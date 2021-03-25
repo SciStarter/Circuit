@@ -1,0 +1,20 @@
+[package]
+name = "backend"
+version = "0.1.0"
+authors = ["Daniel Arbuckle <djarb@highenergymagic.org>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+askama = { version = "0.10.5", features = ["with-tide"] }
+async-session = "2.0.1"
+async-sqlx-session = { version = "0.3.0", features = ["pg"] }
+async-std = { version = "1.9.0", features = ["attributes"] }
+serde = { version = "1.0.124", features = ["derive"] }
+serde_json = "1.0.64"
+sqlx = "0.5.1"
+tide = "0.16.0"
+tide-fluent-routes = "0.1.5"
+tide-sqlx = { version = "0.6.0", features = ["postgres", "rustls"] }
+tide-websockets = "0.3.0"
