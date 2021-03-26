@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-backend-deploy-beta
+  labels:
+    app: circuit-backend-beta
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circuit-backend-beta
+  template:
+    metadata:
+      labels:
+        app: circuit-backend-beta
+    spec:
+      containers:
+      - name: circuit-backend-beta
+        image: scistarter/circuit-backend:0.1.2
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circuit-backend-service-beta
+spec:
+  selector:
+    app: circuit-backend-beta
+  ports:
+    - protocol: TCP
+      port: 8000
+

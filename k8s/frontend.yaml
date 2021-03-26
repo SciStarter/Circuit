@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-frontend-deploy-beta
+  labels:
+    app: circuit-frontend-beta
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circuit-frontend-beta
+  template:
+    metadata:
+      labels:
+        app: circuit-frontend-beta
+    spec:
+      containers:
+      - name: circuit-frontend-beta
+        image: scistarter/circuit-frontend:0.1.2
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circuit-frontend-service-beta
+spec:
+  selector:
+    app: circuit-frontend-beta
+  ports:
+    - protocol: TCP
+      port: 3000
+
