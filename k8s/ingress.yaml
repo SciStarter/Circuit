@@ -2,13 +2,17 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-beta
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/issuer: "letsencrypt"
 spec:
-  # tls:
-  #   - hosts:
-  #     - beta.sciencenearme.org
-  #     secretName: tls-secret
+  tls:
+  - hosts:
+      - beta.sciencenearme.org
+    secretName: cert-beta
   rules:
-  -  http:
+  - host: beta.sciencenearme.org
+    http:
       paths:
       - path: /api
         pathType: Prefix
@@ -24,3 +28,18 @@ spec:
             name: circuit-frontend-service-beta
             port:
               number: 3000
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: daniel@arbuckle-everything.com
+    privateKeySecretRef:
+      name: letsencrypt
+    solvers:
+    - http01:
+        ingress:
+          class:  nginx
