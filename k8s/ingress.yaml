@@ -18,7 +18,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: circuit-backend-service-beta
+            name: circuit-api-service-beta
             port:
               number: 8000
       - path: /
