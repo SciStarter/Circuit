@@ -19,6 +19,12 @@ spec:
         image: scistarter/circuit-api:0.1.6
         ports:
         - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret-beta
+              key: DATABASE_URL
 ---
 apiVersion: v1
 kind: Service

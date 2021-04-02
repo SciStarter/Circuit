@@ -12,3 +12,16 @@ It may be necessary to update the version number in the above. Check
 [the installation instructions](https://cert-manager.io/docs/installation/kubernetes/)
 for up-to-date information.
 
+# Secrets
+
+Create file secrets/database.env containing DATABASE_URL and POSTGRES_PASSWORD, then
+
+    kubectl create secret generic db-secret-beta --from-env-file=secrets/database.env
+
+The DATABASE_URL value will be based on a URL as assigned by
+kubernetes for a stateful service. The database.env file should look
+something like this:
+
+    DATABASE_URL=postgres://postgres:NoPe@postgres-beta/postgres
+    POSTGRES_PASSWORD=NoPe
+
