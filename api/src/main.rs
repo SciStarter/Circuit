@@ -7,12 +7,6 @@ use tide_fluent_routes::prelude::*;
 use tide_sqlx::{SQLxMiddleware, SQLxRequestExt};
 use tide_websockets::{Message, WebSocket};
 
-#[cfg(feature = "container")]
-const DATABASE_URL: &'static str = include_str!("/run/secrets/database_url");
-
-#[cfg(not(feature = "container"))]
-const DATABASE_URL: &'static str = env!("DATABASE_URL");
-
 async fn dummy(mut req: tide::Request<()>) -> tide::Result {
     let mut db = req.sqlx_conn::<Postgres>().await;
     println!("{:?}", req);
@@ -23,7 +17,7 @@ async fn dummy(mut req: tide::Request<()>) -> tide::Result {
 async fn main() -> tide::Result<()> {
     let pool = PgPoolOptions::new()
         .min_connections(1)
-        .connect(DATABASE_URL)
+        .connect(&std::env::var("DATABASE_URL")?)
         .await?;
 
     sqlx::migrate!("db/migrations").run(&pool).await?;

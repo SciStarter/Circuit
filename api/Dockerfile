@@ -1,7 +1,7 @@
 FROM rust:1 as builder
 WORKDIR /usr/src/circuit
 COPY . .
-RUN --mount=type=secret,id=database_url cargo install --path . --features container
+RUN cargo install --path . --features container
 RUN strip /usr/local/cargo/bin/server
 
 FROM debian:stable-slim
