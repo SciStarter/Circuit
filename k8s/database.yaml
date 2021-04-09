@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: postgres-beta
-        image: postgres:13
+        image: postgis/postgis:13-3.1
         env:
         - name: POSTGRES_PASSWORD
           valueFrom:
