@@ -12,6 +12,7 @@ container = []
 [dependencies]
 askama = { version = "0.10.5", features = ["with-tide"] }
 async-std = { version = "1.9.0", features = ["attributes"] }
+djangohashers = "1.4.1"
 hmac = "0.10.1"
 jwt = "0.13.0"
 serde = { version = "1.0.124", features = ["derive"] }
@@ -23,3 +24,4 @@ tide-fluent-routes = "0.1.5"
 tide-sqlx = { version = "0.6.0", features = ["postgres", "rustls"] }
 tide-websockets = "0.3.0"
 time = { version = "0.2.26", features = ["serde"] }
+uuid = { version = "0.8.2", features = ["v4", "v5", "serde"] }
