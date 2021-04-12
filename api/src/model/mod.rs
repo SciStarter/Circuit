@@ -218,6 +218,7 @@ impl Default for LocationType {
     }
 }
 
+// Change to #[derive(Debug, sqlx::Type)] once the workaround is no longer needed
 #[derive(Debug, sqlx::Encode)]
 #[sqlx(type_name = "Opportunity")]
 pub struct Opportunity {
