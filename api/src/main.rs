@@ -7,6 +7,8 @@ use tide_fluent_routes::prelude::*;
 use tide_sqlx::{SQLxMiddleware, SQLxRequestExt};
 use tide_websockets::{Message, WebSocket};
 
+pub mod model;
+
 async fn dummy(mut req: tide::Request<()>) -> tide::Result {
     let mut db = req.sqlx_conn::<Postgres>().await;
     println!("{:?}", req);
