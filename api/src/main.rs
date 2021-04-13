@@ -11,7 +11,10 @@ pub mod model;
 
 async fn dummy(mut req: tide::Request<()>) -> tide::Result {
     let mut db = req.sqlx_conn::<Postgres>().await;
-    println!("{:?}", req);
+    println!(
+        "{:?}",
+        model::Opportunity::load_by_id(db.acquire().await?, 1).await
+    );
     Ok("Hello web world".into())
 }
 

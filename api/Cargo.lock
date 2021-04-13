@@ -1823,6 +1823,7 @@ dependencies = [
  "djangohashers",
  "hmac 0.10.1",
  "jwt",
+ "once_cell",
  "serde",
  "serde_json",
  "sha2",
