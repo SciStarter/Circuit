@@ -19,6 +19,7 @@ serde = { version = "1.0.124", features = ["derive"] }
 serde_json = "1.0.64"
 sha2 = "0.9.3"
 sqlx = {version = "0.5.1", features = ["runtime-async-std-rustls", "postgres", "macros", "migrate", "uuid", "time", "json", "tls", "offline"] }
+thiserror = "1.0.24"
 tide = "0.16.0"
 tide-fluent-routes = "0.1.5"
 tide-sqlx = { version = "0.6.0", features = ["postgres", "rustls"] }
