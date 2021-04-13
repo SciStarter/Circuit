@@ -22,7 +22,7 @@ async fn main() -> tide::Result<()> {
         .connect(&std::env::var("DATABASE_URL")?)
         .await?;
 
-    sqlx::migrate!("db/migrations").run(&pool).await?;
+    sqlx::migrate!().run(&pool).await?;
 
     let mut app = tide::new();
     app.with(SQLxMiddleware::from(pool));
