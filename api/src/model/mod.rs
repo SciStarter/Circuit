@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 use sqlx;
@@ -15,11 +15,13 @@ pub enum Error {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum OrganizationType {
     MuseumOrScienceCenter,
     Festival,
     Library,
     CollegeUniversity,
+    #[serde(rename = "pk12school")]
     PK12School,
     CommunityOrganization,
     Club,
@@ -43,6 +45,7 @@ impl Default for OrganizationType {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum EntityType {
     Opportunity,
     Attraction,
@@ -57,9 +60,11 @@ impl Default for EntityType {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum VenueType {
     MuseumOrScienceCenter,
     Library,
+    #[serde(rename = "pk12school")]
     PK12School,
     CommunityOrganization,
     Bar,
@@ -76,6 +81,7 @@ impl Default for VenueType {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Domain {
     CitizenScience,
     LiveScience,
@@ -93,6 +99,7 @@ impl Default for Domain {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Descriptor {
     AdvocacyDays,
     Bioblitz,
@@ -104,6 +111,7 @@ pub enum Descriptor {
     Competition,
     Concert,
     Conference,
+    #[serde(rename = "create-a-thon")]
     Createathon,
     Dance,
     Exhibition,
@@ -111,9 +119,11 @@ pub enum Descriptor {
     Festival,
     Forum,
     Fundraising,
+    #[serde(rename = "hack-a-thon")]
     Hackathon,
     Lecture,
     LiveScience,
+    #[serde(rename = "make-a-thon")]
     Makeathon,
     Maker,
     MakerFaire,
@@ -140,6 +150,7 @@ pub enum Descriptor {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Topic {
     Agriculture,
     Alcohol,
@@ -165,7 +176,6 @@ pub enum Topic {
     HealthAndMedicine,
     InsectsAndPollinators,
     Mathematics,
-    Medicine,
     NatureAndOutdoors,
     OceanWaterMarine,
     Paleontology,
@@ -174,7 +184,6 @@ pub enum Topic {
     Psychology,
     Religion,
     Robotics,
-    SciencePolicy,
     SocialScience,
     Sound,
     Technology,
@@ -187,7 +196,7 @@ pub struct OpenHours {
     pub closes: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Serialize, Deserialize)]
 pub struct OpenDays {
     pub monday: Option<OpenHours>,
     pub tuesday: Option<OpenHours>,
@@ -199,6 +208,7 @@ pub struct OpenDays {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Cost {
     Free,
     Cost,
@@ -213,10 +223,19 @@ impl Default for Cost {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum LocationType {
+    #[serde(alias = "ANY")]
+    #[serde(alias = "Any")]
     Any,
+    #[serde(alias = "AT")]
+    #[serde(alias = "At")]
     At,
+    #[serde(alias = "NEAR")]
+    #[serde(alias = "Near")]
     Near,
+    #[serde(alias = "UNKNOWN")]
+    #[serde(alias = "Unknown")]
     #[serde(other)]
     Unknown,
 }
@@ -263,7 +282,16 @@ pub struct OpportunityExterior {
     pub address_country: String,
     pub address_zip: String,
     pub opp_hashtags: Vec<String>,
-    pub opp_social_handles: std::collections::HashMap<String, String>,
+    pub opp_social_handles: HashMap<String, String>,
+}
+
+impl Default for OpportunityExterior {
+    fn default() -> Self {
+        OpportunityExterior {
+            partner_uid: Uuid::new_v4(),
+            ..Default::default()
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -274,7 +302,16 @@ pub struct OpportunityInterior {
     pub extra_data: serde_json::Value,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl Default for OpportunityInterior {
+    fn default() -> Self {
+        OpportunityInterior {
+            extra_data: serde_json::json!({}),
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Opportunity {
     pub id: Option<i32>,
     #[serde(flatten)]
