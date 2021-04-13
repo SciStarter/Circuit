@@ -1,0 +1,205 @@
+use super::Error;
+
+use serde::{Deserialize, Serialize};
+use sqlx;
+use std::collections::{HashMap, HashSet};
+use time::OffsetDateTime;
+use uuid::Uuid;
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Gender {
+    Male,
+    Female,
+    NonBinary,
+    #[serde(other)]
+    Unspecified,
+}
+
+impl Default for Gender {
+    fn default() -> Self {
+        Gender::Unspecified
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum EducationLevel {
+    GradeSchool,
+    HighSchool,
+    TradeSchool,
+    University,
+    Graduate,
+    Doctorate,
+    #[serde(other)]
+    Unspecified,
+}
+
+impl Default for EducationLevel {
+    fn default() -> Self {
+        EducationLevel::Unspecified
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum IncomeLevel {
+    Poor,
+    LowerMiddleClass,
+    MiddleClass,
+    UpperMiddleClass,
+    Wealthy,
+    #[serde(other)]
+    Unspecified,
+}
+
+impl Default for IncomeLevel {
+    fn default() -> Self {
+        IncomeLevel::Unspecified
+    }
+}
+
+#[derive(Default, Debug, Serialize, Deserialize)]
+pub struct PersonExterior {
+    pub uid: Uuid,
+    pub username: Option<String>,
+    pub image_url: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PersonInterior {
+    pub email: String,
+    pub password: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub gender: Gender,
+    pub home_location: Option<serde_json::Value>,
+    pub last_location: Option<serde_json::Value>,
+    pub joined_at: OffsetDateTime,
+    pub active_at: OffsetDateTime,
+    pub phone: Option<String>,
+    pub whatsapp: Option<String>,
+    pub zip_code: Option<String>,
+    pub birth_year: Option<u32>,
+    pub race: Option<String>,
+    pub ethnicity: Option<String>,
+    pub family_income: Option<IncomeLevel>,
+    pub education_level: Option<EducationLevel>,
+    pub opt_in_research: Option<bool>,
+    pub opt_in_volunteer: Option<bool>,
+}
+
+impl Default for PersonInterior {
+    fn default() -> Self {
+        PersonInterior {
+            email: Default::default(),
+            first_name: Default::default(),
+            last_name: Default::default(),
+            password: Default::default(),
+            gender: Default::default(),
+            home_location: Default::default(),
+            last_location: Default::default(),
+            joined_at: OffsetDateTime::now_utc(),
+            active_at: OffsetDateTime::now_utc(),
+            phone: Default::default(),
+            whatsapp: Default::default(),
+            zip_code: Default::default(),
+            birth_year: Default::default(),
+            race: Default::default(),
+            ethnicity: Default::default(),
+            family_income: Default::default(),
+            education_level: Default::default(),
+            opt_in_research: Default::default(),
+            opt_in_volunteer: Default::default(),
+        }
+    }
+}
+
+#[derive(Default, Debug, Serialize, Deserialize)]
+pub struct Person {
+    pub id: Option<i32>,
+    #[serde(flatten)]
+    pub exterior: PersonExterior,
+    #[serde(flatten)]
+    pub interior: PersonInterior,
+}
+
+impl Person {
+    pub fn validate(&mut self) -> Result<(), Error> {
+        self.interior.email = self.interior.email.trim_matches(char::is_whitespace).into();
+
+        if self.exterior.uid.is_nil() {
+            self.exterior.uid = Uuid::new_v4();
+        }
+
+        Ok(())
+    }
+
+    pub async fn note_activity<'req, DB>(&mut self, db: DB) -> Result<(), Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        self.interior.active_at = OffsetDateTime::now_utc();
+        self.store(db).await
+    }
+
+    pub async fn load_by_id<'req, DB>(db: DB, id: i32) -> Result<Person, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let rec = sqlx::query_file!("db/query_person_by_id.sql", id)
+            .fetch_one(db)
+            .await?;
+
+        Ok(Person {
+            id: Some(rec.id),
+            exterior: serde_json::from_value(rec.exterior)?,
+            interior: serde_json::from_value(rec.interior)?,
+        })
+    }
+
+    pub async fn load_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<Person, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let rec = sqlx::query_file!("db/query_person_by_uid.sql", uid)
+            .fetch_one(db)
+            .await?;
+
+        Ok(Person {
+            id: Some(rec.id),
+            exterior: serde_json::from_value(rec.exterior)?,
+            interior: serde_json::from_value(rec.interior)?,
+        })
+    }
+
+    pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        self.validate()?;
+
+        if let Some(id) = self.id {
+            sqlx::query_file!(
+                "db/update_opportunity.sql",
+                id,
+                serde_json::to_value(&self.exterior)?,
+                serde_json::to_value(&self.interior)?,
+            )
+            .execute(db)
+            .await?;
+        } else {
+            let rec = sqlx::query_file!(
+                "db/insert_opportunity.sql",
+                serde_json::to_value(&self.exterior)?,
+                serde_json::to_value(&self.interior)?,
+            )
+            .fetch_one(db)
+            .await?;
+
+            self.id = Some(rec.id);
+        };
+
+        Ok(())
+    }
+}
