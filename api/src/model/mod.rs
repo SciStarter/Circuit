@@ -314,31 +314,29 @@ impl Opportunity {
         })
     }
 
-    pub async fn store<'req, DB>(&self, db: DB) -> Result<(), Error>
+    pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        match self.id {
-            Some(id) => {
-                sqlx::query_file!(
-                    "db/update_opportunity.sql",
-                    id,
-                    serde_json::to_value(&self.exterior)?,
-                    serde_json::to_value(&self.interior)?,
-                )
-                .execute(db)
-                .await?
-            }
+        if let Some(id) = self.id {
+            sqlx::query_file!(
+                "db/update_opportunity.sql",
+                id,
+                serde_json::to_value(&self.exterior)?,
+                serde_json::to_value(&self.interior)?,
+            )
+            .execute(db)
+            .await?;
+        } else {
+            let rec = sqlx::query_file!(
+                "db/insert_opportunity.sql",
+                serde_json::to_value(&self.exterior)?,
+                serde_json::to_value(&self.interior)?,
+            )
+            .fetch_one(db)
+            .await?;
 
-            None => {
-                sqlx::query_file!(
-                    "db/insert_opportunity.sql",
-                    serde_json::to_value(&self.exterior)?,
-                    serde_json::to_value(&self.interior)?,
-                )
-                .execute(db)
-                .await?
-            }
+            self.id = Some(rec.id);
         };
 
         Ok(())
