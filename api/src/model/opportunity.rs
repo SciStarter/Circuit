@@ -191,6 +191,7 @@ pub struct OpenHours {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct OpenDays {
     pub monday: Option<OpenHours>,
     pub tuesday: Option<OpenHours>,
@@ -241,6 +242,7 @@ impl Default for LocationType {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct OpportunityExterior {
     pub uid: Uuid,
     pub partner_name: String,
@@ -280,25 +282,31 @@ pub struct OpportunityExterior {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct OpportunityInterior {
+    pub withdrawn: bool,
     pub contact_name: String,
     pub contact_email: String,
     pub contact_phone: String,
     pub extra_data: serde_json::Value,
+    pub partner: Uuid, // uid of the Partner entry which controls this entry
 }
 
 impl Default for OpportunityInterior {
     fn default() -> Self {
         OpportunityInterior {
+            withdrawn: false,
             contact_name: Default::default(),
             contact_email: Default::default(),
             contact_phone: Default::default(),
             extra_data: serde_json::json!({}),
+            partner: Default::default(),
         }
     }
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Opportunity {
     pub id: Option<i32>,
     #[serde(flatten)]
@@ -337,7 +345,7 @@ impl Opportunity {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/query_opportunity_by_id.sql", id)
+        let rec = sqlx::query_file!("db/opportunity/get_by_id.sql", id)
             .fetch_one(db)
             .await?;
 
@@ -352,7 +360,7 @@ impl Opportunity {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/query_opportunity_by_uid.sql", uid)
+        let rec = sqlx::query_file!("db/opportunity/get_by_uid.sql", uid)
             .fetch_one(db)
             .await?;
 
@@ -363,6 +371,17 @@ impl Opportunity {
         })
     }
 
+    pub async fn exists_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<bool, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let rec = sqlx::query_file!("db/opportunity/exists_by_uid.sql", uid)
+            .fetch_one(db)
+            .await?;
+
+        Ok(rec.exists.unwrap_or(false))
+    }
+
     pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
@@ -371,7 +390,7 @@ impl Opportunity {
 
         if let Some(id) = self.id {
             sqlx::query_file!(
-                "db/update_opportunity.sql",
+                "db/opportunity/update.sql",
                 id,
                 serde_json::to_value(&self.exterior)?,
                 serde_json::to_value(&self.interior)?,
@@ -380,7 +399,7 @@ impl Opportunity {
             .await?;
         } else {
             let rec = sqlx::query_file!(
-                "db/insert_opportunity.sql",
+                "db/opportunity/insert.sql",
                 serde_json::to_value(&self.exterior)?,
                 serde_json::to_value(&self.interior)?,
             )

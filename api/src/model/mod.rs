@@ -3,6 +3,7 @@ pub use opportunity::{Opportunity, OpportunityExterior, OpportunityInterior};
 use thiserror::Error;
 
 pub mod opportunity;
+pub mod partner;
 pub mod person;
 
 pub static ROOT_NAMESPACE: Lazy<uuid::Uuid> =
