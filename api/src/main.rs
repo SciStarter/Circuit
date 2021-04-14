@@ -1,22 +1,12 @@
-#![deny(unsafe_code)]
+#![forbid(unsafe_code)]
 
-use sqlx::postgres::{PgPoolOptions, Postgres};
-use sqlx::prelude::*;
-use tide::prelude::*;
-use tide_fluent_routes::prelude::*;
-use tide_sqlx::{SQLxMiddleware, SQLxRequestExt};
-use tide_websockets::{Message, WebSocket};
+use sqlx::postgres::PgPoolOptions;
+use tide::log;
+use tide_fluent_routes::{fs::ServeFs, prelude::*};
+use tide_sqlx::SQLxMiddleware;
 
 pub mod model;
-
-async fn dummy(mut req: tide::Request<()>) -> tide::Result {
-    let mut db = req.sqlx_conn::<Postgres>().await;
-    println!(
-        "{:?}",
-        model::Opportunity::load_by_id(db.acquire().await?, 1).await
-    );
-    Ok("Hello web world".into())
-}
+pub mod v1;
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
@@ -27,13 +17,19 @@ async fn main() -> tide::Result<()> {
 
     sqlx::migrate!().run(&pool).await?;
 
+    log::with_level(log::LevelFilter::Info);
+
     let mut app = tide::new();
+
     app.with(SQLxMiddleware::from(pool));
 
     // https://crates.io/crates/tide-fluent-routes
-    app.register(root().get(dummy).at("api/", |routes| routes.get(dummy)));
+    app.register(root().at("api/v1/", v1::routes).at("api/docs/", |routes| {
+        routes
+            .serve_dir("static/")
+            .expect("Unable to serve static docs dir")
+    }));
 
-    println!("Listening on 0.0.0.0:8000");
     app.listen("0.0.0.0:8000").await?;
 
     Ok(())

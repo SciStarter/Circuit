@@ -24,6 +24,6 @@ thiserror = "1.0.24"
 tide = "0.16.0"
 tide-fluent-routes = "0.1.5"
 tide-sqlx = { version = "0.6.0", features = ["postgres", "rustls"] }
-tide-websockets = "0.3.0"
+#tide-websockets = "0.3.0"
 time = { version = "0.2.26", features = ["serde"] }
 uuid = { version = "0.8.2", features = ["v4", "v5", "serde"] }

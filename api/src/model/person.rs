@@ -87,6 +87,7 @@ pub struct PersonInterior {
     pub education_level: Option<EducationLevel>,
     pub opt_in_research: Option<bool>,
     pub opt_in_volunteer: Option<bool>,
+    pub authority: Vec<Uuid>,
 }
 
 impl Default for PersonInterior {
@@ -111,6 +112,7 @@ impl Default for PersonInterior {
             education_level: Default::default(),
             opt_in_research: Default::default(),
             opt_in_volunteer: Default::default(),
+            authority: Default::default(),
         }
     }
 }
@@ -147,7 +149,7 @@ impl Person {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/query_person_by_id.sql", id)
+        let rec = sqlx::query_file!("db/person/get_by_id.sql", id)
             .fetch_one(db)
             .await?;
 
@@ -162,7 +164,7 @@ impl Person {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/query_person_by_uid.sql", uid)
+        let rec = sqlx::query_file!("db/person/get_by_uid.sql", uid)
             .fetch_one(db)
             .await?;
 
@@ -173,6 +175,17 @@ impl Person {
         })
     }
 
+    pub async fn exists_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<bool, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let rec = sqlx::query_file!("db/person/exists_by_uid.sql", uid)
+            .fetch_one(db)
+            .await?;
+
+        Ok(rec.exists.unwrap_or(false))
+    }
+
     pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
@@ -181,7 +194,7 @@ impl Person {
 
         if let Some(id) = self.id {
             sqlx::query_file!(
-                "db/update_opportunity.sql",
+                "db/person/update.sql",
                 id,
                 serde_json::to_value(&self.exterior)?,
                 serde_json::to_value(&self.interior)?,
@@ -190,7 +203,7 @@ impl Person {
             .await?;
         } else {
             let rec = sqlx::query_file!(
-                "db/insert_opportunity.sql",
+                "db/person/insert.sql",
                 serde_json::to_value(&self.exterior)?,
                 serde_json::to_value(&self.interior)?,
             )
