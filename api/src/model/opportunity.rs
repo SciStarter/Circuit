@@ -279,6 +279,7 @@ pub struct OpportunityExterior {
     pub address_zip: String,
     pub opp_hashtags: Vec<String>,
     pub opp_social_handles: HashMap<String, String>,
+    pub partner: Uuid, // uid of the Partner entry which controls this entry
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -289,7 +290,6 @@ pub struct OpportunityInterior {
     pub contact_email: String,
     pub contact_phone: String,
     pub extra_data: serde_json::Value,
-    pub partner: Uuid, // uid of the Partner entry which controls this entry
 }
 
 impl Default for OpportunityInterior {
@@ -300,7 +300,6 @@ impl Default for OpportunityInterior {
             contact_email: Default::default(),
             contact_phone: Default::default(),
             extra_data: serde_json::json!({}),
-            partner: Default::default(),
         }
     }
 }
