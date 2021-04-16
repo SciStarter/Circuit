@@ -285,6 +285,7 @@ pub struct OpportunityExterior {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityInterior {
+    pub accepted: bool,
     pub withdrawn: bool,
     pub contact_name: String,
     pub contact_email: String,
@@ -295,7 +296,8 @@ pub struct OpportunityInterior {
 impl Default for OpportunityInterior {
     fn default() -> Self {
         OpportunityInterior {
-            withdrawn: false,
+            accepted: false,  // editors have accepted it for publication
+            withdrawn: false, // partner has withdrawn it from publication
             contact_name: Default::default(),
             contact_email: Default::default(),
             contact_phone: Default::default(),

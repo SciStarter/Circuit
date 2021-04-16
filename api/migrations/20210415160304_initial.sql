@@ -56,8 +56,8 @@ create table c_person (
        id serial primary key,
        created timestamptz not null default NOW(),
        updated timestamptz not null default NOW(),
-       home_location geography(POINT, 4326) generated always as (case when interior ? 'home_location' then ST_GeomFromGeoJSON(interior -> 'home_location')::geography else null end) stored,
-       last_location geography(POINT, 4326) generated always as (case when interior ? 'last_location' then ST_GeomFromGeoJSON(interior -> 'last_location')::geography else null end) stored,
+       home_location geography(POINT, 4326) generated always as (case when jsonb_typeof(interior -> 'home_location') != 'null' then ST_GeomFromGeoJSON(interior -> 'home_location')::geography else null end) stored,
+       last_location geography(POINT, 4326) generated always as (case when jsonb_typeof(interior -> 'last_location') != 'null' then ST_GeomFromGeoJSON(interior -> 'last_location')::geography else null end) stored,
        exterior jsonb not null,
        interior jsonb not null
 );
@@ -65,6 +65,8 @@ create table c_person (
 create trigger c_set_person_updated before update on c_person for each row execute procedure set_updated();
 
 create index c_person_uid on c_person using GIN ((exterior -> 'uid'));
+create index c_person_email on c_person using GIN ((interior -> 'email'));
+create index c_person_email_hashes on c_person using GIN ((interior -> 'email_hashes'));
 create index c_person_home_location on c_person using SPGIST (home_location);
 create index c_person_last_location on c_person using SPGIST (last_location);
 

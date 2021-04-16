@@ -35,6 +35,11 @@ spec:
             sercretKeyRef:
               name: superuser-secret-beta
               key: SUPERUSER_PASSWORD
+        - name: JWT_SIGNING_KEY
+          valueFrom:
+            sercretKeyRef:
+              name: jwt-signing-beta
+              key: JWT_SIGNING_KEY
 ---
 apiVersion: v1
 kind: Service
