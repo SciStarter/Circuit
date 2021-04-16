@@ -173,7 +173,23 @@ impl Person {
     }
 
     pub fn validate(&mut self) -> Result<(), Error> {
-        self.interior.email = self.interior.email.trim_matches(char::is_whitespace).into();
+        self.interior.email = self
+            .interior
+            .email
+            .trim_matches(char::is_whitespace)
+            .to_ascii_lowercase() // We're going to ignore the fact
+            // that the local-part of the email address is actually
+            // case sensitive. That is rarely enforced anymore (the
+            // RFC recommends that it not be) and people
+            // misunderstanding it has been a big problem for
+            // SciStarter. We're using to_ascii_lowercase instead of
+            // to_lowercase because non-ASCII email addresses
+            // do not have the same recommendation.
+            .into();
+
+        if self.interior.email.is_empty() {
+            return Err(Error::Missing("email".to_string()));
+        }
 
         if self.exterior.uid.is_nil() {
             self.exterior.uid = Uuid::new_v4();
@@ -229,6 +245,21 @@ impl Person {
             .await?;
 
         Ok(rec.exists.unwrap_or(false))
+    }
+
+    pub async fn load_by_email<'req, DB>(db: DB, email: &str) -> Result<Person, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let rec = sqlx::query_file!("db/person/get_by_email.sql", serde_json::to_value(email)?)
+            .fetch_one(db)
+            .await?;
+
+        Ok(Person {
+            id: Some(rec.id),
+            exterior: serde_json::from_value(rec.exterior)?,
+            interior: serde_json::from_value(rec.interior)?,
+        })
     }
 
     pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
