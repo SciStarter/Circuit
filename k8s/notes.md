@@ -25,3 +25,6 @@ something like this:
     DATABASE_URL=postgres://postgres:NoPe@postgres-beta/postgres
     POSTGRES_PASSWORD=NoPe
 
+Create file secrets/superuser.env containing SUPERUSER_EMAIL and SUPERUSER_PASSWORD, then
+
+    kubectl create secret generic superuser-secret-beta --from-env-file=secrets/superuser.env
