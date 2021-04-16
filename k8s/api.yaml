@@ -25,6 +25,16 @@ spec:
             secretKeyRef:
               name: db-secret-beta
               key: DATABASE_URL
+        - name: SUPERUSER_EMAIL
+          valueFrom:
+            sercretKeyRef:
+              name: superuser-secret-beta
+              key: SUPERUSER_EMAIL
+        - name: SUPERUSER_PASSWORD
+          valueFrom:
+            sercretKeyRef:
+              name: superuser-secret-beta
+              key: SUPERUSER_PASSWORD
 ---
 apiVersion: v1
 kind: Service
