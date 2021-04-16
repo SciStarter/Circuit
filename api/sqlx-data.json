@@ -1,0 +1,508 @@
+{
+  "db": "PostgreSQL",
+  "113ab265c817affe2e5042ec46586946e57e3aef8339c8baae503d4884410d0c": {
+    "query": "insert into c_person (exterior, interior) values ($1, $2) returning id;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "232db60cfb4ba3a2fd8869075ca90f615000a51968582c00b28f66aa687e63e7": {
+    "query": "select id, exterior, interior from c_partner where id = $1 limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "36f5e907e4ae50d5b4273a2c35c0b4111863f7173f2cdbbf7b89cd741a1c3da8": {
+    "query": "select id, exterior, interior from c_opportunity where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "398eb5595d78b03579bcc0a2ed80217fd033806ee14b372e8ec4b380d9b8813a": {
+    "query": "insert into c_partner (exterior, interior) values ($1, $2) returning id;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "3a5fe5a398cd6ba3fce8b29dd91e547c991617fce2a7e8c4ca978149377add97": {
+    "query": "select id, exterior, interior from c_opportunity where ($1::jsonb) @> (exterior -> 'partner');\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "3c0fe1e4ace1686507f9ba8f135fc4217d948ef3fc11b0fadfdfee99fa62b4cc": {
+    "query": "select id, exterior, interior from c_person where ($1::jsonb) @> (exterior -> 'uid');\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "45ee1a6d2f0e1e3adf61cfa87a0dec09e0552712400a512a224cfa79fbf7e4b6": {
+    "query": "update c_opportunity set exterior = $2, interior = $3 where id = $1;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "4952cde5a0390226da36688f8a2d32e5a52749b7efd1a69be726110fb2669323": {
+    "query": "select id, exterior, interior from c_person where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "58321d77d0c4de7155c40c1f954c8345da576c96162f6c594163052fc92bea8a": {
+    "query": "update c_partner set exterior = $2, interior = $3 where id = $1;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "680c3e5c532b96a75b01a3d33c94c664a4a3318515d31a4c908a5a2193348c02": {
+    "query": "insert into c_opportunity (exterior, interior) values ($1, $2) returning id;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "6ff3efed7a7e1ae0be5f36b8c802bbbf4991f826f62254d1ace3051d6d4995aa": {
+    "query": "select id, exterior, interior from c_opportunity where id = $1 limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "83254db54e765203368a9452d869af0332b47c607c0ea4dedb21f9af170a0a3b": {
+    "query": "update c_person set exterior = $2, interior = $3 where id = $1;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "9181b3c3f337b0be8c5a8b9afbe43f5bc99314996da13a2a59d61daf089e837d": {
+    "query": "select id, exterior, interior from c_partner where ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "c052e801bb94dd7532a60b353a2000ae85774fde2803a86095ff7beb751c8af2": {
+    "query": "select id, exterior, interior from c_partner where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "ce31b38ffa11d0adc8607d19015daee92c05a3148e04626d46ca084f2b99de22": {
+    "query": "select exists(select 1 from c_person where ($1::jsonb) @> (interior -> 'email')) as \"exists\";\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "exists",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "d97f02bf2620ddcd59b280f5b5d37dc015d2c8e380a46c6aa692901c38e81199": {
+    "query": "select exists(select 1 from c_partner where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "exists",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "dfbd8aa13f6570cf0774521db896fb88c89ab17e532ff95996a5acfe372206d9": {
+    "query": "select id, exterior, interior from c_person where ($1::jsonb) @> (interior -> 'email') limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "e831e96bf898cecd31483a504415204c2e5d6cddf1105963d6046e87afc0ad52": {
+    "query": "select exists(select 1 from c_opportunity where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "exists",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "f806527d023d3d81b63b12f2f8d2dde317d262b542e9ad9b0f6bc953adf0b678": {
+    "query": "select exists(select 1 from c_person where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "exists",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "fa0dcc4db58016c21be2ca341bbc3d1d3137c6a43e03cc3b47a0843557e50390": {
+    "query": "select id, exterior, interior from c_person where id = $1 limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  }
+}
