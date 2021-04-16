@@ -1,8 +1,7 @@
-use super::Error;
+use super::{partner::Partner, Error};
 
 use serde::{Deserialize, Serialize};
 use sqlx;
-use std::collections::{HashMap, HashSet};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -59,6 +58,30 @@ impl Default for IncomeLevel {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "kebab-case")]
+pub enum Permission {
+    All,
+}
+
+impl Permission {
+    pub fn grants(grantor: &Permission, grantee: &Permission) -> bool {
+        match (grantor, grantee) {
+            (Permission::All, _) => true,
+        }
+    }
+
+    pub fn check(assigned: &Vec<Permission>, requested: &Permission) -> bool {
+        for perm in assigned {
+            if Permission::grants(perm, requested) {
+                return true;
+            }
+        }
+
+        false
+    }
+}
+
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct PersonExterior {
     pub uid: Uuid,
@@ -87,7 +110,7 @@ pub struct PersonInterior {
     pub education_level: Option<EducationLevel>,
     pub opt_in_research: Option<bool>,
     pub opt_in_volunteer: Option<bool>,
-    pub authority: Vec<Uuid>,
+    pub permissions: Vec<Permission>,
 }
 
 impl Default for PersonInterior {
@@ -112,7 +135,7 @@ impl Default for PersonInterior {
             education_level: Default::default(),
             opt_in_research: Default::default(),
             opt_in_volunteer: Default::default(),
-            authority: Default::default(),
+            permissions: Default::default(),
         }
     }
 }
@@ -127,6 +150,28 @@ pub struct Person {
 }
 
 impl Person {
+    pub async fn load_partners<'req, DB>(
+        &self,
+        db: DB,
+    ) -> Result<Vec<Result<Partner, Error>>, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        Ok(sqlx::query_file!(
+            "db/person/fetch_partners.sql",
+            serde_json::to_value(self.exterior.uid)?
+        )
+        .map(|row| {
+            Ok(Partner {
+                id: Some(row.id),
+                exterior: serde_json::from_value(row.exterior)?,
+                interior: serde_json::from_value(row.interior)?,
+            })
+        })
+        .fetch_all(db)
+        .await?)
+    }
+
     pub fn validate(&mut self) -> Result<(), Error> {
         self.interior.email = self.interior.email.trim_matches(char::is_whitespace).into();
 
@@ -164,7 +209,7 @@ impl Person {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/person/get_by_uid.sql", uid)
+        let rec = sqlx::query_file!("db/person/get_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
 
@@ -179,7 +224,7 @@ impl Person {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/person/exists_by_uid.sql", uid)
+        let rec = sqlx::query_file!("db/person/exists_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
 

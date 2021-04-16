@@ -15,9 +15,6 @@ pub static PERSON_NAMESPACE: Lazy<uuid::Uuid> =
 pub static PARTNER_NAMESPACE: Lazy<uuid::Uuid> =
     Lazy::new(|| uuid::Uuid::new_v5(&ROOT_NAMESPACE, b"partner"));
 
-pub static OPPORTUNITY_NAMESPACE: Lazy<uuid::Uuid> =
-    Lazy::new(|| uuid::Uuid::new_v5(&ROOT_NAMESPACE, b"opportunity"));
-
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Required field is missing or empty: {0}")]
