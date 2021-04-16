@@ -43,6 +43,10 @@ pub struct Partner {
 }
 
 impl Partner {
+    pub fn set_secret(&mut self, secret: &str) {
+        self.interior.secret = Some(djangohashers::make_password(secret));
+    }
+
     pub async fn load_persons<'req, DB>(&self, db: DB) -> Result<Vec<Result<Person, Error>>, Error>
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,

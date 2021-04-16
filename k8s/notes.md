@@ -34,3 +34,8 @@ SUPERUSER_PASSWORD, then
 These settings are used to create a superuser account if it doesn’t
 exist. It’s recommended to change the superuser password as one of
 your first actions after deployment.
+
+Create file secrets/jwt.env containing JWT_SIGNING_KEY, then
+
+    kubectl create secret generic jwt-signing-beta --from-env-file=secrets/jwt.env
+

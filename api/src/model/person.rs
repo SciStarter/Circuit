@@ -1,6 +1,7 @@
 use super::{partner::Partner, Error};
 
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use sqlx;
 use time::OffsetDateTime;
 use uuid::Uuid;
@@ -62,12 +63,19 @@ impl Default for IncomeLevel {
 #[serde(rename_all = "kebab-case")]
 pub enum Permission {
     All,
+    ManageOpportunities,
+    ManagePartners,
+    ManagePersons,
 }
 
 impl Permission {
     pub fn grants(grantor: &Permission, grantee: &Permission) -> bool {
         match (grantor, grantee) {
             (Permission::All, _) => true,
+            (Permission::ManageOpportunities, Permission::ManageOpportunities) => true,
+            (Permission::ManagePartners, Permission::ManagePartners) => true,
+            (Permission::ManagePersons, Permission::ManagePersons) => true,
+            _ => false,
         }
     }
 
@@ -92,6 +100,7 @@ pub struct PersonExterior {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PersonInterior {
     pub email: String,
+    pub email_hashes: Vec<String>,
     pub password: Option<String>,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
@@ -117,6 +126,7 @@ impl Default for PersonInterior {
     fn default() -> Self {
         PersonInterior {
             email: Default::default(),
+            email_hashes: Default::default(),
             first_name: Default::default(),
             last_name: Default::default(),
             password: Default::default(),
@@ -140,6 +150,20 @@ impl Default for PersonInterior {
     }
 }
 
+fn normalize_email(email: &str) -> String {
+    email
+        .trim_matches(char::is_whitespace)
+        // We're going to ignore the fact that the local-part of the
+        // email address is actually case sensitive. That is rarely
+        // enforced anymore (the RFC recommends that it not be) and
+        // people misunderstanding it has been a big problem for
+        // SciStarter. We're using to_ascii_lowercase instead of
+        // to_lowercase because non-ASCII email addresses do not have
+        // the same recommendation.
+        .to_ascii_lowercase()
+        .into()
+}
+
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Person {
     pub id: Option<i32>,
@@ -150,6 +174,10 @@ pub struct Person {
 }
 
 impl Person {
+    pub fn set_password(&mut self, password: &str) {
+        self.interior.password = Some(djangohashers::make_password(password));
+    }
+
     pub async fn load_partners<'req, DB>(
         &self,
         db: DB,
@@ -173,19 +201,7 @@ impl Person {
     }
 
     pub fn validate(&mut self) -> Result<(), Error> {
-        self.interior.email = self
-            .interior
-            .email
-            .trim_matches(char::is_whitespace)
-            .to_ascii_lowercase() // We're going to ignore the fact
-            // that the local-part of the email address is actually
-            // case sensitive. That is rarely enforced anymore (the
-            // RFC recommends that it not be) and people
-            // misunderstanding it has been a big problem for
-            // SciStarter. We're using to_ascii_lowercase instead of
-            // to_lowercase because non-ASCII email addresses
-            // do not have the same recommendation.
-            .into();
+        self.interior.email = normalize_email(&self.interior.email);
 
         if self.interior.email.is_empty() {
             return Err(Error::Missing("email".to_string()));
@@ -193,6 +209,21 @@ impl Person {
 
         if self.exterior.uid.is_nil() {
             self.exterior.uid = Uuid::new_v4();
+        }
+
+        let mut hasher = Sha256::new();
+        // Note, email is in UTF-8, has had whitespace trimmed, and
+        // ascii characters have been reduced to lowercase.
+        hasher.update(&self.interior.email);
+        // Salt the hash with a common suffix, to move the hashes into
+        // a distinct 'namespace' and prevent hashes computed for
+        // other purposes from being used.
+        hasher.update(b":science-link");
+        // Lowercase hexidecimal representation
+        let hashed = hex::encode(hasher.finalize());
+
+        if !self.interior.email_hashes.iter().any(|x| x == &hashed) {
+            self.interior.email_hashes.push(hashed);
         }
 
         Ok(())
@@ -251,15 +282,32 @@ impl Person {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/person/get_by_email.sql", serde_json::to_value(email)?)
-            .fetch_one(db)
-            .await?;
+        let rec = sqlx::query_file!(
+            "db/person/get_by_email.sql",
+            serde_json::to_value(normalize_email(email))?
+        )
+        .fetch_one(db)
+        .await?;
 
         Ok(Person {
             id: Some(rec.id),
             exterior: serde_json::from_value(rec.exterior)?,
             interior: serde_json::from_value(rec.interior)?,
         })
+    }
+
+    pub async fn exists_by_email<'req, DB>(db: DB, email: &str) -> Result<bool, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let rec = sqlx::query_file!(
+            "db/person/exists_by_email.sql",
+            serde_json::to_value(normalize_email(email))?
+        )
+        .fetch_one(db)
+        .await?;
+
+        Ok(rec.exists.unwrap_or(false))
     }
 
     pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>

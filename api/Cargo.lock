@@ -1776,6 +1776,7 @@ dependencies = [
  "askama",
  "async-std",
  "djangohashers",
+ "hex",
  "hmac 0.10.1",
  "jwt",
  "once_cell",
