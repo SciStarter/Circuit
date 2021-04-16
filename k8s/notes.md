@@ -14,7 +14,8 @@ for up-to-date information.
 
 # Secrets
 
-Create file secrets/database.env containing DATABASE_URL and POSTGRES_PASSWORD, then
+Create file secrets/database.env containing DATABASE_URL and
+POSTGRES_PASSWORD, then
 
     kubectl create secret generic db-secret-beta --from-env-file=secrets/database.env
 
@@ -25,6 +26,11 @@ something like this:
     DATABASE_URL=postgres://postgres:NoPe@postgres-beta/postgres
     POSTGRES_PASSWORD=NoPe
 
-Create file secrets/superuser.env containing SUPERUSER_EMAIL and SUPERUSER_PASSWORD, then
+Create file secrets/superuser.env containing SUPERUSER_EMAIL and
+SUPERUSER_PASSWORD, then
 
     kubectl create secret generic superuser-secret-beta --from-env-file=secrets/superuser.env
+
+These settings are used to create a superuser account if it doesn’t
+exist. It’s recommended to change the superuser password as one of
+your first actions after deployment.
