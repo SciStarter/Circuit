@@ -1,4 +1,4 @@
-use super::{Error, OPPORTUNITY_NAMESPACE};
+use super::Error;
 
 use serde::{Deserialize, Serialize};
 use sqlx;
@@ -315,6 +315,13 @@ pub struct Opportunity {
 }
 
 impl Opportunity {
+    pub async fn load_partner<'req, DB>(&self, db: DB) -> Result<super::partner::Partner, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        Ok(super::partner::Partner::load_by_uid(db, &self.exterior.partner).await?)
+    }
+
     pub fn validate(&mut self) -> Result<(), Error> {
         self.exterior.partner_name = self
             .exterior
@@ -359,7 +366,7 @@ impl Opportunity {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/opportunity/get_by_uid.sql", uid)
+        let rec = sqlx::query_file!("db/opportunity/get_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
 
@@ -374,9 +381,12 @@ impl Opportunity {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/opportunity/exists_by_uid.sql", uid)
-            .fetch_one(db)
-            .await?;
+        let rec = sqlx::query_file!(
+            "db/opportunity/exists_by_uid.sql",
+            serde_json::to_value(uid)?
+        )
+        .fetch_one(db)
+        .await?;
 
         Ok(rec.exists.unwrap_or(false))
     }

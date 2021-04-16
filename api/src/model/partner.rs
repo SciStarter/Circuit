@@ -1,12 +1,8 @@
-use super::Error;
+use super::{opportunity::Opportunity, person::Person, Error, PARTNER_NAMESPACE};
 
 use serde::{Deserialize, Serialize};
 use sqlx;
-use std::collections::{HashMap, HashSet};
-use time::OffsetDateTime;
 use uuid::Uuid;
-
-use super::PARTNER_NAMESPACE;
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 #[serde(default)]
@@ -34,6 +30,7 @@ pub struct PartnerInterior {
     pub contact: Option<Contact>,
     pub prime: Uuid,           // uid of the prime Person entry for this partner
     pub authorized: Vec<Uuid>, // uids of additional authorized Person entries
+    pub secret: Option<String>,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -46,6 +43,50 @@ pub struct Partner {
 }
 
 impl Partner {
+    pub async fn load_persons<'req, DB>(&self, db: DB) -> Result<Vec<Result<Person, Error>>, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let mut persons = self.interior.authorized.clone();
+        persons.push(self.interior.prime.clone());
+
+        Ok(sqlx::query_file!(
+            "db/partner/fetch_persons.sql",
+            serde_json::to_value(persons)?
+        )
+        .map(|row| {
+            Ok(Person {
+                id: Some(row.id),
+                exterior: serde_json::from_value(row.exterior)?,
+                interior: serde_json::from_value(row.interior)?,
+            })
+        })
+        .fetch_all(db)
+        .await?)
+    }
+
+    pub async fn load_opportunities<'req, DB>(
+        &self,
+        db: DB,
+    ) -> Result<Vec<Result<Opportunity, Error>>, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        Ok(sqlx::query_file!(
+            "db/partner/fetch_opportunities.sql",
+            serde_json::to_value(self.exterior.uid)?
+        )
+        .map(|row| {
+            Ok(Opportunity {
+                id: Some(row.id),
+                exterior: serde_json::from_value(row.exterior)?,
+                interior: serde_json::from_value(row.interior)?,
+            })
+        })
+        .fetch_all(db)
+        .await?)
+    }
+
     pub fn validate(&mut self) -> Result<(), Error> {
         self.exterior.name = self.exterior.name.trim_matches(char::is_whitespace).into();
 
@@ -83,7 +124,7 @@ impl Partner {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/partner/get_by_uid.sql", uid)
+        let rec = sqlx::query_file!("db/partner/get_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
 
@@ -98,7 +139,7 @@ impl Partner {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let rec = sqlx::query_file!("db/partner/exists_by_uid.sql", uid)
+        let rec = sqlx::query_file!("db/partner/exists_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
 
