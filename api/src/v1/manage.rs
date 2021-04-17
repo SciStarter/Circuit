@@ -1,4 +1,4 @@
-use super::{check_jwt, issue_jwt, random_string, redirect, set_csrf_cookie};
+use super::{check_csrf, check_jwt, issue_jwt, random_string, redirect, set_csrf_cookie};
 use crate::model::{partner::PartnerReference, person::Permission, Partner, Person};
 use askama::Template;
 use sqlx::postgres::Postgres;
@@ -41,7 +41,11 @@ async fn authorize(mut req: tide::Request<()>) -> tide::Result {
         Method::Post => {
             let mut form: AuthorizeForm = req.body_form().await?;
 
-            if form.csrf != req.cookie("csrftoken").map(|c| c.value().to_string()) {
+            if let Some(csrf) = &form.csrf {
+                if !check_csrf(&req, csrf) {
+                    return Ok("CSRF validation failed".into());
+                }
+            } else {
                 return Ok("CSRF validation failed".into());
             }
 
@@ -119,6 +123,10 @@ async fn partners(mut req: tide::Request<()>) -> tide::Result {
         }
         Method::Post => {
             let form: PartnersForm = req.body_form().await?;
+
+            if !check_csrf(&req, &form.csrf) {
+                return Ok("CSRF validation failed".into());
+            }
 
             let mut partner = Partner::default();
             partner.exterior.name = form.name;

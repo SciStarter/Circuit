@@ -69,6 +69,14 @@ pub fn set_csrf_cookie(mut resp: Response, csrf: &str) -> Response {
     resp
 }
 
+pub fn check_csrf(req: &tide::Request<()>, csrf: &str) -> bool {
+    if let Some(cookie) = req.cookie("csrftoken") {
+        csrf == cookie.value()
+    } else {
+        false
+    }
+}
+
 pub fn random_string() -> String {
     thread_rng()
         .sample_iter(&Alphanumeric)
