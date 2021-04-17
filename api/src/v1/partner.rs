@@ -1,15 +1,13 @@
-use crate::model::{self, partner::Partner};
-use jwt::SignWithKey;
+use crate::model::Partner;
 use sqlx::postgres::Postgres;
 use sqlx::prelude::*;
 use tide::http::StatusCode;
 use tide::prelude::*;
 use tide_fluent_routes::prelude::*;
 use tide_sqlx::SQLxRequestExt;
-use time::OffsetDateTime;
 use uuid::Uuid;
 
-use super::{error, success, JWT_SIGNING_KEY};
+use super::{error, issue_jwt, success};
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
     routes.at("authorize", |r| r.post(partner_authorize))
@@ -37,8 +35,8 @@ pub async fn partner_authorize(mut req: tide::Request<()>) -> tide::Result {
         }
     };
 
-    if let Some(hashed) = partner.interior.secret {
-        if !djangohashers::check_password_tolerant(&body.secret, &hashed) {
+    if let Some(valid) = partner.check_secret_full(&body.secret) {
+        if !valid {
             return Ok(error(StatusCode::Forbidden, "Invalid uid or secret"));
         }
     } else {
@@ -48,17 +46,7 @@ pub async fn partner_authorize(mut req: tide::Request<()>) -> tide::Result {
         ));
     }
 
-    let now = (OffsetDateTime::now_utc() - OffsetDateTime::unix_epoch()).as_seconds_f64()
-        as jwt::claims::SecondsSinceEpoch;
-
-    let mut claims = jwt::RegisteredClaims::default();
-    claims.subject = Some(partner.exterior.uid.to_string());
-    claims.audience = Some(model::ROOT_NAMESPACE.to_string());
-    claims.issuer = Some(model::ROOT_NAMESPACE.to_string());
-    claims.issued_at = Some(now);
-    claims.expiration = Some(now + (6 * 60 * 60));
-
-    let token = claims.sign_with_key(&*JWT_SIGNING_KEY)?;
+    let token = issue_jwt(&partner.exterior.uid)?;
 
     success(&json!({ "token": token }))
 }
