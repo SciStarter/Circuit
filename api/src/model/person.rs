@@ -59,22 +59,28 @@ impl Default for IncomeLevel {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum Permission {
     All,
     ManageOpportunities,
     ManagePartners,
     ManagePersons,
+    ManageSomething,
 }
 
 impl Permission {
     pub fn grants(grantor: &Permission, grantee: &Permission) -> bool {
+        if grantor == grantee {
+            return true;
+        }
+
         match (grantor, grantee) {
             (Permission::All, _) => true,
-            (Permission::ManageOpportunities, Permission::ManageOpportunities) => true,
-            (Permission::ManagePartners, Permission::ManagePartners) => true,
-            (Permission::ManagePersons, Permission::ManagePersons) => true,
+            (Permission::ManageOpportunities, Permission::ManageSomething) => true,
+            (Permission::ManagePartners, Permission::ManageSomething) => true,
+            (Permission::ManagePersons, Permission::ManageSomething) => true,
+
             _ => false,
         }
     }
@@ -174,8 +180,33 @@ pub struct Person {
 }
 
 impl Person {
+    pub fn check_permission(&self, perm: &Permission) -> bool {
+        Permission::check(&self.interior.permissions, perm)
+    }
+
     pub fn set_password(&mut self, password: &str) {
         self.interior.password = Some(djangohashers::make_password(password));
+    }
+
+    /// Checks whether the person has a password, and if so whether
+    /// the password matches. The three possible outcomes are
+    /// represented by the Option<bool> return type.
+    pub fn check_password_full(&self, password: &str) -> Option<bool> {
+        if let Some(hashed) = &self.interior.password {
+            Some(djangohashers::check_password_tolerant(password, &hashed))
+        } else {
+            None
+        }
+    }
+
+    /// Checks whether the password is the person's password. If the
+    /// person has no password, returns false for any parameter value.
+    pub fn check_password(&self, password: &str) -> bool {
+        if let Some(valid) = self.check_password_full(password) {
+            valid
+        } else {
+            false
+        }
     }
 
     pub async fn load_partners<'req, DB>(

@@ -145,6 +145,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "askama_tide"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12d2cbee67c51e2d2a33fa1988b2416688ffb1428025806a0ca0337d7df4e5da"
+dependencies = [
+ "askama",
+ "tide",
+]
+
+[[package]]
 name = "async-attributes"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1774,12 +1784,14 @@ name = "server"
 version = "0.1.0"
 dependencies = [
  "askama",
+ "askama_tide",
  "async-std",
  "djangohashers",
  "hex",
  "hmac 0.10.1",
  "jwt",
  "once_cell",
+ "rand 0.8.3",
  "serde",
  "serde_json",
  "sha2",
@@ -1789,6 +1801,7 @@ dependencies = [
  "tide-fluent-routes",
  "tide-sqlx",
  "time 0.2.26",
+ "urlencoding",
  "uuid",
 ]
 
@@ -2304,6 +2317,12 @@ dependencies = [
  "percent-encoding",
  "serde",
 ]
+
+[[package]]
+name = "urlencoding"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9232eb53352b4442e40d7900465dfc534e8cb2dc8f18656fcb2ac16112b5593"
 
 [[package]]
 name = "uuid"

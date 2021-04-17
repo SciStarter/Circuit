@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Log in</title>
+  </head>
+  <body>
+    <h1>Log in</h1>
+    <p>{% match error %}{% when Some with (error) %}{{ error }}{% else %}{% endmatch %}</p>
+    <form method="post">
+      <input type="hidden" name="csrf" value="{% match csrf %}{% when Some with (csrf) %}{{csrf}}{% else %}csrf-missing{% endmatch %}">
+      {% match next %}
+      {% when Some with (next) %}
+      <input type="hidden" name="next" value="{{next}}">
+      {% else %}
+      {% endmatch %}
+      <div><input type="email" name="email" {% match email %}{% when Some with (email) %}value="{{email}}" {% else %}{% endmatch %}placeholder="me@example.com"></div>
+      <div><input type="password" name="password"></div>
+      <input type="submit" value="Log in">
+    </form>
+  </body>
+</html>

@@ -1,5 +1,7 @@
 use once_cell::sync::Lazy;
 pub use opportunity::{Opportunity, OpportunityExterior, OpportunityInterior};
+pub use partner::Partner;
+pub use person::Person;
 use thiserror::Error;
 
 pub mod opportunity;

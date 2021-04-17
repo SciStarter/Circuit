@@ -34,6 +34,13 @@ pub struct PartnerInterior {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
+pub struct PartnerReference {
+    pub id: i32,
+    pub uid: Uuid,
+    pub name: String,
+}
+
+#[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Partner {
     pub id: Option<i32>,
     #[serde(flatten)]
@@ -45,6 +52,42 @@ pub struct Partner {
 impl Partner {
     pub fn set_secret(&mut self, secret: &str) {
         self.interior.secret = Some(djangohashers::make_password(secret));
+    }
+
+    pub fn check_secret_full(&self, secret: &str) -> Option<bool> {
+        if let Some(hashed) = &self.interior.secret {
+            Some(djangohashers::check_password_tolerant(secret, &hashed))
+        } else {
+            None
+        }
+    }
+
+    pub fn check_secret(&self, secret: &str) -> bool {
+        if let Some(valid) = self.check_secret_full(secret) {
+            valid
+        } else {
+            false
+        }
+    }
+
+    pub async fn catalog<'req, DB>(db: DB) -> Result<Vec<PartnerReference>, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        Ok(sqlx::query_file!("db/partner/catalog.sql")
+            .map(|row| PartnerReference {
+                id: row.id,
+                uid: row
+                    .uid
+                    .and_then(|x| serde_json::from_value(x).ok())
+                    .unwrap_or_else(|| Default::default()),
+                name: row
+                    .name
+                    .and_then(|x| serde_json::from_value(x).ok())
+                    .unwrap_or_else(|| Default::default()),
+            })
+            .fetch_all(db)
+            .await?)
     }
 
     pub async fn load_persons<'req, DB>(&self, db: DB) -> Result<Vec<Result<Person, Error>>, Error>
