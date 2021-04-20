@@ -85,14 +85,13 @@ async fn opportunity_get(req: tide::Request<()>) -> tide::Result {
         }
     };
 
-    if let Some(auth) = auth {
-        if auth == opp.exterior.partner {
-            success(&opp)
-        } else {
-            success(&opp.exterior)
-        }
-    } else {
-        success(&opp.exterior)
+    match (auth, opp.interior.withdrawn) {
+        (Some(auth), _) if auth == opp.exterior.partner => success(&opp),
+        (_, false) => success(&opp.exterior),
+        _ => Ok(error(
+            StatusCode::NotFound,
+            "Could not load opportunity with that id",
+        )),
     }
 }
 

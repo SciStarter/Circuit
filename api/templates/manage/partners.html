@@ -17,11 +17,17 @@
       </tr>
       {% endfor %}
     </table>
+    <h1>Add Partner</h1>
     <form method="post">
       <input type="hidden" name="csrf" value="{{csrf}}">
       <div><input type="text" name="name" placeholder="partner name"></div>
       <div><input type="text" name="secret" placeholder="partner secret" value="{{suggested_secret}}"></div>
+      <div><input type="text" name="manager_name" placeholder="manager name"></div>
+      <div><input type="text" name="manager_email" placeholder="manager email"></div>
+      <div><input type="text" name="manager_phone" placeholder="manager_phone"></div>
+      <div><textarea name="manager_mailing" placeholder="manager mailing address"></textarea></div>
       <input type="submit" value="Add partner">
     </form>
+    <a href="..">Back to management</a>
   </body>
 </html>

@@ -1,7 +1,7 @@
 use crate::model::Partner;
 use sqlx::postgres::Postgres;
 use sqlx::prelude::*;
-use tide::http::StatusCode;
+use tide::http::{mime, StatusCode};
 use tide::prelude::*;
 use tide_fluent_routes::prelude::*;
 use tide_sqlx::SQLxRequestExt;
@@ -20,6 +20,20 @@ struct PartnerAuthorize {
 }
 
 pub async fn partner_authorize(mut req: tide::Request<()>) -> tide::Result {
+    if let Some(ct) = req.content_type() {
+        if ct != mime::JSON {
+            return Ok(error(
+                StatusCode::BadRequest,
+                "Content-Type header must specify application/json",
+            ));
+        }
+    } else {
+        return Ok(error(
+            StatusCode::BadRequest,
+            "Content-Type header is required",
+        ));
+    }
+
     let body: PartnerAuthorize = match req.body_json().await {
         Ok(data) => data,
         Err(x) => return Ok(error(StatusCode::BadRequest, x.to_string())),
