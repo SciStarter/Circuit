@@ -7,10 +7,10 @@ use uuid::Uuid;
 #[derive(Default, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Contact {
-    name: String,
-    email: String,
-    phone: Option<String>,
-    mailing: Option<String>,
+    pub name: String,
+    pub email: String,
+    pub phone: Option<String>,
+    pub mailing: Option<String>,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -142,7 +142,7 @@ impl Partner {
         }
 
         if self.interior.prime.is_nil() {
-            return Err(Error::Missing("manager".into()));
+            return Err(Error::Missing("prime".into()));
         }
 
         if self.exterior.uid.is_nil() {

@@ -7,17 +7,29 @@ use tide::{http::Cookie, prelude::*};
 use tide::{Response, StatusCode};
 use tide_fluent_routes::prelude::*;
 use tide_sqlx::SQLxRequestExt;
+use uuid::Uuid;
 
-const BASE: &'static str = "/api/v1/manage";
+const BASE: &'static str = "/api/v1/manage/";
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
     routes
+        .get(manage)
         .at("authorize", |r| r.get(authorize).post(authorize))
-        .at("partners", |r| {
+        .at("partners/", |r| {
             r.get(partners)
                 .post(partners)
                 .at(":uid", |r| r.get(partner).post(partner))
         })
+}
+
+#[derive(Template)]
+#[template(path = "manage/manage.html")]
+struct ManagePage {}
+
+async fn manage(_req: tide::Request<()>) -> tide::Result {
+    let page = ManagePage {};
+
+    Ok(page.into())
 }
 
 #[derive(Template, Default, Serialize, Deserialize)]
@@ -101,10 +113,14 @@ struct PartnersForm {
     csrf: String,
     name: String,
     secret: String,
+    manager_name: String,
+    manager_email: String,
+    manager_phone: Option<String>,
+    manager_mailing: Option<String>,
 }
 
 async fn partners(mut req: tide::Request<()>) -> tide::Result {
-    let _manager = match authorized_manager(&req, &Permission::ManagePartners).await {
+    let admin = match authorized_admin(&req, &Permission::ManagePartners).await {
         Ok(uid) => uid,
         Err(resp) => return Ok(resp),
     };
@@ -129,8 +145,13 @@ async fn partners(mut req: tide::Request<()>) -> tide::Result {
             }
 
             let mut partner = Partner::default();
+            partner.interior.prime = admin.exterior.uid.clone();
             partner.exterior.name = form.name;
             partner.set_secret(&form.secret);
+            partner.interior.manager.name = form.manager_name;
+            partner.interior.manager.email = form.manager_email;
+            partner.interior.manager.phone = form.manager_phone;
+            partner.interior.manager.mailing = form.manager_mailing;
 
             let mut db = req.sqlx_conn::<Postgres>().await;
             partner.store(db.acquire().await?).await?;
@@ -146,23 +167,42 @@ async fn partners(mut req: tide::Request<()>) -> tide::Result {
     }
 }
 
-async fn partner(_req: tide::Request<()>) -> tide::Result {
-    todo!()
+#[derive(Template, Default)]
+#[template(path = "manage/partner.html")]
+struct PartnerPage {
+    partner: Partner,
 }
 
-async fn authorized_manager(
+async fn partner(req: tide::Request<()>) -> tide::Result {
+    let _admin = match authorized_admin(&req, &Permission::ManagePartners).await {
+        Ok(uid) => uid,
+        Err(resp) => return Ok(resp),
+    };
+
+    let uid = Uuid::parse_str(req.param("uid")?)?;
+
+    let mut db = req.sqlx_conn::<Postgres>().await;
+
+    let partner = Partner::load_by_uid(db.acquire().await?, &uid).await?;
+
+    let page = PartnerPage { partner };
+
+    Ok(page.into())
+}
+
+async fn authorized_admin(
     req: &tide::Request<()>,
     needed: &Permission,
 ) -> Result<Person, tide::Response> {
     let token = match req.cookie("token") {
         Some(token) => token.value().to_string(),
-        None => return Err(redirect(&format!("{}/authorize", BASE))),
+        None => return Err(redirect(&format!("{}authorize", BASE))),
     };
 
     let uid = match check_jwt(&token) {
         Ok(Some(uid)) => uid,
-        Ok(None) => return Err(redirect(&format!("{}/authorize", BASE))),
-        Err(_) => return Err(redirect(&format!("{}/authorize", BASE))),
+        Ok(None) => return Err(redirect(&format!("{}authorize", BASE))),
+        Err(_) => return Err(redirect(&format!("{}authorize", BASE))),
     };
 
     let mut db = req.sqlx_conn::<Postgres>().await;
@@ -190,7 +230,7 @@ async fn authorized_manager(
 
     if !person.check_permission(needed) {
         return Err(redirect(&format!(
-            "{}/authorize?next={}",
+            "{}authorize?next={}",
             BASE,
             urlencoding::encode(req.url().as_str())
         )));

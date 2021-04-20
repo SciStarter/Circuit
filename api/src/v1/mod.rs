@@ -23,9 +23,9 @@ pub static JWT_SIGNING_KEY: Lazy<Hmac<Sha256>> =
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
     routes
-        .at("partner", partner::routes)
-        .at("opportunity", opportunity::routes)
-        .at("manage", manage::routes)
+        .at("partner/", partner::routes)
+        .at("opportunity/", opportunity::routes)
+        .at("manage/", manage::routes)
 }
 
 pub fn success<J>(json: &J) -> tide::Result
@@ -100,14 +100,15 @@ pub fn issue_jwt(uid: &Uuid) -> Result<String, jwt::Error> {
 }
 
 pub fn check_jwt(token: &str) -> Result<Option<Uuid>, Response> {
-    let claims: jwt::RegisteredClaims = token
-        .verify_with_key(&*JWT_SIGNING_KEY)
-        .map_err(|_| error(StatusCode::Forbidden, "Invalid authorization token"))?;
+    let claims: jwt::RegisteredClaims = token.verify_with_key(&*JWT_SIGNING_KEY).map_err(|e| {
+        dbg!(e);
+        error(StatusCode::Forbidden, "Invalid authorization token")
+    })?;
 
     let now = (OffsetDateTime::now_utc() - OffsetDateTime::unix_epoch()).as_seconds_f64()
         as jwt::claims::SecondsSinceEpoch;
 
-    if claims.expiration.unwrap_or(u64::MAX) >= now
+    if claims.expiration.unwrap_or(u64::MAX) < now
         || claims.audience != Some(model::ROOT_NAMESPACE.to_string())
         || claims.issuer != Some(model::ROOT_NAMESPACE.to_string())
     {
@@ -124,18 +125,20 @@ pub fn check_jwt(token: &str) -> Result<Option<Uuid>, Response> {
 }
 
 pub fn header_check(req: &tide::Request<()>) -> Result<Option<Uuid>, Response> {
-    if let Some(ct) = req.content_type() {
-        if ct != mime::JSON {
+    if req.method() != tide::http::Method::Get {
+        if let Some(ct) = req.content_type() {
+            if ct != mime::JSON {
+                return Err(error(
+                    StatusCode::BadRequest,
+                    "Content-Type header must specify application/json",
+                ));
+            }
+        } else {
             return Err(error(
                 StatusCode::BadRequest,
-                "Content-Type header must specify application/json",
+                "Content-Type header is required",
             ));
         }
-    } else {
-        return Err(error(
-            StatusCode::BadRequest,
-            "Content-Type header is required",
-        ));
     }
 
     if let Some(header) = req.header("Authorization") {
