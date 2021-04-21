@@ -41,10 +41,10 @@ impl Default for OrganizationType {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EntityType {
-    Opportunity,
+    Unspecified,
     Attraction,
     #[serde(other)]
-    Unspecified,
+    Opportunity,
 }
 
 impl Default for EntityType {
@@ -241,6 +241,18 @@ impl Default for LocationType {
     }
 }
 
+fn zero() -> i16 {
+    0
+}
+
+fn nineninetynine() -> i16 {
+    999
+}
+
+fn en_us() -> Vec<String> {
+    vec!["en-US".to_string()]
+}
+
 #[derive(Default, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityExterior {
@@ -253,7 +265,9 @@ pub struct OpportunityExterior {
     pub organization_type: OrganizationType,
     pub organization_website: String,
     pub entity_type: EntityType,
+    #[serde(default = "zero")]
     pub min_age: i16,
+    #[serde(default = "nineninetynine")]
     pub max_age: i16,
     pub pes_domain: Domain,
     pub tags: HashSet<String>,
@@ -266,6 +280,7 @@ pub struct OpportunityExterior {
     pub end_dates: Vec<OffsetDateTime>,
     pub attraction_hours: Option<OpenDays>,
     pub cost: Cost,
+    #[serde(default = "en_us")]
     pub languages: Vec<String>,
     pub is_online: bool,
     pub location_type: LocationType,

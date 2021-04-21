@@ -47,7 +47,9 @@ async fn opportunity_new(mut req: tide::Request<()>) -> tide::Result {
         ));
     }
 
-    opp.store(db.acquire().await?).await?;
+    if let Err(err) = opp.store(db.acquire().await?).await {
+        return Ok(error(StatusCode::BadRequest, err.to_string()));
+    }
 
     let res = Response::builder(StatusCode::Created)
         .content_type(mime::JSON)
@@ -151,7 +153,9 @@ async fn opportunity_put(mut req: tide::Request<()>) -> tide::Result {
     new_opp.id = old_opp.id;
     new_opp.interior.accepted = old_opp.interior.accepted;
 
-    new_opp.store(db.acquire().await?).await?;
+    if let Err(err) = new_opp.store(db.acquire().await?).await {
+        return Ok(error(StatusCode::BadRequest, err.to_string()));
+    }
 
     success(&new_opp)
 }
