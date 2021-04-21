@@ -53,6 +53,36 @@
       ]
     }
   },
+  "2df17666d71246bf68b8ee4ef021d2c5a269995271d3f598a94d0df314fec0e4": {
+    "query": "select id, (exterior -> 'uid') as \"uid\", (exterior -> 'name') as \"name\" from c_partner;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "uid",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "name",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        null,
+        null
+      ]
+    }
+  },
   "36f5e907e4ae50d5b4273a2c35c0b4111863f7173f2cdbbf7b89cd741a1c3da8": {
     "query": "select id, exterior, interior from c_opportunity where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n",
     "describe": {
