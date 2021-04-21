@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-api-beta
-        image: scistarter/circuit-api:0.1.8
+        image: scistarter/circuit-api:0.1.11
         ports:
         - containerPort: 8000
         env:
@@ -27,17 +27,17 @@ spec:
               key: DATABASE_URL
         - name: SUPERUSER_EMAIL
           valueFrom:
-            sercretKeyRef:
+            secretKeyRef:
               name: superuser-secret-beta
               key: SUPERUSER_EMAIL
         - name: SUPERUSER_PASSWORD
           valueFrom:
-            sercretKeyRef:
+            secretKeyRef:
               name: superuser-secret-beta
               key: SUPERUSER_PASSWORD
         - name: JWT_SIGNING_KEY
           valueFrom:
-            sercretKeyRef:
+            secretKeyRef:
               name: jwt-signing-beta
               key: JWT_SIGNING_KEY
 ---

@@ -1,7 +1,7 @@
 begin;
 
-create extension postgis;
-create extension postgis_raster;
+create extension if not exists postgis;
+create extension if not exists postgis_raster;
 
 create function set_updated()
 returns trigger as $body$
