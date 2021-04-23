@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-logger-deploy-beta
+  labels:
+    app: circuit-logger-beta
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circuit-logger-beta
+  template:
+    metadata:
+      labels:
+        app: circuit-logger-beta
+    spec:
+      containers:
+      - name: circuit-logger-beta
+        image: scistarter/circuit-logger:0.1.4
+        ports:
+        - containerPort: 9000
+        env:
+        - name: LOGGER_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: LOGGER_ENDPOINT
+        - name: LOGGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: LOGGER_ACCESS_KEY
+        - name: LOGGER_LOGGER_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: LOGGER_SECRET
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circuit-logger-service-beta
+spec:
+  selector:
+    app: circuit-logger-beta
+  ports:
+    - protocol: TCP
+      port: 9000
+
