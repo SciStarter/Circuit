@@ -1,5 +1,5 @@
-REPO="scistarter/circuit-frontend"
-RELEASE=0.1
+REPO:="scistarter/circuit-frontend"
+RELEASE:=0.1
 PATCH=`cat PATCH`
 
 version:
@@ -11,9 +11,8 @@ imageid:
 bump:
 	echo $$(( $(PATCH) + 1 )) > PATCH
 
-image: bump ../Dockerfile.frontend
-	P=$(shell cat PATCH)
-	cd .. && docker build -f Dockerfile.frontend -t "$(REPO):$(RELEASE).$(P)" .
+image: bump ../Dockerfile.api
+	docker build -f ../Dockerfile.frontend -t "$(REPO):$(RELEASE).$(PATCH)" ..
 
 upload: image
 	docker push "$(REPO):$(RELEASE).$(PATCH)"
