@@ -1,12 +1,12 @@
 #![forbid(unsafe_code)]
 
+use common::model;
 use sqlx::postgres::Postgres;
 use sqlx::{postgres::PgPoolOptions, Acquire};
 use tide::log;
 use tide_fluent_routes::{fs::ServeFs, prelude::*};
 use tide_sqlx::{SQLxMiddleware, SQLxRequestExt};
 
-pub mod model;
 pub mod v1;
 
 async fn initialize(req: tide::Request<()>) -> tide::Result {
@@ -38,7 +38,7 @@ async fn main() -> tide::Result<()> {
         .connect(&std::env::var("DATABASE_URL")?)
         .await?;
 
-    sqlx::migrate!().run(&pool).await?;
+    common::migrate(&pool).await?;
 
     #[cfg(not(debug_assertions))]
     log::with_level(log::LevelFilter::Warn);

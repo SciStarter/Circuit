@@ -1,4 +1,4 @@
-use crate::model;
+use common::model;
 use hmac::{Hmac, NewMac};
 use jwt::SignWithKey;
 use jwt::VerifyWithKey;
