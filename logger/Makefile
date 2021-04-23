@@ -1,4 +1,4 @@
-REPO:="scistarter/circuit-frontend"
+REPO:="scistarter/circuit-logger"
 RELEASE:=0.1
 PATCH=`cat PATCH`
 
@@ -11,8 +11,8 @@ imageid:
 bump:
 	echo $$(( $(PATCH) + 1 )) > PATCH
 
-image: bump ../Dockerfile.frontend
-	docker build -f ../Dockerfile.frontend -t "$(REPO):$(RELEASE).$(PATCH)" ..
+image: bump ../Dockerfile.logger
+	docker build -f ../Dockerfile.logger -t "$(REPO):$(RELEASE).$(PATCH)" ..
 
 upload: image
 	docker push "$(REPO):$(RELEASE).$(PATCH)"

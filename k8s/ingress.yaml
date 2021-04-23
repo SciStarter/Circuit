@@ -28,6 +28,13 @@ spec:
             name: circuit-api-service-beta
             port:
               number: 8000
+      - path: /api/log
+        pathType: Prefix
+        backend:
+          service:
+            name: circuit-logger-service-beta
+            port:
+              number: 9000
       - path: /
         pathType: Prefix
         backend:
