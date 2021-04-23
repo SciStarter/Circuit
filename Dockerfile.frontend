@@ -1,6 +1,6 @@
 FROM node:15
 EXPOSE 3000
-COPY . .
+COPY frontend/ .
 RUN yarn build
 CMD ["yarn", "start", "-H", "0.0.0.0"]
 

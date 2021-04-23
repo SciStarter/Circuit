@@ -11,11 +11,12 @@ imageid:
 bump:
 	echo $$(( $(PATCH) + 1 )) > PATCH
 
-image: bump Dockerfile
-	docker build -t "$(REPO):$(RELEASE).$(PATCH)" .
+image: bump ../Dockerfile.frontend
+	P=$(shell cat PATCH)
+	cd .. && docker build -f Dockerfile.frontend -t "$(REPO):$(RELEASE).$(P)" .
 
 upload: image
 	docker push "$(REPO):$(RELEASE).$(PATCH)"
-	echo "Uploaded $(RELEASE).$(PATCH)"
+	@echo "Uploaded $(RELEASE).$(PATCH)"
 
 .PHONY: image upload bump version

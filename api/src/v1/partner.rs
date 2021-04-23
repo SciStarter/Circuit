@@ -1,4 +1,4 @@
-use crate::model::Partner;
+use common::model::Partner;
 use sqlx::postgres::Postgres;
 use sqlx::prelude::*;
 use tide::http::{mime, StatusCode};

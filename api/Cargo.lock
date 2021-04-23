@@ -598,6 +598,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "async-std",
+ "djangohashers",
+ "hex",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx",
+ "thiserror",
+ "time 0.2.26",
+ "uuid",
+]
+
+[[package]]
 name = "concurrent-queue"
 version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1784,6 +1801,7 @@ dependencies = [
  "askama",
  "askama_tide",
  "async-std",
+ "common",
  "djangohashers",
  "hex",
  "hmac 0.10.1",
@@ -1794,7 +1812,6 @@ dependencies = [
  "serde_json",
  "sha2",
  "sqlx",
- "thiserror",
  "tide",
  "tide-fluent-routes",
  "tide-sqlx",

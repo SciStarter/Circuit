@@ -11,8 +11,9 @@ imageid:
 bump:
 	echo $$(( $(PATCH) + 1 )) > PATCH
 
-image: bump Dockerfile
-	docker build -t "$(REPO):$(RELEASE).$(PATCH)" .
+image: bump ../Dockerfile.api
+	P=$(shell cat PATCH)
+	cd .. && docker build -f Dockerfile.api -t "$(REPO):$(RELEASE).$(P)" .
 
 upload: image
 	docker push "$(REPO):$(RELEASE).$(PATCH)"

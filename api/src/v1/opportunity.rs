@@ -1,4 +1,4 @@
-use crate::model::opportunity::Opportunity;
+use common::model::opportunity::Opportunity;
 use sqlx::postgres::Postgres;
 use sqlx::prelude::*;
 use tide::http::{mime, StatusCode};

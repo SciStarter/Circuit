@@ -1,6 +1,6 @@
 use super::{check_csrf, check_jwt, issue_jwt, random_string, redirect, set_csrf_cookie};
-use crate::model::{partner::PartnerReference, person::Permission, Partner, Person};
 use askama::Template;
+use common::model::{partner::PartnerReference, person::Permission, Partner, Person};
 use sqlx::postgres::Postgres;
 use sqlx::prelude::*;
 use tide::{http::Cookie, prelude::*};
