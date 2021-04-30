@@ -1,703 +1,703 @@
 {
-  "openapi": "3.0.3",
-  "info": {
-    "title": "Circuit API v1",
-    "version": "1.0.0"
-  },
-  "servers": [
-    {
-      "url": "https://beta.sciencenearme.org/api/v1",
-      "description": "Beta server on ScienceNearMe.org"
-    }
-  ],
-  "components": {
-    "schemas": {
-      "opportunity": {
-        "type": "object",
-        "required": [
-          "partner_name",
-          "title",
-          "partner_opp_url",
-          "description"
-        ],
-        "properties": {
-          "uid": {
-            "type": "string",
-            "format": "uuid",
-            "default": "0000-0000-0000-0000-000000000000",
-            "description": "The UID which uniquely identifies this opportunity"
-          },
-          "title": {
-            "type": "string",
-            "description": "The visible name which will identify this opportunity to participants"
-          },
-          "description": {
-            "type": "string",
-            "description": "A textual description of the opportunity. One or two paragraphs is an ideal length."
-          },
-          "image_url": {
-            "type": "string",
-            "format": "url",
-            "default": "",
-            "description": "The URL where an image associated with this opportunity may be found"
-          },
-          "partner_opp_url": {
-            "type": "string",
-            "format": "url",
-            "description": "The URL where the partner wishes participants to be directed for this opportunity"
-          },
-          "partner_name": {
-            "type": "string",
-            "description": "The name to use to identify the originating partner for this opportunity. This is not necessarily the name of the partner making the API call; for example, partner A may be serving as a proxy for partner B"
-          },
-          "partner_created": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true,
-            "description": "The date and time when the partner's record of this opportunity was created"
-          },
-          "partner_updated": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true,
-            "description": "The date and time when the partner's record of this opportuity was last updated"
-          },
-          "organization_name": {
-            "type": "string",
-            "default": "",
-            "description": "The name of the organization which is hosting this opportunity"
-          },
-          "organization_type": {
-            "type": "string",
-            "enum": [
-              "museum_or_science_center",
-              "festival",
-              "library",
-              "college_university",
-              "pk12school",
-              "community_organization",
-              "club",
-              "zoo",
-              "acquarium",
-              "planetarium",
-              "botanical_garden",
-              "parks_and_rec",
-              "historical_site",
-              "maker_organization",
-              "company",
-              "govt_agency",
-              "unspecified"
-            ],
-            "default": "unspecified",
-            "description": "The type of organization that is hosting this opportunity"
-          },
-          "organization_website": {
-            "type": "string",
-            "format": "url",
-            "default": "",
-            "description": "The URL of the hosting organization's web site"
-          },
-          "entity_type": {
-            "type": "string",
-            "enum": [
-              "opportunity",
-              "attraction",
-              "unspecified"
-            ],
-            "default": "opportunity",
-            "description": "Opportunities are scheduled, while attractions are ongoing"
-          },
-          "min_age": {
-            "type": "integer",
-            "description": "The youngest age, in years, that the opportunity is suitable for. 0 means no lower age limit",
-            "default": 0
-          },
-          "max_age": {
-            "type": "integer",
-            "description": "The oldest age, in years, that the opportunity is suitable for. 999 means no uper age limit",
-            "default": 999
-          },
-          "pes_domain": {
-            "type": "string",
-            "enum": [
-              "citizen_science",
-              "live_science",
-              "maker",
-              "policy",
-              "out_of_school_time_program",
-              "unspecified"
-            ],
-            "default": "unspecified",
-            "description": "The high-level domain of Public Engagement in Science that this opportunity best fits into"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "default": [],
-            "description": "Arbitrary set of tags which describe this opportunity"
-          },
-          "ticket_required": {
-            "type": "boolean",
-            "default": false,
-            "description": "Participation requires a ticket"
-          },
-          "start_dates": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "default": [],
-            "description": "Dates and times at which the opportunity begins"
-          },
-          "has_end": {
-            "type": "boolean",
-            "default": false,
-            "description": "The start dates and times are paired with end dates and times in the end_dates field"
-          },
-          "end_dates": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "default": [],
-            "description": "Dates and times at which the opportunity ends. Each entry in end_dates should be paired with the corresponding entry in start_dates, so an opportunity might begin at start_dates[2] and end at end_dates[2]"
-          },
-          "attraction_hours": {
-            "type": "object",
-            "properties": {
-              "monday": {
-                "type": "object",
-                "properties": {
-                  "opens": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "closes": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
-                },
-                "nullable": true
-              },
-              "tuesday": {
-                "type": "object",
-                "properties": {
-                  "opens": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "closes": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
-                },
-                "nullable": true
-              },
-              "wednesday": {
-                "type": "object",
-                "properties": {
-                  "opens": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "closes": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
-                },
-                "nullable": true
-              },
-              "thursday": {
-                "type": "object",
-                "properties": {
-                  "opens": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "closes": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
-                },
-                "nullable": true
-              },
-              "friday": {
-                "type": "object",
-                "properties": {
-                  "opens": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "closes": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
-                },
-                "nullable": true
-              },
-              "saturday": {
-                "type": "object",
-                "properties": {
-                  "opens": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "closes": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
-                },
-                "nullable": true
-              },
-              "sunday": {
-                "type": "object",
-                "properties": {
-                  "opens": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "closes": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
-                },
-                "nullable": true
-              }
-            },
-            "nullable": true,
-            "description": "Attractions don't have start dates and end dates, but they do have open and close times on different days of the week."
-          },
-          "cost": {
-            "type": "string",
-            "enum": [
-              "free",
-              "cost",
-              "unknown"
-            ],
-            "default": "free",
-            "description": "Whether participants have a cost associated with participating in this opportunity"
-          },
-          "languages": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "rfc5646"
-            },
-            "default": [
-              "en-US"
-            ],
-            "description": "The languages the opportunity will be presented in"
-          },
-          "is_online": {
-            "type": "boolean",
-            "default": false,
-            "description": "The opportunity is presented entirely online, with no in-person component"
-          },
-          "location_type": {
-            "type": "string",
-            "enum": [
-              "any",
-              "at",
-              "near",
-              "unknown"
-            ],
-            "default": "any",
-            "description": "Display the opportunity as begin available anywhere (any), at an address (at), within a region (near), or unknown"
-          },
-          "location_name": {
-            "type": "string",
-            "default": "",
-            "description": "If the location_type is 'at' or 'near' the value of this field will be used to help participants identify the opportunity location"
-          },
-          "location_point": {
-            "type": "object",
-            "format": "point",
-            "description": "The point at which this opportunity is centered, represented as a [GeoJSON Point geometry](https://tools.ietf.org/html/rfc7946#section-3.1) object",
-            "nullable": true
-          },
-          "location_polygon": {
-            "type": "object",
-            "format": "multipolygon",
-            "description": "The region within which this opportunity is available, represented as a [GeoJSON MultiPolygon geometry](https://tools.ietf.org/html/rfc7946#section-3.1) object",
-            "nullable": true
-          },
-          "address_street": {
-            "type": "string",
-            "default": "",
-            "description": "The street part of the address for this opportunity"
-          },
-          "address_city": {
-            "type": "string",
-            "default": "",
-            "description": "The city part of the address for this opportunity"
-          },
-          "address_state": {
-            "type": "string",
-            "default": "",
-            "description": "The state or province part of the address for this opportunity"
-          },
-          "address_country": {
-            "type": "string",
-            "default": "",
-            "description": "The country part of the address for this opportunity"
-          },
-          "address_zip": {
-            "type": "string",
-            "default": "",
-            "description": "The zip or postal code part of the address for this opportunity"
-          },
-          "opp_hashtags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "default": [],
-            "description": "Hashtags to use when advertising this opportunity on social media"
-          },
-          "opp_social_handles": {
-            "type": "object",
-            "default": {},
-            "description": "Handles to use when advertising this opportunity on social media. e.g. {\"twitter\": \"@SciStarter\"}"
-          },
-          "partner": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Automatically set to the UID used for authorization when the opportunity was added.",
-            "readOnly": true
-          },
-          "accepted": {
-            "type": "boolean",
-            "readOnly": true,
-            "description": "Whether this opportunity has been accepted for publication"
-          },
-          "withdrawn": {
-            "type": "boolean",
-            "default": false,
-            "description": "If set to true, this opportunity is not visible to the public"
-          },
-          "contact_name": {
-            "type": "string",
-            "default": "",
-            "description": "The name of the person who should be contacted for administrative reasons regarding this opportunity. NOT PUBLISHED."
-          },
-          "contact_email": {
-            "type": "string",
-            "format": "email",
-            "default": "",
-            "description": "The email of the person who should be contacted for administrative reasons regarding this opportunity. NOT PUBLISHED."
-          },
-          "contact_phone": {
-            "type": "string",
-            "format": "phone",
-            "default": "",
-            "description": "The phone number of the person who should be contacted for administrative reasons regarding this opportunity. NOT PUBLISHED."
-          },
-          "extra_data": {
-            "type": "object",
-            "default": {},
-            "description": "Any additional information which should be stored as part of this opportunity record"
-          }
-        }
-      },
-      "error": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string"
-          }
-        }
-      }
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Circuit API v1",
+        "version": "1.0.0"
     },
-    "securitySchemes": {
-      "token": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
-      }
-    }
-  },
-  "paths": {
-    "/partner/authorize": {
-      "post": {
-        "summary": "Use a partner UID and secret to retrieve an authorization token",
-        "operationId": "partner_authorize",
-        "requestBody": {
-          "description": "Partner UID and secret for authentication",
-          "content": {
-            "application/json": {
-              "schema": {
+    "servers": [
+        {
+            "url": "https://beta.sciencenearme.org/api/v1",
+            "description": "Beta server on ScienceNearMe.org"
+        }
+    ],
+    "components": {
+        "schemas": {
+            "opportunity": {
                 "type": "object",
                 "required": [
-                  "uid",
-                  "secret"
+                    "partner_name",
+                    "title",
+                    "partner_opp_url",
+                    "description"
                 ],
                 "properties": {
-                  "uid": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "secret": {
-                    "type": "string",
-                    "format": "password"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "An authorization token which will remain valid for six hours after authentication",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string",
-                      "format": "JWT"
+                    "uid": {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "0000-0000-0000-0000-000000000000",
+                        "description": "The UID which uniquely identifies this opportunity"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "The visible name which will identify this opportunity to participants"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "A textual description of the opportunity. One or two paragraphs is an ideal length."
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "format": "url",
+                        "default": "",
+                        "description": "The URL where an image associated with this opportunity may be found"
+                    },
+                    "partner_opp_url": {
+                        "type": "string",
+                        "format": "url",
+                        "description": "The URL where the partner wishes participants to be directed for this opportunity"
+                    },
+                    "partner_name": {
+                        "type": "string",
+                        "description": "The name to use to identify the originating partner for this opportunity. This is not necessarily the name of the partner making the API call; for example, partner A may be serving as a proxy for partner B"
+                    },
+                    "partner_created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "The date and time when the partner's record of this opportunity was created"
+                    },
+                    "partner_updated": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "The date and time when the partner's record of this opportuity was last updated"
+                    },
+                    "organization_name": {
+                        "type": "string",
+                        "default": "",
+                        "description": "The name of the organization which is hosting this opportunity"
+                    },
+                    "organization_type": {
+                        "type": "string",
+                        "enum": [
+                            "museum_or_science_center",
+                            "festival",
+                            "library",
+                            "college_university",
+                            "pk12school",
+                            "community_organization",
+                            "club",
+                            "zoo",
+                            "acquarium",
+                            "planetarium",
+                            "botanical_garden",
+                            "parks_and_rec",
+                            "historical_site",
+                            "maker_organization",
+                            "company",
+                            "govt_agency",
+                            "unspecified"
+                        ],
+                        "default": "unspecified",
+                        "description": "The type of organization that is hosting this opportunity"
+                    },
+                    "organization_website": {
+                        "type": "string",
+                        "format": "url",
+                        "default": "",
+                        "description": "The URL of the hosting organization's web site"
+                    },
+                    "entity_type": {
+                        "type": "string",
+                        "enum": [
+                            "opportunity",
+                            "attraction",
+                            "unspecified"
+                        ],
+                        "default": "opportunity",
+                        "description": "Opportunities are scheduled, while attractions are ongoing"
+                    },
+                    "min_age": {
+                        "type": "integer",
+                        "description": "The youngest age, in years, that the opportunity is suitable for. 0 means no lower age limit",
+                        "default": 0
+                    },
+                    "max_age": {
+                        "type": "integer",
+                        "description": "The oldest age, in years, that the opportunity is suitable for. 999 means no uper age limit",
+                        "default": 999
+                    },
+                    "pes_domain": {
+                        "type": "string",
+                        "enum": [
+                            "citizen_science",
+                            "live_science",
+                            "maker",
+                            "policy",
+                            "out_of_school_time_program",
+                            "unspecified"
+                        ],
+                        "default": "unspecified",
+                        "description": "The high-level domain of Public Engagement in Science that this opportunity best fits into"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "description": "Arbitrary set of tags which describe this opportunity"
+                    },
+                    "ticket_required": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Participation requires a ticket"
+                    },
+                    "start_datetimes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "default": [],
+                        "description": "Dates and times at which the opportunity begins"
+                    },
+                    "has_end": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "The start dates and times are paired with end dates and times in the end_dates field"
+                    },
+                    "end_datetimes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "default": [],
+                        "description": "Dates and times at which the opportunity ends. Each entry in end_datetimes should be paired with the corresponding entry in start_datetimes, so an opportunity might begin at start_datetimes[2] and end at end_datetimes[2]"
+                    },
+                    "attraction_hours": {
+                        "type": "object",
+                        "properties": {
+                            "monday": {
+                                "type": "object",
+                                "properties": {
+                                    "opens": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "closes": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "nullable": true
+                            },
+                            "tuesday": {
+                                "type": "object",
+                                "properties": {
+                                    "opens": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "closes": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "nullable": true
+                            },
+                            "wednesday": {
+                                "type": "object",
+                                "properties": {
+                                    "opens": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "closes": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "nullable": true
+                            },
+                            "thursday": {
+                                "type": "object",
+                                "properties": {
+                                    "opens": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "closes": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "nullable": true
+                            },
+                            "friday": {
+                                "type": "object",
+                                "properties": {
+                                    "opens": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "closes": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "nullable": true
+                            },
+                            "saturday": {
+                                "type": "object",
+                                "properties": {
+                                    "opens": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "closes": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "nullable": true
+                            },
+                            "sunday": {
+                                "type": "object",
+                                "properties": {
+                                    "opens": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "closes": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "nullable": true
+                            }
+                        },
+                        "nullable": true,
+                        "description": "Attractions don't have start dates and end dates, but they do have open and close times on different days of the week. The attraction_hours field should only be used if the opportunity not tied to specific dates (and specific times on those dates), but instead is always available, subject to the schedule described here."
+                    },
+                    "cost": {
+                        "type": "string",
+                        "enum": [
+                            "free",
+                            "cost",
+                            "unknown"
+                        ],
+                        "default": "free",
+                        "description": "Whether participants have a cost associated with participating in this opportunity"
+                    },
+                    "languages": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "rfc5646"
+                        },
+                        "default": [
+                            "en-US"
+                        ],
+                        "description": "The languages the opportunity will be presented in"
+                    },
+                    "is_online": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "The opportunity is presented entirely online, with no in-person component"
+                    },
+                    "location_type": {
+                        "type": "string",
+                        "enum": [
+                            "any",
+                            "at",
+                            "near",
+                            "unknown"
+                        ],
+                        "default": "any",
+                        "description": "Display the opportunity as begin available anywhere (any), at an address (at), within a region (near), or unknown"
+                    },
+                    "location_name": {
+                        "type": "string",
+                        "default": "",
+                        "description": "If the location_type is 'at' or 'near' the value of this field will be used to help participants identify the opportunity location"
+                    },
+                    "location_point": {
+                        "type": "object",
+                        "format": "point",
+                        "description": "The point at which this opportunity is centered, represented as a [GeoJSON Point geometry](https://tools.ietf.org/html/rfc7946#section-3.1) object",
+                        "nullable": true
+                    },
+                    "location_polygon": {
+                        "type": "object",
+                        "format": "multipolygon",
+                        "description": "The region within which this opportunity is available, represented as a [GeoJSON MultiPolygon geometry](https://tools.ietf.org/html/rfc7946#section-3.1) object",
+                        "nullable": true
+                    },
+                    "address_street": {
+                        "type": "string",
+                        "default": "",
+                        "description": "The street part of the address for this opportunity"
+                    },
+                    "address_city": {
+                        "type": "string",
+                        "default": "",
+                        "description": "The city part of the address for this opportunity"
+                    },
+                    "address_state": {
+                        "type": "string",
+                        "default": "",
+                        "description": "The state or province part of the address for this opportunity"
+                    },
+                    "address_country": {
+                        "type": "string",
+                        "default": "",
+                        "description": "The country part of the address for this opportunity"
+                    },
+                    "address_zip": {
+                        "type": "string",
+                        "default": "",
+                        "description": "The zip or postal code part of the address for this opportunity"
+                    },
+                    "opp_hashtags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "description": "Hashtags to use when advertising this opportunity on social media"
+                    },
+                    "opp_social_handles": {
+                        "type": "object",
+                        "default": {},
+                        "description": "Handles to use when advertising this opportunity on social media. e.g. {\"twitter\": \"@SciStarter\"}"
+                    },
+                    "partner": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Automatically set to the UID used for authorization when the opportunity was added.",
+                        "readOnly": true
+                    },
+                    "accepted": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Whether this opportunity has been accepted for publication"
+                    },
+                    "withdrawn": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If set to true, this opportunity is not visible to the public"
+                    },
+                    "contact_name": {
+                        "type": "string",
+                        "default": "",
+                        "description": "The name of the person who should be contacted for administrative reasons regarding this opportunity. NOT PUBLISHED."
+                    },
+                    "contact_email": {
+                        "type": "string",
+                        "format": "email",
+                        "default": "",
+                        "description": "The email of the person who should be contacted for administrative reasons regarding this opportunity. NOT PUBLISHED."
+                    },
+                    "contact_phone": {
+                        "type": "string",
+                        "format": "phone",
+                        "default": "",
+                        "description": "The phone number of the person who should be contacted for administrative reasons regarding this opportunity. NOT PUBLISHED."
+                    },
+                    "extra_data": {
+                        "type": "object",
+                        "default": {},
+                        "description": "Any additional information which should be stored as part of this opportunity record"
                     }
-                  }
                 }
-              }
-            }
-          },
-          "400": {
-            "description": "Incorrectly formatted request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
+            },
+            "error": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
                 }
-              }
             }
-          },
-          "403": {
-            "description": "UID is invalid or secret is incorrect",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Other error"
-          }
-        }
-      }
-    },
-    "/opportunity/": {
-      "post": {
-        "summary": "",
-        "operationId": "opportunity_new",
-        "security": [
-          {
-            "token": []
-          }
-        ],
-        "requestBody": {
-          "description": "Values to store as a new opportunity. Note that while most of the opportunity data fields are optional, sparsely described opportunities may not be accepted for publication.",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/opportunity"
-              }
-            }
-          }
         },
-        "responses": {
-          "201": {
-            "description": "Opportunity as stored by the server, after defaults have been applied, and validation performed.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/opportunity"
-                }
-              }
+        "securitySchemes": {
+            "token": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
             }
-          },
-          "400": {
-            "description": "The opportunity did not pass validation checks, or the request could not be parsed at all",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authorization header was not provided",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Authorization token did not grant access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "The provided UID is already in use by an opportunity. If a UID was not provided, then one was generated by hashing the partner_name and title fields, and that UID is a duplicate.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
-                }
-              }
-            }
-          }
         }
-      }
     },
-    "/opportunity/{uid}": {
-      "put": {
-        "parameters": [
-          {
-            "name": "uid",
-            "in": "path",
-            "description": "The UID of the opportunity to be stored",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
+    "paths": {
+        "/partner/authorize": {
+            "post": {
+                "summary": "Use a partner UID and secret to retrieve an authorization token",
+                "operationId": "partner_authorize",
+                "requestBody": {
+                    "description": "Partner UID and secret for authentication",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "uid",
+                                    "secret"
+                                ],
+                                "properties": {
+                                    "uid": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "secret": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "An authorization token which will remain valid for six hours after authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "format": "JWT"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Incorrectly formatted request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "UID is invalid or secret is incorrect",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Other error"
+                    }
+                }
             }
-          }
-        ],
-        "security": [
-          {
-            "token": []
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/opportunity"
-              }
-            }
-          }
         },
-        "responses": {
-          "200": {
-            "description": "The opportunity record was updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/opportunity"
+        "/opportunity/": {
+            "post": {
+                "summary": "",
+                "operationId": "opportunity_new",
+                "security": [
+                    {
+                        "token": []
+                    }
+                ],
+                "requestBody": {
+                    "description": "Values to store as a new opportunity. Note that while most of the opportunity data fields are optional, sparsely described opportunities may not be accepted for publication.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/opportunity"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Opportunity as stored by the server, after defaults have been applied, and validation performed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/opportunity"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The opportunity did not pass validation checks, or the request could not be parsed at all",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization header was not provided",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authorization token did not grant access",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "The provided UID is already in use by an opportunity. If a UID was not provided, then one was generated by hashing the partner_name and title fields, and that UID is a duplicate.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
                 }
-              }
             }
-          },
-          "400": {
-            "description": "Error while validating the opportunity object, or the request was badly structured overall",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
+        },
+        "/opportunity/{uid}": {
+            "put": {
+                "parameters": [
+                    {
+                        "name": "uid",
+                        "in": "path",
+                        "description": "The UID of the opportunity to be stored",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "security": [
+                    {
+                        "token": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/opportunity"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The opportunity record was updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/opportunity"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error while validating the opportunity object, or the request was badly structured overall",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization header was not provided",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authorization token did not grant access",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No opportunity is identified by that UID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
                 }
-              }
-            }
-          },
-          "401": {
-            "description": "Authorization header was not provided",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
+            },
+            "get": {
+                "parameters": [
+                    {
+                        "name": "uid",
+                        "in": "path",
+                        "description": "The UID of the opportunity to be retrieved",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "security": [
+                    {},
+                    {
+                        "token": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The public content of the opportunity record, or the complete content if the request is authorized to access it.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/opportunity"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authorization token was provided but did not grant access",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No opportunity is identified by that UID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
                 }
-              }
             }
-          },
-          "403": {
-            "description": "Authorization token did not grant access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "No opportunity is identified by that UID",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
-                }
-              }
-            }
-          }
         }
-      },
-      "get": {
-        "parameters": [
-          {
-            "name": "uid",
-            "in": "path",
-            "description": "The UID of the opportunity to be retrieved",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "security": [
-          {},
-          {
-            "token": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The public content of the opportunity record, or the complete content if the request is authorized to access it.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/opportunity"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Authorization token was provided but did not grant access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "No opportunity is identified by that UID",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error"
-                }
-              }
-            }
-          }
-        }
-      }
     }
-  }
 }

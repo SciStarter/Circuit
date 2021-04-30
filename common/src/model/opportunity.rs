@@ -275,9 +275,11 @@ pub struct OpportunityExterior {
     pub title: String,
     pub description: String,
     pub image_url: String,
-    pub start_dates: Vec<OffsetDateTime>,
+    #[serde(alias = "start_dates")]
+    pub start_datetimes: Vec<OffsetDateTime>,
     pub has_end: bool,
-    pub end_dates: Vec<OffsetDateTime>,
+    #[serde(alias = "end_dates")]
+    pub end_datetimes: Vec<OffsetDateTime>,
     pub attraction_hours: Option<OpenDays>,
     pub cost: Cost,
     #[serde(default = "en_us")]
