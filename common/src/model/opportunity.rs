@@ -258,12 +258,15 @@ fn en_us() -> Vec<String> {
 pub struct OpportunityExterior {
     pub uid: Uuid,
     pub partner_name: String,
+    pub partner_website: Option<String>,
+    pub partner_logo_url: Option<String>,
     pub partner_created: Option<OffsetDateTime>,
     pub partner_updated: Option<OffsetDateTime>,
     pub partner_opp_url: String,
     pub organization_name: String,
     pub organization_type: OrganizationType,
-    pub organization_website: String,
+    pub organization_website: Option<String>,
+    pub organization_logo_url: Option<String>,
     pub entity_type: EntityType,
     #[serde(default = "zero")]
     pub min_age: i16,
