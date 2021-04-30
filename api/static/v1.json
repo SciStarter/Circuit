@@ -25,7 +25,7 @@
                         "type": "string",
                         "format": "uuid",
                         "default": "0000-0000-0000-0000-000000000000",
-                        "description": "The UID which uniquely identifies this opportunity"
+                        "description": "The UID which uniquely identifies this opportunity. If omitted, a UUID will be generated based on the partner_name and title fields."
                     },
                     "title": {
                         "type": "string",
@@ -49,6 +49,18 @@
                     "partner_name": {
                         "type": "string",
                         "description": "The name to use to identify the originating partner for this opportunity. This is not necessarily the name of the partner making the API call; for example, partner A may be serving as a proxy for partner B"
+                    },
+                    "partner_website": {
+                        "type": "string",
+                        "format": "url",
+                        "nullable": true,
+                        "description": "The URL for the partner's main web site"
+                    },
+                    "partner_logo_url": {
+                        "type": "string",
+                        "format": "url",
+                        "nullable": true,
+                        "description": "The URL for an image file to use to represent the partner to users."
                     },
                     "partner_created": {
                         "type": "string",
@@ -94,8 +106,14 @@
                     "organization_website": {
                         "type": "string",
                         "format": "url",
-                        "default": "",
+                        "nullable": true,
                         "description": "The URL of the hosting organization's web site"
+                    },
+                    "organization_logo_url": {
+                        "type": "string",
+                        "format": "url",
+                        "nullable": true,
+                        "description": "The URL of an image to use for representing the organization"
                     },
                     "entity_type": {
                         "type": "string",
