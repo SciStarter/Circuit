@@ -25,7 +25,7 @@
                         "type": "string",
                         "format": "uuid",
                         "default": "0000-0000-0000-0000-000000000000",
-                        "description": "The UID which uniquely identifies this opportunity. If omitted, a UUID will be generated based on the partner_name and title fields."
+                        "description": "The UID which uniquely identifies this opportunity. If omitted during opportunity creation, a UUID will be generated based on the partner_name and title fields."
                     },
                     "title": {
                         "type": "string",
