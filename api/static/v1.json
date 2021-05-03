@@ -192,11 +192,13 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "10:30:00-05:00"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "15:30:00-05:00"
                                     }
                                 },
                                 "nullable": true
@@ -206,11 +208,13 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "10:30:00+00:00"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "15:30:00+00:00"
                                     }
                                 },
                                 "nullable": true
@@ -220,11 +224,13 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "10:30:00Z"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "15:30:00Z"
                                     }
                                 },
                                 "nullable": true
@@ -234,11 +240,13 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "10:30:00Z"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "15:30:00Z"
                                     }
                                 },
                                 "nullable": true
@@ -248,11 +256,13 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "10:30:00Z"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "15:30:00Z"
                                     }
                                 },
                                 "nullable": true
@@ -262,11 +272,13 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "10:30:00Z"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "15:30:00Z"
                                     }
                                 },
                                 "nullable": true
@@ -276,11 +288,13 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "10:30:00Z"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "time"
+                                        "format": "time",
+                                        "example": "15:30:00Z"
                                     }
                                 },
                                 "nullable": true
