@@ -192,11 +192,11 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     }
                                 },
                                 "nullable": true
@@ -206,11 +206,11 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     }
                                 },
                                 "nullable": true
@@ -220,11 +220,11 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     }
                                 },
                                 "nullable": true
@@ -234,11 +234,11 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     }
                                 },
                                 "nullable": true
@@ -248,11 +248,11 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     }
                                 },
                                 "nullable": true
@@ -262,11 +262,11 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     }
                                 },
                                 "nullable": true
@@ -276,11 +276,11 @@
                                 "properties": {
                                     "opens": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     },
                                     "closes": {
                                         "type": "string",
-                                        "format": "date-time"
+                                        "format": "time"
                                     }
                                 },
                                 "nullable": true
