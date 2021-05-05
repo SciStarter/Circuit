@@ -1,6 +1,21 @@
 use sqlx::{postgres::Postgres, Pool};
+use thiserror::Error;
+pub mod jwt;
 pub mod model;
 
-pub async fn migrate(pool: &Pool<Postgres>) -> Result<(), sqlx::migrate::MigrateError> {
-    sqlx::migrate!().run(pool).await
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("Authorization failed")]
+    Auth(String),
+    #[error("JWT operation failed")]
+    JWT(#[from] ::jwt::Error),
+    #[error("UUID operation failed")]
+    Uuid(#[from] uuid::Error),
+    #[error("Migration failed")]
+    Migrate(#[from] sqlx::migrate::MigrateError),
+}
+
+pub async fn migrate(pool: &Pool<Postgres>) -> Result<(), Error> {
+    sqlx::migrate!().run(pool).await?;
+    Ok(())
 }

@@ -200,8 +200,7 @@ async fn authorized_admin(
     };
 
     let uid = match check_jwt(&token) {
-        Ok(Some(uid)) => uid,
-        Ok(None) => return Err(redirect(&format!("{}authorize", BASE))),
+        Ok(uid) => uid,
         Err(_) => return Err(redirect(&format!("{}authorize", BASE))),
     };
 

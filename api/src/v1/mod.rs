@@ -1,25 +1,18 @@
 use common::model;
-use hmac::{Hmac, NewMac};
-use jwt::SignWithKey;
-use jwt::VerifyWithKey;
-use once_cell::sync::Lazy;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use sha2::Sha256;
 use std::convert::TryInto;
 use tide::http::{mime, StatusCode};
 use tide::prelude::*;
 use tide::Response;
 use tide_fluent_routes::prelude::*;
-use time::OffsetDateTime;
 use uuid::Uuid;
+
+use common::jwt::{check_jwt, issue_jwt};
 
 pub mod manage;
 pub mod opportunity;
 pub mod partner;
-
-pub static JWT_SIGNING_KEY: Lazy<Hmac<Sha256>> =
-    Lazy::new(|| Hmac::new_varkey(std::env::var("JWT_SIGNING_KEY").unwrap().as_bytes()).unwrap());
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
     routes
@@ -85,52 +78,13 @@ pub fn random_string() -> String {
         .collect()
 }
 
-pub fn issue_jwt(uid: &Uuid) -> Result<String, jwt::Error> {
-    let now = (OffsetDateTime::now_utc() - OffsetDateTime::unix_epoch()).as_seconds_f64()
-        as jwt::claims::SecondsSinceEpoch;
-
-    let mut claims = jwt::RegisteredClaims::default();
-    claims.subject = Some(uid.to_string());
-    claims.audience = Some(model::ROOT_NAMESPACE.to_string());
-    claims.issuer = Some(model::ROOT_NAMESPACE.to_string());
-    claims.issued_at = Some(now);
-    claims.expiration = Some(now + (6 * 60 * 60));
-
-    claims.sign_with_key(&*JWT_SIGNING_KEY)
-}
-
-pub fn check_jwt(token: &str) -> Result<Option<Uuid>, Response> {
-    let claims: jwt::RegisteredClaims = token.verify_with_key(&*JWT_SIGNING_KEY).map_err(|e| {
-        dbg!(e);
-        error(StatusCode::Forbidden, "Invalid authorization token")
-    })?;
-
-    let now = (OffsetDateTime::now_utc() - OffsetDateTime::unix_epoch()).as_seconds_f64()
-        as jwt::claims::SecondsSinceEpoch;
-
-    if claims.expiration.unwrap_or(u64::MAX) < now
-        || claims.audience != Some(model::ROOT_NAMESPACE.to_string())
-        || claims.issuer != Some(model::ROOT_NAMESPACE.to_string())
-    {
-        return Err(error(StatusCode::Forbidden, "Invalid authorization token"));
-    }
-
-    claims
-        .subject
-        .map(|s| -> Result<Uuid, Response> {
-            Ok(Uuid::parse_str(&s)
-                .map_err(|_| error(StatusCode::Forbidden, "Invalid authorization token"))?)
-        })
-        .transpose()
-}
-
 pub fn header_check(req: &tide::Request<()>) -> Result<Option<Uuid>, Response> {
     if req.method() != tide::http::Method::Get {
         if let Some(ct) = req.content_type() {
             if ct != mime::JSON {
                 return Err(error(
                     StatusCode::BadRequest,
-                    "Content-Type header must specify application/json",
+                    "Content-Type must be application/json",
                 ));
             }
         } else {
@@ -161,7 +115,12 @@ pub fn header_check(req: &tide::Request<()>) -> Result<Option<Uuid>, Response> {
         }
 
         if let Some(token) = parts.next() {
-            return check_jwt(&token);
+            return Ok(Some(check_jwt(&token).map_err(|e| {
+                error(
+                    StatusCode::Unauthorized,
+                    "The Authorization header must contain a partner authorization token",
+                )
+            })?));
         } else {
             return Err(error(
                 StatusCode::Unauthorized,
