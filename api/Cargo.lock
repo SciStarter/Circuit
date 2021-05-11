@@ -604,7 +604,7 @@ dependencies = [
  "async-std",
  "djangohashers",
  "hex",
- "hmac 0.11.0",
+ "hmac 0.10.1",
  "jwt",
  "once_cell",
  "serde",
@@ -652,6 +652,15 @@ dependencies = [
  "sha2",
  "time 0.2.26",
  "version_check",
+]
+
+[[package]]
+name = "cpufeatures"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dec1028182c380cc45a2e2c5ec841134f2dfd0f8f5f0a5bcd68004f81b5efdf4"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
@@ -1863,13 +1872,13 @@ checksum = "2579985fda508104f7587689507983eadd6a6e84dd35d6d115361f530916fa0d"
 
 [[package]]
 name = "sha2"
-version = "0.9.3"
+version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa827a14b29ab7f44778d14a88d3cb76e949c45083f7dbfa507d0cb699dc12de"
+checksum = "b362ae5752fd2137731f9fa25fd4d9058af34666ca1966fb969119cc35719f12"
 dependencies = [
  "block-buffer",
  "cfg-if 1.0.0",
- "cpuid-bool 0.1.2",
+ "cpufeatures",
  "digest",
  "opaque-debug",
 ]

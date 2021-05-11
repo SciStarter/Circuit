@@ -8,9 +8,8 @@ use uuid::Uuid;
 
 use crate::{model, Error};
 
-pub static JWT_SIGNING_KEY: Lazy<Hmac<Sha256>> = Lazy::new(|| {
-    Hmac::new_from_slice(std::env::var("JWT_SIGNING_KEY").unwrap().as_bytes()).unwrap()
-});
+pub static JWT_SIGNING_KEY: Lazy<Hmac<Sha256>> =
+    Lazy::new(|| Hmac::new_varkey(std::env::var("JWT_SIGNING_KEY").unwrap().as_bytes()).unwrap());
 
 pub fn issue_jwt(uid: &Uuid) -> Result<String, Error> {
     let now = (OffsetDateTime::now_utc() - OffsetDateTime::unix_epoch()).as_seconds_f64()
