@@ -4,7 +4,9 @@ pub use partner::Partner;
 pub use person::Person;
 use thiserror::Error;
 
+pub mod geojson;
 pub mod opportunity;
+pub mod participation;
 pub mod partner;
 pub mod person;
 
