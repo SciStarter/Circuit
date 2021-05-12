@@ -66,7 +66,7 @@ async fn authorize(mut req: tide::Request<()>) -> tide::Result {
 
                 let person = Person::load_by_email(db.acquire().await?, email).await?;
                 if person.check_password(password) {
-                    if person.check_permission(&Permission::ManageSomething) {
+                    if !person.check_permission(&Permission::ManageSomething) {
                         return Ok(redirect("/"));
                     }
                     let mut resp = redirect(&form.next.unwrap_or_else(|| BASE.to_string()));
