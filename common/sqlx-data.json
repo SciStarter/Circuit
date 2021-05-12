@@ -327,6 +327,20 @@
       "nullable": []
     }
   },
+  "84078fb24d45a8726b6e5f99612f933187ff24d3b9f8f990b207f4c95e6f9e49": {
+    "query": "update c_participation set exterior = $2, interior = $3 where id = $1;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "9181b3c3f337b0be8c5a8b9afbe43f5bc99314996da13a2a59d61daf089e837d": {
     "query": "select id, exterior, interior from c_partner where ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n",
     "describe": {
@@ -480,6 +494,59 @@
       },
       "nullable": [
         null
+      ]
+    }
+  },
+  "e9e41146b86490f984df1aded1306bed4009f67ca870a07e612caf9f38f8f63d": {
+    "query": "insert into c_participation (exterior, interior) values ($1, $2) returning id;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "ecc9ab2c4fdc34d99d31671d5fba6f4511dffe29bb2d028923bb363bbd0b7904": {
+    "query": "select id, exterior, interior from c_participation where id = $1 limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
       ]
     }
   },
