@@ -1,23 +1,19 @@
 use crate::Error;
-use bytes::Bytes;
-use std::io::Read;
+use bytes::{BufMut, Bytes, BytesMut};
 
 // We won't read more than 10 MiB from the server, even if it wants to
 // send us that much. It's likely an error, or outright malicious.
-pub const MAX_SIZE: u64 = 10 * 1024 * 1024;
+pub const MAX_SIZE: usize = 10 * 1024 * 1024;
 
 pub struct HttpGet;
 
 impl super::Source for HttpGet {
-    fn load(&self, source: &dyn AsRef<str>) -> Result<Bytes, Error> {
-        let mut data = Vec::new();
+    fn load<S: AsRef<str>>(&self, source: S) -> Result<Bytes, Error> {
+        let mut writer = BytesMut::new().limit(MAX_SIZE).writer();
+        let mut reader = ureq::get(source.as_ref()).call()?.into_reader();
 
-        ureq::get(source.as_ref())
-            .call()?
-            .into_reader()
-            .take(MAX_SIZE)
-            .read_to_end(&mut data)?;
+        std::io::copy(&mut reader, &mut writer)?;
 
-        Ok(data.into())
+        Ok(writer.into_inner().into_inner().into())
     }
 }
