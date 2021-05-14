@@ -44,3 +44,8 @@ LOGGER_ACCESS_KEY, and LOGGER_SECRET containing the S3-compatible
 endpoint URL, access key, and secret, then
 
     kubectl create secret generic logger-beta --from-env-file=secrets/logger.env
+
+Create file secrets/airtable.env containing AIRTABLE_KEY containing
+the access key which will be used to read data from Airtable, then
+
+    kubectl create secret generic airtable-beta --from-env-file=secrets/airtable.env

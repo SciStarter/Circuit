@@ -30,7 +30,7 @@ spec:
             secretKeyRef:
               name: logger-beta
               key: LOGGER_ACCESS_KEY
-        - name: LOGGER_LOGGER_SECRET
+        - name: LOGGER_SECRET
           valueFrom:
             secretKeyRef:
               name: logger-beta
