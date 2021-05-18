@@ -22,7 +22,8 @@ fn _decode<R: std::io::Read>(mut reader: Reader<R>) -> Result<Value, Error> {
 }
 
 /// CSV: fields separated by "," and records separated by "\r", "\n",
-/// or "\r\n". The first row is assumed to contain field names.
+/// or "\r\n". Quotes are escaped by doubling them, so "" represents
+/// ". The first row is assumed to contain field names.
 pub struct CommaSeparated;
 
 impl super::Format for CommaSeparated {
