@@ -17,3 +17,16 @@ impl super::Source for HttpGet {
         Ok(writer.into_inner().into_inner().into())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Source;
+
+    #[test]
+    fn fetch_night_sky_network() {
+        HttpGet
+            .load("https://nightsky.jpl.nasa.gov/js/data/events_json_api.cfm")
+            .unwrap();
+    }
+}

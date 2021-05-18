@@ -351,6 +351,12 @@ impl Opportunity {
             .trim_matches(char::is_whitespace)
             .into();
 
+        self.exterior.partner_opp_url = self
+            .exterior
+            .partner_opp_url
+            .trim_matches(char::is_whitespace)
+            .into();
+
         self.exterior.title = self.exterior.title.trim_matches(char::is_whitespace).into();
 
         if self.exterior.partner_name.is_empty() {
@@ -361,9 +367,18 @@ impl Opportunity {
             return Err(Error::Missing("title".into()));
         }
 
+        if self.exterior.partner_opp_url.is_empty() {
+            return Err(Error::Missing("partner_opp_url".into()));
+        }
+
         if self.exterior.uid.is_nil() {
             let namespace = Uuid::new_v5(&PARTNER_NAMESPACE, self.exterior.partner_name.as_ref());
-            self.exterior.uid = Uuid::new_v5(&namespace, self.exterior.title.as_ref());
+
+            let mut identifier = self.exterior.partner_opp_url.to_string();
+            identifier.push_str("||");
+            identifier.push_str(&self.exterior.title);
+
+            self.exterior.uid = Uuid::new_v5(&namespace, identifier.as_ref());
         }
 
         Ok(())
