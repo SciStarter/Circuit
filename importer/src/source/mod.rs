@@ -5,5 +5,5 @@ pub mod eventsql;
 pub mod http;
 
 pub trait Source {
-    fn load<S: AsRef<str>>(&self, source: S) -> Result<Bytes, Error>;
+    fn load(&self) -> Result<Bytes, Error>;
 }

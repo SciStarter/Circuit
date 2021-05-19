@@ -158,12 +158,22 @@ const QUERY: &'static str = "{\
 // send us that much. It's likely an error, or outright malicious.
 pub const MAX_SIZE: usize = 10 * 1024 * 1024;
 
-pub struct EventsQL;
+pub struct EventsQL {
+    endpoint: String,
+}
+
+impl EventsQL {
+    pub fn new<S: AsRef<str>>(endpoint: S) -> Self {
+        EventsQL {
+            endpoint: endpoint.as_ref().to_string(),
+        }
+    }
+}
 
 impl super::Source for EventsQL {
-    fn load<S: AsRef<str>>(&self, endpoint: S) -> Result<Bytes, Error> {
+    fn load(&self) -> Result<Bytes, Error> {
         let mut writer = BytesMut::new().limit(MAX_SIZE).writer();
-        let mut reader = ureq::post(endpoint.as_ref())
+        let mut reader = ureq::post(&self.endpoint)
             .set("Content-Type", "application/json")
             .send_json(ureq::json!({"variables": {}, "query": QUERY}))?
             .into_reader();
@@ -181,8 +191,8 @@ mod tests {
 
     #[test]
     fn fetch_wisconsin_science_fest() {
-        EventsQL
-            .load("https://www.wisconsinsciencefest.org/graphql")
+        EventsQL::new("https://www.wisconsinsciencefest.org/graphql")
+            .load()
             .unwrap();
     }
 }

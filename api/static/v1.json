@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Circuit API v1",
-        "version": "1.0.1"
+        "version": "1.1.0"
     },
     "servers": [
         {
@@ -124,6 +124,124 @@
                         ],
                         "default": "opportunity",
                         "description": "Opportunities are scheduled, while attractions are ongoing"
+                    },
+                    "opp_venue": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "museum_or_science_center",
+                                "library",
+                                "pk12school",
+                                "community_organization",
+                                "bar",
+                                "outdoors",
+                                "college_university"
+                            ]
+                        },
+                        "default": [],
+                        "description": "Description of the facility or facilities physically hosting this opportunity"
+                    },
+                    "opp_topics": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "agriculture",
+                                "alcohol",
+                                "animals",
+                                "archaeology_and_cultural",
+                                "art",
+                                "astronomy_and_space",
+                                "awards",
+                                "biology",
+                                "birds",
+                                "chemistry",
+                                "climate_and_weather",
+                                "computers_and_technology",
+                                "crowd_funding",
+                                "design",
+                                "disaster_response",
+                                "ecology_and_environment",
+                                "education",
+                                "engineering",
+                                "food",
+                                "general_science",
+                                "geography",
+                                "geology_and_earth_science",
+                                "health_and_medicine",
+                                "insects_and_pollinators",
+                                "mathematics",
+                                "nature_and_outdoors",
+                                "ocean_water_marine",
+                                "paleontology",
+                                "physics",
+                                "policy",
+                                "psychology",
+                                "religion",
+                                "robotics",
+                                "social_science",
+                                "sound",
+                                "technology",
+                                "transportation"
+                            ]
+                        },
+                        "default": [],
+                        "description": "Topics applicable to this opportunity"
+                    },
+                    "opp_descriptor": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "advocacy_days",
+                                "bioblitz",
+                                "camp",
+                                "citizen_science",
+                                "clean_up",
+                                "club",
+                                "community",
+                                "competition",
+                                "concert",
+                                "conference",
+                                "create-a-thon",
+                                "dance",
+                                "exhibition",
+                                "expo_style",
+                                "festival",
+                                "forum",
+                                "fundraising",
+                                "hack-a-thon",
+                                "lecture",
+                                "live_science",
+                                "make-a-thon",
+                                "maker",
+                                "maker_faire",
+                                "media",
+                                "outreach",
+                                "overnight",
+                                "panel",
+                                "policy",
+                                "professional_development",
+                                "research",
+                                "science_blogging",
+                                "science_cafe_or_pub",
+                                "science_on_tap",
+                                "science_poetry_slam",
+                                "science_slam",
+                                "service",
+                                "star_party",
+                                "story_collider",
+                                "story_collider",
+                                "tinker",
+                                "tinker_faire",
+                                "training",
+                                "volunteering",
+                                "workshop"
+                            ]
+                        },
+                        "default": [],
+                        "description": "Description of the opportunity based on established typology"
                     },
                     "min_age": {
                         "type": "integer",

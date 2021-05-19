@@ -165,6 +165,7 @@ pub enum Topic {
     Education,
     Engineering,
     Food,
+    GeneralScience,
     Geography,
     GeologyAndEarthScience,
     HealthAndMedicine,
@@ -268,12 +269,15 @@ pub struct OpportunityExterior {
     pub organization_website: Option<String>,
     pub organization_logo_url: Option<String>,
     pub entity_type: EntityType,
+    pub opp_venue: Vec<VenueType>,
+    pub opp_descriptor: Vec<Descriptor>,
     #[serde(default = "zero")]
     pub min_age: i16,
     #[serde(default = "nineninetynine")]
     pub max_age: i16,
     pub pes_domain: Domain,
     pub tags: HashSet<String>,
+    pub opp_topics: Vec<Topic>,
     pub ticket_required: bool,
     pub title: String,
     pub description: String,
