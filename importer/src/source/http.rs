@@ -5,12 +5,22 @@ use bytes::{BufMut, Bytes, BytesMut};
 // send us that much. It's likely an error, or outright malicious.
 pub const MAX_SIZE: usize = 10 * 1024 * 1024;
 
-pub struct HttpGet;
+pub struct HttpGet {
+    endpoint: String,
+}
+
+impl HttpGet {
+    pub fn new<S: AsRef<str>>(endpoint: S) -> Self {
+        HttpGet {
+            endpoint: endpoint.as_ref().to_string(),
+        }
+    }
+}
 
 impl super::Source for HttpGet {
-    fn load<S: AsRef<str>>(&self, source: S) -> Result<Bytes, Error> {
+    fn load(&self) -> Result<Bytes, Error> {
         let mut writer = BytesMut::new().limit(MAX_SIZE).writer();
-        let mut reader = ureq::get(source.as_ref()).call()?.into_reader();
+        let mut reader = ureq::get(&self.endpoint).call()?.into_reader();
 
         std::io::copy(&mut reader, &mut writer)?;
 
@@ -25,8 +35,8 @@ mod tests {
 
     #[test]
     fn fetch_night_sky_network() {
-        HttpGet
-            .load("https://nightsky.jpl.nasa.gov/js/data/events_json_api.cfm")
+        HttpGet::new("https://nightsky.jpl.nasa.gov/js/data/events_json_api.cfm")
+            .load()
             .unwrap();
     }
 }
