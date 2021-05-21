@@ -1,8 +1,8 @@
 use super::Error;
 
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use sqlx;
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -17,7 +17,7 @@ pub enum Mode {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ParticipationExterior {
     pub opportunity: Uuid,
-    pub when: OffsetDateTime,
+    pub when: DateTime<FixedOffset>,
     pub mode: Mode,
     #[serde(default)]
     pub keywords: Vec<String>,

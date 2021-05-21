@@ -1,10 +1,14 @@
 use super::{partner::Partner, Error};
 
+use chrono::{DateTime, FixedOffset, Utc};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sqlx;
-use time::OffsetDateTime;
 use uuid::Uuid;
+
+fn fixed_offset_now() -> DateTime<FixedOffset> {
+    Utc::now().with_timezone(&FixedOffset::west(0))
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -113,8 +117,8 @@ pub struct PersonInterior {
     pub gender: Gender,
     pub home_location: Option<serde_json::Value>,
     pub last_location: Option<serde_json::Value>,
-    pub joined_at: OffsetDateTime,
-    pub active_at: OffsetDateTime,
+    pub joined_at: DateTime<FixedOffset>,
+    pub active_at: DateTime<FixedOffset>,
     pub phone: Option<String>,
     pub whatsapp: Option<String>,
     pub zip_code: Option<String>,
@@ -139,8 +143,8 @@ impl Default for PersonInterior {
             gender: Default::default(),
             home_location: Default::default(),
             last_location: Default::default(),
-            joined_at: OffsetDateTime::now_utc(),
-            active_at: OffsetDateTime::now_utc(),
+            joined_at: fixed_offset_now(),
+            active_at: fixed_offset_now(),
             phone: Default::default(),
             whatsapp: Default::default(),
             zip_code: Default::default(),
@@ -264,7 +268,7 @@ impl Person {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        self.interior.active_at = OffsetDateTime::now_utc();
+        self.interior.active_at = fixed_offset_now();
         self.store(db).await
     }
 

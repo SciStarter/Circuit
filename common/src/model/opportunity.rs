@@ -1,9 +1,9 @@
 use super::Error;
 
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use sqlx;
 use std::collections::{HashMap, HashSet};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 use super::PARTNER_NAMESPACE;
@@ -261,8 +261,8 @@ pub struct OpportunityExterior {
     pub partner_name: String,
     pub partner_website: Option<String>,
     pub partner_logo_url: Option<String>,
-    pub partner_created: Option<OffsetDateTime>,
-    pub partner_updated: Option<OffsetDateTime>,
+    pub partner_created: Option<DateTime<FixedOffset>>,
+    pub partner_updated: Option<DateTime<FixedOffset>>,
     pub partner_opp_url: String,
     pub organization_name: String,
     pub organization_type: OrganizationType,
@@ -283,10 +283,10 @@ pub struct OpportunityExterior {
     pub description: String,
     pub image_url: String,
     #[serde(alias = "start_dates")]
-    pub start_datetimes: Vec<OffsetDateTime>,
+    pub start_datetimes: Vec<DateTime<FixedOffset>>,
     pub has_end: bool,
     #[serde(alias = "end_dates")]
-    pub end_datetimes: Vec<OffsetDateTime>,
+    pub end_datetimes: Vec<DateTime<FixedOffset>>,
     pub attraction_hours: Option<OpenDays>,
     pub cost: Cost,
     #[serde(default = "en_us")]

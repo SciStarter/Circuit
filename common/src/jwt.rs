@@ -1,9 +1,9 @@
 use ::jwt::SignWithKey;
 use ::jwt::VerifyWithKey;
+use chrono::Utc;
 use hmac::{Hmac, NewMac};
 use once_cell::sync::Lazy;
 use sha2::Sha256;
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::{model, Error};
@@ -12,8 +12,7 @@ pub static JWT_SIGNING_KEY: Lazy<Hmac<Sha256>> =
     Lazy::new(|| Hmac::new_varkey(std::env::var("JWT_SIGNING_KEY").unwrap().as_bytes()).unwrap());
 
 pub fn issue_jwt(uid: &Uuid) -> Result<String, Error> {
-    let now = (OffsetDateTime::now_utc() - OffsetDateTime::unix_epoch()).as_seconds_f64()
-        as ::jwt::claims::SecondsSinceEpoch;
+    let now = Utc::now().timestamp() as ::jwt::claims::SecondsSinceEpoch;
 
     let mut claims = ::jwt::RegisteredClaims::default();
     claims.subject = Some(uid.to_string());
@@ -32,8 +31,7 @@ pub fn check_jwt(token: &str) -> Result<Uuid, Error> {
             Error::Auth("Invalid signature".to_string())
         })?;
 
-    let now = (OffsetDateTime::now_utc() - OffsetDateTime::unix_epoch()).as_seconds_f64()
-        as jwt::claims::SecondsSinceEpoch;
+    let now = Utc::now().timestamp() as ::jwt::claims::SecondsSinceEpoch;
 
     if claims.expiration.unwrap_or(u64::MAX) < now
         || claims.audience != Some(model::ROOT_NAMESPACE.to_string())
