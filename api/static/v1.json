@@ -148,7 +148,6 @@
                             "type": "string",
                             "enum": [
                                 "agriculture",
-                                "alcohol",
                                 "animals",
                                 "archaeology_and_cultural",
                                 "art",
