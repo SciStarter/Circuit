@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Circuit API v1",
-        "version": "1.1.0"
+        "version": "1.2.0"
     },
     "servers": [
         {
@@ -12,6 +12,58 @@
     ],
     "components": {
         "schemas": {
+            "participation": {
+                "type": "object",
+                "required": [
+                    "opportunity",
+                    "when",
+                    "mode"
+                ],
+                "properties": {
+                    "opportunity": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "The UID which uniquely identifies the opportunity being participated in. This is the same value which was sent to and/or returned from the opportunity API endpoints."
+                    },
+                    "partner": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "The UID which uniquely identifies the partner which reported this participation.",
+                        "readOnly": true
+                    },
+                    "when": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The date and time when this participation action was completed."
+                    },
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "signup",
+                            "collect-data",
+                            "analyze-data",
+                            "organize"
+                        ],
+                        "description": "Which general category of participation the person performed."
+                    },
+                    "keywords": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "description": "Any additional keywords which may further refine the understanding of this participation."
+                    },
+                    "location": {
+                        "type": "object",
+                        "format": "point",
+                        "description": "The point at which this participation occurred, represented as a [GeoJSON Point geometry](https://tools.ietf.org/html/rfc7946#section-3.1) object",
+                        "nullable": true,
+                        "writeOnly": true,
+                        "default": null
+                    }
+                }
+            },
             "opportunity": {
                 "type": "object",
                 "required": [
@@ -643,8 +695,16 @@
         },
         "/opportunity/": {
             "post": {
-                "summary": "",
+                "summary": "Create a new opportunity record",
                 "operationId": "opportunity_new",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "description": "An authorization bearer header containing an unexpired token returned from the /partner/authorize endpoint",
+                        "required": true
+                    }
+                ],
                 "security": [
                     {
                         "token": []
@@ -716,6 +776,7 @@
         },
         "/opportunity/{uid}": {
             "put": {
+                "summary": "Update an opportunity record",
                 "parameters": [
                     {
                         "name": "uid",
@@ -726,6 +787,12 @@
                             "type": "string",
                             "format": "uuid"
                         }
+                    },
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "description": "An authorization bearer header containing an unexpired token returned from the /partner/authorize endpoint",
+                        "required": true
                     }
                 ],
                 "security": [
@@ -796,6 +863,7 @@
                 }
             },
             "get": {
+                "summary": "Retrieve an opportunity record",
                 "parameters": [
                     {
                         "name": "uid",
@@ -806,6 +874,12 @@
                             "type": "string",
                             "format": "uuid"
                         }
+                    },
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "description": "An authorization bearer header containing an unexpired token returned from the /partner/authorize endpoint",
+                        "required": false
                     }
                 ],
                 "security": [
@@ -837,6 +911,97 @@
                     },
                     "404": {
                         "description": "No opportunity is identified by that UID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/participation/{hash}": {
+            "post": {
+                "summary": "Create a record of a person's participation in an opportunity at a particular time",
+                "operationId": "participation_new",
+                "parameters": [
+                    {
+                        "name": "hash",
+                        "in": "path",
+                        "description": "A **cryptographic hash** of the participant's email address. This non-reversible encoding allows consenting participants to be recognized *without* violating the privacy of other participants. This value is computed as ASCII_LOWERCASE(HEXIDECIMAL(SHA256(ASCII_LOWERCASE(TRIM_WHITESPACE(UTF8(email))) + \":science-link\")))",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "hexidecimal"
+                        }
+                    },
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "description": "An authorization bearer header containing an unexpired token returned from the /partner/authorize endpoint",
+                        "required": true
+                    }
+                ],
+                "security": [
+                    {
+                        "token": []
+                    }
+                ],
+                "requestBody": {
+                    "description": "Values to store as a new participation record.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/participation"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Public part of the participation record as stored by the server, after defaults have been applied, and validation performed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/participation"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Incorrectly formatted request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization header was not provided",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The opportunity is managed by a different partner",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Participant or opportunity does not exist",
                         "content": {
                             "application/json": {
                                 "schema": {
