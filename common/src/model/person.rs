@@ -345,6 +345,51 @@ impl Person {
         Ok(rec.exists.unwrap_or(false))
     }
 
+    pub async fn load_by_email_hash<'req, DB>(db: DB, hash: &str) -> Result<Person, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let rec = sqlx::query_file!("db/person/get_by_email_hash.sql", hash)
+            .fetch_one(db)
+            .await?;
+
+        Ok(Person {
+            id: Some(rec.id),
+            exterior: serde_json::from_value(rec.exterior)?,
+            interior: serde_json::from_value(rec.interior)?,
+        })
+    }
+
+    pub async fn exists_by_email_hash<'req, DB>(db: DB, hash: &str) -> Result<bool, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let rec = sqlx::query_file!("db/person/exists_by_email_hash.sql", hash)
+            .fetch_one(db)
+            .await?;
+
+        Ok(rec.exists.unwrap_or(false))
+    }
+
+    pub async fn all_by_email_hash<'req, DB>(
+        db: DB,
+        hash: &str,
+    ) -> Result<Vec<Result<Person, Error>>, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        Ok(sqlx::query_file!("db/person/all_by_email_hash.sql", hash)
+            .map(|row| {
+                Ok(Person {
+                    id: Some(row.id),
+                    exterior: serde_json::from_value(row.exterior)?,
+                    interior: serde_json::from_value(row.interior)?,
+                })
+            })
+            .fetch_all(db)
+            .await?)
+    }
+
     pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,

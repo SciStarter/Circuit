@@ -17,6 +17,8 @@ pub enum Mode {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ParticipationExterior {
     pub opportunity: Uuid,
+    #[serde(default)]
+    pub partner: Uuid,
     pub when: DateTime<FixedOffset>,
     pub mode: Mode,
     #[serde(default)]

@@ -313,6 +313,38 @@
       ]
     }
   },
+  "731e1957cf8705f40d16d13e85efb39ea753be689994ab6ee729c4a1e12072b8": {
+    "query": "select id, exterior, interior from c_person where (interior -> 'email_hashes') ? $1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "83254db54e765203368a9452d869af0332b47c607c0ea4dedb21f9af170a0a3b": {
     "query": "update c_person set exterior = $2, interior = $3 where id = $1;\n",
     "describe": {
@@ -373,6 +405,38 @@
       ]
     }
   },
+  "c0425047604adf0d688a217b964e5787c81262a6d2f5c32654d53c6bf148c4ca": {
+    "query": "select id, exterior, interior from c_person where (interior -> 'email_hashes') ? $1 order by id limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "c052e801bb94dd7532a60b353a2000ae85774fde2803a86095ff7beb751c8af2": {
     "query": "select id, exterior, interior from c_partner where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n",
     "describe": {
@@ -402,6 +466,26 @@
         false,
         false,
         false
+      ]
+    }
+  },
+  "c1dd73e6e209f99460d54eb85c68c4cda0e96f6224cb57c09b4ac11428b54b63": {
+    "query": "select exists(select 1 from c_person where (interior -> 'email') ? $1) as \"exists\";\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "exists",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
       ]
     }
   },

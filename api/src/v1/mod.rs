@@ -12,12 +12,14 @@ use common::jwt::{check_jwt, issue_jwt};
 
 pub mod manage;
 pub mod opportunity;
+pub mod participation;
 pub mod partner;
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
     routes
         .at("partner/", partner::routes)
         .at("opportunity/", opportunity::routes)
+        .at("participation/", participation::routes)
         .at("manage/", manage::routes)
 }
 
