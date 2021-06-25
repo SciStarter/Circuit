@@ -7,6 +7,7 @@ use tide::log;
 use tide_fluent_routes::{fs::ServeFs, prelude::*};
 use tide_sqlx::{SQLxMiddleware, SQLxRequestExt};
 
+pub mod ui;
 pub mod v1;
 
 async fn initialize(db: &Pool<Postgres>) -> tide::Result {
@@ -49,11 +50,16 @@ async fn main() -> tide::Result<()> {
     app.with(SQLxMiddleware::from(pool));
 
     // https://crates.io/crates/tide-fluent-routes
-    app.register(root().at("api/v1/", v1::routes).at("api/docs/", |routes| {
-        routes
-            .serve_dir("static/")
-            .expect("Unable to serve static docs dir")
-    }));
+    app.register(
+        root()
+            .at("api/v1/", v1::routes)
+            .at("api/ui/", ui::routes)
+            .at("api/docs/", |routes| {
+                routes
+                    .serve_dir("static/")
+                    .expect("Unable to serve static docs dir")
+            }),
+    );
 
     app.listen("0.0.0.0:8000").await?;
 

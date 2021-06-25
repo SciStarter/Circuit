@@ -95,9 +95,10 @@ where
         // The self.load() call blocks the executor while doing
         // synchronous network I/O. This is not ideal, in general, but
         // the only reason we're even using an asynchronous executor
-        // is because the SQLx API is asynchronous. We're handling the
-        // data sources serially on purpose, so blocking the executor
-        // while we download from one of them is not a problem.
+        // here is because the SQLx API is asynchronous. We're
+        // handling the data sources serially on purpose, so blocking
+        // the executor while we download from one of them is not a
+        // problem.
         match self.load()? {
             structure::OneOrMany::One(mut value) => {
                 maybe_store_opportunity(db, &mut value).await?;

@@ -1,0 +1,125 @@
+<template><a @click.stop.prevent="go" :href="href" :title="title"><slot></slot></a></template>
+
+<script>
+export default {
+    props: {
+        href: {
+            type: String,
+            required: true,
+        },
+
+        title: {
+            type: String,
+            required: false,
+            default: "",
+        },
+
+        // If true, open link target in a new tab or window
+        newTab: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
+
+        // Identifies which site sent the traffic
+        source: {
+            type: String,
+            required: false,
+            default: "sciencenearme"
+        },
+
+        // Identifies what type of link was used, such as cost per click or email.
+        medium: {
+            type: String,
+            required: false,
+            default: "web"
+        },
+
+        // Identifies a specific product promotion or strategic campaign.
+        campaign: {
+            type: String,
+            required: false,
+            default: "general"
+        },
+
+        // Identifies search terms.
+        term: {
+            type: String,
+            required: false,
+            default: ""
+        },
+
+        // Identifies what specifically was clicked to bring the user to the site, such as a banner ad or a text link.
+        content: {
+            type: String,
+            required: false,
+            default: "link"
+        },
+    },
+
+    computed: {
+        joint() {
+            if(this.href.indexOf('?') < 0) {
+                return '?';
+            }
+            else {
+                return '&';
+            }
+        },
+
+        target() {
+            let params = "";
+
+            if(this.source) {
+                params = params + (params ? '&' : '') + "utm_source=" + this.source;
+            }
+
+            if(this.medium) {
+                params = params + (params ? '&' : '') + "utm_medium=" + this.medium;
+            }
+
+            if(this.campaign) {
+                params = params + (params ? '&' : '') + "utm_campaign=" + this.campaign;
+            }
+
+            if(this.term) {
+                params = params + (params ? '&' : '') + "utm_term=" + this.term;
+            }
+
+            if(this.content) {
+                params = params + (params ? '&' : '') + "utm_content=" + this.content;
+            }
+
+            if(params.length) {
+                return this.href + this.joint + params;
+            }
+            else {
+                return this.href;
+            }
+        }
+    },
+
+    methods: {
+        async go() {
+            await this.$axios.$post("/api/ui/external", {
+                session: window.localStorage.getItem("token") || "",
+                on_page: window.location.href,
+                href: this.href,
+                title: this.title,
+                source: this.source,
+                medium: this.medium,
+                campaign: this.campaign,
+                term: this.term,
+                content: this.content,
+            });
+
+            if(this.newTab) {
+                window.open(this.target, "_blank");
+            }
+            else {
+                window.location = this.target;
+            }
+        }
+    }
+}
+</script>
