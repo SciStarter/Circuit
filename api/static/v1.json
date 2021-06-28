@@ -87,6 +87,12 @@
                         "type": "string",
                         "description": "A textual description of the opportunity. One or two paragraphs is an ideal length."
                     },
+                    "short_desc": {
+                        "type": "string",
+                        "description": "A short (120 character or less) \"elevator pitch\" for this opportunity.",
+                        "required": false,
+                        "default": ""
+                    },
                     "image_url": {
                         "type": "string",
                         "format": "url",
@@ -182,13 +188,8 @@
                         "items": {
                             "type": "string",
                             "enum": [
-                                "museum_or_science_center",
-                                "library",
-                                "pk12school",
-                                "community_organization",
-                                "bar",
-                                "outdoors",
-                                "college_university"
+                                "indoors",
+                                "outdoors"
                             ]
                         },
                         "default": [],

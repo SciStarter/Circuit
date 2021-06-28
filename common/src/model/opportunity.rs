@@ -56,13 +56,15 @@ impl Default for EntityType {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum VenueType {
+    Indoors,
+    Outdoors,
+    // Following variants are deprecated
     MuseumOrScienceCenter,
     Library,
     #[serde(rename = "pk12school")]
     PK12School,
     CommunityOrganization,
     Bar,
-    Outdoors,
     CollegeUniversity,
     #[serde(other)]
     Unspecified,
@@ -281,6 +283,7 @@ pub struct OpportunityExterior {
     pub ticket_required: bool,
     pub title: String,
     pub description: String,
+    pub short_desc: String,
     pub image_url: String,
     #[serde(alias = "start_dates")]
     pub start_datetimes: Vec<DateTime<FixedOffset>>,
