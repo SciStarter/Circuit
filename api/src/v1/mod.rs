@@ -1,4 +1,4 @@
-use common::model;
+//use common::model;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::convert::TryInto;
@@ -117,7 +117,7 @@ pub fn header_check(req: &tide::Request<()>) -> Result<Option<Uuid>, Response> {
         }
 
         if let Some(token) = parts.next() {
-            return Ok(Some(check_jwt(&token).map_err(|e| {
+            return Ok(Some(check_jwt(&token).map_err(|_e| {
                 error(
                     StatusCode::Unauthorized,
                     "The Authorization header must contain a partner authorization token",

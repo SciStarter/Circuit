@@ -1,12 +1,13 @@
-use common::model;
-use std::convert::TryInto;
-use tide::http::{mime, StatusCode};
+//use common::model;
+//use std::convert::TryInto;
+//use tide::http::mime;
+use tide::http::StatusCode;
 use tide::Response;
-use tide::{prelude::*, ResponseBuilder};
+//use tide::{prelude::*, ResponseBuilder};
 use tide_fluent_routes::prelude::*;
-use uuid::Uuid;
+//use uuid::Uuid;
 
-use common::jwt::{check_jwt, issue_jwt};
+//use common::jwt::{check_jwt, issue_jwt};
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
     routes
@@ -16,18 +17,18 @@ pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
         .at("signup", |r| r.post(signup))
 }
 
-pub async fn record_click(mut req: tide::Request<()>) -> tide::Result {
+pub async fn record_click(mut _req: tide::Request<()>) -> tide::Result {
     Ok(Response::builder(StatusCode::Ok).build())
 }
 
-pub async fn record_external(mut req: tide::Request<()>) -> tide::Result {
+pub async fn record_external(mut _req: tide::Request<()>) -> tide::Result {
     Ok(Response::builder(StatusCode::Ok).build())
 }
 
-pub async fn login(mut req: tide::Request<()>) -> tide::Result {
+pub async fn login(mut _req: tide::Request<()>) -> tide::Result {
     unimplemented!()
 }
 
-pub async fn signup(mut req: tide::Request<()>) -> tide::Result {
+pub async fn signup(mut _req: tide::Request<()>) -> tide::Result {
     unimplemented!()
 }

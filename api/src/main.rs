@@ -2,10 +2,10 @@
 
 use common::model;
 use sqlx::postgres::Postgres;
-use sqlx::{postgres::PgPoolOptions, Acquire, Pool};
+use sqlx::{postgres::PgPoolOptions, Pool};
 use tide::log;
 use tide_fluent_routes::{fs::ServeFs, prelude::*};
-use tide_sqlx::{SQLxMiddleware, SQLxRequestExt};
+use tide_sqlx::SQLxMiddleware;
 
 pub mod ui;
 pub mod v1;

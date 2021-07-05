@@ -46,12 +46,26 @@ export default {
         id: 'GTM-5ZT2954'
     },
 
+    // Build Configuration: https://go.nuxtjs.dev/config-build
+    build: {
+
+    },
+
     // Axios module configuration: https://go.nuxtjs.dev/config-axios
     axios: {
         baseURL: "https://beta.sciencenearme.org"
     },
 
-    // Build Configuration: https://go.nuxtjs.dev/config-build
-    build: {
+    // These two sections override config values at runtime
+    publicRuntimeConfig: {
+        axios: {
+            browserBaseURL: process.env.LOCAL_API_URL || "https://beta.sciencenearme.org"
+        }
+    },
+
+    privateRuntimeConfig: {
+        axios: {
+            baseURL: process.env.LOCAL_API_URL || "http://" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_HOST + ":" + CIRCUIT_API_SERVICE_BETA_SERVICE_PORT
+        }
     }
 }
