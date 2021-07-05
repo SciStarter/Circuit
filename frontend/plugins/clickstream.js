@@ -35,7 +35,7 @@ document.body.addEventListener('click', function(event) {
     };
 
     axios.post(
-        window.location.protocol + "//" + window.location.hostname + "/api/ui/click",
+        window.location.protocol + "//" + window.location.hostname + (window.location.port === "3000" ? ":8000" : "") + "/api/ui/click",
         params,
     );
 });
