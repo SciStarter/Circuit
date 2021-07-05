@@ -246,6 +246,29 @@
       ]
     }
   },
+  "4dd91b80ed6a319a15dd9c6d1972de6ced297cfdd37abbfc446b45f6805a07d9": {
+    "query": "INSERT INTO c_block (\"language\", \"group\", item, content) VALUES ($1, $2, $3, $4) RETURNING id;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Text",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
   "58321d77d0c4de7155c40c1f954c8345da576c96162f6c594163052fc92bea8a": {
     "query": "update c_partner set exterior = $2, interior = $3 where id = $1;\n",
     "describe": {
@@ -345,6 +368,119 @@
       ]
     }
   },
+  "74512cbed2fd621ad4388b22d49e8bee098b0cdc223e9c10f6688afbe16b5e3e": {
+    "query": "SELECT * FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "created",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 2,
+          "name": "updated",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "language",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "group",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "item",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "content",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "80950a68e5badeed5975a1c5cabd085a45fc0b5e786af4dc039da2de675bfa20": {
+    "query": "SELECT * FROM c_block WHERE id = $1 LIMIT 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "created",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 2,
+          "name": "updated",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "language",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "group",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "item",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "content",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "83254db54e765203368a9452d869af0332b47c607c0ea4dedb21f9af170a0a3b": {
     "query": "update c_person set exterior = $2, interior = $3 where id = $1;\n",
     "describe": {
@@ -403,6 +539,80 @@
         false,
         false
       ]
+    }
+  },
+  "929ffec7bf66135fe540d42efd846e0bafdfa4a8d7895d360b4794e81731a76f": {
+    "query": "SELECT * FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 AND item LIKE $3 LIMIT 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "created",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 2,
+          "name": "updated",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "language",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "group",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "item",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "content",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "bc9782848dbe8d7992f5c31524988e03075c62b6a0dbe0fe35b459e05de34a09": {
+    "query": "UPDATE c_BLOCK SET \"language\" = $2, \"group\" = $3, item = $4, content = $5 WHERE id = $1;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Varchar",
+          "Text",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": []
     }
   },
   "c0425047604adf0d688a217b964e5787c81262a6d2f5c32654d53c6bf148c4ca": {
@@ -561,6 +771,27 @@
       ]
     }
   },
+  "e3e4979a8993b5aa8281b730e005b1b9220b4a4ec9320465e04445d4b7162d99": {
+    "query": "SELECT DISTINCT \"item\" FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 ORDER BY \"item\";\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "item",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
   "e831e96bf898cecd31483a504415204c2e5d6cddf1105963d6046e87afc0ad52": {
     "query": "select exists(select 1 from c_opportunity where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n",
     "describe": {
@@ -630,6 +861,26 @@
       "nullable": [
         false,
         false,
+        false
+      ]
+    }
+  },
+  "f6f4075f2a6e539d490b730364c608936865aa275e126a84899f8674dfb8a2dd": {
+    "query": "SELECT DISTINCT \"group\" FROM c_block WHERE \"language\" LIKE $1 ORDER BY \"group\";\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "group",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
         false
       ]
     }
