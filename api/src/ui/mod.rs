@@ -23,30 +23,40 @@ pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
         .at("content", |r| r.get(content))
 }
 
-/// Update the clickstream with a single on-site click instance
+/// Update the clickstream with a single on-site click instance. No-op
+/// when compiled in debug mode.
 pub async fn record_click(mut _req: tide::Request<()>) -> tide::Result {
-    Ok(Response::builder(StatusCode::Ok).build())
+    if cfg!(not(debug_assertions)) {
+        todo!()
+    } else {
+        Ok(Response::builder(StatusCode::Ok).build())
+    }
 }
 
-/// Record an instance of a user clicking on an external link
+/// Record an instance of a user clicking on an external link. No-op
+/// when compiled in debug mode.
 pub async fn record_external(mut _req: tide::Request<()>) -> tide::Result {
-    Ok(Response::builder(StatusCode::Ok).build())
+    if cfg!(not(debug_assertions)) {
+        todo!()
+    } else {
+        Ok(Response::builder(StatusCode::Ok).build())
+    }
 }
 
 /// Log the current session in to an account, if the validations pass.
 ///
-/// Set a token cookie with the HttpOnly and (on
-/// #[cfg(not(debug_assertions))] ) Secure flags, and also return the
-/// token in the response body for script use.
+/// Set a token cookie with the HttpOnly, SameSite=Lax, and (when
+/// ```#[cfg(not(debug_assertions))]```) Secure flags, and also
+/// return the token in the response body for script use.
 pub async fn login(mut _req: tide::Request<()>) -> tide::Result {
     unimplemented!()
 }
 
 /// Create an account, if the validations pass.
 ///
-/// Set a token cookie with the HttpOnly and (on
-/// #[cfg(not(debug_assertions))] ) Secure flags, and also return the
-/// token in the response body for script use.
+/// Set a token cookie with the HttpOnly, SameSite=Lax, and (when
+/// ```#[cfg(not(debug_assertions))]```) Secure flags, and also
+/// return the token in the response body for script use.
 pub async fn signup(mut _req: tide::Request<()>) -> tide::Result {
     unimplemented!()
 }

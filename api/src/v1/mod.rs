@@ -55,7 +55,7 @@ pub fn set_csrf_cookie(mut resp: Response, csrf: &str) -> Response {
     resp.insert_cookie(
         tide::http::Cookie::build("csrftoken", csrf.to_string())
             .path("/")
-            .secure(true)
+            .secure(cfg!(not(debug_assertions)))
             .http_only(true)
             .same_site(tide::http::cookies::SameSite::Strict)
             .finish(),

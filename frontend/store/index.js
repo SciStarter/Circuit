@@ -5,7 +5,7 @@ function block_key(language, group, item) {
 }
 
 export const state = () => ({
-    dynamic_blocks: {}
+    dynamic_blocks: {},
 });
 
 export const mutations = {
@@ -31,6 +31,7 @@ export const actions = {
                 commit('save_dynamic_block', {language, group, item, content});
             }
             catch(x) {
+                commit('save_dynamic_block', {language, group, item, content: ""});
             }
         }
 

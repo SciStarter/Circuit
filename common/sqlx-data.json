@@ -115,6 +115,24 @@
       ]
     }
   },
+  "3966e9453b13f17e061b7a957fe71e2d1a00ea869abe878738a992b6363b00d1": {
+    "query": "UPDATE c_BLOCK SET \"language\" = $2, \"group\" = $3, item = $4, tags = $5, label = $6, content = $7 WHERE id = $1;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Varchar",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "398eb5595d78b03579bcc0a2ed80217fd033806ee14b372e8ec4b380d9b8813a": {
     "query": "insert into c_partner (exterior, interior) values ($1, $2) returning id;\n",
     "describe": {
@@ -246,8 +264,8 @@
       ]
     }
   },
-  "4dd91b80ed6a319a15dd9c6d1972de6ced297cfdd37abbfc446b45f6805a07d9": {
-    "query": "INSERT INTO c_block (\"language\", \"group\", item, content) VALUES ($1, $2, $3, $4) RETURNING id;\n",
+  "4d1ba739e2e5c521464c4eb89ce69d49b51d14d6c697901d1ffb079b350945a6": {
+    "query": "INSERT INTO c_block (\"language\", \"group\", item, tags, label, content) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;\n",
     "describe": {
       "columns": [
         {
@@ -259,6 +277,8 @@
       "parameters": {
         "Left": [
           "Varchar",
+          "Text",
+          "Text",
           "Text",
           "Text",
           "Text"
@@ -281,6 +301,75 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "58a5b3faeef84fb02e03e9ebab0ec2596cf0e115d1d4e5bbfd3fb6d6f2b3a6a9": {
+    "query": "SELECT * FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 ORDER BY item;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "created",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 2,
+          "name": "updated",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "language",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "group",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "item",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "content",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "tags",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 8,
+          "name": "label",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
     }
   },
   "680c3e5c532b96a75b01a3d33c94c664a4a3318515d31a4c908a5a2193348c02": {
@@ -368,63 +457,6 @@
       ]
     }
   },
-  "74512cbed2fd621ad4388b22d49e8bee098b0cdc223e9c10f6688afbe16b5e3e": {
-    "query": "SELECT * FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "created",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 2,
-          "name": "updated",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 3,
-          "name": "language",
-          "type_info": "Varchar"
-        },
-        {
-          "ordinal": 4,
-          "name": "group",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "item",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 6,
-          "name": "content",
-          "type_info": "Text"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "80950a68e5badeed5975a1c5cabd085a45fc0b5e786af4dc039da2de675bfa20": {
     "query": "SELECT * FROM c_block WHERE id = $1 LIMIT 1;\n",
     "describe": {
@@ -463,6 +495,16 @@
           "ordinal": 6,
           "name": "content",
           "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "tags",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 8,
+          "name": "label",
+          "type_info": "Text"
         }
       ],
       "parameters": {
@@ -471,6 +513,8 @@
         ]
       },
       "nullable": [
+        false,
+        false,
         false,
         false,
         false,
@@ -579,6 +623,16 @@
           "ordinal": 6,
           "name": "content",
           "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "tags",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 8,
+          "name": "label",
+          "type_info": "Text"
         }
       ],
       "parameters": {
@@ -595,24 +649,28 @@
         false,
         false,
         false,
+        false,
+        false,
         false
       ]
     }
   },
-  "bc9782848dbe8d7992f5c31524988e03075c62b6a0dbe0fe35b459e05de34a09": {
-    "query": "UPDATE c_BLOCK SET \"language\" = $2, \"group\" = $3, item = $4, content = $5 WHERE id = $1;\n",
+  "a6078950e864ccf313a410f0a12987a2bcec73567eb8a3e6a415632706f60e12": {
+    "query": "SELECT DISTINCT \"language\" FROM c_block ORDER BY \"language\";\n",
     "describe": {
-      "columns": [],
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "language",
+          "type_info": "Varchar"
+        }
+      ],
       "parameters": {
-        "Left": [
-          "Int4",
-          "Varchar",
-          "Text",
-          "Text",
-          "Text"
-        ]
+        "Left": []
       },
-      "nullable": []
+      "nullable": [
+        false
+      ]
     }
   },
   "c0425047604adf0d688a217b964e5787c81262a6d2f5c32654d53c6bf148c4ca": {

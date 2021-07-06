@@ -1,6 +1,14 @@
 <template><a @click.stop.prevent="go" :href="href" :title="title"><slot></slot></a></template>
 
 <script>
+  /*
+
+  This component is used to create tracked links to external
+  resources. It has parameters for setting the UTM query parameters on
+  the links, and informs the server of the outgoing link before
+  opening the new URL.
+
+  */
 export default {
     props: {
         href: {

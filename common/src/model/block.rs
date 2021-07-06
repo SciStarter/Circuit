@@ -8,11 +8,25 @@ pub struct Block {
     pub language: String,
     pub group: String,
     pub item: String,
+    pub tags: String,
+    pub label: String,
     pub content: String,
 }
 
 impl Block {
-    pub async fn list_groups<'req, DB>(&self, db: DB, language: &str) -> Result<Vec<String>, Error>
+    pub async fn list_languages<'req, DB>(db: DB) -> Result<Vec<String>, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        Ok(sqlx::query_file!("db/block/list_languages.sql")
+            .fetch_all(db)
+            .await?
+            .iter()
+            .map(|r| r.language.to_string())
+            .collect())
+    }
+
+    pub async fn list_groups<'req, DB>(db: DB, language: &str) -> Result<Vec<String>, Error>
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
@@ -25,7 +39,6 @@ impl Block {
     }
 
     pub async fn list_items<'req, DB>(
-        &self,
         db: DB,
         language: &str,
         group: &str,
@@ -44,7 +57,6 @@ impl Block {
     }
 
     pub async fn all_items<'req, DB>(
-        &self,
         db: DB,
         language: &str,
         group: &str,
@@ -62,6 +74,8 @@ impl Block {
                     language: r.language.to_string(),
                     group: r.group.to_string(),
                     item: r.item.to_string(),
+                    tags: r.item.to_string(),
+                    label: r.item.to_string(),
                     content: r.content.to_string(),
                 })
                 .collect(),
@@ -85,6 +99,8 @@ impl Block {
             language: rec.language,
             group: rec.group,
             item: rec.item,
+            tags: rec.tags,
+            label: rec.label,
             content: rec.content,
         })
     }
@@ -107,6 +123,8 @@ impl Block {
             language: rec.language,
             group: rec.group,
             item: rec.item,
+            tags: rec.tags,
+            label: rec.label,
             content: rec.content,
         })
     }
@@ -124,6 +142,8 @@ impl Block {
                 self.language,
                 self.group,
                 self.item,
+                self.tags,
+                self.label,
                 self.content,
             )
             .execute(db)
@@ -134,6 +154,8 @@ impl Block {
                 self.language,
                 self.group,
                 self.item,
+                self.tags,
+                self.label,
                 self.content,
             )
             .fetch_one(db)

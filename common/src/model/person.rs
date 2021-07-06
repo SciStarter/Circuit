@@ -70,6 +70,7 @@ pub enum Permission {
     ManageOpportunities,
     ManagePartners,
     ManagePersons,
+    ManageContent,
     ManageSomething,
 }
 
@@ -84,6 +85,7 @@ impl Permission {
             (Permission::ManageOpportunities, Permission::ManageSomething) => true,
             (Permission::ManagePartners, Permission::ManageSomething) => true,
             (Permission::ManagePersons, Permission::ManageSomething) => true,
+            (Permission::ManageContent, Permission::ManageSomething) => true,
 
             _ => false,
         }

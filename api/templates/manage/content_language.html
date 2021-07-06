@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>{{language_name}} Content Groups</title>
+  </head>
+  <body>
+    <h1>{{language_name}} Content Groups</h1>
+    <ul style="list-style: none">
+      {% for group in groups %}
+      <li><a href="{{group}}/">{{group}}</a></li>
+      {% endfor %}
+    </ul>
+
+    <h1>Add Group</h1>
+    <form method="post">
+      <input name="group" type="text" placeholder="Group id">
+      <input type="submit" value="Add">
+    </form>
+    <a href="..">Back to language list</a>
+  </body>
+</html>
