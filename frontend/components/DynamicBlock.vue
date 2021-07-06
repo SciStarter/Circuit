@@ -4,7 +4,7 @@
 </template>
 
 <script>
-  /*
+/*
 
   This component is used to present a block of HTML which can be
   edited in the management interface. This allows non-programmers to
@@ -20,7 +20,7 @@
   in case the requested content can not retrieved. If that is not
   supplied wither, a paragraph of lorem ipsum text will be used.
 
-  */
+*/
 
 export default {
     props: {
@@ -37,11 +37,31 @@ export default {
             type: String,
             required: true
         },
+        removeParagraphs: {
+            type: Boolean,
+            default: false,
+            required: false
+        },
     },
 
     data: () => ({
-        content: null
+        raw_content: null
     }),
+
+    computed: {
+        content() {
+            if(this.removeParagraphs) {
+                if(this.raw_content === null) {
+                    return null;
+                }
+
+                return this.raw_content.replaceAll(/<\/?p.*?>/ig, '').trim();
+            }
+            else {
+                return this.raw_content;
+            }
+        }
+    },
 
     async fetch() {
         // We could have used this.$axios.$get directly here, and for
@@ -51,7 +71,7 @@ export default {
         // It's done through the Vuex state store here so that we can
         // cache the content locally (in the state store) during a
         // session rather than fetching it repeatedly.
-        this.content = await this.$store.dispatch('get_dynamic_block', {
+        this.raw_content = await this.$store.dispatch('get_dynamic_block', {
             language: this.language,
             group: this.group,
             item: this.item

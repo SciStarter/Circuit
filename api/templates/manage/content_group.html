@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>{{language_name}} : {{group}} Content Items</title>
+  </head>
+  <body>
+    <h1>{{language_name}} : {{group}} Content Items</h1>
+    <ul style="list-style: none">
+      {% for item in items %}
+      <li><a href="{{item}}">{{item}}</a></li>
+      {% endfor %}
+    </ul>
+
+    <h1>Add Block</h1>
+    <form method="post">
+      <input name="item" type="text" placeholder="Block id">
+      <input type="submit" value="Add">
+    </form>
+    <a href="..">Back to {{language_name}}</a>
+  </body>
+</html>
