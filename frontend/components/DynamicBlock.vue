@@ -55,7 +55,7 @@ export default {
                     return null;
                 }
 
-                return this.raw_content.replaceAll(/<\/?p.*?>/ig, '').trim();
+                return this.raw_content.replaceAll(/<\/?p\b.*?>/ig, '').trim();
             }
             else {
                 return this.raw_content;
