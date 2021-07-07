@@ -34,7 +34,7 @@ The short version is this:
   you’re comfortable with. Linux package managers and Docker are both
   convenient options.
 
-* Make sure the credentials are set up so that a local process will
+* Make sure the credentials are set up so that a local process can
   have read/write access to an empty database on that PostgreSQL
   server.
 
@@ -63,6 +63,11 @@ SUPERUSER_PASSWORD | Set this to the password you want to use for accessing the 
 Now we can run the server by changing to the ../api folder and doing:
 
     cargo run
+
+The first time you do a cargo run, it might take a while to complete,
+as it downloads and compiles dependencies. Subsequent runs will be
+almost instantaneous, unless the API server code has been updated, in
+which case it will need to recompile the changed parts.
 
 ## Build Setup
 
