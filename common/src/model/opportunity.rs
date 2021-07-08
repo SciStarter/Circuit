@@ -2,7 +2,7 @@ use super::Error;
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
-use sqlx;
+use sqlx::prelude::*;
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
@@ -343,7 +343,135 @@ pub struct Opportunity {
     pub interior: OpportunityInterior,
 }
 
+impl std::fmt::Display for Opportunity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.exterior.title)
+    }
+}
+
+pub struct OpportunityReference {
+    pub uid: Uuid,
+    pub title: String,
+}
+
+impl std::fmt::Display for OpportunityReference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.title)
+    }
+}
+
+/// Each field represents one of the database fields by which
+/// Opportunity queries can be narrowed. The default value does not
+/// narrow the query at all, so to find all of the opportunities with
+/// a particular string in the name, we could do something like:
+/// ```
+/// Opportunity::load_matching(db.acquire().await?, OpportunityQuery { title_contains: "hello".to_string(), ..Default::default() })
+/// ```
+#[derive(Default)]
+pub struct OpportunityQuery {
+    pub accepted: Option<bool>,
+    pub withdrawn: Option<bool>,
+    pub title_contains: Option<String>,
+    pub partner: Option<Uuid>,
+}
+
+enum ParamValue {
+    Bool(bool),
+    String(String),
+    Uuid(Uuid),
+}
+
 impl Opportunity {
+    pub async fn load_matching<'req, DB>(
+        db: DB,
+        query: OpportunityQuery,
+    ) -> Result<Vec<Opportunity>, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let mut clauses = Vec::new();
+        let mut params = Vec::new();
+
+        if let Some(val) = query.accepted {
+            params.push(ParamValue::Bool(val));
+            clauses.push(format!(
+                "(interior -> 'accepted') @> (${}::jsonb)",
+                params.len()
+            ));
+        }
+
+        if let Some(val) = query.withdrawn {
+            params.push(ParamValue::Bool(val));
+            clauses.push(format!(
+                "(interior -> 'withdrawn') @> (${}::jsonb)",
+                params.len()
+            ));
+        }
+
+        if let Some(val) = query.title_contains {
+            params.push(ParamValue::String(format!("%{}%", val)));
+            clauses.push(format!("(exterior ->> 'title') ILIKE ${}", params.len()));
+        }
+
+        if let Some(val) = query.partner {
+            params.push(ParamValue::Uuid(val));
+            clauses.push(format!(
+                "(exterior -> 'partner') @> (${}::jsonb)",
+                params.len()
+            ));
+        }
+
+        let mut query_string = "SELECT * FROM c_opportunity".to_string();
+
+        if !clauses.is_empty() {
+            query_string.push_str(" WHERE");
+        }
+
+        for clause in clauses.into_iter() {
+            query_string.push(' ');
+            query_string.push_str(&clause);
+        }
+
+        query_string.push_str(" ORDER BY (exterior ->> 'title');");
+
+        let mut query_obj = sqlx::query(&query_string);
+
+        for value in params.into_iter() {
+            query_obj = match value {
+                ParamValue::Bool(val) => query_obj.bind(val),
+                ParamValue::String(val) => query_obj.bind(val),
+                ParamValue::Uuid(val) => query_obj.bind(val),
+            };
+        }
+
+        query_obj
+            .map(|rec| {
+                Ok(Opportunity {
+                    id: Some(rec.get("id")),
+                    exterior: serde_json::from_value(rec.get("exterior"))?,
+                    interior: serde_json::from_value(rec.get("interior"))?,
+                })
+            })
+            .fetch_all(db)
+            .await?
+            .into_iter()
+            .collect()
+    }
+
+    pub fn as_reference(&self) -> OpportunityReference {
+        OpportunityReference {
+            uid: self.exterior.uid.clone(),
+            title: self.exterior.title.clone(),
+        }
+    }
+
+    pub fn into_reference(self) -> OpportunityReference {
+        OpportunityReference {
+            uid: self.exterior.uid,
+            title: self.exterior.title,
+        }
+    }
+
     pub async fn load_partner<'req, DB>(&self, db: DB) -> Result<super::partner::Partner, Error>
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,

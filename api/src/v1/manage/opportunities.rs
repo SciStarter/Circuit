@@ -1,0 +1,113 @@
+use askama::Template;
+use common::model::person::Permission;
+use http_types::Method;
+use serde::Deserialize;
+use sqlx::{Acquire, Postgres};
+use tide_fluent_routes::{
+    routebuilder::{RouteBuilder, RouteBuilderExt},
+    RouteSegment,
+};
+use tide_sqlx::SQLxRequestExt;
+use uuid::Uuid;
+
+use crate::v1::redirect;
+use common::model::opportunity::OpportunityQuery;
+use common::model::Opportunity;
+
+pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
+    routes
+        .get(search)
+        .at(":uid", |r| r.get(opportunity).post(opportunity))
+}
+
+#[derive(Template)]
+#[template(path = "manage/opportunities.html")]
+struct OpportunitiesPage {
+    pub accepted: Option<bool>,
+    pub withdrawn: Option<bool>,
+    pub title: Option<String>,
+    pub partner: Option<Uuid>,
+    pub matches: Vec<Opportunity>,
+}
+
+#[derive(Deserialize)]
+struct OpportunitiesForm {
+    pub accepted: Option<bool>,
+    pub withdrawn: Option<bool>,
+    pub title: Option<String>,
+    pub partner: Option<Uuid>,
+}
+
+async fn search(req: tide::Request<()>) -> tide::Result {
+    let _admin = match super::authorized_admin(&req, &Permission::ManageOpportunities).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let form: OpportunitiesForm = req.query()?;
+    let mut db = req.sqlx_conn::<Postgres>().await;
+
+    Ok(OpportunitiesPage {
+        accepted: form.accepted.clone(),
+        withdrawn: form.withdrawn.clone(),
+        title: form.title.clone(),
+        partner: form.partner.clone(),
+        matches: Opportunity::load_matching(
+            db.acquire().await?,
+            OpportunityQuery {
+                title_contains: form.title,
+                partner: form.partner,
+                accepted: form.accepted,
+                withdrawn: form.withdrawn,
+                ..Default::default()
+            },
+        )
+        .await?,
+    }
+    .into())
+}
+
+#[derive(Deserialize, Template)]
+#[template(path = "manage/opportunity.html")]
+struct OpportunityForm {
+    message: String,
+    title: String,
+    partner_name: String,
+}
+
+async fn opportunity(mut req: tide::Request<()>) -> tide::Result {
+    let _admin = match super::authorized_admin(&req, &Permission::ManageOpportunities).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let mut opportunity = {
+        let uid: Uuid = req.param("uid")?.parse()?;
+        let mut db = req.sqlx_conn::<Postgres>().await;
+        Opportunity::load_by_uid(db.acquire().await?, &uid).await?
+    };
+
+    if let Method::Post = req.method() {
+        let mut form: OpportunityForm = req.body_form().await?;
+
+        opportunity.exterior.title = form.title.clone();
+        opportunity.exterior.partner_name = form.partner_name.clone();
+
+        let mut db = req.sqlx_conn::<Postgres>().await;
+
+        if let Err(err) = opportunity.store(db.acquire().await?).await {
+            form.message = err.to_string();
+            return Ok(form.into());
+        }
+
+        return Ok(redirect(req.url().path()));
+    }
+
+    let form = OpportunityForm {
+        message: String::new(),
+        title: opportunity.exterior.title,
+        partner_name: opportunity.exterior.partner_name,
+    };
+
+    Ok(form.into())
+}
