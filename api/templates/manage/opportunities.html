@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Opportunities</title>
+  </head>
+  <body>
+    <h1>Opportunities</h1>
+    <table>
+      <tr>
+        <th>Opportunity</th>
+        <th>Accepted</th>
+        <th>Withdrawn</th>
+      </tr>
+      {% for opp in matches %}
+      <tr>
+        <td>
+          <a href="{{opp.exterior.uid}}">{{opp.exterior.title}}</a>
+        </td>
+        <td>
+          {% if opp.interior.accepted %}<span style="color: #007C03">✓</span>{% endif %}
+        </td>
+        <td>
+          {% if opp.interior.withdrawn %}<span style="color: #650071">✓</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <a href=".">Back to opportunity list</a>
+  </body>
+</html>
