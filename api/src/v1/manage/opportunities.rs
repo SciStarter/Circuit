@@ -12,7 +12,9 @@ use uuid::Uuid;
 
 use crate::v1::redirect;
 use common::model::opportunity::OpportunityQuery;
+use common::model::partner::PartnerReference;
 use common::model::Opportunity;
+use common::model::Partner;
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
     routes
@@ -23,10 +25,11 @@ pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
 #[derive(Template)]
 #[template(path = "manage/opportunities.html")]
 struct OpportunitiesPage {
-    pub accepted: Option<bool>,
-    pub withdrawn: Option<bool>,
-    pub title: Option<String>,
-    pub partner: Option<Uuid>,
+    pub accepted: bool,
+    pub withdrawn: bool,
+    pub title: String,
+    pub partner: Uuid,
+    pub partners: Vec<PartnerReference>,
     pub matches: Vec<Opportunity>,
 }
 
@@ -48,10 +51,11 @@ async fn search(req: tide::Request<()>) -> tide::Result {
     let mut db = req.sqlx_conn::<Postgres>().await;
 
     Ok(OpportunitiesPage {
-        accepted: form.accepted.clone(),
-        withdrawn: form.withdrawn.clone(),
-        title: form.title.clone(),
-        partner: form.partner.clone(),
+        accepted: form.accepted.unwrap_or(false),
+        withdrawn: form.withdrawn.unwrap_or(false),
+        title: form.title.clone().unwrap_or_else(String::new),
+        partner: form.partner.clone().unwrap_or_default(),
+        partners: Partner::catalog(db.acquire().await?).await?,
         matches: Opportunity::load_matching(
             db.acquire().await?,
             OpportunityQuery {

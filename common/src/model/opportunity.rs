@@ -395,7 +395,7 @@ impl Opportunity {
         if let Some(val) = query.accepted {
             params.push(ParamValue::Bool(val));
             clauses.push(format!(
-                "(interior -> 'accepted') @> (${}::jsonb)",
+                "(${}::jsonb) @> (interior -> 'accepted')",
                 params.len()
             ));
         }
@@ -403,7 +403,7 @@ impl Opportunity {
         if let Some(val) = query.withdrawn {
             params.push(ParamValue::Bool(val));
             clauses.push(format!(
-                "(interior -> 'withdrawn') @> (${}::jsonb)",
+                "(${}::jsonb) @> (interior -> 'withdrawn')",
                 params.len()
             ));
         }
@@ -416,7 +416,7 @@ impl Opportunity {
         if let Some(val) = query.partner {
             params.push(ParamValue::Uuid(val));
             clauses.push(format!(
-                "(exterior -> 'partner') @> (${}::jsonb)",
+                "(${}::jsonb) @> (exterior -> 'partner')",
                 params.len()
             ));
         }
@@ -440,7 +440,7 @@ impl Opportunity {
             query_obj = match value {
                 ParamValue::Bool(val) => query_obj.bind(val),
                 ParamValue::String(val) => query_obj.bind(val),
-                ParamValue::Uuid(val) => query_obj.bind(val),
+                ParamValue::Uuid(val) => query_obj.bind(serde_json::to_value(val)?),
             };
         }
 

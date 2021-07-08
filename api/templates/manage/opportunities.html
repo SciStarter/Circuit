@@ -6,6 +6,16 @@
   </head>
   <body>
     <h1>Opportunities</h1>
+    <form method="get">
+      <input type="text" name="title" value="{{title}}" placeholder="name">
+      <select name="partner">
+        <option value="">Partner</option>
+        {% for option in partners %}
+        <option value="{{option.uid}}"{% if option.uid == partner %} selected{% endif %}>{{option.name}}</option>
+        {% endfor %}
+      </select>
+      <input type="submit" value="Search">
+    </form>
     <table>
       <tr>
         <th>Opportunity</th>
