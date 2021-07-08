@@ -74,20 +74,22 @@ impl Partner {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        Ok(sqlx::query_file!("db/partner/catalog.sql")
-            .map(|row| PartnerReference {
-                id: row.id,
-                uid: row
-                    .uid
-                    .and_then(|x| serde_json::from_value(x).ok())
-                    .unwrap_or_else(|| Default::default()),
-                name: row
-                    .name
-                    .and_then(|x| serde_json::from_value(x).ok())
-                    .unwrap_or_else(|| Default::default()),
+        sqlx::query_file!("db/partner/catalog.sql")
+            .map(|row| {
+                Ok(PartnerReference {
+                    id: row.id,
+                    uid: serde_json::from_value(
+                        row.uid.ok_or_else(|| Error::Missing("uid".to_string()))?,
+                    )?,
+                    name: serde_json::from_value(
+                        row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
+                    )?,
+                })
             })
             .fetch_all(db)
-            .await?)
+            .await?
+            .into_iter()
+            .collect()
     }
 
     pub async fn load_persons<'req, DB>(&self, db: DB) -> Result<Vec<Result<Person, Error>>, Error>
