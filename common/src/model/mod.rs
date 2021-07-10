@@ -30,6 +30,30 @@ pub enum Error {
     JSON(#[from] serde_json::Error),
 }
 
+/// Returns a string containing spaces inserted before each capital
+/// letter (except the first, if the first capital is also the first
+/// letter of the input string)
+// The vec! expressions are used to get variable length iterators, but
+// it could be done better. Revisit if this becomes a bottleneck.
+pub fn separate_camel_case(input: &str) -> String {
+    input
+        .chars()
+        .enumerate()
+        .flat_map(|(i, c)| {
+            if i > 0 && c.is_ascii_uppercase() {
+                vec![' ', c].into_iter()
+            } else {
+                vec![c].into_iter()
+            }
+        })
+        .collect()
+}
+
+pub trait SelectOption: Sized {
+    fn all_options() -> Vec<(String, String, Self)>;
+    fn to_option(&self) -> (String, String, Self);
+}
+
 // #[derive(Debug, Default, sqlx::Type)]
 // #[sqlx(type_name = "Person")]
 // pub struct Person {}

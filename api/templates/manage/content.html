@@ -2,25 +2,31 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/api/docs/bulma.css">
     <title>Content</title>
   </head>
   <body>
-    <h1>Current Languages</h1>
-    <ul style="list-style: none">
-      {% for language in languages %}
-      <li><a href="{{language.0}}/">{{language.1}}</a></li>
-      {% endfor %}
-    </ul>
+    <section class="section">
+      <div class="container">
+        <a href="..">Back to management dashboard</a>
+        <h1 class="title">Current Languages</h1>
+        <ul style="list-style: none">
+          {% for language in languages %}
+          <li><a href="{{language.0}}/">{{language.1}}</a></li>
+          {% endfor %}
+        </ul>
 
-    <h1>Add Language</h1>
-    <form method="post">
-      <select name="language">
-        {% for language in all_languages %}
-        <option value="{{language.0}}">{{language.1}}</option>
-        {% endfor %}
-      </select>
-      <input type="submit" value="Add">
-    </form>
-    <a href="..">Back to management</a>
+        <h1>Add Language</h1>
+        <form method="post">
+          <select name="language">
+            {% for language in all_languages %}
+            <option value="{{language.0}}">{{language.1}}</option>
+            {% endfor %}
+          </select>
+          <input class="button is-small" type="submit" value="Add">
+        </form>
+      </div>
+    </section>
   </body>
 </html>

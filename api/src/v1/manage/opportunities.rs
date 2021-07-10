@@ -15,6 +15,7 @@ use common::model::opportunity::OpportunityQuery;
 use common::model::partner::PartnerReference;
 use common::model::Opportunity;
 use common::model::Partner;
+use common::model::SelectOption;
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
     routes
@@ -71,10 +72,31 @@ async fn search(req: tide::Request<()>) -> tide::Result {
     .into())
 }
 
-#[derive(Deserialize, Template)]
+mod filters {
+    pub fn mapping(
+        mapping: &std::collections::HashMap<String, String>,
+    ) -> ::askama::Result<String> {
+        if mapping.is_empty() {
+            return Ok("<em>No data entered</em>".to_string());
+        }
+
+        let parts: Vec<String> = mapping
+            .iter()
+            .map(|(k, v)| format!("{}: {}", k, v))
+            .collect();
+        Ok(parts.join(", "))
+    }
+}
+
+#[derive(Template)]
 #[template(path = "manage/opportunity.html")]
-struct OpportunityForm {
+struct OpportunityPage {
     message: String,
+    opportunity: Opportunity,
+}
+
+#[derive(Deserialize)]
+struct OpportunityForm {
     title: String,
     partner_name: String,
 }
@@ -92,7 +114,7 @@ async fn opportunity(mut req: tide::Request<()>) -> tide::Result {
     };
 
     if let Method::Post = req.method() {
-        let mut form: OpportunityForm = req.body_form().await?;
+        let form: OpportunityForm = req.body_form().await?;
 
         opportunity.exterior.title = form.title.clone();
         opportunity.exterior.partner_name = form.partner_name.clone();
@@ -100,17 +122,19 @@ async fn opportunity(mut req: tide::Request<()>) -> tide::Result {
         let mut db = req.sqlx_conn::<Postgres>().await;
 
         if let Err(err) = opportunity.store(db.acquire().await?).await {
-            form.message = err.to_string();
-            return Ok(form.into());
+            return Ok(OpportunityPage {
+                message: err.to_string(),
+                opportunity,
+            }
+            .into());
         }
 
         return Ok(redirect(req.url().path()));
     }
 
-    let form = OpportunityForm {
+    let form = OpportunityPage {
         message: String::new(),
-        title: opportunity.exterior.title,
-        partner_name: opportunity.exterior.partner_name,
+        opportunity,
     };
 
     Ok(form.into())

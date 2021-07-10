@@ -1,0 +1,7 @@
+dl > dt {
+    font-weight: bold;
+}
+
+dl > dd {
+    margin-left: 1rem;
+}
