@@ -2,41 +2,46 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/api/docs/bulma.css">
     <title>Opportunities</title>
   </head>
   <body>
-    <h1>Opportunities</h1>
-    <form method="get">
-      <input type="text" name="title" value="{{title}}" placeholder="name">
-      <select name="partner">
-        <option value="">Partner</option>
-        {% for option in partners %}
-        <option value="{{option.uid}}"{% if option.uid == partner %} selected{% endif %}>{{option.name}}</option>
-        {% endfor %}
-      </select>
-      <input type="submit" value="Search">
-    </form>
-    <table>
-      <tr>
-        <th>Opportunity</th>
-        <th>Accepted</th>
-        <th>Withdrawn</th>
-      </tr>
-      {% for opp in matches %}
-      <tr>
-        <td>
-          <a href="{{opp.exterior.uid}}">{{opp.exterior.title}}</a>
-        </td>
-        <td>
-          {% if opp.interior.accepted %}<span style="color: #007C03">✓</span>{% endif %}
-        </td>
-        <td>
-          {% if opp.interior.withdrawn %}<span style="color: #650071">✓</span>{% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
-
-    <a href=".">Back to opportunity list</a>
+    <section class="section">
+      <div class="container">
+        <a href="..">Back to management dashboard</a>
+        <h1 class="title">Opportunities</h1>
+        <form method="get">
+          <input type="text" name="title" value="{{title}}" placeholder="name">
+          <select name="partner">
+            <option value="">Partner</option>
+            {% for option in partners %}
+            <option value="{{option.uid}}"{% if option.uid == partner %} selected{% endif %}>{{option.name}}</option>
+            {% endfor %}
+          </select>
+          <input type="submit" value="Search">
+        </form>
+        <table>
+          <tr>
+            <th>Opportunity</th>
+            <th>Accepted</th>
+            <th>Withdrawn</th>
+          </tr>
+          {% for opp in matches %}
+          <tr>
+            <td>
+              <a href="{{opp.exterior.uid}}">{{opp.exterior.title}}</a>
+            </td>
+            <td>
+              {% if opp.interior.accepted %}<span style="color: #007C03">✓</span>{% endif %}
+            </td>
+            <td>
+              {% if opp.interior.withdrawn %}<span style="color: #650071">✓</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </section>
   </body>
 </html>

@@ -2,32 +2,37 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/api/docs/bulma.css">
     <title>{{language_name}} : {{group}} : {{item}}</title>
     <script src="https://cdn.tiny.cloud/1/24mjuektfkv1ynidjxtt61dnvj8flo2yxxcpb35r4gwwqfrp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
       tinymce.init({
-        selector: '#content',
-        plugins: 'code image link',
-        menubar: 'file edit view format insert',
-        toolbar: 'undo redo | styleselect forecolor | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | link image'
+      selector: '#content',
+      plugins: 'code image link',
+      menubar: 'file edit view format insert',
+      toolbar: 'undo redo | styleselect forecolor | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | link image'
       });
     </script>
   </head>
   <body>
-    <h1>{{language_name}} : {{group}} : {{item}}</h1>
-    <form method="post">
-      <label for="label"><h3>Label</h3></label>
-      <input id="label" type="text" name="label" value="{{label}}">
+    <section class="section">
+      <div class="container">
+        <a href=".">Back to {{group}}</a>
+        <h1 class="title">{{language_name}} : {{group}} : {{item}}</h1>
+        <form method="post">
+          <label for="label"><h3>Label</h3></label>
+          <input id="label" type="text" name="label" value="{{label}}">
 
-      <label for="content"><h3>Content</h3></label>
-      <textarea id="content" name="content" style="min-height: 50vh">{{content}}</textarea>
+          <label for="content"><h3>Content</h3></label>
+          <textarea id="content" name="content" style="min-height: 50vh">{{content}}</textarea>
 
-      <label for="label"><h3>Tags</h3></label>
-      <input id="tags" type="text" name="tags" value="{{tags}}">
+          <label for="label"><h3>Tags</h3></label>
+          <input id="tags" type="text" name="tags" value="{{tags}}">
 
-      <input style="display: block; margin-top: 2rem" type="submit" value="Save">
-    </form>
-
-    <a href=".">Back to {{group}}</a>
+          <input class="button is-primary is-large" type="submit" value="Save">
+        </form>
+      </div>
+    </section>
   </body>
 </html>

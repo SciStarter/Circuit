@@ -1,16 +1,23 @@
 <!doctype html>
 <html>
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/api/docs/bulma.css">
     <title>Management Dashboard</title>
   </head>
   <body>
-    <h1>Management Dashboard</h1>
-    <h2>Logged in as {{admin.interior.email}}</h2>
+    <section class="section">
+      <div class="container">
+        <h1 class="title">Management Dashboard</h1>
+        <h2>Logged in as {{admin.interior.email}}</h2>
 
-    <ul style="list-style: none">
-      <li><a href="partners/">Partners</a></li>
-      <li><a href="opportunities/">Opportunities</a></li>
-      <li><a href="content/">Dynamic Content</a></li>
-    </ul>
+        <ul style="list-style: none">
+          <li><a href="partners/">Partners</a></li>
+          <li><a href="opportunities/">Opportunities</a></li>
+          <li><a href="content/">Dynamic Content</a></li>
+        </ul>
+      </div>
+    </section>
   </body>
 </html>

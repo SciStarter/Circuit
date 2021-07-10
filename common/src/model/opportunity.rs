@@ -4,11 +4,15 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::convert::AsRef;
+use std::str::FromStr;
+use strum::IntoEnumIterator;
+use strum_macros::{AsRefStr, EnumIter, EnumString};
 use uuid::Uuid;
 
 use super::PARTNER_NAMESPACE;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum OrganizationType {
     MuseumOrScienceCenter,
@@ -32,13 +36,26 @@ pub enum OrganizationType {
     Unspecified,
 }
 
+impl super::SelectOption for OrganizationType {
+    fn all_options() -> Vec<(String, String, OrganizationType)> {
+        OrganizationType::iter().map(|x| x.to_option()).collect()
+    }
+
+    fn to_option(&self) -> (String, String, OrganizationType) {
+        let code = self.as_ref();
+        let name = super::separate_camel_case(code);
+
+        (code.to_string(), name, *self)
+    }
+}
+
 impl Default for OrganizationType {
     fn default() -> Self {
         OrganizationType::Unspecified
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr)]
 #[serde(rename_all = "snake_case")]
 pub enum EntityType {
     Unspecified,
@@ -53,7 +70,7 @@ impl Default for EntityType {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum VenueType {
     Indoors,
@@ -70,13 +87,26 @@ pub enum VenueType {
     Unspecified,
 }
 
+impl super::SelectOption for VenueType {
+    fn all_options() -> Vec<(String, String, VenueType)> {
+        VenueType::iter().map(|x| x.to_option()).collect()
+    }
+
+    fn to_option(&self) -> (String, String, VenueType) {
+        let code = self.as_ref();
+        let name = super::separate_camel_case(code);
+
+        (code.to_string(), name, *self)
+    }
+}
+
 impl Default for VenueType {
     fn default() -> Self {
         VenueType::Unspecified
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum Domain {
     CitizenScience,
@@ -88,13 +118,26 @@ pub enum Domain {
     Unspecified,
 }
 
+impl super::SelectOption for Domain {
+    fn all_options() -> Vec<(String, String, Domain)> {
+        Domain::iter().map(|x| x.to_option()).collect()
+    }
+
+    fn to_option(&self) -> (String, String, Domain) {
+        let code = self.as_ref();
+        let name = super::separate_camel_case(code);
+
+        (code.to_string(), name, *self)
+    }
+}
+
 impl Default for Domain {
     fn default() -> Self {
         Domain::Unspecified
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum Descriptor {
     AdvocacyDays,
@@ -145,7 +188,20 @@ pub enum Descriptor {
     Workshop,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl super::SelectOption for Descriptor {
+    fn all_options() -> Vec<(String, String, Descriptor)> {
+        Descriptor::iter().map(|x| x.to_option()).collect()
+    }
+
+    fn to_option(&self) -> (String, String, Descriptor) {
+        let code = self.as_ref();
+        let name = super::separate_camel_case(code);
+
+        (code.to_string(), name, *self)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum Topic {
     Agriculture,
@@ -187,6 +243,19 @@ pub enum Topic {
     Transportation,
 }
 
+impl super::SelectOption for Topic {
+    fn all_options() -> Vec<(String, String, Topic)> {
+        Topic::iter().map(|x| x.to_option()).collect()
+    }
+
+    fn to_option(&self) -> (String, String, Topic) {
+        let code = self.as_ref();
+        let name = super::separate_camel_case(code);
+
+        (code.to_string(), name, *self)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct OpenHours {
     pub opens: String,
@@ -205,7 +274,7 @@ pub struct OpenDays {
     pub sunday: Option<OpenHours>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum Cost {
     Free,
@@ -214,13 +283,26 @@ pub enum Cost {
     Unknown,
 }
 
+impl super::SelectOption for Cost {
+    fn all_options() -> Vec<(String, String, Cost)> {
+        Cost::iter().map(|x| x.to_option()).collect()
+    }
+
+    fn to_option(&self) -> (String, String, Cost) {
+        let code = self.as_ref();
+        let name = super::separate_camel_case(code);
+
+        (code.to_string(), name, *self)
+    }
+}
+
 impl Default for Cost {
     fn default() -> Self {
         Cost::Free
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum LocationType {
     #[serde(alias = "ANY")]
@@ -236,6 +318,19 @@ pub enum LocationType {
     #[serde(alias = "Unknown")]
     #[serde(other)]
     Unknown,
+}
+
+impl super::SelectOption for LocationType {
+    fn all_options() -> Vec<(String, String, LocationType)> {
+        LocationType::iter().map(|x| x.to_option()).collect()
+    }
+
+    fn to_option(&self) -> (String, String, LocationType) {
+        let code = self.as_ref();
+        let name = super::separate_camel_case(code);
+
+        (code.to_string(), name, *self)
+    }
 }
 
 impl Default for LocationType {
@@ -256,7 +351,7 @@ fn en_us() -> Vec<String> {
     vec!["en-US".to_string()]
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityExterior {
     pub uid: Uuid,
@@ -309,7 +404,18 @@ pub struct OpportunityExterior {
     pub partner: Uuid, // uid of the Partner entry which controls this entry
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl std::fmt::Debug for OpportunityExterior {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            serde_json::to_string_pretty(self)
+                .unwrap_or_else(|_| "## JSON serialization failed".to_string())
+        )
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityInterior {
     pub accepted: bool,
@@ -333,7 +439,18 @@ impl Default for OpportunityInterior {
     }
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+impl std::fmt::Debug for OpportunityInterior {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            serde_json::to_string_pretty(self)
+                .unwrap_or_else(|_| "## JSON serialization failed".to_string())
+        )
+    }
+}
+
+#[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Opportunity {
     pub id: Option<i32>,
@@ -346,6 +463,17 @@ pub struct Opportunity {
 impl std::fmt::Display for Opportunity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.exterior.title)
+    }
+}
+
+impl std::fmt::Debug for Opportunity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            serde_json::to_string_pretty(self)
+                .unwrap_or_else(|_| "## JSON serialization failed".to_string())
+        )
     }
 }
 
@@ -458,7 +586,7 @@ impl Opportunity {
             .collect()
     }
 
-    pub fn as_reference(&self) -> OpportunityReference {
+    pub fn to_reference(&self) -> OpportunityReference {
         OpportunityReference {
             uid: self.exterior.uid.clone(),
             title: self.exterior.title.clone(),

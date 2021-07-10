@@ -2,29 +2,545 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>{{partner_name}} : {{title}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/api/docs/bulma.css">
+    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+    <link rel="stylesheet" href="/api/docs/manage.css">
+    <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+    {#
     <script src="https://cdn.tiny.cloud/1/24mjuektfkv1ynidjxtt61dnvj8flo2yxxcpb35r4gwwqfrp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
       tinymce.init({
-        selector: '.wysiwyg',
-        plugins: 'code image link',
-        menubar: 'file edit view format insert',
-        toolbar: 'undo redo | styleselect forecolor | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | link image'
+      selector: '.wysiwyg',
+      plugins: 'code image link',
+      menubar: 'file edit view format insert',
+      toolbar: 'undo redo | styleselect forecolor | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | link image'
       });
     </script>
+    #}
+    <title>{{opportunity.exterior.partner_name}} : {{opportunity.exterior.title}}</title>
   </head>
   <body>
-    <h1>{{partner_name}} : {{title}}</h1>
+    <section class="section">
+      <div class="container">
+        <a href=".">Back to opportunity list</a>
+        <h1 class="title">{{opportunity.exterior.partner_name}} : {{opportunity.exterior.title}}</h1>
 
-    {% if message.len() > 0 %}
-    {{message|safe}}
-    {% endif %}
+        {% if message.len() > 0 %}
+        {{message|safe}}
+        {% endif %}
 
-    <form method="post">
+        <form method="post">
+          <div class="columns">
+            <div class="column">
+              <div class="field">
+                <label class="label">UID</label>
+                <div class="control">
+                  <input class="input" type="text" value="{{opportunity.exterior.uid}}" disabled>
+                </div>
+              </div>
+            </div>
+            <div class="column">
+              <div class="field">
+                <label class="label">Created</label>
+                <div class="control">
+                  {% match opportunity.exterior.partner_created %}
+                  {% when Some with (dt) %}
+                  <input class="input" type="text" value="{{dt}}" disabled>
+                  {% else %}
+                  <input class="input" type="text" value="" disabled>
+                  {% endmatch %}
+                </div>
+              </div>
+            </div>
+            <div class="column">
+              <div class="field">
+                <label class="label">Updated</label>
+                <div class="control">
+                  {% match opportunity.exterior.partner_updated %}
+                  {% when Some with (dt) %}
+                  <input class="input" type="text" value="{{dt}}" disabled>
+                  {% else %}
+                  <input class="input" type="text" value="" disabled>
+                  {% endmatch %}
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <input style="display: block; margin-top: 2rem" type="submit" value="Save">
-    </form>
+          <div class="field">
+            <label class="label">Accepted</label>
+            <div class="control">
+              <label class="checkbox"><input type="checkbox" name="accepted" value="true"{% if opportunity.interior.accepted %} checked{% endif %}>Has the opportunity been accepted for publication?</label>
+            </div>
+          </div>
 
-    <a href=".">Back to opportunity list</a>
+          <div class="field">
+            <label class="label">Withdrawn</label>
+            <div class="control">
+              <label class="checkbox"><input type="checkbox" name="withdrawn" value="true"{% if opportunity.interior.withdrawn %} checked{% endif %}>Has the partner withdrawn the opportunity from publication?</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Partner Name</label>
+            <div class="control">
+              <input class="input" type="text" name="partner_name" value="{{opportunity.exterior.partner_name}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Partner Website</label>
+            <div class="control">
+              {% match opportunity.exterior.partner_website %}
+              {% when Some with (val) %}
+              <input class="input" type="text" name="partner_website" value="{{val}}">
+              {% else %}
+              <input class="input" type="text" name="partner_website" value="">
+              {% endmatch %}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Partner Logo URL</label>
+            <div class="control">
+              {% match opportunity.exterior.partner_logo_url %}
+              {% when Some with (val) %}
+              <input class="input" type="text" name="partner_logo_url" value="{{val}}">
+              {% else %}
+              <input class="input" type="text" name="partner_logo_url" value="">
+              {% endmatch %}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Partner Opportunity URL</label>
+            <div class="control">
+              <input class="input" type="text" name="partner_opp_url" value="{{opportunity.exterior.partner_opp_url}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Organization Name</label>
+            <div class="control">
+              <input class="input" type="text" name="organization_name" value="{{opportunity.exterior.organization_name}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Organization Type</label>
+            <div class="control">
+              <div class="select">
+                <select class="input" name="organization_type">
+                  {% for opt in common::model::opportunity::OrganizationType::all_options() %}
+                  <option value="{{opt.0}}"{% if opt.2 == opportunity.exterior.organization_type %} selected{% endif %}>{{opt.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Organization Website</label>
+            <div class="control">
+              {% match opportunity.exterior.organization_website %}
+              {% when Some with (val) %}
+              <input class="input" type="text" name="organization_website" value="{{val}}">
+              {% else %}
+              <input class="input" type="text" name="organization_website" value="">
+              {% endmatch %}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Organization Logo URL</label>
+            <div class="control">
+              {% match opportunity.exterior.organization_logo_url %}
+              {% when Some with (val) %}
+              <input class="input" type="text" name="organization_logo_url" value="{{val}}">
+              {% else %}
+              <input class="input" type="text" name="organization_logo_url" value="">
+              {% endmatch %}
+            </div>
+          </div>
+
+          {# Skipped entity_type, per recent discussions 2021-7-9 #}
+
+          <div class="field">
+            <div class="columns">
+              <div class="column">
+                <label class="label">Opportunity Venue Types</label>
+              </div>
+              <div class="column">
+                <span title="hold down contol or command to select multiple items" class="tag is-info">multiple select</span>
+              </div>
+            </div>
+            <div class="control">
+              <div class="select is-multiple">
+                <select multiple class="input" name="opp_venue">
+                  {% for opt in common::model::opportunity::VenueType::all_options() %}
+                  <option value="{{opt.0}}"{% if opportunity.exterior.opp_venue.contains(opt.2) %} selected{% endif %}>{{opt.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="columns">
+              <div class="column">
+                <label class="label">Opportunity Descriptors</label>
+              </div>
+              <div class="column">
+                <span title="hold down contol or command to select multiple items" class="tag is-info">multiple select</span>
+              </div>
+            </div>
+            <div class="control">
+              <div class="select is-multiple">
+                <select multiple class="input" name="opp_descriptor">
+                  {% for opt in common::model::opportunity::Descriptor::all_options() %}
+                  <option value="{{opt.0}}"{% if opportunity.exterior.opp_descriptor.contains(opt.2) %} selected{% endif %}>{{opt.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Minimum Age</label>
+            <div class="control">
+              <input class="input" type="number" name="min_age" value="{{opportunity.exterior.min_age}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Maximum Age</label>
+            <div class="control">
+              <input class="input" type="number" name="max_age" value="{{opportunity.exterior.max_age}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Domain (Public Engagement in Science)</label>
+            <div class="control">
+              <div class="select">
+                <select class="input" name="pes_domain">
+                  {% for opt in common::model::opportunity::Domain::all_options() %}
+                  <option value="{{opt.0}}"{% if opt.2 == opportunity.exterior.pes_domain %} selected{% endif %}>{{opt.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Tags</label>
+            <div class="control">
+              <textarea class="textarea" name="tags">{{opportunity.exterior.tags|join(", ")}}</textarea>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="columns">
+              <div class="column">
+                <label class="label">Opportunity Topics</label>
+              </div>
+              <div class="column">
+                <span title="hold down contol or command to select multiple items" class="tag is-info">multiple select</span>
+              </div>
+            </div>
+            <div class="control">
+              <div class="select is-multiple">
+                <select multiple class="input" name="opp_topics">
+                  {% for opt in common::model::opportunity::Topic::all_options() %}
+                  <option value="{{opt.0}}"{% if opportunity.exterior.opp_topics.contains(opt.2) %} selected{% endif %}>{{opt.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Ticket Required</label>
+            <div class="control">
+              <label class="checkbox"><input type="checkbox" name="ticket_required" value="true"{% if opportunity.exterior.ticket_required %} checked{% endif %}>Is a ticket required?</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Title</label>
+            <div class="control">
+              <input class="input" type="text" name="title" value="{{opportunity.exterior.title}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Description</label>
+            <div class="control">
+              <textarea id="description" type="text" name="description">{{opportunity.exterior.description}}</textarea>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Short Description (elevator pitch)</label>
+            <div class="control">
+              <input class="input" type="text" name="short_desc" value="{{opportunity.exterior.short_desc}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Image URL</label>
+            <div class="control">
+              <input class="input" type="text" name="image_url" value="{{opportunity.exterior.image_url}}">
+            </div>
+          </div>
+
+          <div class="columns">
+            <div class="column">
+              <div class="field">
+                <label class="label">Begins</label>
+                <div class="control">
+                  {% if opportunity.exterior.start_datetimes.is_empty() %}
+                  <em>No data entered</em>
+                  {% else %}
+                  {% for b in opportunity.exterior.start_datetimes %}
+                  <p>{{b}}</p>
+                  {% endfor %}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% if opportunity.exterior.has_end %}
+            <div class="column">
+              <div class="field">
+                <label class="label">Ends</label>
+                <div class="control">
+                  {% if opportunity.exterior.end_datetimes.is_empty() %}
+                  <em>No data entered</em>
+                  {% else %}
+                  {% for e in opportunity.exterior.end_datetimes %}
+                  <p>{{e}}</p>
+                  {% endfor %}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="field">
+            <label class="label">Daily Hours</label>
+            <div class="control">
+              {% match opportunity.exterior.attraction_hours %}
+              {% when None %}
+              <em>No data entered</em>
+              {% when Some with (days) %}
+              <dl>
+                <dt>Monday</dt>
+                <dd>
+                {%- match days.monday %}
+                {%- when None %}None
+                {%- when Some with (hours) %}{{hours.opens}} through {{hours.closes}}
+                {%- endmatch -%}
+                </dd>
+                <dt>Tuesday</dt>
+                <dd>
+                {%- match days.tuesday %}
+                {%- when None %}None
+                {%- when Some with (hours) %}{{hours.opens}} through {{hours.closes}}
+                {%- endmatch -%}
+                </dd>
+                <dt>Wednesday</dt>
+                <dd>
+                {%- match days.wednesday %}
+                {%- when None %}None
+                {%- when Some with (hours) %}{{hours.opens}} through {{hours.closes}}
+                {%- endmatch -%}
+                </dd>
+                <dt>Thursday</dt>
+                <dd>
+                {%- match days.thursday %}
+                {%- when None %}None
+                {%- when Some with (hours) %}{{hours.opens}} through {{hours.closes}}
+                {%- endmatch -%}
+                </dd>
+                <dt>Friday</dt>
+                <dd>
+                {%- match days.friday %}
+                {%- when None %}None
+                {%- when Some with (hours) %}{{hours.opens}} through {{hours.closes}}
+                {%- endmatch -%}
+                </dd>
+                <dt>Saturday</dt>
+                <dd>
+                {%- match days.saturday %}
+                {%- when None %}None
+                {%- when Some with (hours) %}{{hours.opens}} through {{hours.closes}}
+                {%- endmatch -%}
+                </dd>
+                <dt>Sunday</dt>
+                <dd>
+                {%- match days.sunday %}
+                {%- when None %}None
+                {%- when Some with (hours) %}{{hours.opens}} through {{hours.closes}}
+                {%- endmatch -%}
+                </dd>
+              </dl>
+              {% endmatch %}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Has Cost</label>
+            <div class="control">
+              <div class="select">
+                <select class="input" name="cost">
+                  {% for opt in common::model::opportunity::Cost::all_options() %}
+                  <option value="{{opt.0}}"{% if opt.2 == opportunity.exterior.cost %} selected{% endif %}>{{opt.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Languages</label>
+            <div class="control">
+              <input class="input" type="text" name="languages" value="{{opportunity.exterior.languages|join(", ")}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Hashtags</label>
+            <div class="control">
+              <input class="input" type="text" name="opp_hashtags" value="{{opportunity.exterior.opp_hashtags|join(", ")}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Social Handles</label>
+            <div class="control">
+              <p>{{opportunity.exterior.opp_social_handles|mapping|safe}}</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Is Online</label>
+            <div class="control">
+              <label class="checkbox"><input type="checkbox" name="is_online" value="true"{% if opportunity.exterior.is_online %} checked{% endif %}>Is the opportunity available online?</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Location Type</label>
+            <div class="control">
+              <div class="select">
+                <select class="input" name="location_type">
+                  {% for opt in common::model::opportunity::LocationType::all_options() %}
+                  <option value="{{opt.0}}"{% if opt.2 == opportunity.exterior.location_type %} selected{% endif %}>{{opt.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Point</label>
+            <div class="control">
+              {% match opportunity.exterior.location_point %}
+              {% when None %}<em>No data entered</em>
+              {% when Some with (geom) %}{% if !geom.is_object() || geom.as_object().unwrap().is_empty() %}<em>No data entered</em>{% else %}<strong><em>Available</em></strong>{% endif %}
+              {% endmatch %}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Geometry</label>
+            <div class="control">
+              {% match opportunity.exterior.location_polygon %}
+              {% when None %}<em>No data entered</em>
+              {% when Some with (geom) %}{% if !geom.is_object() || geom.as_object().unwrap().is_empty() %}<em>No data entered</em>{% else %}<strong><em>Available</em></strong>{% endif %}
+              {% endmatch %}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Street</label>
+            <div class="control">
+              <input class="input" type="text" name="address_street" value="{{opportunity.exterior.address_street}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">City</label>
+            <div class="control">
+              <input class="input" type="text" name="address_city" value="{{opportunity.exterior.address_city}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">State/Province</label>
+            <div class="control">
+              <input class="input" type="text" name="address_state" value="{{opportunity.exterior.address_state}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Country</label>
+            <div class="control">
+              <input class="input" type="text" name="address_country" value="{{opportunity.exterior.address_country}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Zip</label>
+            <div class="control">
+              <input class="input" type="text" name="address_zip" value="{{opportunity.exterior.address_zip}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Contact Name</label>
+            <div class="control">
+              <input class="input" type="text" name="contact_name" value="{{opportunity.interior.contact_name}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Contact Email</label>
+            <div class="control">
+              <input class="input" type="text" name="contact_email" value="{{opportunity.interior.contact_email}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Contact Phone</label>
+            <div class="control">
+              <input class="input" type="text" name="contact_phone" value="{{opportunity.interior.contact_phone}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="control">
+              <input class="button is-primary is-large" type="submit" value="Save">
+            </div>
+          </div>
+        </form>
+{#
+        <h1>Exterior</h1>
+        <pre>
+{{"{:?}"|format(opportunity.exterior)}}
+        </pre>
+
+        <h1>Interior</h1>
+        <pre>
+{{"{:?}"|format(opportunity.interior)}}
+        </pre>
+        #}
+      </div>
+    </section>
+    <script>
+      var descriptionMDE = new EasyMDE({element: document.getElementById('description')});
+    </script>
   </body>
 </html>
