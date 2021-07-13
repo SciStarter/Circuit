@@ -195,4 +195,9 @@ mod tests {
             .load()
             .unwrap();
     }
+
+    #[test]
+    fn fetch_museum_of_discovery_and_science() {
+        EventsQL::new("https://mods.org/graphql").load().unwrap();
+    }
 }

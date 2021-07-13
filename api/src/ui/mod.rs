@@ -1,4 +1,5 @@
 use common::model;
+use once_cell::sync::Lazy;
 use sqlx::postgres::Postgres;
 //use std::convert::TryInto;
 //use tide::http::mime;
@@ -12,6 +13,9 @@ use tide_sqlx::SQLxRequestExt;
 //use uuid::Uuid;
 
 //use common::jwt::{check_jwt, issue_jwt};
+
+pub static UI_AUDIENCE: Lazy<uuid::Uuid> =
+    Lazy::new(|| uuid::Uuid::parse_str("0be35cad-2b1f-4a45-a6da-b1051643c6f6").unwrap());
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
     routes
