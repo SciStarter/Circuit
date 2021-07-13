@@ -5,6 +5,7 @@ use serde_json::json;
 use serde_json::Value;
 use std::io::BufReader;
 
+#[derive(Debug)]
 pub struct Ical;
 
 fn _property(p: &ical::property::Property) -> (String, Value) {

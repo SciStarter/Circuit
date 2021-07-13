@@ -8,7 +8,7 @@ pub enum OneOrMany<T> {
     Many(Vec<T>),
 }
 
-pub trait Structure {
+pub trait Structure: std::fmt::Debug {
     type Data;
 
     fn interpret(&self, parsed: Value) -> Result<OneOrMany<Self::Data>, Error>;

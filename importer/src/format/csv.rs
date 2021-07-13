@@ -24,6 +24,7 @@ fn _decode<R: std::io::Read>(mut reader: Reader<R>) -> Result<Value, Error> {
 /// CSV: fields separated by "," and records separated by "\r", "\n",
 /// or "\r\n". Quotes are escaped by doubling them, so "" represents
 /// ". The first row is assumed to contain field names.
+#[derive(Debug)]
 pub struct CommaSeparated;
 
 impl super::Format for CommaSeparated {
@@ -48,6 +49,7 @@ impl super::Format for CommaSeparated {
 /// TSV: fields separated by tab characters and records separated by
 /// "\r", "\n", or "\r\n". The first row is assumed to contain field
 /// names.
+#[derive(Debug)]
 pub struct TabSeparated;
 
 impl super::Format for TabSeparated {
@@ -71,6 +73,7 @@ impl super::Format for TabSeparated {
 
 /// SSV: fields separated by ";" and records separated by "\r", "\n",
 /// or "\r\n". The first row is assumed to contain field names.
+#[derive(Debug)]
 pub struct SemicolonSeparated;
 
 impl super::Format for SemicolonSeparated {
