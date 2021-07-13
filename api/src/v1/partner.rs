@@ -60,7 +60,7 @@ pub async fn partner_authorize(mut req: tide::Request<()>) -> tide::Result {
         ));
     }
 
-    let token = issue_jwt(&partner.exterior.uid)?;
+    let token = issue_jwt(&partner.exterior.uid, &super::API_AUDIENCE)?;
 
     success(&json!({ "token": token }))
 }

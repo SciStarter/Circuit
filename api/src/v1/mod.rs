@@ -1,3 +1,4 @@
+use once_cell::sync::Lazy;
 //use common::model;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
@@ -14,6 +15,9 @@ pub mod manage;
 pub mod opportunity;
 pub mod participation;
 pub mod partner;
+
+pub static API_AUDIENCE: Lazy<uuid::Uuid> =
+    Lazy::new(|| uuid::Uuid::parse_str("023fda90-f6be-43ff-9b92-fa6ac89b2023").unwrap());
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
     routes
@@ -80,7 +84,7 @@ pub fn random_string() -> String {
         .collect()
 }
 
-pub fn header_check(req: &tide::Request<()>) -> Result<Option<Uuid>, Response> {
+pub fn header_check(req: &tide::Request<()>, aud: &Uuid) -> Result<Option<Uuid>, Response> {
     if req.method() != tide::http::Method::Get {
         if let Some(ct) = req.content_type() {
             if ct != mime::JSON {
@@ -117,7 +121,7 @@ pub fn header_check(req: &tide::Request<()>) -> Result<Option<Uuid>, Response> {
         }
 
         if let Some(token) = parts.next() {
-            return Ok(Some(check_jwt(&token).map_err(|_e| {
+            return Ok(Some(check_jwt(&token, aud).map_err(|_e| {
                 error(
                     StatusCode::Unauthorized,
                     "The Authorization header must contain a partner authorization token",

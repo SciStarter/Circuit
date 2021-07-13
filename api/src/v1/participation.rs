@@ -13,7 +13,7 @@ pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
 }
 
 async fn participation_new(mut req: tide::Request<()>) -> tide::Result {
-    let auth = match header_check(&req) {
+    let auth = match header_check(&req, &super::API_AUDIENCE) {
         Ok(x) => match x {
             Some(auth) => auth,
             None => return Ok(error(StatusCode::Unauthorized, "Authorization is required")),
