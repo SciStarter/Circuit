@@ -158,6 +158,7 @@ const QUERY: &'static str = "{\
 // send us that much. It's likely an error, or outright malicious.
 pub const MAX_SIZE: usize = 10 * 1024 * 1024;
 
+#[derive(Debug)]
 pub struct EventsQL {
     endpoint: String,
 }
@@ -187,7 +188,7 @@ impl super::Source for EventsQL {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Source;
+    use crate::source::Source;
 
     #[test]
     fn fetch_wisconsin_science_fest() {

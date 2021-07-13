@@ -1,10 +1,11 @@
 use crate::Error;
 use bytes::{BufMut, Bytes, BytesMut};
 
-// We won't read more than 10 MiB from the server, even if it wants to
+// We won't read more than 64 MiB from the server, even if it wants to
 // send us that much. It's likely an error, or outright malicious.
-pub const MAX_SIZE: usize = 10 * 1024 * 1024;
+pub const MAX_SIZE: usize = 64 * 1024 * 1024;
 
+#[derive(Debug)]
 pub struct HttpGet {
     endpoint: String,
 }
@@ -31,7 +32,7 @@ impl super::Source for HttpGet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Source;
+    use crate::source::Source;
 
     #[test]
     fn fetch_night_sky_network() {

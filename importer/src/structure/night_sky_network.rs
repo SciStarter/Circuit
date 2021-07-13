@@ -6,6 +6,7 @@ use super::{
 use common::model::Opportunity;
 use serde_json::{from_value, Value};
 
+#[derive(Debug)]
 pub struct NightSkyNetwork;
 
 impl Structure for NightSkyNetwork {

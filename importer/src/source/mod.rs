@@ -4,6 +4,6 @@ use bytes::Bytes;
 pub mod eventsql;
 pub mod http;
 
-pub trait Source {
+pub trait Source: std::fmt::Debug {
     fn load(&self) -> Result<Bytes, Error>;
 }
