@@ -380,6 +380,7 @@ pub struct OpportunityExterior {
     pub description: String,
     pub short_desc: String,
     pub image_url: String,
+    pub image_credit: String,
     #[serde(alias = "start_dates")]
     pub start_datetimes: Vec<DateTime<FixedOffset>>,
     pub has_end: bool,

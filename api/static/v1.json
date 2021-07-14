@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Circuit API v1",
-        "version": "1.2.0"
+        "version": "1.2.1"
     },
     "servers": [
         {
@@ -98,6 +98,12 @@
                         "format": "url",
                         "default": "",
                         "description": "The URL where an image associated with this opportunity may be found"
+                    },
+                    "image_credit": {
+                        "type": "string",
+                        "required": false,
+                        "default": "",
+                        "description": "Accreditation and/or copyright acknowledgment for the image"
                     },
                     "partner_opp_url": {
                         "type": "string",
