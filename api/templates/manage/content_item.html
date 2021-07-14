@@ -21,14 +21,26 @@
         <a href=".">Back to {{group}}</a>
         <h1 class="title">{{language_name}} : {{group}} : {{item}}</h1>
         <form method="post">
-          <label for="label"><h3>Label</h3></label>
-          <input id="label" type="text" name="label" value="{{label}}">
+          <div class="field">
+            <label for="label" class="label"><h3>Label</h3></label>
+            <div class="control">
+              <input id="label" type="text" name="label" value="{{label}}" class="input">
+            </div>
+          </div>
 
-          <label for="content"><h3>Content</h3></label>
-          <textarea id="content" name="content" style="min-height: 50vh">{{content}}</textarea>
+          <div class="field">
+            <label for="content" class="label"><h3>Content</h3></label>
+            <div class="control">
+              <textarea id="content" name="content" style="min-height: 50vh">{{content}}</textarea>
+            </div>
+          </div>
 
-          <label for="label"><h3>Tags</h3></label>
-          <input id="tags" type="text" name="tags" value="{{tags}}">
+          <div class="field">
+            <label for="tags" class="label"><h3>Tags</h3></label>
+            <div class="control">
+              <input id="tags" type="text" name="tags" value="{{tags}}" class="input">
+            </div>
+          </div>
 
           <input class="button is-primary is-large" type="submit" value="Save">
         </form>

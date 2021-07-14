@@ -18,8 +18,9 @@
     </card>
   </div>
   <h1><dynamic-block group="homepage" item="demo-header" remove-paragraphs>The contents of a &lt;dynamic-block&gt; tag are displayed if the dynamic content can not be retrieved. If the dynamic content can't be retrieved <em>and</em> the tag has no contents, lorem ipsum is displayed.</dynamic-block></h1>
-  <!-- Dynamic blocks are rendered as div elements, but you can use a class to change how they are displayed -->
-  <dynamic-block group="homepage" item="demo-dynamic" class="demo"></dynamic-block>
+  <!-- Dynamic blocks are rendered as div elements, but you can use classes to change how they are displayed. -->
+  <!-- The "content" class is provided by Bulma, and often makes WYSIWYG-created content look better-->
+  <dynamic-block group="homepage" item="demo-dynamic" class="content demo"></dynamic-block>
 </section>
 </template>
 

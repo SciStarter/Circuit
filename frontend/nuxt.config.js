@@ -65,7 +65,7 @@ export default {
 
     privateRuntimeConfig: {
         axios: {
-            baseURL: process.env.LOCAL_API_URL || "http://" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_HOST + ":" + CIRCUIT_API_SERVICE_BETA_SERVICE_PORT
+            baseURL: process.env.LOCAL_API_URL || "http://" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_HOST + ":" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_PORT
         }
     }
 }
