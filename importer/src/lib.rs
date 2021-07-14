@@ -12,6 +12,8 @@ pub mod structure;
 pub enum Error {
     #[error("I/O error")]
     IO(#[from] std::io::Error),
+    #[error("Incorrectly encoded data")]
+    Unicode(#[from] std::str::Utf8Error),
     #[error("HTTP error")]
     Http(#[from] ureq::Error),
     #[error("JSON error")]

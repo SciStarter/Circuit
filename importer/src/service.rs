@@ -9,6 +9,10 @@ mod config;
 
 #[async_std::main]
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Duration::new is scheduled to become a const fn, after which
+    // this can be moved to a module-level const
+    let RETRY_DELAY: Duration = Duration::new(300, 0);
+
     let importers = config::configure();
     let mut schedule: BinaryHeap<Reverse<(Instant, usize)>> = BinaryHeap::new();
 
@@ -29,10 +33,13 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Some(Reverse((when, idx))) = schedule.pop() {
             if when <= now {
                 let delay = match (&importers[idx]).import(pool.clone()).await {
-                    Ok(optional) => optional,
+                    Ok(optional) => {
+                        println!("Imported {:?}", &importers[idx]);
+                        optional
+                    }
                     Err(error) => {
                         println!("Error {:?} while importing {:?}", error, &importers[idx]);
-                        Some(Duration::new(300, 0))
+                        Some(RETRY_DELAY)
                     }
                 };
 
