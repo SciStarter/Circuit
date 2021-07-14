@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-importer-deploy-beta
+  labels:
+    app: circuit-importer-beta
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circuit-importer-beta
+  template:
+    metadata:
+      labels:
+        app: circuit-importer-beta
+    spec:
+      containers:
+      - name: circuit-importer-beta
+        image: scistarter/circuit-importer:0.1.1
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret-beta
+              key: DATABASE_URL
+
+
