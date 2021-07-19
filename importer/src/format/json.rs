@@ -7,15 +7,15 @@ pub struct Json;
 
 impl super::Format for Json {
     fn decode(&self, raw: Bytes) -> Result<Value, Error> {
-        //Ok(serde_json::from_slice(&raw)?)
+        Ok(serde_json::from_slice(&raw)?)
 
-        // This is a workaround for tab characters in JSON strings.
-        // Hopefully temporary, and to be removed when the Night Sky
-        // Network starts providing valid JSON.
-        let filtered: String = std::str::from_utf8(&raw)?
-            .chars()
-            .map(|c| if c == '\t' { ' ' } else { c })
-            .collect();
-        Ok(serde_json::from_str(&filtered)?)
+        // // This is a workaround for tab characters in JSON strings.
+        // // Hopefully temporary, and to be removed when the Night Sky
+        // // Network starts providing valid JSON.
+        // let filtered: String = std::str::from_utf8(&raw)?
+        //     .chars()
+        //     .map(|c| if c == '\t' { ' ' } else { c })
+        //     .collect();
+        // Ok(serde_json::from_str(&filtered)?)
     }
 }
