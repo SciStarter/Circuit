@@ -2,7 +2,8 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Circuit API v1",
-        "version": "1.2.1"
+        "version": "1.2.1",
+        "description": ""
     },
     "servers": [
         {

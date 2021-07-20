@@ -757,6 +757,26 @@
       ]
     }
   },
+  "cb6bcc178c43dad5481ee0ee1d1bb7e53da5da3a58e093a0175decb2c190b3af": {
+    "query": "select id from c_opportunity where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
   "ce31b38ffa11d0adc8607d19015daee92c05a3148e04626d46ca084f2b99de22": {
     "query": "select exists(select 1 from c_person where ($1::jsonb) @> (interior -> 'email')) as \"exists\";\n",
     "describe": {

@@ -10,9 +10,10 @@ use uuid::Uuid;
 use super::{error, header_check, success};
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
-    routes
-        .post(opportunity_new)
-        .at(":uid", |r| r.get(opportunity_get).put(opportunity_put))
+    routes.post(opportunity_new).at(
+        ":uid",
+        |r| r.get(opportunity_get).put(opportunity_put), /*.patch(opportunity_patch)*/
+    )
 }
 
 async fn opportunity_new(mut req: tide::Request<()>) -> tide::Result {
