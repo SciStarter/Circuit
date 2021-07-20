@@ -53,9 +53,13 @@ where
             .structure
             .interpret(self.format.decode(self.source.load()?)?)?
         {
-            OneOrMany::One(mut item) => item.store(&db).await?,
+            OneOrMany::One(mut item) => {
+                item.set_id_if_necessary(&db).await?;
+                item.store(&db).await?
+            }
             OneOrMany::Many(vec) => {
                 for mut item in vec {
+                    item.set_id_if_necessary(&db).await?;
                     item.store(&db).await?
                 }
             }

@@ -119,6 +119,8 @@ async fn opportunity(mut req: tide::Request<()>) -> tide::Result {
         opportunity.exterior.title = form.title.clone();
         opportunity.exterior.partner_name = form.partner_name.clone();
 
+        // TODO this is incomplete
+
         let mut db = req.sqlx_conn::<Postgres>().await;
 
         if let Err(err) = opportunity.store(db.acquire().await?).await {

@@ -2,9 +2,10 @@ use super::Error;
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
-use sqlx::prelude::*;
+use sqlx::{prelude::*, Postgres};
 use std::collections::{HashMap, HashSet};
 use std::convert::AsRef;
+use std::ops::Deref;
 use std::str::FromStr;
 use strum::IntoEnumIterator;
 use strum_macros::{AsRefStr, EnumIter, EnumString};
@@ -627,6 +628,10 @@ impl Opportunity {
             return Err(Error::Missing("partner_name".into()));
         }
 
+        if let (None, Some(dt)) = (self.exterior.partner_created, self.exterior.partner_updated) {
+            self.exterior.partner_created = Some(dt.clone());
+        }
+
         if self.exterior.title.is_empty() {
             return Err(Error::Missing("title".into()));
         }
@@ -678,6 +683,17 @@ impl Opportunity {
         })
     }
 
+    pub async fn id_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<Option<i32>, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let rec = sqlx::query_file!("db/opportunity/id_by_uid.sql", serde_json::to_value(uid)?)
+            .fetch_optional(db)
+            .await?;
+
+        Ok(rec.map(|row| row.id))
+    }
+
     pub async fn exists_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<bool, Error>
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
@@ -690,6 +706,17 @@ impl Opportunity {
         .await?;
 
         Ok(rec.exists.unwrap_or(false))
+    }
+
+    pub async fn set_id_if_necessary<'req, DB>(&mut self, db: DB) -> Result<(), Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        if let None = self.id {
+            self.id = Opportunity::id_by_uid(db, &self.exterior.uid).await?;
+        }
+
+        Ok(())
     }
 
     pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
