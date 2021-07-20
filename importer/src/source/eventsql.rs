@@ -5,6 +5,7 @@ use crate::Error;
 use bytes::{BufMut, Bytes, BytesMut};
 
 /// This query produces results similar to:
+/// ```
 /// {
 ///   "data": {
 ///     "events": {
@@ -85,78 +86,79 @@ use bytes::{BufMut, Bytes, BytesMut};
 ///     ]
 ///   }
 /// }
-const QUERY: &'static str = "{\
-    events {\
-      edges {\
-        node {\
-          id\
-          content(format: RAW)\
-          cost\
-          currencySymbol\
-          endDate\
-          link\
-          modifiedGmt\
-          origin\
-          phone\
-          recurring\
-          slug\
-          startDates\
-          status\
-          timezone\
-          title(format: RAW)\
-          linkedData {\
-            location {\
-              url\
-              type\
-              telephone\
-              name\
-              description\
-              address {\
-                addressCountry\
-                addressLocality\
-                addressRegion\
-                postalCode\
-                streetAddress\
-                type\
-              }\
-            }\
-            organizer {\
-              email\
-              telephone\
-              name\
-              type\
-              description\
-              url\
-            }\
-            description\
-          }\
-          eventsCategories {\
-            edges {\
-              node {\
-                name\
-              }\
-            }\
-          }\
-          featuredImage {\
-            node {\
-              sourceUrl(size: MEDIUM)\
-            }\
-          }\
-          tags {\
-            edges {\
-              node {\
-                name\
-              }\
-            }\
-          }\
-        }\
-      }\
-    }\
-  }";
+/// ```
+const QUERY: &'static str = r#"{
+    events {
+      edges {
+        node {
+          id
+          content(format: RAW)
+          cost
+          currencySymbol
+          endDate
+          link
+          modifiedGmt
+          origin
+          phone
+          recurring
+          slug
+          startDates
+          status
+          timezone
+          title(format: RAW)
+          linkedData {
+            location {
+              url
+              type
+              telephone
+              name
+              description
+              address {
+                addressCountry
+                addressLocality
+                addressRegion
+                postalCode
+                streetAddress
+                type
+              }
+            }
+            organizer {
+              email
+              telephone
+              name
+              type
+              description
+              url
+            }
+            description
+          }
+          eventsCategories {
+            edges {
+              node {
+                name
+              }
+            }
+          }
+          featuredImage {
+            node {
+              sourceUrl(size: MEDIUM)
+            }
+          }
+          tags {
+            edges {
+              node {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }"#;
 
-// We won't read more than 10 MiB from the server, even if it wants to
+// We won't read more than 64 MiB from the server, even if it wants to
 // send us that much. It's likely an error, or outright malicious.
-pub const MAX_SIZE: usize = 10 * 1024 * 1024;
+pub const MAX_SIZE: usize = 64 * 1024 * 1024;
 
 #[derive(Debug)]
 pub struct EventsQL {
@@ -192,13 +194,11 @@ mod tests {
 
     #[test]
     fn fetch_wisconsin_science_fest() {
-        EventsQL::new("https://www.wisconsinsciencefest.org/graphql")
-            .load()
-            .unwrap();
-    }
-
-    #[test]
-    fn fetch_museum_of_discovery_and_science() {
-        EventsQL::new("https://mods.org/graphql").load().unwrap();
+        assert_ne!(
+            EventsQL::new("https://www.wisconsinsciencefest.org/graphql")
+                .load()
+                .unwrap()[..10],
+            b"{\"errors\":"[..]
+        );
     }
 }
