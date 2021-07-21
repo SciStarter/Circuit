@@ -87,12 +87,15 @@ async fn authorize(mut req: tide::Request<()>) -> tide::Result {
                     }
                     let mut resp = redirect(&form.next.unwrap_or_else(|| BASE.to_string()));
                     resp.insert_cookie(
-                        Cookie::build("manage", issue_jwt(&person.exterior.uid, &MANAGE_AUDIENCE)?)
-                            .path(BASE)
-                            .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
-                            .http_only(true)
-                            .same_site(tide::http::cookies::SameSite::Strict)
-                            .finish(),
+                        Cookie::build(
+                            "manage",
+                            issue_jwt(&person.exterior.uid, &MANAGE_AUDIENCE, 6)?,
+                        )
+                        .path(BASE)
+                        .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
+                        .http_only(true)
+                        .same_site(tide::http::cookies::SameSite::Strict)
+                        .finish(),
                     );
                     return Ok(resp);
                 } else {
