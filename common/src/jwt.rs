@@ -12,7 +12,7 @@ pub static JWT_SIGNING_KEY: Lazy<Hmac<Sha256>> = Lazy::new(|| {
     Hmac::new_from_slice(std::env::var("JWT_SIGNING_KEY").unwrap().as_bytes()).unwrap()
 });
 
-pub fn issue_jwt(uid: &Uuid, aud: &Uuid) -> Result<String, Error> {
+pub fn issue_jwt(uid: &Uuid, aud: &Uuid, hours: u64) -> Result<String, Error> {
     let now = Utc::now().timestamp() as ::jwt::claims::SecondsSinceEpoch;
 
     let mut claims = ::jwt::RegisteredClaims::default();
@@ -20,7 +20,7 @@ pub fn issue_jwt(uid: &Uuid, aud: &Uuid) -> Result<String, Error> {
     claims.audience = Some(aud.to_string());
     claims.issuer = Some(model::ROOT_NAMESPACE.to_string());
     claims.issued_at = Some(now);
-    claims.expiration = Some(now + (6 * 60 * 60));
+    claims.expiration = Some(now + (hours * 60 * 60));
 
     Ok(claims.sign_with_key(&*JWT_SIGNING_KEY)?)
 }
