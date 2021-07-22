@@ -1,3 +1,5 @@
+const DOMAIN = "beta.sciencenearme.org";
+
 export default {
     // Global page headers: https://go.nuxtjs.dev/config-head
     head: {
@@ -21,7 +23,8 @@ export default {
 
     // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
     plugins: [
-        {src: "~/plugins/clickstream.js", mode: "client"}
+        {src: "~/plugins/refresh_user.js", mode: "client"},
+        {src: "~/plugins/clickstream.js", mode: "client"},
     ],
 
     // Auto import components: https://go.nuxtjs.dev/config-components
@@ -39,7 +42,10 @@ export default {
         'nuxt-buefy',
         // https://go.nuxtjs.dev/axios
         '@nuxtjs/axios',
+        // https://www.npmjs.com/package/cookie-universal-nuxt
+        'cookie-universal-nuxt',
         '@nuxtjs/gtm',
+        '@nuxtjs/proxy',
     ],
 
     gtm: {
@@ -51,21 +57,27 @@ export default {
 
     },
 
+    // In production, these requests won't normally make it to the
+    // Nuxt server, so this is mostly for local development.
+    proxy: {
+        "/api": process.env.LOCAL_API_URL || "https://" + DOMAIN,
+    },
+
     // Axios module configuration: https://go.nuxtjs.dev/config-axios
     axios: {
-        baseURL: "https://beta.sciencenearme.org"
+        baseURL: "https://" + DOMAIN,
     },
 
     // These two sections override config values at runtime
     publicRuntimeConfig: {
         axios: {
-            browserBaseURL: process.env.LOCAL_API_URL || "https://beta.sciencenearme.org"
+            browserBaseURL: process.env.LOCAL_API_URL ? "/" : "https://" + DOMAIN,
         }
     },
 
     privateRuntimeConfig: {
         axios: {
-            baseURL: process.env.LOCAL_API_URL || "http://" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_HOST + ":" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_PORT
+            baseURL: process.env.LOCAL_API_URL || "http://" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_HOST + ":" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_PORT,
         }
     }
 }

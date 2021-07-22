@@ -16,10 +16,12 @@ spec:
     spec:
       containers:
       - name: circuit-api-beta
-        image: scistarter/circuit-api:0.1.38
+        image: scistarter/circuit-api:0.1.39
         ports:
         - containerPort: 8000
         env:
+        - name: DOMAIN
+          value: "sciencenearme.org"
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:

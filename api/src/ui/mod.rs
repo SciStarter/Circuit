@@ -21,6 +21,9 @@ use time::Duration;
 pub static UI_AUDIENCE: Lazy<uuid::Uuid> =
     Lazy::new(|| uuid::Uuid::parse_str("0be35cad-2b1f-4a45-a6da-b1051643c6f6").unwrap());
 
+pub static COOKIE_DOMAIN: Lazy<String> =
+    Lazy::new(|| std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string()));
+
 pub const SESSION_HOURS: i64 = 24 * 90;
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
@@ -51,6 +54,48 @@ pub async fn record_external(mut _req: tide::Request<()>) -> tide::Result {
     } else {
         Ok(Response::builder(StatusCode::Ok).build())
     }
+}
+
+/// Generates a JSON object which represents a person, suitable for
+/// sending to the front-end.
+fn person_json(person: &Person, token: &String) -> serde_json::Value {
+    json!({
+        "authenticated": true,
+        "uid": person.exterior.uid.to_string(),
+        "token": token.clone(),
+        "username": person.exterior.username.clone(),
+        "image_url": person.exterior.image_url.clone(),
+    })
+}
+
+async fn request_person(req: &mut tide::Request<()>) -> tide::Result<Option<Person>> {
+    let token = if let Some(val) = req.header("Authorization").and_then(|vals| vals.get(0)) {
+        if let Some((mode, token)) = val.as_str().split_once(" ") {
+            if mode == "Bearer" {
+                token
+            } else {
+                return Ok(None);
+            }
+        } else {
+            return Ok(None);
+        }
+    } else {
+        return Ok(None);
+    };
+
+    let uid = match common::jwt::check_jwt(token, &UI_AUDIENCE) {
+        Ok(checked) => checked,
+        Err(_) => return Ok(None),
+    };
+
+    let mut db = req.sqlx_conn::<Postgres>().await;
+
+    let person = match Person::load_by_uid(db.acquire().await?, &uid).await {
+        Ok(loaded) => loaded,
+        Err(_) => return Ok(None),
+    };
+
+    Ok(Some(person))
 }
 
 #[derive(Default, Deserialize)]
@@ -90,13 +135,14 @@ pub async fn login(mut req: tide::Request<()>) -> tide::Result {
 
         let mut resp = Response::builder(StatusCode::Ok)
             .content_type(mime::JSON)
-            .body(json!({"uid": person.exterior.uid.to_string(), "token": jwt.clone()}))
+            .body(person_json(&person, &jwt))
             .build();
 
         resp.insert_cookie(
             Cookie::build("token", jwt)
                 .path("/")
                 .max_age(Duration::hours(SESSION_HOURS))
+                .domain(&*COOKIE_DOMAIN)
                 .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
                 .http_only(true)
                 .same_site(tide::http::cookies::SameSite::Lax)
@@ -114,10 +160,10 @@ pub async fn login(mut req: tide::Request<()>) -> tide::Result {
 #[derive(Default, Deserialize)]
 struct SignupForm {
     email: String,
-    password: String,
     username: Option<String>,
-    first_name: Option<String>,
-    last_name: Option<String>,
+    password: String,
+    zip_code: Option<String>,
+    phone: Option<String>,
 }
 
 /// Create an account, if the validations pass.
@@ -147,8 +193,8 @@ pub async fn signup(mut req: tide::Request<()>) -> tide::Result {
     person.set_password(&form.password);
     person.exterior.username = form.username;
     person.interior.email = form.email;
-    person.interior.first_name = form.first_name;
-    person.interior.last_name = form.last_name;
+    person.interior.zip_code = form.zip_code;
+    person.interior.phone = form.phone;
 
     person.store(db.acquire().await?).await?;
 
@@ -156,13 +202,14 @@ pub async fn signup(mut req: tide::Request<()>) -> tide::Result {
 
     let mut resp = Response::builder(StatusCode::Ok)
         .content_type(mime::JSON)
-        .body(json!({"uid": person.exterior.uid.to_string(), "token": jwt.clone()}))
+        .body(person_json(&person, &jwt))
         .build();
 
     resp.insert_cookie(
         Cookie::build("token", jwt)
             .path("/")
             .max_age(Duration::hours(SESSION_HOURS))
+            .domain(&*COOKIE_DOMAIN)
             .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
             .http_only(true)
             .same_site(tide::http::cookies::SameSite::Lax)
@@ -174,8 +221,33 @@ pub async fn signup(mut req: tide::Request<()>) -> tide::Result {
 
 /// Retrieve UI-approriate information about the current user in JSON
 /// format. Includes the token, uid, username, and so on.
-pub async fn me(mut _req: tide::Request<()>) -> tide::Result {
-    unimplemented!()
+pub async fn me(mut req: tide::Request<()>) -> tide::Result {
+    if let Some(person) = request_person(&mut req).await? {
+        let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
+
+        let mut resp = Response::builder(StatusCode::Ok)
+            .content_type(mime::JSON)
+            .body(person_json(&person, &jwt))
+            .build();
+
+        resp.insert_cookie(
+            Cookie::build("token", jwt)
+                .path("/")
+                .max_age(Duration::hours(SESSION_HOURS))
+                .domain(&*COOKIE_DOMAIN)
+                .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
+                .http_only(true)
+                .same_site(tide::http::cookies::SameSite::Lax)
+                .finish(),
+        );
+
+        Ok(resp)
+    } else {
+        Ok(Response::builder(StatusCode::Ok)
+            .content_type(mime::JSON)
+            .body(json!({"authenticated": false}))
+            .build())
+    }
 }
 
 #[derive(Deserialize)]

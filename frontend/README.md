@@ -55,6 +55,7 @@ If cargo works, we need to set some environment variables:
 
 variable           |value
 -------------------|-----
+DOMAIN             | Set this to the domain to use for cookies and such. Defaults to localhost if not set.
 DATABASE_URL       | Set this to the database URL which will allow the API server to access the PostgreSQL database. For example: ```DATABASE_URL=postgres://postgres@127.0.0.1/circuit-api```
 JWT_SIGNING_KEY    | Set this to some random value. For example: ```JWT_SIGNING_KEY=example-key```
 SUPERUSER_EMAIL    | Set this to the email address you want to use for accessing the [management area](http://127.0.0.1:8000/api/v1/manage/) of your local install.
