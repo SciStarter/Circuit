@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-document.body.addEventListener('click', function(event) {
+document.body.addEventListener('click', async function(event) {
     let params = {
         session: window.localStorage.getItem("token") || "",
         on_page: window.location.pathname + window.location.search + window.location.hash,
@@ -34,8 +32,5 @@ document.body.addEventListener('click', function(event) {
     default:
     };
 
-    axios.post(
-        window.location.protocol + "//" + window.location.hostname + (window.location.port === "3000" ? ":8000" : "") + "/api/ui/click",
-        params,
-    );
+    await window.$nuxt.$axios.$post("/api/ui/click", params);
 });

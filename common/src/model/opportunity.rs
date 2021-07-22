@@ -2,11 +2,9 @@ use super::Error;
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
-use sqlx::{prelude::*, Postgres};
+use sqlx::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::convert::AsRef;
-use std::ops::Deref;
-use std::str::FromStr;
 use strum::IntoEnumIterator;
 use strum_macros::{AsRefStr, EnumIter, EnumString};
 use uuid::Uuid;
@@ -115,6 +113,7 @@ pub enum Domain {
     Maker,
     Policy,
     OutOfSchoolTimeProgram,
+    FormalEducation,
     #[serde(other)]
     Unspecified,
 }

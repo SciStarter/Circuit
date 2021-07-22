@@ -26,11 +26,9 @@ pub fn issue_jwt(uid: &Uuid, aud: &Uuid, hours: u64) -> Result<String, Error> {
 }
 
 pub fn check_jwt(token: &str, aud: &Uuid) -> Result<Uuid, Error> {
-    let claims: ::jwt::RegisteredClaims =
-        token.verify_with_key(&*JWT_SIGNING_KEY).map_err(|e| {
-            dbg!(e);
-            Error::Auth("Invalid signature".to_string())
-        })?;
+    let claims: ::jwt::RegisteredClaims = token
+        .verify_with_key(&*JWT_SIGNING_KEY)
+        .map_err(|_| Error::Auth("Invalid signature".to_string()))?;
 
     let now = Utc::now().timestamp() as ::jwt::claims::SecondsSinceEpoch;
 
