@@ -7,7 +7,7 @@ use crate::Error;
 use bytes::{BufMut, Bytes, BytesMut};
 
 /// This query produces results similar to:
-/// ```
+/// ```json
 /// {
 ///   "data": {
 ///     "events": {
@@ -180,7 +180,7 @@ const QUERY: &'static str = r#"{
             }
           }
           scienceNearMeData {
-            activityType
+            descriptor
             facebook
             indoorsOutdoors
             instagram
