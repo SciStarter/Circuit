@@ -2,7 +2,9 @@ use super::Error;
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
-use sqlx::prelude::*;
+use sqlx::postgres::PgArguments;
+use sqlx::query::Query;
+use sqlx::{prelude::*, Postgres};
 use std::collections::{HashMap, HashSet};
 use std::convert::AsRef;
 use strum::IntoEnumIterator;
@@ -478,9 +480,13 @@ impl std::fmt::Debug for Opportunity {
     }
 }
 
+#[derive(Serialize, Deserialize, Default)]
+#[serde(default)]
 pub struct OpportunityReference {
     pub uid: Uuid,
     pub title: String,
+    pub image_url: String,
+    pub short_desc: String,
 }
 
 impl std::fmt::Display for OpportunityReference {
@@ -496,21 +502,165 @@ impl std::fmt::Display for OpportunityReference {
 /// ```
 /// Opportunity::load_matching(db.acquire().await?, OpportunityQuery { title_contains: "hello".to_string(), ..Default::default() })
 /// ```
-#[derive(Default)]
+#[derive(Default, Deserialize, Debug)]
 pub struct OpportunityQuery {
     pub accepted: Option<bool>,
     pub withdrawn: Option<bool>,
     pub title_contains: Option<String>,
+    pub tags: Option<Vec<String>>,
+    pub topics: Option<Vec<Topic>>,
     pub partner: Option<Uuid>,
 }
 
+#[derive(Debug)]
 enum ParamValue {
+    // Raw means it's not converted to JSON before sending it to the
+    // database.
+    RawString(String),
     Bool(bool),
-    String(String),
     Uuid(Uuid),
+    VecString(Vec<String>),
+    VecTopic(Vec<Topic>),
+}
+
+impl ParamValue {
+    fn add_to_query(
+        self,
+        query: Query<Postgres, PgArguments>,
+    ) -> Result<Query<Postgres, PgArguments>, Error> {
+        Ok(match self {
+            ParamValue::RawString(val) => query.bind(val),
+            ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
+            ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
+            ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
+            ParamValue::VecTopic(val) => query.bind(serde_json::to_value(val)?),
+        })
+    }
+
+    fn add_all_to_query<'req>(
+        params: Vec<ParamValue>,
+        mut query: Query<Postgres, PgArguments>,
+    ) -> Result<Query<Postgres, PgArguments>, Error> {
+        for value in params.into_iter() {
+            query = value.add_to_query(query)?;
+        }
+
+        Ok(query)
+    }
+}
+
+fn build_matching_query(
+    fields: &[&str],
+    query: OpportunityQuery,
+) -> Result<(String, Vec<ParamValue>), Error> {
+    let mut clauses = Vec::new();
+    let mut params = Vec::new();
+
+    if let Some(val) = query.accepted {
+        params.push(ParamValue::Bool(val));
+        clauses.push(format!(
+            "(${}::jsonb) @> (interior -> 'accepted')",
+            params.len()
+        ));
+    }
+
+    if let Some(val) = query.withdrawn {
+        params.push(ParamValue::Bool(val));
+        clauses.push(format!(
+            "(${}::jsonb) @> (interior -> 'withdrawn')",
+            params.len()
+        ));
+    }
+
+    if let Some(val) = query.title_contains {
+        params.push(ParamValue::RawString(format!("%{}%", val)));
+        clauses.push(format!("(exterior ->> 'title') ILIKE ${}", params.len()));
+    }
+
+    if let Some(val) = query.tags {
+        params.push(ParamValue::VecString(val));
+        clauses.push(format!("(exterior -> 'tags') @> ${}", params.len()));
+    }
+
+    if let Some(val) = query.topics {
+        params.push(ParamValue::VecTopic(val));
+        clauses.push(format!("(exterior -> 'topics') @> ${}", params.len()));
+    }
+
+    if let Some(val) = query.partner {
+        params.push(ParamValue::Uuid(val));
+        clauses.push(format!(
+            "(${}::jsonb) @> (exterior -> 'partner')",
+            params.len()
+        ));
+    }
+
+    let mut query_string = "SELECT ".to_string();
+
+    match fields.len() {
+        0 => query_string.push_str("*"),
+        1 => query_string.push_str(fields[0]),
+        _ => query_string.push_str(&fields.join(", ")),
+    }
+
+    query_string.push_str(" FROM c_opportunity");
+
+    if !clauses.is_empty() {
+        query_string.push_str(" WHERE");
+    }
+
+    let mut first = true;
+
+    for clause in clauses.into_iter() {
+        if first {
+            query_string.push(' ');
+            first = false;
+        } else {
+            query_string.push_str(" AND ");
+        }
+        query_string.push_str(&clause);
+    }
+
+    query_string.push_str(" ORDER BY (exterior ->> 'title');");
+
+    Ok((query_string, params))
 }
 
 impl Opportunity {
+    pub async fn load_matching_refs<'req, DB>(
+        db: DB,
+        query: OpportunityQuery,
+    ) -> Result<Vec<OpportunityReference>, Error>
+    where
+        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
+    {
+        let (query_string, query_params) = build_matching_query(
+            &[
+                "(exterior -> 'uid') as uid",
+                "(exterior -> 'title') as title",
+                "(exterior -> 'image_url') as image_url",
+                "(exterior -> 'short_desc') as short_desc",
+            ],
+            query,
+        )?;
+
+        let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
+
+        query_obj
+            .map(|rec| {
+                Ok(OpportunityReference {
+                    uid: serde_json::from_value(rec.get("uid"))?,
+                    title: serde_json::from_value(rec.get("title"))?,
+                    image_url: serde_json::from_value(rec.get("image_url"))?,
+                    short_desc: serde_json::from_value(rec.get("short_desc"))?,
+                })
+            })
+            .fetch_all(db)
+            .await?
+            .into_iter()
+            .collect()
+    }
+
     pub async fn load_matching<'req, DB>(
         db: DB,
         query: OpportunityQuery,
@@ -518,60 +668,9 @@ impl Opportunity {
     where
         DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
     {
-        let mut clauses = Vec::new();
-        let mut params = Vec::new();
+        let (query_string, query_params) = build_matching_query(&[], query)?;
 
-        if let Some(val) = query.accepted {
-            params.push(ParamValue::Bool(val));
-            clauses.push(format!(
-                "(${}::jsonb) @> (interior -> 'accepted')",
-                params.len()
-            ));
-        }
-
-        if let Some(val) = query.withdrawn {
-            params.push(ParamValue::Bool(val));
-            clauses.push(format!(
-                "(${}::jsonb) @> (interior -> 'withdrawn')",
-                params.len()
-            ));
-        }
-
-        if let Some(val) = query.title_contains {
-            params.push(ParamValue::String(format!("%{}%", val)));
-            clauses.push(format!("(exterior ->> 'title') ILIKE ${}", params.len()));
-        }
-
-        if let Some(val) = query.partner {
-            params.push(ParamValue::Uuid(val));
-            clauses.push(format!(
-                "(${}::jsonb) @> (exterior -> 'partner')",
-                params.len()
-            ));
-        }
-
-        let mut query_string = "SELECT * FROM c_opportunity".to_string();
-
-        if !clauses.is_empty() {
-            query_string.push_str(" WHERE");
-        }
-
-        for clause in clauses.into_iter() {
-            query_string.push(' ');
-            query_string.push_str(&clause);
-        }
-
-        query_string.push_str(" ORDER BY (exterior ->> 'title');");
-
-        let mut query_obj = sqlx::query(&query_string);
-
-        for value in params.into_iter() {
-            query_obj = match value {
-                ParamValue::Bool(val) => query_obj.bind(val),
-                ParamValue::String(val) => query_obj.bind(val),
-                ParamValue::Uuid(val) => query_obj.bind(serde_json::to_value(val)?),
-            };
-        }
+        let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
 
         query_obj
             .map(|rec| {
@@ -591,6 +690,8 @@ impl Opportunity {
         OpportunityReference {
             uid: self.exterior.uid.clone(),
             title: self.exterior.title.clone(),
+            image_url: self.exterior.image_url.clone(),
+            short_desc: self.exterior.short_desc.clone(),
         }
     }
 
@@ -598,6 +699,8 @@ impl Opportunity {
         OpportunityReference {
             uid: self.exterior.uid,
             title: self.exterior.title,
+            image_url: self.exterior.image_url,
+            short_desc: self.exterior.short_desc,
         }
     }
 

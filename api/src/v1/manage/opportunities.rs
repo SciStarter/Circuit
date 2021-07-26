@@ -99,6 +99,9 @@ struct OpportunityPage {
 struct OpportunityForm {
     title: String,
     partner_name: String,
+    tags: String,
+    accepted: Option<String>,
+    withdrawn: Option<String>,
 }
 
 async fn opportunity(mut req: tide::Request<()>) -> tide::Result {
@@ -116,8 +119,12 @@ async fn opportunity(mut req: tide::Request<()>) -> tide::Result {
     if let Method::Post = req.method() {
         let form: OpportunityForm = req.body_form().await?;
 
+        opportunity.interior.accepted = form.accepted.is_some();
+        opportunity.interior.withdrawn = form.withdrawn.is_some();
+
         opportunity.exterior.title = form.title.clone();
         opportunity.exterior.partner_name = form.partner_name.clone();
+        opportunity.exterior.tags = form.tags.split(',').map(|s| s.trim().to_string()).collect();
 
         // TODO this is incomplete
 
