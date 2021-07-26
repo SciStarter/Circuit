@@ -1,4 +1,5 @@
-use common::model::opportunity::Opportunity;
+use common::model::opportunity::{Opportunity, OpportunityQuery};
+use serde_json::json;
 use sqlx::postgres::Postgres;
 use sqlx::prelude::*;
 use tide::http::{mime, StatusCode};
@@ -10,7 +11,7 @@ use uuid::Uuid;
 use super::{error, header_check, success};
 
 pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
-    routes.post(opportunity_new).at(
+    routes.post(opportunity_new).get(opportunity_search).at(
         ":uid",
         |r| r.get(opportunity_get).put(opportunity_put), /*.patch(opportunity_patch)*/
     )
@@ -58,6 +59,38 @@ async fn opportunity_new(mut req: tide::Request<()>) -> tide::Result {
         .build();
 
     Ok(res)
+}
+
+async fn opportunity_search(req: tide::Request<()>) -> tide::Result {
+    let auth = match header_check(&req, &super::API_AUDIENCE) {
+        Ok(x) => x,
+        Err(res) => return Ok(res),
+    };
+
+    let mut query: OpportunityQuery = req.query()?;
+
+    if let Some(_) = auth {
+        if query.partner == auth {
+            // Request is authenticated and the authenticated partner
+            // is the target of the query, so we allow searches to
+            // include non-accepted and withdrawn opportunities.
+        } else {
+            query.accepted = Some(true);
+            query.withdrawn = Some(false);
+        }
+    } else {
+        query.accepted = Some(true);
+        query.withdrawn = Some(false);
+    }
+
+    let mut db = req.sqlx_conn::<Postgres>().await;
+
+    let matches = Opportunity::load_matching_refs(db.acquire().await?, query).await?;
+
+    Ok(Response::builder(StatusCode::Created)
+        .content_type(mime::JSON)
+        .body(json!({ "matches": matches }))
+        .build())
 }
 
 async fn opportunity_get(req: tide::Request<()>) -> tide::Result {
