@@ -69,15 +69,10 @@ async fn opportunity_search(req: tide::Request<()>) -> tide::Result {
 
     let mut query: OpportunityQuery = req.query()?;
 
-    if let Some(_) = auth {
-        if query.partner == auth {
-            // Request is authenticated and the authenticated partner
-            // is the target of the query, so we allow searches to
-            // include non-accepted and withdrawn opportunities.
-        } else {
-            query.accepted = Some(true);
-            query.withdrawn = Some(false);
-        }
+    if auth.is_some() && query.partner == auth {
+        // Request is authenticated and the authenticated partner
+        // is the target of the query, so we allow searches to
+        // include non-accepted and withdrawn opportunities.
     } else {
         query.accepted = Some(true);
         query.withdrawn = Some(false);
