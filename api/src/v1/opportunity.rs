@@ -87,7 +87,7 @@ async fn opportunity_search(req: tide::Request<()>) -> tide::Result {
 
     let matches = Opportunity::load_matching_refs(db.acquire().await?, query).await?;
 
-    Ok(Response::builder(StatusCode::Created)
+    Ok(Response::builder(StatusCode::Ok)
         .content_type(mime::JSON)
         .body(json!({ "matches": matches }))
         .build())
