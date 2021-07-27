@@ -46,10 +46,15 @@ export default {
         'cookie-universal-nuxt',
         '@nuxtjs/gtm',
         '@nuxtjs/proxy',
+        '@nuxtjs/style-resources'
     ],
 
     gtm: {
         id: 'GTM-5ZT2954'
+    },
+
+    styleResources: {
+        scss: []
     },
 
     // Build Configuration: https://go.nuxtjs.dev/config-build
