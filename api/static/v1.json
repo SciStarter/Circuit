@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Circuit API v1",
-        "version": "1.2.2",
+        "version": "1.3.0",
         "description": ""
     },
     "servers": [
@@ -62,6 +62,38 @@
                         "nullable": true,
                         "writeOnly": true,
                         "default": null
+                    }
+                }
+            },
+            "opportunity_ref": {
+                "type": "object",
+                "required": [
+                    "uid"
+                ],
+                "properties": {
+                    "uid": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "The UID which uniquely identifies this opportunity."
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "The visible name which will identify this opportunity to participants",
+                        "required": false,
+                        "default": ""
+                    },
+                    "short_desc": {
+                        "type": "string",
+                        "description": "A short (120 character or less) \"elevator pitch\" for this opportunity.",
+                        "required": false,
+                        "default": ""
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "format": "url",
+                        "description": "The URL where an image associated with this opportunity may be found",
+                        "required": false,
+                        "default": ""
                     }
                 }
             },
@@ -703,6 +735,96 @@
             }
         },
         "/opportunity/": {
+            "get": {
+                "summary": "Retrieve references to opportunities matching the query parameters",
+                "operationId": "opportunity_search",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "description": "An authorization bearer header containing an unexpired token returned from the /partner/authorize endpoint",
+                        "required": false
+                    },
+                    {
+                        "name": "accepted",
+                        "in": "query",
+                        "default": true,
+                        "required": false,
+                        "description": "If provided, narrow the search to opportunities that have been accepted (for accepted=true) or not accepted (for accepted=false). This parameter is ignored unless the request has the Authorization header and the authorized parther is also the partner being queried. In other words, you can only specify this parameter if you are searching for your own opportunities."
+                    },
+                    {
+                        "name": "withdrawn",
+                        "in": "query",
+                        "default": false,
+                        "required": false,
+                        "description": "If provided, narrow the search to opportunities that have been withdrawn from publication (for withdrawn=true) or not withdrawn (for withdrawn=false). This parameter is ignored unless the request has the Authorization header and the authorized parther is also the partner being queried. In other words, you can only specify this parameter if you are searching for your own opportunities."
+                    },
+                    {
+                        "name": "title_contains",
+                        "in": "query",
+                        "required": false,
+                        "description": "If provided, narrow the search to opportunities that contain the parameter value as a (case insensitive) substring of their title."
+                    },
+                    {
+                        "name": "tags[]",
+                        "in": "query",
+                        "explode": true,
+                        "required": false,
+                        "description": "Can be added to the query parameters multiple times. Each tags[] parameter specifies a single tag which must be present on all matching opportunities."
+                    },
+                    {
+                        "name": "topics[]",
+                        "in": "query",
+                        "explode": true,
+                        "required": false,
+                        "description": "Can be added to the query parameters multiple times. Each topics[] parameter specifies a single topic which must be present on all matching opportunities. See the topic field in the opportunity schema for valid values."
+                    },
+                    {
+                        "name": "partner",
+                        "in": "query",
+                        "required": false,
+                        "format": "uuid",
+                        "description": "If provided, narrow the search to opportunities provided by a specific partner. The parameter value should be the partner uid. If the partner is also the party authorized by the Authorization header, enables the accepted and withdrawn parameters."
+                    }
+                ],
+                "security": [
+                    {},
+                    {
+                        "token": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Produces a list of references to opportunities matching all of the provided parameters. The UID values of the references can be used to access more complete information about specific opportunities.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "matches": {
+                                            "type": "array",
+                                            "default": [],
+                                            "items": {
+                                                "$ref": "#/components/schemas/opportunity_ref"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authorization token did not grant access",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "summary": "Create a new opportunity record",
                 "operationId": "opportunity_new",
