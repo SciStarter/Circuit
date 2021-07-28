@@ -69,9 +69,9 @@ dependencies = [
 
 [[package]]
 name = "aho-corasick"
-version = "0.7.15"
+version = "0.7.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7404febffaa47dac81aa44dba71523c9d069b1bdc50a77db41195149e17f68e5"
+checksum = "1e37cfd5e7657ada45f742d6e99ca5788580b5c529dc78faf11ece6dc702656f"
 dependencies = [
  "memchr",
 ]
@@ -604,6 +604,7 @@ dependencies = [
  "hmac 0.11.0",
  "jwt",
  "once_cell",
+ "regex",
  "serde",
  "serde_json",
  "sha2",
@@ -1343,9 +1344,9 @@ dependencies = [
 
 [[package]]
 name = "memchr"
-version = "2.3.4"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ee1c47aaa256ecabcaea351eae4a9b01ef39ed810004e298d2511ed284b1525"
+checksum = "b16bd47d9e329435e309c58469fe0791c2d0d1ba96ec0954152a5ae2b04387dc"
 
 [[package]]
 name = "nom"
@@ -1666,9 +1667,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.4.5"
+version = "1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "957056ecddbeba1b26965114e191d2e8589ce74db242b6ea25fc4062427a5c19"
+checksum = "d07a8629359eb56f1e2fb1652bb04212c072a87ba68546a04065d525673ac461"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1677,9 +1678,9 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
-version = "0.6.23"
+version = "0.6.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24d5f089152e60f62d28b835fbff2cd2e8dc0baf1ac13343bef92ab7eed84548"
+checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
 
 [[package]]
 name = "ring"
@@ -1850,7 +1851,6 @@ dependencies = [
  "sqlx",
  "tide",
  "tide-fluent-routes",
- "tide-sqlx",
  "time 0.2.26",
  "urlencoding",
  "uuid",
@@ -2229,17 +2229,6 @@ checksum = "42df274c54034219e584d82f3012b0f3a0ebaec8beafab978f137fce78741a05"
 dependencies = [
  "async-std",
  "log",
- "tide",
-]
-
-[[package]]
-name = "tide-sqlx"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecbab281229d36a84c83c2b69f7abf54f2cecc041c4f45928834ef099a4a335a"
-dependencies = [
- "async-std",
- "sqlx",
  "tide",
 ]
 

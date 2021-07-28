@@ -1,4 +1,5 @@
 use super::Error;
+use crate::Database;
 use serde::{Deserialize, Serialize};
 use sqlx;
 
@@ -14,10 +15,7 @@ pub struct Block {
 }
 
 impl Block {
-    pub async fn list_languages<'req, DB>(db: DB) -> Result<Vec<String>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn list_languages(db: &Database) -> Result<Vec<String>, Error> {
         Ok(sqlx::query_file!("db/block/list_languages.sql")
             .fetch_all(db)
             .await?
@@ -26,10 +24,7 @@ impl Block {
             .collect())
     }
 
-    pub async fn list_groups<'req, DB>(db: DB, language: &str) -> Result<Vec<String>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn list_groups(db: &Database, language: &str) -> Result<Vec<String>, Error> {
         Ok(sqlx::query_file!("db/block/list_groups.sql", language)
             .fetch_all(db)
             .await?
@@ -38,14 +33,11 @@ impl Block {
             .collect())
     }
 
-    pub async fn list_items<'req, DB>(
-        db: DB,
+    pub async fn list_items(
+        db: &Database,
         language: &str,
         group: &str,
-    ) -> Result<Vec<String>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    ) -> Result<Vec<String>, Error> {
         Ok(
             sqlx::query_file!("db/block/list_items.sql", language, group)
                 .fetch_all(db)
@@ -56,14 +48,11 @@ impl Block {
         )
     }
 
-    pub async fn all_items<'req, DB>(
-        db: DB,
+    pub async fn all_items(
+        db: &Database,
         language: &str,
         group: &str,
-    ) -> Result<Vec<Block>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    ) -> Result<Vec<Block>, Error> {
         Ok(
             sqlx::query_file!("db/block/get_group_items.sql", language, group)
                 .fetch_all(db)
@@ -86,10 +75,7 @@ impl Block {
         Ok(())
     }
 
-    pub async fn load_by_id<'req, DB>(db: DB, id: i32) -> Result<Block, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_id(db: &Database, id: i32) -> Result<Block, Error> {
         let rec = sqlx::query_file!("db/block/get_by_id.sql", id)
             .fetch_one(db)
             .await?;
@@ -105,15 +91,12 @@ impl Block {
         })
     }
 
-    pub async fn load<'req, DB>(
-        db: DB,
+    pub async fn load(
+        db: &Database,
         language: &str,
         group: &str,
         item: &str,
-    ) -> Result<Block, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    ) -> Result<Block, Error> {
         let rec = sqlx::query_file!("db/block/get_by_logical_id.sql", language, group, item)
             .fetch_one(db)
             .await?;
@@ -129,10 +112,7 @@ impl Block {
         })
     }
 
-    pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
         self.validate()?;
 
         if let Some(id) = self.id {

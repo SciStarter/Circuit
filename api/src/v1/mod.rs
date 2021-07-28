@@ -1,5 +1,5 @@
+use common::Database;
 use once_cell::sync::Lazy;
-//use common::model;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::convert::TryInto;
@@ -19,7 +19,7 @@ pub mod partner;
 pub static API_AUDIENCE: Lazy<uuid::Uuid> =
     Lazy::new(|| uuid::Uuid::parse_str("023fda90-f6be-43ff-9b92-fa6ac89b2023").unwrap());
 
-pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
+pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .at("partner/", partner::routes)
         .at("opportunity/", opportunity::routes)
@@ -68,7 +68,7 @@ pub fn set_csrf_cookie(mut resp: Response, csrf: &str) -> Response {
     resp
 }
 
-pub fn check_csrf(req: &tide::Request<()>, csrf: &str) -> bool {
+pub fn check_csrf(req: &tide::Request<Database>, csrf: &str) -> bool {
     if let Some(cookie) = req.cookie("csrftoken") {
         csrf == cookie.value()
     } else {
@@ -84,7 +84,7 @@ pub fn random_string() -> String {
         .collect()
 }
 
-pub fn header_check(req: &tide::Request<()>, aud: &Uuid) -> Result<Option<Uuid>, Response> {
+pub fn header_check(req: &tide::Request<Database>, aud: &Uuid) -> Result<Option<Uuid>, Response> {
     if req.method() != tide::http::Method::Get {
         if let Some(ct) = req.content_type() {
             if ct != mime::JSON {

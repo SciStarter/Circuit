@@ -1,19 +1,18 @@
 use askama::Template;
 use common::model::{block::Block, person::Permission};
+use common::Database;
 use http_types::Method;
 use serde::Deserialize;
-use sqlx::{Acquire, Postgres};
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
 };
-use tide_sqlx::SQLxRequestExt;
 
 use crate::v1::redirect;
 
 use super::authorized_admin;
 
-pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
+pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes.get(content).post(content).at(":language/", |r| {
         r.get(content_language)
             .post(content_language)
@@ -37,7 +36,7 @@ struct ContentForm {
     language: String,
 }
 
-async fn content(mut req: tide::Request<()>) -> tide::Result {
+async fn content(mut req: tide::Request<Database>) -> tide::Result {
     let _admin = match super::authorized_admin(&req, &Permission::ManageContent).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
@@ -48,10 +47,10 @@ async fn content(mut req: tide::Request<()>) -> tide::Result {
         return Ok(redirect(&format!("{}{}/", req.url().path(), form.language)));
     }
 
-    let mut db = req.sqlx_conn::<Postgres>().await;
+    let db = req.state();
 
     let page = ContentPage {
-        languages: Block::list_languages(db.acquire().await?)
+        languages: Block::list_languages(db)
             .await?
             .iter()
             .map(|code| {
@@ -82,7 +81,7 @@ struct ContentLanguageForm {
     group: String,
 }
 
-async fn content_language(mut req: tide::Request<()>) -> tide::Result {
+async fn content_language(mut req: tide::Request<Database>) -> tide::Result {
     let _admin = match authorized_admin(&req, &Permission::ManageContent).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
@@ -93,14 +92,14 @@ async fn content_language(mut req: tide::Request<()>) -> tide::Result {
         return Ok(redirect(&format!("{}{}/", req.url().path(), form.group)));
     }
 
-    let mut db = req.sqlx_conn::<Postgres>().await;
+    let db = req.state();
 
     let language = req.param("language")?.to_owned();
     let language_name = common::LANGUAGES
         .get(&language)
         .unwrap_or(&language)
         .to_owned();
-    let groups = Block::list_groups(db.acquire().await?, &language).await?;
+    let groups = Block::list_groups(db, &language).await?;
 
     Ok(ContentLanguagePage {
         language_name,
@@ -122,7 +121,7 @@ struct ContentGroupForm {
     item: String,
 }
 
-async fn content_group(mut req: tide::Request<()>) -> tide::Result {
+async fn content_group(mut req: tide::Request<Database>) -> tide::Result {
     let _admin = match authorized_admin(&req, &Permission::ManageContent).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
@@ -133,7 +132,7 @@ async fn content_group(mut req: tide::Request<()>) -> tide::Result {
         return Ok(redirect(&format!("{}{}", req.url().path(), form.item)));
     }
 
-    let mut db = req.sqlx_conn::<Postgres>().await;
+    let db = req.state();
 
     let language = req.param("language")?.to_owned();
     let language_name = common::LANGUAGES
@@ -141,7 +140,7 @@ async fn content_group(mut req: tide::Request<()>) -> tide::Result {
         .unwrap_or(&language)
         .to_owned();
     let group = req.param("group")?.to_owned();
-    let items = Block::list_items(db.acquire().await?, &language, &group).await?;
+    let items = Block::list_items(db, &language, &group).await?;
 
     Ok(ContentGroupPage {
         language_name,
@@ -169,7 +168,7 @@ struct ContentItemForm {
     content: String,
 }
 
-async fn content_item(mut req: tide::Request<()>) -> tide::Result {
+async fn content_item(mut req: tide::Request<Database>) -> tide::Result {
     let _admin = match authorized_admin(&req, &Permission::ManageContent).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
@@ -184,8 +183,8 @@ async fn content_item(mut req: tide::Request<()>) -> tide::Result {
     let item = req.param("item")?.to_owned();
 
     let mut block = {
-        let mut db = req.sqlx_conn::<Postgres>().await;
-        match Block::load(db.acquire().await?, &language, &group, &item).await {
+        let db = req.state();
+        match Block::load(db, &language, &group, &item).await {
             Ok(block) => block,
             Err(_) => Block {
                 id: None,
@@ -201,11 +200,11 @@ async fn content_item(mut req: tide::Request<()>) -> tide::Result {
 
     if let Method::Post = req.method() {
         let form: ContentItemForm = req.body_form().await?;
-        let mut db = req.sqlx_conn::<Postgres>().await;
+        let db = req.state();
         block.tags = form.tags.trim().to_string();
         block.label = form.label.trim().to_string();
         block.content = form.content.trim().to_string();
-        block.store(db.acquire().await?).await?;
+        block.store(db).await?;
         return Ok(redirect(""));
     } else {
         Ok(ContentItemPage {

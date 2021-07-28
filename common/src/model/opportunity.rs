@@ -1,6 +1,9 @@
 use super::Error;
+use crate::Database;
 
 use chrono::{DateTime, FixedOffset};
+use once_cell::sync::Lazy;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgArguments;
 use sqlx::query::Query;
@@ -12,6 +15,14 @@ use strum_macros::{AsRefStr, EnumIter, EnumString};
 use uuid::Uuid;
 
 use super::PARTNER_NAMESPACE;
+
+// This regular expression matches any sequence of characters that
+// does not consist of letters, numbers, or the dash character. The
+// slugify() function replaces these sequences with a single dash.
+// Status as a letter or number is defined by Unicode, which means
+// that text using non-Latin characters will be retained when slugified.
+pub static SLUGIFY_REPLACE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"[^\pL\pN-]+").expect("Unable to compile SLUGIFY_REPLACE regex"));
 
 #[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -56,13 +67,73 @@ impl Default for OrganizationType {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr)]
+#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, PartialEq, Eq, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum PageLayout {
+    JustContent,
+}
+
+impl Default for PageLayout {
+    fn default() -> Self {
+        PageLayout::JustContent
+    }
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+pub struct PageOptions {
+    pub layout: PageLayout,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum EntityType {
     Unspecified,
     Attraction,
+    Page(PageOptions),
     #[serde(other)]
     Opportunity,
+}
+
+impl super::SelectOption for EntityType {
+    fn all_options() -> Vec<(String, String, EntityType)> {
+        vec![
+            EntityType::Opportunity.to_option(),
+            EntityType::Attraction.to_option(),
+            EntityType::Page(PageOptions {
+                layout: PageLayout::JustContent,
+                ..Default::default()
+            })
+            .to_option(),
+            EntityType::Unspecified.to_option(),
+        ]
+    }
+
+    fn to_option(&self) -> (String, String, EntityType) {
+        match self {
+            EntityType::Unspecified => (
+                "unspecified".to_string(),
+                "Unspecified".to_string(),
+                EntityType::Unspecified,
+            ),
+            EntityType::Attraction => (
+                "attraction".to_string(),
+                "Attraction".to_string(),
+                EntityType::Attraction,
+            ),
+            EntityType::Opportunity => (
+                "opportunity".to_string(),
+                "Opportunity".to_string(),
+                EntityType::Opportunity,
+            ),
+            EntityType::Page(options) => match options.layout {
+                PageLayout::JustContent => (
+                    "page__just_content".to_string(),
+                    "Page - Just Content".to_string(),
+                    EntityType::Page(options.clone()),
+                ),
+            },
+        }
+    }
 }
 
 impl Default for EntityType {
@@ -357,6 +428,7 @@ fn en_us() -> Vec<String> {
 #[serde(default)]
 pub struct OpportunityExterior {
     pub uid: Uuid,
+    pub slug: String,
     pub partner_name: String,
     pub partner_website: Option<String>,
     pub partner_logo_url: Option<String>,
@@ -484,6 +556,7 @@ impl std::fmt::Debug for Opportunity {
 #[serde(default)]
 pub struct OpportunityReference {
     pub uid: Uuid,
+    pub slug: String,
     pub title: String,
     pub image_url: String,
     pub short_desc: String,
@@ -506,6 +579,7 @@ impl std::fmt::Display for OpportunityReference {
 pub struct OpportunityQuery {
     pub accepted: Option<bool>,
     pub withdrawn: Option<bool>,
+    pub entity_type: Option<Vec<EntityType>>,
     pub title_contains: Option<String>,
     pub tags: Option<Vec<String>>,
     pub topics: Option<Vec<Topic>>,
@@ -521,6 +595,7 @@ enum ParamValue {
     Uuid(Uuid),
     VecString(Vec<String>),
     VecTopic(Vec<Topic>),
+    VecEntityType(Vec<EntityType>),
 }
 
 impl ParamValue {
@@ -534,6 +609,7 @@ impl ParamValue {
             ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecTopic(val) => query.bind(serde_json::to_value(val)?),
+            ParamValue::VecEntityType(val) => query.bind(serde_json::to_value(val)?),
         })
     }
 
@@ -570,6 +646,11 @@ fn build_matching_query(
             "(${}::jsonb) @> (interior -> 'withdrawn')",
             params.len()
         ));
+    }
+
+    if let Some(val) = query.entity_type {
+        params.push(ParamValue::VecEntityType(val));
+        clauses.push(format!("(exterior -> 'entity_type') <@ ${}", params.len()));
     }
 
     if let Some(val) = query.title_contains {
@@ -626,17 +707,22 @@ fn build_matching_query(
     Ok((query_string, params))
 }
 
+fn slugify(source: &str) -> String {
+    SLUGIFY_REPLACE
+        .replace_all(source.trim(), "-")
+        .trim_end_matches("-") // Only trims from the trailing end of the string
+        .to_lowercase()
+}
+
 impl Opportunity {
-    pub async fn load_matching_refs<'req, DB>(
-        db: DB,
+    pub async fn load_matching_refs(
+        db: &Database,
         query: OpportunityQuery,
-    ) -> Result<Vec<OpportunityReference>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    ) -> Result<Vec<OpportunityReference>, Error> {
         let (query_string, query_params) = build_matching_query(
             &[
                 "(exterior -> 'uid') as uid",
+                "(exterior -> 'slug') as slug",
                 "(exterior -> 'title') as title",
                 "(exterior -> 'image_url') as image_url",
                 "(exterior -> 'short_desc') as short_desc",
@@ -650,6 +736,7 @@ impl Opportunity {
             .map(|rec| {
                 Ok(OpportunityReference {
                     uid: serde_json::from_value(rec.get("uid"))?,
+                    slug: serde_json::from_value(rec.get("slug"))?,
                     title: serde_json::from_value(rec.get("title"))?,
                     image_url: serde_json::from_value(rec.get("image_url"))?,
                     short_desc: serde_json::from_value(rec.get("short_desc"))?,
@@ -661,13 +748,10 @@ impl Opportunity {
             .collect()
     }
 
-    pub async fn load_matching<'req, DB>(
-        db: DB,
+    pub async fn load_matching(
+        db: &Database,
         query: OpportunityQuery,
-    ) -> Result<Vec<Opportunity>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    ) -> Result<Vec<Opportunity>, Error> {
         let (query_string, query_params) = build_matching_query(&[], query)?;
 
         let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
@@ -689,6 +773,7 @@ impl Opportunity {
     pub fn to_reference(&self) -> OpportunityReference {
         OpportunityReference {
             uid: self.exterior.uid.clone(),
+            slug: self.exterior.slug.clone(),
             title: self.exterior.title.clone(),
             image_url: self.exterior.image_url.clone(),
             short_desc: self.exterior.short_desc.clone(),
@@ -698,16 +783,17 @@ impl Opportunity {
     pub fn into_reference(self) -> OpportunityReference {
         OpportunityReference {
             uid: self.exterior.uid,
+            slug: self.exterior.slug,
             title: self.exterior.title,
             image_url: self.exterior.image_url,
             short_desc: self.exterior.short_desc,
         }
     }
 
-    pub async fn load_partner<'req, DB>(&self, db: DB) -> Result<super::partner::Partner, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_partner<'req, DB>(
+        &self,
+        db: &Database,
+    ) -> Result<super::partner::Partner, Error> {
         Ok(super::partner::Partner::load_by_uid(db, &self.exterior.partner).await?)
     }
 
@@ -755,10 +841,7 @@ impl Opportunity {
         Ok(())
     }
 
-    pub async fn load_by_id<'req, DB>(db: DB, id: i32) -> Result<Opportunity, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_id(db: &Database, id: i32) -> Result<Opportunity, Error> {
         let rec = sqlx::query_file!("db/opportunity/get_by_id.sql", id)
             .fetch_one(db)
             .await?;
@@ -770,10 +853,7 @@ impl Opportunity {
         })
     }
 
-    pub async fn load_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<Opportunity, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<Opportunity, Error> {
         let rec = sqlx::query_file!("db/opportunity/get_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
@@ -785,10 +865,7 @@ impl Opportunity {
         })
     }
 
-    pub async fn id_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<Option<i32>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn id_by_uid(db: &Database, uid: &Uuid) -> Result<Option<i32>, Error> {
         let rec = sqlx::query_file!("db/opportunity/id_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_optional(db)
             .await?;
@@ -796,10 +873,7 @@ impl Opportunity {
         Ok(rec.map(|row| row.id))
     }
 
-    pub async fn exists_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<bool, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn exists_by_uid(db: &Database, uid: &Uuid) -> Result<bool, Error> {
         let rec = sqlx::query_file!(
             "db/opportunity/exists_by_uid.sql",
             serde_json::to_value(uid)?
@@ -810,10 +884,7 @@ impl Opportunity {
         Ok(rec.exists.unwrap_or(false))
     }
 
-    pub async fn set_id_if_necessary<'req, DB>(&mut self, db: DB) -> Result<(), Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn set_id_if_necessary(&mut self, db: &Database) -> Result<(), Error> {
         if let None = self.id {
             self.id = Opportunity::id_by_uid(db, &self.exterior.uid).await?;
         }
@@ -821,11 +892,55 @@ impl Opportunity {
         Ok(())
     }
 
-    pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_slug(db: &Database, slug: &str) -> Result<Opportunity, Error> {
+        let rec = sqlx::query_file!("db/opportunity/get_by_slug.sql", slug)
+            .fetch_one(db)
+            .await?;
+
+        Ok(Opportunity {
+            id: Some(rec.id),
+            exterior: serde_json::from_value(rec.exterior)?,
+            interior: serde_json::from_value(rec.interior)?,
+        })
+    }
+
+    pub async fn id_by_slug(db: &Database, slug: &str) -> Result<Option<i32>, Error> {
+        let rec = sqlx::query_file!("db/opportunity/id_by_slug.sql", slug)
+            .fetch_optional(db)
+            .await?;
+
+        Ok(rec.map(|row| row.id))
+    }
+
+    pub async fn exists_by_slug(db: &Database, slug: &str) -> Result<bool, Error> {
+        let rec = sqlx::query_file!("db/opportunity/exists_by_slug.sql", slug)
+            .fetch_one(db)
+            .await?;
+
+        Ok(rec.exists.unwrap_or(false))
+    }
+
+    pub async fn set_slug_if_necessary(&mut self, db: &Database) -> Result<(), Error> {
+        if self.exterior.slug.is_empty() {
+            let base = slugify(&self.exterior.title);
+            let mut slug = base.clone();
+            let mut disamb = 0u32;
+
+            while Opportunity::exists_by_slug(db, &slug).await? {
+                disamb += 1;
+                slug = format!("{}-{}", base, disamb);
+            }
+
+            self.exterior.slug = slug
+        }
+
+        Ok(())
+    }
+
+    pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
         self.validate()?;
+
+        self.set_slug_if_necessary(db).await?;
 
         if let Some(id) = self.id {
             sqlx::query_file!(
