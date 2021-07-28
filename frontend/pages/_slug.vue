@@ -21,7 +21,7 @@ export default {
 
     head() {
         return {
-            title: this.entity.title + " - Science Near Me";
+            title: this.entity.title + " - Science Near Me",
         };
     },
 
