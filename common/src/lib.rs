@@ -1,10 +1,12 @@
 use once_cell::sync::Lazy;
-use sqlx::{postgres::Postgres, Pool};
+use sqlx::{Pool, Postgres};
 use std::collections::BTreeMap;
 use thiserror::Error;
 
 pub mod jwt;
 pub mod model;
+
+pub type Database = Pool<Postgres>;
 
 pub static LANGUAGES: Lazy<BTreeMap<String, String>> = Lazy::new(|| {
     [
@@ -135,7 +137,7 @@ pub enum Error {
     Migrate(#[from] sqlx::migrate::MigrateError),
 }
 
-pub async fn migrate(pool: &Pool<Postgres>) -> Result<(), Error> {
-    sqlx::migrate!().run(pool).await?;
+pub async fn migrate(db: &Database) -> Result<(), Error> {
+    sqlx::migrate!().run(db).await?;
     Ok(())
 }

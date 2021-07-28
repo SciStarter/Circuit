@@ -1,4 +1,5 @@
 use super::{opportunity::Opportunity, person::Person, Error, PARTNER_NAMESPACE};
+use crate::Database;
 
 use serde::{Deserialize, Serialize};
 use sqlx;
@@ -70,10 +71,7 @@ impl Partner {
         }
     }
 
-    pub async fn catalog<'req, DB>(db: DB) -> Result<Vec<PartnerReference>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn catalog(db: &Database) -> Result<Vec<PartnerReference>, Error> {
         sqlx::query_file!("db/partner/catalog.sql")
             .map(|row| {
                 Ok(PartnerReference {
@@ -92,10 +90,7 @@ impl Partner {
             .collect()
     }
 
-    pub async fn load_persons<'req, DB>(&self, db: DB) -> Result<Vec<Result<Person, Error>>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_persons(&self, db: &Database) -> Result<Vec<Result<Person, Error>>, Error> {
         let mut persons = self.interior.authorized.clone();
         persons.push(self.interior.prime.clone());
 
@@ -114,13 +109,10 @@ impl Partner {
         .await?)
     }
 
-    pub async fn load_opportunities<'req, DB>(
+    pub async fn load_opportunities(
         &self,
-        db: DB,
-    ) -> Result<Vec<Result<Opportunity, Error>>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+        db: &Database,
+    ) -> Result<Vec<Result<Opportunity, Error>>, Error> {
         Ok(sqlx::query_file!(
             "db/partner/fetch_opportunities.sql",
             serde_json::to_value(self.exterior.uid)?
@@ -154,10 +146,7 @@ impl Partner {
         Ok(())
     }
 
-    pub async fn load_by_id<'req, DB>(db: DB, id: i32) -> Result<Partner, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_id(db: &Database, id: i32) -> Result<Partner, Error> {
         let rec = sqlx::query_file!("db/partner/get_by_id.sql", id)
             .fetch_one(db)
             .await?;
@@ -169,10 +158,7 @@ impl Partner {
         })
     }
 
-    pub async fn load_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<Partner, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<Partner, Error> {
         let rec = sqlx::query_file!("db/partner/get_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
@@ -184,10 +170,7 @@ impl Partner {
         })
     }
 
-    pub async fn exists_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<bool, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn exists_by_uid(db: &Database, uid: &Uuid) -> Result<bool, Error> {
         let rec = sqlx::query_file!("db/partner/exists_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
@@ -195,10 +178,7 @@ impl Partner {
         Ok(rec.exists.unwrap_or(false))
     }
 
-    pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
         self.validate()?;
 
         if let Some(id) = self.id {

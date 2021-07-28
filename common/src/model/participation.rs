@@ -1,4 +1,5 @@
 use super::Error;
+use crate::Database;
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
@@ -48,10 +49,7 @@ impl Participation {
         Ok(())
     }
 
-    pub async fn load_by_id<'req, DB>(db: DB, id: i32) -> Result<Participation, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_id(db: &Database, id: i32) -> Result<Participation, Error> {
         let rec = sqlx::query_file!("db/participation/get_by_id.sql", id)
             .fetch_one(db)
             .await?;
@@ -63,10 +61,7 @@ impl Participation {
         })
     }
 
-    pub async fn store<'req, DB>(&mut self, db: DB, force_new: bool) -> Result<(), Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn store(&mut self, db: &Database, force_new: bool) -> Result<(), Error> {
         self.validate()?;
 
         if force_new {

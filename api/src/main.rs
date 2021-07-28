@@ -1,16 +1,14 @@
 #![forbid(unsafe_code)]
 
-use common::model;
-use sqlx::postgres::Postgres;
-use sqlx::{postgres::PgPoolOptions, Pool};
+use common::{model, Database};
+use sqlx::postgres::PgPoolOptions;
 use tide::log;
 use tide_fluent_routes::{fs::ServeFs, prelude::*};
-use tide_sqlx::SQLxMiddleware;
 
 pub mod ui;
 pub mod v1;
 
-async fn initialize(db: &Pool<Postgres>) -> tide::Result {
+async fn initialize(db: &Database) -> tide::Result {
     let superuser_email = std::env::var("SUPERUSER_EMAIL")?;
     let superuser_password = std::env::var("SUPERUSER_PASSWORD")?;
 
@@ -46,8 +44,7 @@ async fn main() -> tide::Result<()> {
 
     initialize(&pool).await?;
 
-    let mut app = tide::new();
-    app.with(SQLxMiddleware::from(pool));
+    let mut app = tide::with_state(pool);
 
     #[cfg(debug_assertions)]
     {

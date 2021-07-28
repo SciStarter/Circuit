@@ -1,23 +1,21 @@
-use common::model::opportunity::{Opportunity, OpportunityQuery};
+use common::model::opportunity::{EntityType, Opportunity, OpportunityQuery};
+use common::Database;
 use serde_json::json;
-use sqlx::postgres::Postgres;
-use sqlx::prelude::*;
 use tide::http::{mime, StatusCode};
 use tide::Response;
 use tide_fluent_routes::prelude::*;
-use tide_sqlx::SQLxRequestExt;
 use uuid::Uuid;
 
 use super::{error, header_check, success};
 
-pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
+pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes.post(opportunity_new).get(opportunity_search).at(
         ":uid",
         |r| r.get(opportunity_get).put(opportunity_put), /*.patch(opportunity_patch)*/
     )
 }
 
-async fn opportunity_new(mut req: tide::Request<()>) -> tide::Result {
+async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
     let auth = match header_check(&req, &super::API_AUDIENCE) {
         Ok(x) => match x {
             Some(auth) => auth,
@@ -33,6 +31,13 @@ async fn opportunity_new(mut req: tide::Request<()>) -> tide::Result {
         }
     };
 
+    if let EntityType::Page(_) = opp.exterior.entity_type {
+        return Ok(error(
+            StatusCode::BadRequest,
+            "Page entities can not be created via the API".to_string(),
+        ));
+    }
+
     opp.exterior.partner = auth;
     opp.interior.accepted = false;
 
@@ -40,16 +45,16 @@ async fn opportunity_new(mut req: tide::Request<()>) -> tide::Result {
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
 
-    let mut db = req.sqlx_conn::<Postgres>().await;
+    let db = req.state();
 
-    if Opportunity::exists_by_uid(db.acquire().await?, &opp.exterior.uid).await? {
+    if Opportunity::exists_by_uid(db, &opp.exterior.uid).await? {
         return Ok(error(
             StatusCode::Conflict,
             "An opportunity with that uid (or partner_name and title) already exists.",
         ));
     }
 
-    if let Err(err) = opp.store(db.acquire().await?).await {
+    if let Err(err) = opp.store(db).await {
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
 
@@ -61,7 +66,7 @@ async fn opportunity_new(mut req: tide::Request<()>) -> tide::Result {
     Ok(res)
 }
 
-async fn opportunity_search(req: tide::Request<()>) -> tide::Result {
+async fn opportunity_search(req: tide::Request<Database>) -> tide::Result {
     let auth = match header_check(&req, &super::API_AUDIENCE) {
         Ok(x) => x,
         Err(res) => return Ok(res),
@@ -78,9 +83,28 @@ async fn opportunity_search(req: tide::Request<()>) -> tide::Result {
         query.withdrawn = Some(false);
     }
 
-    let mut db = req.sqlx_conn::<Postgres>().await;
+    // Filter out EntityType::Page entries, even if they were
+    // requested. They are not meant to be addressed via the API.
+    if let Some(requested) = query.entity_type {
+        query.entity_type = Some(
+            requested
+                .into_iter()
+                .filter(|t| {
+                    if let EntityType::Page(_) = t {
+                        false
+                    } else {
+                        true
+                    }
+                })
+                .collect(),
+        );
+    } else {
+        query.entity_type = Some(vec![EntityType::Opportunity, EntityType::Attraction])
+    }
 
-    let matches = Opportunity::load_matching_refs(db.acquire().await?, query).await?;
+    let db = req.state();
+
+    let matches = Opportunity::load_matching_refs(db, query).await?;
 
     Ok(Response::builder(StatusCode::Ok)
         .content_type(mime::JSON)
@@ -88,7 +112,7 @@ async fn opportunity_search(req: tide::Request<()>) -> tide::Result {
         .build())
 }
 
-async fn opportunity_get(req: tide::Request<()>) -> tide::Result {
+async fn opportunity_get(req: tide::Request<Database>) -> tide::Result {
     let auth = match header_check(&req, &super::API_AUDIENCE) {
         Ok(x) => x,
         Err(res) => return Ok(res),
@@ -104,9 +128,9 @@ async fn opportunity_get(req: tide::Request<()>) -> tide::Result {
         }
     };
 
-    let mut db = req.sqlx_conn::<Postgres>().await;
+    let db = req.state();
 
-    let opp = match Opportunity::load_by_uid(db.acquire().await?, &uid).await {
+    let opp = match Opportunity::load_by_uid(db, &uid).await {
         Ok(opp) => opp,
         Err(_) => {
             return Ok(error(
@@ -126,7 +150,7 @@ async fn opportunity_get(req: tide::Request<()>) -> tide::Result {
     }
 }
 
-async fn opportunity_put(mut req: tide::Request<()>) -> tide::Result {
+async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
     let auth = match header_check(&req, &super::API_AUDIENCE) {
         Ok(x) => match x {
             Some(auth) => auth,
@@ -152,9 +176,16 @@ async fn opportunity_put(mut req: tide::Request<()>) -> tide::Result {
         }
     };
 
-    let mut db = req.sqlx_conn::<Postgres>().await;
+    if let EntityType::Page(_) = new_opp.exterior.entity_type {
+        return Ok(error(
+            StatusCode::BadRequest,
+            "Page entities can not be created via the API".to_string(),
+        ));
+    }
 
-    let old_opp = match Opportunity::load_by_uid(db.acquire().await?, &uid).await {
+    let db = req.state();
+
+    let old_opp = match Opportunity::load_by_uid(db, &uid).await {
         Ok(opp) => opp,
         Err(_) => {
             return Ok(error(
@@ -182,7 +213,7 @@ async fn opportunity_put(mut req: tide::Request<()>) -> tide::Result {
     new_opp.id = old_opp.id;
     new_opp.interior.accepted = old_opp.interior.accepted;
 
-    if let Err(err) = new_opp.store(db.acquire().await?).await {
+    if let Err(err) = new_opp.store(db).await {
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
 

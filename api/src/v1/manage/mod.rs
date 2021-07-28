@@ -1,13 +1,11 @@
 use super::{check_csrf, check_jwt, issue_jwt, random_string, redirect, set_csrf_cookie};
 use askama::Template;
 use common::model::{partner::PartnerReference, person::Permission, Partner, Person};
+use common::Database;
 use once_cell::sync::Lazy;
-use sqlx::postgres::Postgres;
-use sqlx::prelude::*;
 use tide::{http::Cookie, prelude::*};
 use tide::{Response, StatusCode};
 use tide_fluent_routes::prelude::*;
-use tide_sqlx::SQLxRequestExt;
 use uuid::Uuid;
 
 pub mod content;
@@ -18,7 +16,7 @@ const BASE: &'static str = "/api/v1/manage/";
 static MANAGE_AUDIENCE: Lazy<uuid::Uuid> =
     Lazy::new(|| uuid::Uuid::parse_str("51456ff1-ff31-4d99-a550-7325e5e728a5").unwrap());
 
-pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
+pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .get(manage)
         .at("authorize", |r| r.get(authorize).post(authorize))
@@ -37,7 +35,7 @@ struct ManagePage {
     pub admin: Person,
 }
 
-async fn manage(req: tide::Request<()>) -> tide::Result {
+async fn manage(req: tide::Request<Database>) -> tide::Result {
     let admin = match authorized_admin(&req, &Permission::ManageSomething).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
@@ -58,7 +56,7 @@ struct AuthorizeForm {
     csrf: Option<String>,
 }
 
-async fn authorize(mut req: tide::Request<()>) -> tide::Result {
+async fn authorize(mut req: tide::Request<Database>) -> tide::Result {
     match req.method() {
         Method::Get => {
             let csrf = random_string();
@@ -78,9 +76,9 @@ async fn authorize(mut req: tide::Request<()>) -> tide::Result {
             }
 
             if let (Some(email), Some(password)) = (&form.email, &form.password) {
-                let mut db = req.sqlx_conn::<Postgres>().await;
+                let db = req.state();
 
-                let person = Person::load_by_email(db.acquire().await?, email).await?;
+                let person = Person::load_by_email(db, email).await?;
                 if person.check_password(password) {
                     if !person.check_permission(&Permission::ManageSomething) {
                         return Ok(redirect("/"));
@@ -139,7 +137,7 @@ struct PartnersForm {
     manager_mailing: Option<String>,
 }
 
-async fn partners(mut req: tide::Request<()>) -> tide::Result {
+async fn partners(mut req: tide::Request<Database>) -> tide::Result {
     let admin = match authorized_admin(&req, &Permission::ManagePartners).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
@@ -147,11 +145,11 @@ async fn partners(mut req: tide::Request<()>) -> tide::Result {
 
     match req.method() {
         Method::Get => {
-            let mut db = req.sqlx_conn::<Postgres>().await;
+            let db = req.state();
 
             let csrf = random_string();
             let page = PartnersPage {
-                partners: Partner::catalog(db.acquire().await?).await?,
+                partners: Partner::catalog(db).await?,
                 suggested_secret: csrf.to_string(),
                 csrf: csrf.to_string(),
             };
@@ -173,8 +171,8 @@ async fn partners(mut req: tide::Request<()>) -> tide::Result {
             partner.interior.manager.phone = form.manager_phone;
             partner.interior.manager.mailing = form.manager_mailing;
 
-            let mut db = req.sqlx_conn::<Postgres>().await;
-            partner.store(db.acquire().await?).await?;
+            let db = req.state();
+            partner.store(db).await?;
 
             let page = PartnersCreatedPage {
                 name: partner.exterior.name.to_string(),
@@ -193,7 +191,7 @@ struct PartnerPage {
     partner: Partner,
 }
 
-async fn partner(req: tide::Request<()>) -> tide::Result {
+async fn partner(req: tide::Request<Database>) -> tide::Result {
     let _admin = match authorized_admin(&req, &Permission::ManagePartners).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
@@ -201,9 +199,9 @@ async fn partner(req: tide::Request<()>) -> tide::Result {
 
     let uid = Uuid::parse_str(req.param("uid")?)?;
 
-    let mut db = req.sqlx_conn::<Postgres>().await;
+    let db = req.state();
 
-    let partner = Partner::load_by_uid(db.acquire().await?, &uid).await?;
+    let partner = Partner::load_by_uid(db, &uid).await?;
 
     let page = PartnerPage { partner };
 
@@ -211,7 +209,7 @@ async fn partner(req: tide::Request<()>) -> tide::Result {
 }
 
 async fn authorized_admin(
-    req: &tide::Request<()>,
+    req: &tide::Request<Database>,
     needed: &Permission,
 ) -> Result<Person, tide::Response> {
     let token = match req.cookie("manage") {
@@ -224,21 +222,9 @@ async fn authorized_admin(
         Err(_) => return Err(redirect(&format!("{}authorize", BASE))),
     };
 
-    let mut db = req.sqlx_conn::<Postgres>().await;
+    let db = req.state();
 
-    let person = match Person::load_by_uid(
-        match db.acquire().await {
-            Ok(x) => x,
-            Err(_) => {
-                return Err(Response::builder(StatusCode::InternalServerError)
-                    .body("Error retrieving database connection from pool")
-                    .build())
-            }
-        },
-        &uid,
-    )
-    .await
-    {
+    let person = match Person::load_by_uid(db, &uid).await {
         Ok(person) => person,
         Err(_) => {
             return Err(Response::builder(StatusCode::InternalServerError)

@@ -1,4 +1,5 @@
 use super::{partner::Partner, Error};
+use crate::Database;
 
 use chrono::{DateTime, FixedOffset, Utc};
 use serde::{Deserialize, Serialize};
@@ -215,13 +216,7 @@ impl Person {
         }
     }
 
-    pub async fn load_partners<'req, DB>(
-        &self,
-        db: DB,
-    ) -> Result<Vec<Result<Partner, Error>>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_partners(&self, db: &Database) -> Result<Vec<Result<Partner, Error>>, Error> {
         Ok(sqlx::query_file!(
             "db/person/fetch_partners.sql",
             serde_json::to_value(self.exterior.uid)?
@@ -266,18 +261,12 @@ impl Person {
         Ok(())
     }
 
-    pub async fn note_activity<'req, DB>(&mut self, db: DB) -> Result<(), Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn note_activity(&mut self, db: &Database) -> Result<(), Error> {
         self.interior.active_at = fixed_offset_now();
         self.store(db).await
     }
 
-    pub async fn load_by_id<'req, DB>(db: DB, id: i32) -> Result<Person, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_id(db: &Database, id: i32) -> Result<Person, Error> {
         let rec = sqlx::query_file!("db/person/get_by_id.sql", id)
             .fetch_one(db)
             .await?;
@@ -289,10 +278,7 @@ impl Person {
         })
     }
 
-    pub async fn load_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<Person, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<Person, Error> {
         let rec = sqlx::query_file!("db/person/get_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
@@ -304,10 +290,7 @@ impl Person {
         })
     }
 
-    pub async fn exists_by_uid<'req, DB>(db: DB, uid: &Uuid) -> Result<bool, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn exists_by_uid(db: &Database, uid: &Uuid) -> Result<bool, Error> {
         let rec = sqlx::query_file!("db/person/exists_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
@@ -315,10 +298,7 @@ impl Person {
         Ok(rec.exists.unwrap_or(false))
     }
 
-    pub async fn load_by_email<'req, DB>(db: DB, email: &str) -> Result<Person, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_email(db: &Database, email: &str) -> Result<Person, Error> {
         let rec = sqlx::query_file!(
             "db/person/get_by_email.sql",
             serde_json::to_value(normalize_email(email))?
@@ -333,10 +313,7 @@ impl Person {
         })
     }
 
-    pub async fn exists_by_email<'req, DB>(db: DB, email: &str) -> Result<bool, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn exists_by_email(db: &Database, email: &str) -> Result<bool, Error> {
         let rec = sqlx::query_file!(
             "db/person/exists_by_email.sql",
             serde_json::to_value(normalize_email(email))?
@@ -347,10 +324,7 @@ impl Person {
         Ok(rec.exists.unwrap_or(false))
     }
 
-    pub async fn load_by_email_hash<'req, DB>(db: DB, hash: &str) -> Result<Person, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn load_by_email_hash(db: &Database, hash: &str) -> Result<Person, Error> {
         let rec = sqlx::query_file!("db/person/get_by_email_hash.sql", hash)
             .fetch_one(db)
             .await?;
@@ -362,10 +336,7 @@ impl Person {
         })
     }
 
-    pub async fn exists_by_email_hash<'req, DB>(db: DB, hash: &str) -> Result<bool, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn exists_by_email_hash(db: &Database, hash: &str) -> Result<bool, Error> {
         let rec = sqlx::query_file!("db/person/exists_by_email_hash.sql", hash)
             .fetch_one(db)
             .await?;
@@ -373,13 +344,10 @@ impl Person {
         Ok(rec.exists.unwrap_or(false))
     }
 
-    pub async fn all_by_email_hash<'req, DB>(
-        db: DB,
+    pub async fn all_by_email_hash(
+        db: &Database,
         hash: &str,
-    ) -> Result<Vec<Result<Person, Error>>, Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    ) -> Result<Vec<Result<Person, Error>>, Error> {
         Ok(sqlx::query_file!("db/person/all_by_email_hash.sql", hash)
             .map(|row| {
                 Ok(Person {
@@ -392,10 +360,7 @@ impl Person {
             .await?)
     }
 
-    pub async fn store<'req, DB>(&mut self, db: DB) -> Result<(), Error>
-    where
-        DB: sqlx::Executor<'req, Database = sqlx::Postgres>,
-    {
+    pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
         self.validate()?;
 
         if let Some(id) = self.id {

@@ -83,6 +83,77 @@
           </div>
 
           <div class="field">
+            <label class="label">Slug</label>
+            <div class="control">
+              <input class="input" type="text" name="slug" value="{{opportunity.exterior.slug}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Page Type</label>
+            <div class="control">
+              <div class="select">
+                <select class="input" name="entity_type">
+                  {% for opt in common::model::opportunity::EntityType::all_options() %}
+                  {% match opportunity.exterior.entity_type %}
+                  {% when EntityType::Page with (options) %}
+                  {% match opt.2 %}
+                  {% when EntityType::Page with (item_options) %}
+                  <option value="{{opt.0}}"{% if item_options.layout == options.layout %} selected{% endif %}>{{opt.1}}</option>
+                  {% else %}
+                  <option value="{{opt.0}}">{{opt.1}}</option>
+                  {% endmatch %}
+                  {% else %}
+                  <option value="{{opt.0}}"{% if opt.2 == opportunity.exterior.entity_type %} selected{% endif %}>{{opt.1}}</option>
+                  {% endmatch %}
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {% match opportunity.exterior.entity_type %}
+
+          {% when EntityType::Page with (options) %}
+
+          <div class="field">
+            <label class="label">Title</label>
+            <div class="control">
+              <input class="input" type="text" name="title" value="{{opportunity.exterior.title}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Short Description (elevator pitch)</label>
+            <div class="control">
+              <input class="input" type="text" name="short_desc" value="{{opportunity.exterior.short_desc}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Image URL</label>
+            <div class="control">
+              <input class="input" type="text" name="image_url" value="{{opportunity.exterior.image_url}}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Image Credit</label>
+            <div class="control">
+              <input class="input" type="text" name="image_credit" value="{{opportunity.exterior.image_credit}}">
+            </div>
+          </div>
+
+          {# add form fields for any options we add to the PageOptions struct #}
+
+          {# consider adding .wysiwyg textareas to edit the page blocks inline #}
+
+          <input type="hidden" name="partner_name" value="{{opportunity.exterior.partner_name}}">
+          <input type="hidden" name="tags" value="{{opportunity.exterior.tags|join(", ")}}">
+
+          {% else %}
+
+          <div class="field">
             <label class="label">Partner Name</label>
             <div class="control">
               <input class="input" type="text" name="partner_name" value="{{opportunity.exterior.partner_name}}">
@@ -163,8 +234,6 @@
               {% endmatch %}
             </div>
           </div>
-
-          {# Skipped entity_type, per recent discussions 2021-7-9 #}
 
           <div class="field">
             <div class="columns">
@@ -527,6 +596,8 @@
             </div>
           </div>
 
+          {% endmatch %}
+
           <div class="field">
             <div class="control">
               <input class="button is-primary is-large" type="submit" value="Save">
@@ -543,7 +614,7 @@
         <pre>
 {{"{:?}"|format(opportunity.interior)}}
         </pre>
-        #}
+#}
       </div>
     </section>
     <script>

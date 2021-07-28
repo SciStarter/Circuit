@@ -1,15 +1,13 @@
 use common::model::Partner;
-use sqlx::postgres::Postgres;
-use sqlx::prelude::*;
+use common::Database;
 use tide::http::{mime, StatusCode};
 use tide::prelude::*;
 use tide_fluent_routes::prelude::*;
-use tide_sqlx::SQLxRequestExt;
 use uuid::Uuid;
 
 use super::{error, issue_jwt, success};
 
-pub fn routes(routes: RouteSegment<()>) -> RouteSegment<()> {
+pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes.at("authorize", |r| r.post(partner_authorize))
 }
 
@@ -19,7 +17,7 @@ struct PartnerAuthorize {
     secret: String,
 }
 
-pub async fn partner_authorize(mut req: tide::Request<()>) -> tide::Result {
+pub async fn partner_authorize(mut req: tide::Request<Database>) -> tide::Result {
     if let Some(ct) = req.content_type() {
         if ct != mime::JSON {
             return Ok(error(
@@ -39,9 +37,9 @@ pub async fn partner_authorize(mut req: tide::Request<()>) -> tide::Result {
         Err(x) => return Ok(error(StatusCode::BadRequest, x.to_string())),
     };
 
-    let mut db = req.sqlx_conn::<Postgres>().await;
+    let db = req.state();
 
-    let partner = match Partner::load_by_uid(db.acquire().await?, &body.uid).await {
+    let partner = match Partner::load_by_uid(db, &body.uid).await {
         Ok(p) => p,
         Err(x) => {
             tide::log::warn!("Error loading partner for authorization: {:?}", x);

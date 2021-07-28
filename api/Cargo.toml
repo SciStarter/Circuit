@@ -26,7 +26,6 @@ sha2 = "0.9.5"
 sqlx = { version = "0.5.5", features = ["runtime-async-std-rustls", "postgres", "macros", "migrate", "uuid", "time", "json", "tls", "offline"] }
 tide = "0.16.0"
 tide-fluent-routes = "0.1.5"
-tide-sqlx = { version = "0.6.1", features = ["postgres", "rustls"] }
 #tide-websockets = "0.3.0"
 time = { version = "0.2.26", features = ["serde"] }
 urlencoding = "1.3.3"
