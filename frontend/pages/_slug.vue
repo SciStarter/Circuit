@@ -19,6 +19,12 @@ export default {
         Opportunity,
     },
 
+    head() {
+        return {
+            title: this.entity.title + " - Science Near Me";
+        };
+    },
+
     async asyncData({ params, $axios }) {
         const entity = await $axios.$get("/api/ui/entity/" + params.slug);
         const layout = entity.entity_type.page ? entity.entity_type.page.layout : entity.entity_type;
