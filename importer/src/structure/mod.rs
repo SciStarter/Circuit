@@ -3,6 +3,7 @@ use serde_json::Value;
 use uuid::Uuid;
 
 pub mod eventsql;
+pub mod neon;
 pub mod night_sky_network;
 
 pub enum OneOrMany<T> {

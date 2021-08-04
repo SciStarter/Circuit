@@ -32,6 +32,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if let Some(Reverse((when, idx))) = schedule.pop() {
             if when <= now {
+                println!("Importing from {:?}", &importers[idx]);
                 let delay = match (&importers[idx]).import(pool.clone()).await {
                     Ok(optional) => {
                         println!("Imported {:?}", &importers[idx]);

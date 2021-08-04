@@ -10,86 +10,86 @@ use serde_json::{from_value, Value};
 #[derive(Debug)]
 pub struct EventsQLResult(PartnerInfo);
 
-fn interpret_one(partner: &PartnerInfo, mut entry: Value) -> Option<Opportunity> {
+#[derive(serde::Deserialize, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+struct EventsQLDataOrganizer {
+    name: String,
+    url: Option<String>,
+}
+
+#[derive(serde::Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct EventsQLDataNode {
+    id: String,
+    modified_gmt: String,
+    link: String,
+    organizer: EventsQLDataOrganizer,
+}
+
+#[derive(serde::Deserialize, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+struct EventsQLDataCustom {
+    indoors_outdoors: Vec<common::model::opportunity::VenueType>,
+}
+
+#[derive(serde::Deserialize, Debug, Default)]
+#[serde(default)]
+struct EventsQLData {
+    node: Option<EventsQLDataNode>,
+    #[serde(rename = "scienceNearMeData")]
+    custom: Option<EventsQLDataCustom>,
+}
+
+fn interpret_one(partner: &PartnerInfo, entry: Value) -> Option<Opportunity> {
+    let data: EventsQLData = match serde_json::from_value(entry) {
+        Ok(d) => d,
+        Err(err) => {
+            println!("Warning: Entry could not be parsed: {:?}", err);
+            return None;
+        }
+    };
+
     let mut opp = Opportunity::default();
 
-    opp.exterior.partner = partner.partner.clone();
+    if let Some(node) = data.node {
+        opp.exterior.partner = partner.partner.clone();
 
-    opp.exterior.partner_name = partner.partner_name.clone();
+        opp.exterior.partner_name = partner.partner_name.clone();
 
-    opp.exterior.partner_website = partner.partner_website.clone();
+        opp.exterior.partner_website = partner.partner_website.clone();
 
-    opp.exterior.partner_logo_url = partner.partner_logo_url.clone();
+        opp.exterior.partner_logo_url = partner.partner_logo_url.clone();
 
-    if let Some(node) = entry.get("node") {
-        opp.exterior.uid = uuid::Uuid::new_v5(
-            &partner.partner,
-            match node.get("id").and_then(|id| id.as_str()) {
-                Some(id) => id,
-                None => {
-                    println!("Error: Invalid entry (missing id): {:?}", entry);
-                    return None;
+        opp.exterior.uid = uuid::Uuid::new_v5(&partner.partner, node.id.as_bytes());
+
+        opp.exterior.partner_updated =
+            match DateTime::parse_from_rfc3339(&format!("{}Z", &node.modified_gmt)) {
+                Ok(dt) => Some(dt),
+                Err(err) => {
+                    println!(
+                        "Warning: Parsing modifiedGmt failed, substituting None: {:?}",
+                        err
+                    );
+                    None
                 }
-            }
-            .as_bytes(),
-        );
-
-        opp.exterior.partner_updated = match node
-            .get("modifiedGmt")
-            .and_then(|s| s.as_str())
-            .map(|s| DateTime::parse_from_rfc3339(&format!("{}Z", s)))
-            .transpose()
-        {
-            Ok(dt) => dt,
-            Err(err) => {
-                println!(
-                    "Warning: Parsing modifiedGmt failed, substituting None: {:?}",
-                    err
-                );
-                None
-            }
-        };
-
-        opp.exterior.partner_opp_url = match node.get("link").and_then(|s| s.as_str()) {
-            Some(url) => url.to_string(),
-            None => {
-                println!("Error: Entry missing 'link' field.");
-                return None;
-            }
-        };
-
-        if let Some(organizer) = node.get("organizer") {
-            opp.exterior.organization_name = match organizer.get("name").and_then(|s| s.as_str()) {
-                Some(s) => s.to_string(),
-                None => "".to_string(),
             };
 
-            opp.exterior.organization_website = organizer
-                .get("url")
-                .and_then(|s| s.as_str())
-                .map(|s| s.to_string());
-        }
+        opp.exterior.partner_opp_url = node.link;
+
+        opp.exterior.organization_name = node.organizer.name;
+
+        opp.exterior.organization_website = node.organizer.url;
+
+        // !!! TODO
     } else {
-        println!("Error: Entry missing the 'node' field.");
+        println!("Warning: Opportunity data is not present in the record");
         return None;
     }
 
-    if let Some(custom) = entry.get_mut("scienceNearMeData") {
-        opp.exterior.opp_venue = match custom
-            .get_mut("indoorsOutdoors")
-            .and_then(|val| val.as_array_mut())
-        {
-            Some(vec) => vec
-                .drain(..)
-                .map(|v| serde_json::from_value(v))
-                .flatten()
-                .collect(),
-            None => {
-                vec![]
-            }
-        };
+    if let Some(custom) = data.custom {
+        opp.exterior.opp_venue = custom.indoors_outdoors;
 
-        // !!! next up is opp_descriptor if it gets added to the custom fields
+        // !!! TODO next up is opp_descriptor if it gets added to the custom fields
     }
 
     Some(opp)
@@ -101,7 +101,7 @@ impl Structure for EventsQLResult {
     fn interpret(&self, mut parsed: Value) -> Result<OneOrMany<Self::Data>, Error> {
         if let Some(entries) = parsed
             .get_mut("data")
-            .ok_or_else(|| Error::Structure("Missing 'data' key in GrtaphQL result".to_string()))?
+            .ok_or_else(|| Error::Structure("Missing 'data' key in GraphQL result".to_string()))?
             .get_mut("events")
             .ok_or_else(|| Error::Structure("Missing 'events' key in GraphQL result".to_string()))?
             .get_mut("edges")
