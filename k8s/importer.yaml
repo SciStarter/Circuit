@@ -23,5 +23,13 @@ spec:
             secretKeyRef:
               name: db-secret-beta
               key: DATABASE_URL
-
-
+        - name: SCIENCEWORKS_ORG_ID
+          valueFrom:
+            secretKeyRef:
+              name: scienceworks-beta
+              key: SCIENCEWORKS_ORG_ID
+        - name: SCIENCEWORKS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: scienceworks-beta
+              key: SCIENCEWORKS_AOPI_KEY
