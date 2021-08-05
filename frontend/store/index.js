@@ -50,10 +50,12 @@ export const actions = {
         let user = { authenticated: false };
 
         try {
-            user = await this.$axios.$post("/api/ui/login", {
+            let resp = await this.$axios.$post("/api/ui/auth/login", {
                 email,
                 password,
             });
+
+            user = resp.payload;
         }
         catch(error) {
             console.log(error);
@@ -95,7 +97,8 @@ export const actions = {
         let user = { authenticated: false };
 
         try {
-            user = await this.$axios.$post("/api/ui/signup", params);
+            let resp = await this.$axios.$post("/api/ui/auth/signup", params);
+            user = resp.payload;
         }
         catch(error) {
             console.log(error);
@@ -136,11 +139,13 @@ export const actions = {
             user = state.user;
         }
         else if(!!token) {
-            user = await this.$axios.$get("/api/ui/me", {
+            let resp = await this.$axios.$get("/api/ui/auth/me", {
                 headers: {
                     "Authorization": "Bearer " + token,
                 },
             });
+
+            user = resp.payload;
         }
 
         commit('save_user', user);

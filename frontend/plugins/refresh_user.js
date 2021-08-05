@@ -8,11 +8,13 @@ window.onNuxtReady(async () => {
     // let user = await window.$nuxt.$store.dispatch('get_user');
 
     // This version just updates the token in cookie and localStorage
-    const user = await window.$nuxt.$axios.$get("/api/ui/me", {
+    const resp = await window.$nuxt.$axios.$get("/api/ui/auth/me", {
         headers: {
             "Authorization": "Bearer " + window.localStorage.getItem('token'),
         },
     });
+
+    const user = resp.payload;
 
     // Needed for either version
     if(user.authenticated) {
