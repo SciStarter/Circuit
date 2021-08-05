@@ -49,6 +49,16 @@ export default {
         '@nuxtjs/style-resources'
     ],
 
+    build: {
+        babel: {
+            plugins: [
+                ["@babel/plugin-proposal-private-property-in-object", { "loose": true }],
+                ["@babel/plugin-proposal-private-methods", { "loose": true }],
+                ["@babel/plugin-proposal-class-properties", { "loose": true }],
+            ]
+        }
+    },
+
     gtm: {
         id: 'GTM-5ZT2954'
     },

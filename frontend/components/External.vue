@@ -109,7 +109,7 @@ export default {
 
     methods: {
         async go() {
-            await this.$axios.$post("/api/ui/external", {
+            await this.$axios.$post("/api/ui/activity/external", {
                 session: window.localStorage.getItem("token") || "",
                 on_page: window.location.href,
                 href: this.href,

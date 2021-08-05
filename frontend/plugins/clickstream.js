@@ -32,5 +32,5 @@ document.body.addEventListener('click', async function(event) {
     default:
     };
 
-    await window.$nuxt.$axios.$post("/api/ui/click", params);
+    await window.$nuxt.$axios.$post("/api/ui/activity/click", params);
 });
