@@ -21,10 +21,10 @@ pub static API_AUDIENCE: Lazy<uuid::Uuid> =
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
-        .at("partner/", partner::routes)
-        .at("opportunity/", opportunity::routes)
-        .at("participation/", participation::routes)
-        .at("manage/", manage::routes)
+        .at("partner", partner::routes)
+        .at("opportunity", opportunity::routes)
+        .at("participation", participation::routes)
+        .at("manage", manage::routes)
 }
 
 pub fn success<J>(json: &J) -> tide::Result

@@ -60,16 +60,14 @@ async fn main() -> tide::Result<()> {
     }
 
     // https://crates.io/crates/tide-fluent-routes
-    app.register(
-        root()
-            .at("api/v1/", v1::routes)
-            .at("api/ui/", ui::routes)
-            .at("api/docs/", |routes| {
-                routes
-                    .serve_dir("static/")
-                    .expect("Unable to serve static docs dir")
-            }),
-    );
+    app.register(root().at("api/v1", v1::routes).at("api/ui", ui::routes).at(
+        "api/docs",
+        |routes| {
+            routes
+                .serve_dir("static/")
+                .expect("Unable to serve static docs dir")
+        },
+    ));
 
     app.listen("0.0.0.0:8000").await?;
 

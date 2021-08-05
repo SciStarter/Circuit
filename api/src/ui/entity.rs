@@ -10,7 +10,14 @@ use tide_fluent_routes::{
 use super::{error, okay, request_person};
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
-    routes.at(":slug", |r| r.get(entity))
+    routes.at(":slug", |r| {
+        r.get(entity)
+            .at("like", |r| r.post(add_like))
+            .at("reviews", |r| r.post(add_review).get(reviews))
+            .at("report-review", |r| r.post(report_review))
+            .at("recommended", |r| r.get(recommended))
+            .at("didit", |r| r.get(get_didit).put(set_didit))
+    })
 }
 
 pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
@@ -30,4 +37,32 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
     } else {
         error(404, "not found", &[slug])
     }
+}
+
+pub async fn add_like(_req: tide::Request<Database>) -> tide::Result {
+    todo!()
+}
+
+pub async fn add_review(_req: tide::Request<Database>) -> tide::Result {
+    todo!()
+}
+
+pub async fn report_review(_req: tide::Request<Database>) -> tide::Result {
+    todo!()
+}
+
+pub async fn reviews(_req: tide::Request<Database>) -> tide::Result {
+    todo!()
+}
+
+pub async fn recommended(_req: tide::Request<Database>) -> tide::Result {
+    todo!()
+}
+
+pub async fn set_didit(_req: tide::Request<Database>) -> tide::Result {
+    todo!()
+}
+
+pub async fn get_didit(_req: tide::Request<Database>) -> tide::Result {
+    todo!()
 }
