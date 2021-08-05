@@ -1,10 +1,10 @@
 use common::{jwt::issue_jwt, model::Person, Database};
-use http_types::{mime, Cookie};
+use http_types::Cookie;
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde_json::json;
 use tide::{Response, StatusCode};
-use tide_fluent_routes::{
+pub use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
 };
@@ -22,6 +22,7 @@ pub const SESSION_HOURS: i64 = 24 * 90;
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .at("login", |r| r.post(login))
+        .at("login-scistarter", |r| r.post(login_scistarter))
         .at("signup", |r| r.post(signup))
         .at("me", |r| r.get(me))
 }
@@ -74,6 +75,17 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
     }
 }
 
+pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result {
+    let _form: LoginForm = match req.body_json().await {
+        Ok(parsed) => parsed,
+        Err(_) => {
+            return error(400, "Login failed", &["email and password are required"]);
+        }
+    };
+
+    todo!()
+}
+
 #[derive(Default, Deserialize)]
 struct SignupForm {
     email: String,
@@ -81,6 +93,7 @@ struct SignupForm {
     password: String,
     zip_code: Option<String>,
     phone: Option<String>,
+    _newsletter: Option<bool>,
 }
 
 /// Create an account, if the validations pass.

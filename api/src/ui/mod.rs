@@ -1,6 +1,8 @@
 pub mod activity;
 pub mod auth;
 pub mod entity;
+pub mod finder;
+pub mod profile;
 
 use std::convert::TryFrom;
 
@@ -19,9 +21,11 @@ pub static UI_AUDIENCE: Lazy<uuid::Uuid> =
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
-        .at("activity/", activity::routes)
-        .at("auth/", auth::routes)
-        .at("entity/", entity::routes)
+        .at("activity", activity::routes)
+        .at("auth", auth::routes)
+        .at("entity", entity::routes)
+        .at("finder", finder::routes)
+        .at("profile", profile::routes)
         .at("content", |r| r.get(content))
 }
 

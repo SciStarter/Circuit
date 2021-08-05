@@ -632,6 +632,11 @@ fn build_matching_query(
     let mut clauses = Vec::new();
     let mut params = Vec::new();
 
+    // Use *geography* versions of the functions
+    // https://postgis.net/docs/ST_DWithin.html
+    // https://postgis.net/docs/ST_Distance.html
+    // https://postgis.net/docs/ST_Intersects.html
+
     if let Some(val) = query.accepted {
         params.push(ParamValue::Bool(val));
         clauses.push(format!(
