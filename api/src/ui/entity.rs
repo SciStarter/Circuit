@@ -16,7 +16,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
             .at("reviews", |r| r.post(add_review).get(reviews))
             .at("report-review", |r| r.post(report_review))
             .at("recommended", |r| r.get(recommended))
-            .at("didit", |r| r.get(get_didit).put(set_didit))
+            .at("managers", |r| r.post(request_page_management))
     })
 }
 
@@ -59,10 +59,6 @@ pub async fn recommended(_req: tide::Request<Database>) -> tide::Result {
     todo!()
 }
 
-pub async fn set_didit(_req: tide::Request<Database>) -> tide::Result {
-    todo!()
-}
-
-pub async fn get_didit(_req: tide::Request<Database>) -> tide::Result {
+pub async fn request_page_management(_req: tide::Request<Database>) -> tide::Result {
     todo!()
 }

@@ -2,6 +2,7 @@ pub mod activity;
 pub mod auth;
 pub mod entity;
 pub mod finder;
+pub mod organization;
 pub mod profile;
 
 use std::convert::TryFrom;
@@ -26,6 +27,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("entity", entity::routes)
         .at("finder", finder::routes)
         .at("profile", profile::routes)
+        .at("organization", profile::routes)
         .at("content", |r| r.get(content))
 }
 
