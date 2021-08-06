@@ -31,6 +31,7 @@ pub struct PartnerInterior {
     pub contact: Option<Contact>,
     pub prime: Uuid,           // uid of the prime Person entry for this partner
     pub authorized: Vec<Uuid>, // uids of additional authorized Person entries
+    pub pending: Vec<Uuid>,    // uids of Person entries that can be authorized
     pub secret: Option<String>,
 }
 

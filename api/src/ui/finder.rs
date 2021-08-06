@@ -80,6 +80,10 @@ struct SearchQuery {
     pub _page: Option<u32>,
     pub _per_page: Option<u8>,
     pub _saved: Option<bool>,
+    pub _participated: Option<bool>,
+    pub _reviewing: Option<bool>,
+    pub _withdrawn: Option<bool>,
+    pub _over: Option<bool>,
 }
 
 pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
