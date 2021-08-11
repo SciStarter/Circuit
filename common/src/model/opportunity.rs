@@ -1,7 +1,7 @@
 use super::Error;
 use crate::Database;
 
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, Utc};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -719,6 +719,37 @@ fn slugify(source: &str) -> String {
         .to_lowercase()
 }
 
+#[derive(Debug)]
+pub struct OpportunityImportRecord {
+    pub id: i32,
+    pub when: DateTime<Utc>,
+    pub partner: Uuid,
+    pub opportunity: Uuid,
+    pub created: bool,
+    pub ignored: bool,
+}
+
+impl OpportunityImportRecord {
+    pub async fn store(
+        db: &Database,
+        partner: &Uuid,
+        opportunity: &Uuid,
+        created: bool,
+        ignored: bool,
+    ) -> Result<OpportunityImportRecord, Error> {
+        Ok(sqlx::query_file_as!(
+            OpportunityImportRecord,
+            "db/opportunity/import_record_store.sql",
+            partner,
+            opportunity,
+            created,
+            ignored
+        )
+        .fetch_one(db)
+        .await?)
+    }
+}
+
 impl Opportunity {
     pub async fn load_matching_refs(
         db: &Database,
@@ -741,7 +772,10 @@ impl Opportunity {
             .map(|rec| {
                 Ok(OpportunityReference {
                     uid: serde_json::from_value(rec.get("uid"))?,
-                    slug: serde_json::from_value(rec.get("slug"))?,
+                    slug: serde_json::from_value(
+                        rec.try_get("slug")
+                            .unwrap_or_else(|_| serde_json::Value::String(String::new())),
+                    )?,
                     title: serde_json::from_value(rec.get("title"))?,
                     image_url: serde_json::from_value(rec.get("image_url"))?,
                     short_desc: serde_json::from_value(rec.get("short_desc"))?,
@@ -795,10 +829,7 @@ impl Opportunity {
         }
     }
 
-    pub async fn load_partner<'req, DB>(
-        &self,
-        db: &Database,
-    ) -> Result<super::partner::Partner, Error> {
+    pub async fn load_partner(&self, db: &Database) -> Result<super::partner::Partner, Error> {
         Ok(super::partner::Partner::load_by_uid(db, &self.exterior.partner).await?)
     }
 

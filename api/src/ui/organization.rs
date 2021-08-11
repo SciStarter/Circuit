@@ -1,4 +1,4 @@
-use common::Database;
+use common::{model::opportunity::OpportunityImportRecord, Database};
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
@@ -22,7 +22,9 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
                 })
                 .at("opportunities", |r| {
                     r.post(add_opportunity).at(":opp_uid", |r| {
-                        r.post(duplicate_opportunity).delete(withdraw_opportunity)
+                        r.put(edit_opportunity)
+                            .post(duplicate_opportunity)
+                            .delete(withdraw_opportunity)
                     })
                 })
         })
@@ -78,15 +80,57 @@ pub async fn remove_manager(_req: tide::Request<Database>) -> tide::Result {
 }
 
 pub async fn add_opportunity(_req: tide::Request<Database>) -> tide::Result {
+    // OpportunityImportRecord::store(
+    //     db,
+    //     &new_opp.exterior.partner,
+    //     &new_opp.exterior.uid,
+    //     true,
+    //     false,
+    // )
+    // .await?;
+
     todo!()
 }
 
 pub async fn duplicate_opportunity(_req: tide::Request<Database>) -> tide::Result {
+    // OpportunityImportRecord::store(
+    //     db,
+    //     &new_opp.exterior.partner,
+    //     &new_opp.exterior.uid,
+    //     true,
+    //     false,
+    // )
+    // .await?;
+
+    todo!()
+}
+
+// If the opportunity is not approved, delete it instead of marking it
+// withdrawn.
+pub async fn edit_opportunity(_req: tide::Request<Database>) -> tide::Result {
+    // OpportunityImportRecord::store(
+    //     db,
+    //     &new_opp.exterior.partner,
+    //     &new_opp.exterior.uid,
+    //     false,
+    //     false,
+    // )
+    // .await?;
+
     todo!()
 }
 
 // If the opportunity is not approved, delete it instead of marking it
 // withdrawn.
 pub async fn withdraw_opportunity(_req: tide::Request<Database>) -> tide::Result {
+    // OpportunityImportRecord::store(
+    //     db,
+    //     &new_opp.exterior.partner,
+    //     &new_opp.exterior.uid,
+    //     false,
+    //     false,
+    // )
+    // .await?;
+
     todo!()
 }

@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 
+use common::model::opportunity::OpportunityImportRecord;
 use importer::format::csv::{CommaSeparated, SemicolonSeparated, TabSeparated};
 use importer::format::ical::Ical;
 use importer::format::json::Json;
@@ -55,12 +56,30 @@ where
         {
             OneOrMany::One(mut item) => {
                 item.set_id_if_necessary(&db).await?;
-                item.store(&db).await?
+                let created = item.id.is_none();
+                item.store(&db).await?;
+                OpportunityImportRecord::store(
+                    &db,
+                    &item.exterior.partner,
+                    &item.exterior.uid,
+                    created,
+                    false, // Ignored is for a hypothetical case, where we may skip importing a record because the current version is authoritative. In that case, it should be set to true.
+                )
+                .await?;
             }
             OneOrMany::Many(vec) => {
                 for mut item in vec {
                     item.set_id_if_necessary(&db).await?;
-                    item.store(&db).await?
+                    let created = item.id.is_none();
+                    item.store(&db).await?;
+                    OpportunityImportRecord::store(
+                        &db,
+                        &item.exterior.partner,
+                        &item.exterior.uid,
+                        created,
+                        false,
+                    )
+                    .await?;
                 }
             }
         }
