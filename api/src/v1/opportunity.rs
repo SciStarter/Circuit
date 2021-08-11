@@ -1,4 +1,6 @@
-use common::model::opportunity::{EntityType, Opportunity, OpportunityQuery};
+use common::model::opportunity::{
+    EntityType, Opportunity, OpportunityImportRecord, OpportunityQuery,
+};
 use common::Database;
 use serde_json::json;
 use tide::http::{mime, StatusCode};
@@ -57,6 +59,9 @@ async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
     if let Err(err) = opp.store(db).await {
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
+
+    OpportunityImportRecord::store(db, &opp.exterior.partner, &opp.exterior.uid, true, false)
+        .await?;
 
     let res = Response::builder(StatusCode::Created)
         .content_type(mime::JSON)
@@ -216,6 +221,15 @@ async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
     if let Err(err) = new_opp.store(db).await {
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
+
+    OpportunityImportRecord::store(
+        db,
+        &new_opp.exterior.partner,
+        &new_opp.exterior.uid,
+        false,
+        false,
+    )
+    .await?;
 
     success(&new_opp)
 }

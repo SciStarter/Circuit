@@ -22,12 +22,12 @@ pub static UI_AUDIENCE: Lazy<uuid::Uuid> =
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
-        .at("activity", activity::routes)
-        .at("auth", auth::routes)
-        .at("entity", entity::routes)
-        .at("finder", finder::routes)
-        .at("profile", profile::routes)
-        .at("organization", profile::routes)
+        .at("activity/", activity::routes)
+        .at("auth/", auth::routes)
+        .at("entity/", entity::routes)
+        .at("finder/", finder::routes)
+        .at("profile/", profile::routes)
+        .at("organization/", organization::routes)
         .at("content", |r| r.get(content))
 }
 

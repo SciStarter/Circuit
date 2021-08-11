@@ -284,6 +284,59 @@
       ]
     }
   },
+  "4b936d63a1c18538d39873008467a3731c529ab8b310d65f677e563e76d6a182": {
+    "query": "insert into c_opportunity_import_record (\"partner\", \"opportunity\", \"created\", \"ignored\")\nvalues ($1, $2, $3, $4)\nreturning \"id\", \"when\", \"partner\", \"opportunity\", \"created\", \"ignored\";\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "when",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 2,
+          "name": "partner",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "opportunity",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 4,
+          "name": "created",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 5,
+          "name": "ignored",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Bool",
+          "Bool"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "4d1ba739e2e5c521464c4eb89ce69d49b51d14d6c697901d1ffb079b350945a6": {
     "query": "INSERT INTO c_block (\"language\", \"group\", item, tags, label, content) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;\n",
     "describe": {
