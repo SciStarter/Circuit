@@ -1,9 +1,13 @@
 use askama::Template;
-use common::model::{
-    opportunity::{PageLayout, PageOptions},
-    person::Permission,
+use common::{
+    model::{
+        opportunity::{EntityType, OpportunityQuery, PageLayout, PageOptions},
+        partner::PartnerReference,
+        person::Permission,
+        Opportunity, Partner, SelectOption,
+    },
+    Database,
 };
-use common::Database;
 use http_types::Method;
 use serde::Deserialize;
 use tide_fluent_routes::{
@@ -13,11 +17,6 @@ use tide_fluent_routes::{
 use uuid::Uuid;
 
 use crate::v1::redirect;
-use common::model::opportunity::{EntityType, OpportunityQuery};
-use common::model::partner::PartnerReference;
-use common::model::Opportunity;
-use common::model::Partner;
-use common::model::SelectOption;
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
