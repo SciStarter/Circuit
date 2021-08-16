@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Circuit API v1",
-        "version": "1.3.0",
+        "version": "1.4.0",
         "description": ""
     },
     "servers": [
@@ -730,6 +730,89 @@
                     },
                     "500": {
                         "description": "Other error"
+                    }
+                }
+            }
+        },
+        "/opportunity/recommend": {
+            "get": {
+                "summary": "Retrieve references to opportunities recommended based on the query parameters",
+                "operationId": "opportunity_recommend",
+                "parameters": [
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "description": "An optional authorization bearer header containing an unexpired token returned from the /partner/authorize endpoint",
+                        "required": false
+                    },
+                    {
+                        "name": "tags[]",
+                        "in": "query",
+                        "explode": true,
+                        "required": false,
+                        "description": "Can be added to the query parameters multiple times. Each tags[] parameter specifies a single tag which will guide the recommendations."
+                    },
+                    {
+                        "name": "topics[]",
+                        "in": "query",
+                        "explode": true,
+                        "required": false,
+                        "description": "Can be added to the query parameters multiple times. Each topics[] parameter specifies a single topic while will guide the recommendations. See the topic field in the opportunity schema for valid values."
+                    },
+                    {
+                        "name": "abstract",
+                        "in": "query",
+                        "description": "A short-ish section of text which will be used to guide the recommendations",
+                        "required": false
+                    },
+                    {
+                        "name": "longitude",
+                        "in": "query",
+                        "description": "GPS X coordinate of a location of interest that will be used to guide the recommendations",
+                        "required": false
+                    },
+                    {
+                        "name": "latitude",
+                        "in": "query",
+                        "description": "GPS Y coordinate of a location of interest that will be used to guide the recommendations",
+                        "required": false
+                    }
+                ],
+                "security": [
+                    {},
+                    {
+                        "token": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Produces a list of references to opportunities recommended based on the provided parameters. The UID values of the references can be used to access more complete information about specific opportunities.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "recommended": {
+                                            "type": "array",
+                                            "default": [],
+                                            "items": {
+                                                "$ref": "#/components/schemas/opportunity_ref"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Authorization token did not grant access",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
                     }
                 }
             }

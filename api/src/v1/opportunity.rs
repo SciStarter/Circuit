@@ -11,10 +11,14 @@ use uuid::Uuid;
 use super::{error, header_check, success};
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
-    routes.post(opportunity_new).get(opportunity_search).at(
-        ":uid",
-        |r| r.get(opportunity_get).put(opportunity_put), /*.patch(opportunity_patch)*/
-    )
+    routes
+        .post(opportunity_new)
+        .get(opportunity_search)
+        .at("recommend", |r| r.get(opportunity_recommend))
+        .at(
+            ":uid",
+            |r| r.get(opportunity_get).put(opportunity_put), /*.patch(opportunity_patch)*/
+        )
 }
 
 async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
@@ -114,6 +118,31 @@ async fn opportunity_search(req: tide::Request<Database>) -> tide::Result {
     Ok(Response::builder(StatusCode::Ok)
         .content_type(mime::JSON)
         .body(json!({ "matches": matches }))
+        .build())
+}
+
+#[derive(serde::Deserialize)]
+struct RecommendQuery {
+    tags: Option<Vec<String>>,
+    topics: Option<Vec<common::model::opportunity::Topic>>,
+    r#abstract: Option<String>,
+    longitude: Option<f64>,
+    latitude: Option<f64>,
+}
+
+async fn opportunity_recommend(req: tide::Request<Database>) -> tide::Result {
+    let auth = match header_check(&req, &super::API_AUDIENCE) {
+        Ok(x) => x,
+        Err(res) => return Ok(res),
+    };
+
+    let mut query: RecommendQuery = req.query()?;
+
+    // !!! TODO
+
+    Ok(Response::builder(StatusCode::Ok)
+        .content_type(mime::JSON)
+        .body(json!({ "recommended": [] }))
         .build())
 }
 
