@@ -1,0 +1,7 @@
+@mixin svg-fill {
+    fill: currentColor;
+}
+
+@mixin svg-stroke {
+    stroke: currentColor;
+}

@@ -10,16 +10,15 @@ export default {
         meta: [
             { charset: 'utf-8' },
             { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-            { hid: 'description', name: 'description', content: '' }
+            { hid: 'description', name: 'description', content: "Find opportunities to do real science, anywhere." }
         ],
         link: [
-            { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+            { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+            { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+            { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true },
+            { rel: 'stylesheet', type: 'text/css', href: 'https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,700;1,400&family=Fira+Sans:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap' },
         ]
     },
-
-    // Global CSS: https://go.nuxtjs.dev/config-css
-    css: [
-    ],
 
     // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
     plugins: [
@@ -32,23 +31,38 @@ export default {
 
     // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
     buildModules: [
-        // https://go.nuxtjs.dev/eslint
-        '@nuxtjs/eslint-module',
+        //['@nuxtjs/eslint-module', { emitWarning: true, emitError: false }],
+        '@nuxtjs/style-resources',
+        "@nuxtjs/svg",
     ],
 
     // Modules: https://go.nuxtjs.dev/config-modules
     modules: [
         // https://go.nuxtjs.dev/buefy
-        'nuxt-buefy',
+        ['nuxt-buefy', { css: false }],
         // https://go.nuxtjs.dev/axios
         '@nuxtjs/axios',
         // https://www.npmjs.com/package/cookie-universal-nuxt
         'cookie-universal-nuxt',
         '@nuxtjs/gtm',
         '@nuxtjs/proxy',
-        '@nuxtjs/style-resources'
     ],
 
+    css: ['@/assets/vars/buefy.scss'],
+
+    styleResources: {
+        scss: [
+            './assets/vars/*.scss',
+            './assets/abstracts/_mixins.scss'
+        ]
+    },
+
+
+    gtm: {
+        id: 'GTM-5ZT2954'
+    },
+
+    // Build Configuration: https://go.nuxtjs.dev/config-build
     build: {
         babel: {
             plugins: [
@@ -57,19 +71,6 @@ export default {
                 ["@babel/plugin-proposal-class-properties", { "loose": true }],
             ]
         }
-    },
-
-    gtm: {
-        id: 'GTM-5ZT2954'
-    },
-
-    styleResources: {
-        scss: []
-    },
-
-    // Build Configuration: https://go.nuxtjs.dev/config-build
-    build: {
-
     },
 
     // In production, these requests won't normally make it to the

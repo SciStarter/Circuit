@@ -140,10 +140,26 @@ pub async fn content(req: tide::Request<Database>) -> tide::Result {
     if let Ok(block) =
         model::block::Block::load(db, &query.language, &query.group, &query.item).await
     {
-        Ok(Response::builder(StatusCode::Ok)
-            .body(block.content)
-            .build())
+        if !block.content.is_empty() {
+            Ok(Response::builder(StatusCode::Ok)
+                .body(block.content)
+                .build())
+        } else {
+            Ok(Response::builder(StatusCode::NotFound)
+                .body(format!("{} {} {}", query.language, query.group, query.item))
+                .build())
+        }
     } else {
+        let mut block = model::block::Block {
+            id: None,
+            language: query.language.to_string(),
+            group: query.group.to_string(),
+            item: query.item.to_string(),
+            ..Default::default()
+        };
+
+        block.store(db).await?;
+
         Ok(Response::builder(StatusCode::NotFound)
             .body(format!("{} {} {}", query.language, query.group, query.item))
             .build())
