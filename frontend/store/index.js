@@ -10,6 +10,8 @@ export const state = () => ({
     user: {
         authenticated: false,
     },
+
+    language: "en"
 });
 
 export const mutations = {
@@ -19,10 +21,20 @@ export const mutations = {
 
     save_user(state, user) {
         state.user = user;
+    },
+
+    save_language(state, language) {
+        state.language = language;
     }
 };
 
 export const actions = {
+    async get_language({commit, state}) {
+        // Load language preference here if we decide to support
+        // multiple site translations.
+        return state.language || "en";
+    },
+
     async get_dynamic_block({commit, state}, {language, group, item}) {
         const key = block_key(language, group, item);
 

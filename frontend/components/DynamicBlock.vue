@@ -26,7 +26,7 @@ export default {
     props: {
         language: {
             type: String,
-            default: "en",
+            default: "",
             required: false
         },
         group: {
@@ -45,7 +45,8 @@ export default {
     },
 
     data: () => ({
-        raw_content: null
+        raw_content: null,
+        default_language: ""
     }),
 
     computed: {
@@ -71,8 +72,11 @@ export default {
         // It's done through the Vuex state store here so that we can
         // cache the content locally (in the state store) during a
         // session rather than fetching it repeatedly.
-        this.raw_content = await this.$store.dispatch('get_dynamic_block', {
-            language: this.language,
+
+        this.default_language = await this.$store.dispatch("get_language");
+
+        this.raw_content = await this.$store.dispatch("get_dynamic_block", {
+            language: this.language || this.default_language,
             group: this.group,
             item: this.item
         });

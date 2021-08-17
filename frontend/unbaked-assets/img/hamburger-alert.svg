@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="24"
+   height="24"
+   viewBox="0 0 24 24"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="hamburger-alert.svg"
+   inkscape:version="1.1 (c4e8f9ed74, 2021-05-24)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview8"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     width="24px"
+     inkscape:zoom="13.296875"
+     inkscape:cx="2.6698002"
+     inkscape:cy="13.950646"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     id="layer1"
+     transform="matrix(0.46606774,0,0,0.48116761,4.2225433,9.8804416)"
+     style="stroke-width:2.11168">
+    <rect
+       style="fill:#000000;stroke:none;stroke-width:6.33503;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill"
+       id="rect1086"
+       width="38.620995"
+       height="6.2348337"
+       x="-2.6231022"
+       y="-10.142914"
+       rx="2.1456108"
+       ry="2.0782778" />
+    <rect
+       style="fill:#000000;stroke:none;stroke-width:6.33503;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill"
+       id="rect1086-3"
+       width="38.620995"
+       height="6.2348337"
+       x="-2.6231022"
+       y="2.3267539"
+       rx="2.1456108"
+       ry="2.0782778" />
+    <rect
+       style="fill:#000000;stroke:none;stroke-width:6.33503;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill"
+       id="rect1086-3-6"
+       width="38.620995"
+       height="6.2348337"
+       x="-2.6231022"
+       y="14.796421"
+       rx="2.1456108"
+       ry="2.0782778" />
+    <ellipse
+       style="fill:#aa0000;stroke:#ffffff;stroke-width:2.11168;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="path885"
+       cx="34.746559"
+       cy="-11.814768"
+       rx="6.4368324"
+       ry="6.2348337" />
+  </g>
+</svg>
