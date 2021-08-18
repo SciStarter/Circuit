@@ -49,3 +49,8 @@ Create file secrets/airtable.env containing AIRTABLE_KEY containing
 the API key for the info@scistarter.org Airtable account, then
 
     kubectl create secret generic airtable-beta --from-env-file=secrets/airtable.env
+
+Create file secrets/opencage.env containing OPENCAGE_API_KEY
+containing the api.opencage.com key, then
+
+    kubectl create secret generic opencage --from-env-file=secrets/opencage.env

@@ -46,6 +46,7 @@ export default {
         'cookie-universal-nuxt',
         '@nuxtjs/gtm',
         '@nuxtjs/proxy',
+        'vue-geolocation-api/nuxt',
     ],
 
     css: ['@/assets/vars/buefy.scss'],

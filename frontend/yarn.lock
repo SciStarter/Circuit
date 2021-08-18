@@ -11310,6 +11310,13 @@ vue-eslint-parser@^7.1.1, vue-eslint-parser@^7.10.0:
     lodash "^4.17.21"
     semver "^6.3.0"
 
+vue-geolocation-api@^0.1.21:
+  version "0.1.21"
+  resolved "https://registry.yarnpkg.com/vue-geolocation-api/-/vue-geolocation-api-0.1.21.tgz#f276b5f228e49a9e761d51b70ecd1de7cd2d1100"
+  integrity sha512-+62ANOOWkHuB0AaSvD5sbIt6aHo73UeHKunNNy4JaUWmptBDD3yHsRDCwpwtSPGDKZpj5bR0cdkY9edFa8WLGw==
+  dependencies:
+    vue "^2.6.12"
+
 vue-hot-reload-api@^2.3.0:
   version "2.3.4"
   resolved "https://registry.yarnpkg.com/vue-hot-reload-api/-/vue-hot-reload-api-2.3.4.tgz#532955cc1eb208a3d990b3a9f9a70574657e08f2"

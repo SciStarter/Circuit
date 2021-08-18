@@ -18,6 +18,17 @@
         <b-input v-model="query.keywords" placeholder="e.g. astronomy, bar crawl" icon="magnify"/>
       </b-field>
       <lookup-place v-model="query.place"/>
+      <b-field>
+        <b-checkbox v-model="query.include_online">Include Online Opportunities</b-checkbox>
+      </b-field>
+      <b-field>
+        <b-field label="From">
+          <b-datepicker v-model="query.date_from"/>
+        </b-field>
+        <b-field label="Until">
+          <b-datepicker v-model="query.date_until"/>
+        </b-field>
+      </b-field>
       <arrow-button @click="$buefy.toast.open('moo')" style="color: #fff"><search-icon class="button-icon"/> Search</arrow-button>
     </aside>
 
@@ -187,6 +198,7 @@ header {
         z-index: 1;
         box-sizing: border-box;
         padding: 1rem;
+        text-align: center;
     }
 
     .toggled {
@@ -234,6 +246,8 @@ export default {
     },
 
     data() {
+        let now = new Date();
+
         return {
             alert: false,
             menu: false,
@@ -244,11 +258,14 @@ export default {
             query: {
                 keywords: "",
                 place: {
-                    name: "",
-                    longitude: 0,
-                    latitude: 0,
+                    near: "",
+                    lon: 0,
+                    lat: 0,
                     radius: 0
-                }
+                },
+                include_online: true,
+                date_from: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+                date_until: new Date(now.getFullYear() + 50, now.getMonth(), now.getDate()),
             },
         }
     },

@@ -1,34 +1,34 @@
 <template>
-<b-field>
-  <b-select v-model="query.radius">
+<b-field label="Near" class="lookup-place">
+  <b-autocomplete
+    :loading="loading"
+    @typing="completions"
+    @select="change($event)"
+    :data="matches"
+    field="near"
+    @input="change({near: $event})"
+    :value="sanitized_value.near"
+    placeholder="e.g. Iowa City, IA"/>
+  <b-select @input="change({radius: $event})" :value="sanitized_value.radius">
     <option :value="80467">50 miles</option>
     <option :value="40233">25 miles</option>
     <option :value="16093">10 miles</option>
     <option :value="8046">5 miles</option>
-    <option :value="value.radius">{{ value_miles }} miles</option>
+    <option :value="sanitized_value.radius">{{ value_miles }} miles</option>
   </b-select>
-  <b-input v-model="query.near" placeholder="e.g. Iowa City, IA"/>
 </b-field>
 </template>
 
-<style lang="scss" scoped>
->>> .select::after {
-    border-color: $snm-color-hint !important;
+<style lang="scss">
+.lookup-place .autocomplete .dropdown-menu {
+    width: 350px;
 }
 </style>
 
 <script>
+import debounce from 'lodash/debounce'
+
 const MILES = 0.000621371;
-
-function clamp_radius(place) {
-    if(place.radius > 0 && place.radius < 100000) {
-        return place;
-    }
-
-    place.radius = 80467;
-
-    return place;
-}
 
 export default {
     props: {
@@ -37,8 +37,8 @@ export default {
             required: false,
             default: {
                 near: "",
-                longitude: 0,
-                latitude: 0,
+                lon: 0,
+                lat: 0,
                 radius: 0
             }
         }
@@ -46,19 +46,94 @@ export default {
 
     data() {
         return {
-            query: clamp_radius(JSON.parse(JSON.stringify(this.value)))
-       };
+            matches: [],
+            num_loading: 0
+        };
     },
 
     computed: {
+        loading() {
+            return this.num_loading > 0;
+        },
+
+        sanitized_value() {
+            let patch = {};
+
+            if(!this.value.radius || this.value.radius < 1 || this.value.radius > 100000) {
+                patch.radius = 80467;
+            }
+
+            if(!this.value.lon) {
+                patch.lon = 0;
+            }
+
+            if(!this.value.lat) {
+                patch.lat = 0;
+            }
+
+            if(!this.value.near) {
+                patch.near = "";
+            }
+
+            return Object.assign({}, this.value, patch);
+        },
+
         value_miles() {
             return (this.value.radius * MILES).toFixed(2);
         }
     },
 
+    mounted() {
+        if(this.value && this.value.near === "") {
+            if(this.value.lon !== 0 || this.value.lat !== 0) {
+                this.complete_near();
+            }
+            else if(this.$geolocation.checkSupport()) {
+                this.num_loading += 1;
+
+                this.$geolocation.getCurrentPosition()
+                    .then(({longitude, latitude}) => {
+                        this.change({lon: longitude, lat: latitude});
+                        this.complete_near();
+                    })
+                    .finally(() => { this.num_loading -= 1 });
+            }
+        }
+    },
+
     methods: {
-        changed() {
-            this.$emit('input', this.query);
+        completions: debounce(function(near) {
+            if(near.length < 3) {
+                this.matches = [];
+                return;
+            }
+
+            this.num_loading += 1;
+
+            this.$axios.$post("/api/ui/finder/geo", {lookup: 'coords', place: this.sanitized_value})
+                .then(({payload: {places}}) => { this.matches = places; })
+                .catch((error) => { this.matches = []; console.error(error); })
+                .finally(() => { this.num_loading -= 1 });
+        }, 500),
+
+        complete_near() {
+            if(this.value.lon !== 0 || this.value.lat !== 0) {
+                this.num_loading += 1;
+
+                this.$axios.post("/api/ui/finder/geo", {lookup: 'near', place: this.value})
+                    .then(({results}) => {
+                        if(results.length > 0) {
+                            this.change({near: results[0].near});
+                        }
+                    })
+                    .catch((error) => { console.error(error); })
+                    .finally(() => { this.num_loading -= 1 });
+            }
+        },
+
+        change(delta) {
+            let result = Object.assign({}, this.value, delta);
+            this.$emit('input', result);
         }
     }
 }
