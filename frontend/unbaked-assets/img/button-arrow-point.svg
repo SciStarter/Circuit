@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="28"
+   height="40"
+   viewBox="0 0 7.4083335 10.583333"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="button-arrow-point.svg"
+   inkscape:version="1.1 (c4e8f9ed74, 2021-05-24)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:document-units="px"
+     showgrid="false"
+     showborder="false"
+     inkscape:zoom="16"
+     inkscape:cx="11.78125"
+     inkscape:cy="22.34375"
+     inkscape:current-layer="layer1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     units="px"
+     height="40px" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="rect846-3"
+       style="fill:#087a91;fill-opacity:1;stroke:#1b4a54;stroke-width:0.529167;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       d="m 0.39233512,0.26458378 c 0.19106955,0 0.38206545,0.0545178 0.52847265,0.16353596 L 6.9241385,4.8977671 c 0.2928151,0.2180366 0.2928151,0.5695444 0,0.7875809 L 0.92080777,10.155497 C 0.74163617,10.288912 0.49567506,10.33986 0.2645835,10.310003 V 0.27311173 c 0.0422583,-0.005455 0.0849926,-0.008533 0.12775162,-0.008533 z" />
+    <rect
+       style="fill:#087a91;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+       id="rect2107"
+       width="0.5291667"
+       height="10.054167"
+       x="0"
+       y="0.26458332"
+       rx="0"
+       ry="0" />
+  </g>
+</svg>

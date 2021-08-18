@@ -1,41 +1,35 @@
 <template>
-  <a @click="$emit('click')" :title="title" class="arrow right"><slot/></a>
+<span><a @click="$emit('click')" :title="title"><slot/></a></span>
 </template>
 
 <style lang="scss" scoped>
 a {
-  cursor: pointer;
-  display: inline-block;
-  height: 40px;
-  margin-left: 40px;
-  margin-right: 40px;
-  position: relative;
-  line-height: 2.5em;
-  padding-left: 1em;
-  padding-right: 2em;
-  background: $snm-color-element-med;
-   &::after {
-    border-left: 20px solid $snm-color-element-med;
-   }
-   box-shadow: 0px 0px 6px 2px $snm-color-shadow;
+    display: inline-block;
+    position: relative;
+    box-sizing: border-box;
+    height: 40px;
+    line-height: 40px;
+    margin: 0px 32px 0px 12px;
+    padding: 0px 1rem;
+    /* Not using the Sass variables since the SVG colors are fixed */
+    color: currentcolor;
+    background-color: #087A91;
+    border-top: 1px solid #1B4A54;
+    border-bottom: 1px solid #1B4A54;
+}
+
+a::before {
+    position: absolute;
+    top: -1px;
+    left: -8px;
+    content: url(~/assets/img/button-arrow-rear.svg);
 }
 
 a::after {
-  content: "";
-  position: absolute;
-  border-bottom: 20px solid transparent;
-  border-top: 20px solid transparent;
-  height: 0px;
-  width: 0px;
-  margin-right: -20px;
-  right: 0;
-}
-
-a:hover, a:active {
-  background: $snm-color-background-meddark;
-  &::after {
-    border-left: 20px solid $snm-color-background-meddark;
-  }
+    position: absolute;
+    top: -1px;
+    right: -27px;
+    content: url(~/assets/img/button-arrow-point.svg);
 }
 </style>
 

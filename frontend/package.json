@@ -20,9 +20,11 @@
         "@nuxtjs/proxy": "^2.1.0",
         "cookie-universal-nuxt": "^2.1.5",
         "core-js": "^3.9.1",
+        "lodash": "^4.17.21",
         "nuxt": "^2.15.3",
         "nuxt-buefy": "^0.4.4",
-        "sortablejs": "^1.14.0"
+        "sortablejs": "^1.14.0",
+        "vue-geolocation-api": "^0.1.21"
     },
     "devDependencies": {
         "@nuxt/test-utils": "^0.2.2",
