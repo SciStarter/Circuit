@@ -1,25 +1,5 @@
 {
   "db": "PostgreSQL",
-  "10bc39c5d2b2e332600e71f41fcf126cf3e4bc7cc7ee1dffcd920266a23dfee9": {
-    "query": "select exists(select 1 from c_opportunity where ($1::text) = (exterior ->> 'slug')) as \"exists\";\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "exists",
-          "type_info": "Bool"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
-      "nullable": [
-        null
-      ]
-    }
-  },
   "113ab265c817affe2e5042ec46586946e57e3aef8339c8baae503d4884410d0c": {
     "query": "insert into c_person (exterior, interior) values ($1, $2) returning id;\n",
     "describe": {
@@ -70,6 +50,26 @@
         false,
         false,
         false
+      ]
+    }
+  },
+  "2a6805df4bd8ba9d61737cb668ec77691b8f1cd7b26e2f4d93124ad675463848": {
+    "query": "select exists(select 1 from c_opportunity where lower($1::text) = lower(exterior ->> 'slug')) as \"exists\";\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "exists",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
       ]
     }
   },
@@ -445,38 +445,6 @@
       ]
     }
   },
-  "59057bde5803bce1996ffa4c359cc66c347064c0edf0192d1ee32305beb7c554": {
-    "query": "select id, exterior, interior from c_opportunity where ($1::text) = (exterior ->> 'slug') limit 1;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "exterior",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 2,
-          "name": "interior",
-          "type_info": "Jsonb"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "680c3e5c532b96a75b01a3d33c94c664a4a3318515d31a4c908a5a2193348c02": {
     "query": "insert into c_opportunity (exterior, interior) values ($1, $2) returning id;\n",
     "describe": {
@@ -754,6 +722,38 @@
         false,
         false,
         false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "9bb0999b7e5a12c77e56c562fa3f53a8258f4997a37ee2bcde64795efc6ef8a6": {
+    "query": "select id, exterior, interior from c_opportunity where lower($1::text) = lower(exterior ->> 'slug') limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
         false,
         false,
         false

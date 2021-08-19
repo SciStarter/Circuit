@@ -9,8 +9,9 @@
   <body>
     <section class="section">
       <div class="container">
-        <a href="..">Back to management dashboard</a>
-        <h1 class="title">Opportunities</h1>
+        <a href="..">Back to management dashboard</a> |
+        <a href="#create">Create</a>
+        <h1 class="title">Opportunities &amp; Pages</h1>
         <form method="get">
           <input type="text" name="title" value="{{title}}" placeholder="name">
           <select name="partner">
@@ -41,6 +42,39 @@
           </tr>
           {% endfor %}
         </table>
+      </div>
+      <div id="create" class="container">
+        <h1 class="title">Create an Opportunity or Page</h1>
+        <form method="post">
+          <input type="hidden" name="partner_name" value="Science Near Me">
+          <input id="set_partner_opp_url" type="hidden" name="partner_opp_url" value="https://sciencenearme.org/">
+          <input type="hidden" name="tags" value="">
+          <div class="field">
+            <label class="label">Slug</label>
+            <div class="control">
+              <input class="input" type="text" name="slug" onchange="document.getElementById('set_partner_opp_url').value = 'https://sciencenearme.org/' + this.value">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Title</label>
+            <div class="control">
+              <input class="input" type="text" name="title">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Page Type</label>
+            <div class="control">
+              <div class="select">
+                <select class="input" name="entity_type">
+                  {% for opt in common::model::opportunity::EntityType::all_options() %}
+                  <option value="{{opt.0}}">{{opt.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          <input type="submit" value="Create">
+        </form>
       </div>
     </section>
   </body>
