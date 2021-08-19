@@ -20,6 +20,8 @@ export default {
         ]
     },
 
+    modern: "client",
+
     // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
     plugins: [
         {src: "~/plugins/refresh_user.js", mode: "client"},
