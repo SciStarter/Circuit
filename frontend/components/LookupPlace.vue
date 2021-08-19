@@ -9,12 +9,12 @@
     @input="change({near: $event})"
     :value="sanitized_value.near"
     placeholder="e.g. Iowa City, IA"/>
-  <b-select @input="change({radius: $event})" :value="sanitized_value.radius">
+  <b-select @input="change({proximity: $event})" :value="sanitized_value.proximity">
     <option :value="80467">50 miles</option>
     <option :value="40233">25 miles</option>
     <option :value="16093">10 miles</option>
     <option :value="8046">5 miles</option>
-    <option :value="sanitized_value.radius">{{ value_miles }} miles</option>
+    <option :value="sanitized_value.proximity">{{ value_miles }} miles</option>
   </b-select>
 </b-field>
 </template>
@@ -37,9 +37,9 @@ export default {
             required: false,
             default: {
                 near: "",
-                lon: 0,
-                lat: 0,
-                radius: 0
+                longitude: 0,
+                latitude: 0,
+                proximity: 0
             }
         }
     },
@@ -59,16 +59,16 @@ export default {
         sanitized_value() {
             let patch = {};
 
-            if(!this.value.radius || this.value.radius < 1 || this.value.radius > 100000) {
-                patch.radius = 80467;
+            if(!this.value.proximity || this.value.proximity < 1 || this.value.proximity > 100000) {
+                patch.proximity = 80467;
             }
 
-            if(!this.value.lon) {
-                patch.lon = 0;
+            if(!this.value.longitude) {
+                patch.longitude = 0;
             }
 
-            if(!this.value.lat) {
-                patch.lat = 0;
+            if(!this.value.latitude) {
+                patch.latitude = 0;
             }
 
             if(!this.value.near) {
@@ -79,13 +79,13 @@ export default {
         },
 
         value_miles() {
-            return (this.value.radius * MILES).toFixed(2);
+            return (this.value.proximity * MILES).toFixed(2);
         }
     },
 
     mounted() {
         if(this.value && this.value.near === "") {
-            if(this.value.lon !== 0 || this.value.lat !== 0) {
+            if(this.value.longitude !== 0 || this.value.latitude !== 0) {
                 this.complete_near();
             }
             else if(this.$geolocation.checkSupport()) {
@@ -93,7 +93,7 @@ export default {
 
                 this.$geolocation.getCurrentPosition()
                     .then(({longitude, latitude}) => {
-                        this.change({lon: longitude, lat: latitude});
+                        this.change({longitude: longitude, latitude: latitude});
                         this.complete_near();
                     })
                     .finally(() => { this.num_loading -= 1 });
@@ -117,7 +117,7 @@ export default {
         }, 500),
 
         complete_near() {
-            if(this.value.lon !== 0 || this.value.lat !== 0) {
+            if(this.value.longitude !== 0 || this.value.latitude !== 0) {
                 this.num_loading += 1;
 
                 this.$axios.post("/api/ui/finder/geo", {lookup: 'near', place: this.value})

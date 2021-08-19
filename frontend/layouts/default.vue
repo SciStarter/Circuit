@@ -29,7 +29,7 @@
           <b-datepicker v-model="query.date_until"/>
         </b-field>
       </b-field>
-      <arrow-button @click="$buefy.toast.open('moo')" style="color: #fff"><search-icon class="button-icon"/> Search</arrow-button>
+      <arrow-button @click="find" style="color: #fff"><search-icon class="button-icon"/> Search</arrow-button>
     </aside>
 
     <aside :class="{toggled: menu}" class="menu-box">
@@ -53,6 +53,35 @@
   <nuxt/>
 
   <footer>
+    <ul>
+      <li><h1>For Everyone</h1></li>
+      <li><nuxt-link to="/about">About Us</nuxt-link></li>
+      <li><nuxt-link to="/terms">Terms of Service</nuxt-link></li>
+      <li><nuxt-link to="/privacy">Privacy Policy</nuxt-link></li>
+      <li><nuxt-link to="/cookies">Cookies Policy</nuxt-link></li>
+      <li><nuxt-link to="/contact">Contact Us</nuxt-link></li>
+    </ul>
+
+    <ul>
+      <li><h1>For Science Professionals</h1></li>
+      <li><nuxt-link to="/affiliate">Be Part of Science Near Me</nuxt-link></li>
+      <li><external href="/api/docs/v1.html" content="footer-link">API documentation</external></li>
+      <li><nuxt-link to="/contact">Display Science Opportunities</nuxt-link></li>
+    </ul>
+
+    <div class="partner">
+      <div class="logo">
+        <img src="~assets/img/NSF-small.png">
+      </div>
+      <div class="description">
+        This project is based upon work supported, in part, by the
+        National Science Foundation under Grant DRL-1906998. Any
+        opinions, findings, and conclusions or recommendations
+        expressed in this material are those of the authors and do not
+        necessarily reflect the view of the National Science
+        Foundation.
+      </div>
+    </div>
   </footer>
 
   <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
@@ -208,6 +237,52 @@ header {
 
 footer {
     background-color: $snm-color-background-dark;
+
+    li {
+        line-height: 40px;
+        padding-left: 1rem;
+        border-bottom: 1px solid $snm-color-border-ondark;
+
+        h1 {
+            color: $snm-color-heading-ondark;
+            font-family: $snm-font-heading;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 0.7px;
+        }
+
+        a {
+            color: $snm-color-element-ondark;
+            font-family: $snm-font-content;
+            font-size: 16px;
+            letter-spacing: 0px;
+        }
+    }
+
+    .partner {
+        display: flex;
+        flex-direction: row;
+
+        .logo {
+            margin: 16px;
+            flex-shrink: 0;
+
+            img {
+                height: auto;
+                width: 56px;
+                vertical-align: top;
+            }
+        }
+
+        .description {
+            color: $snm-color-element-ondark;
+            font-family: $snm-font-content;
+            font-size: 14px;
+            line-height: 22px;
+            letter-spacing: 0px;
+            margin: 16px 16px 16px 0px;
+        }
+    }
 }
 </style>
 
@@ -246,8 +321,6 @@ export default {
     },
 
     data() {
-        let now = new Date();
-
         return {
             alert: false,
             menu: false,
@@ -264,13 +337,60 @@ export default {
                     radius: 0
                 },
                 include_online: true,
-                date_from: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-                date_until: new Date(now.getFullYear() + 50, now.getMonth(), now.getDate()),
+                date_from: null,
+                date_until: null,
             },
         }
     },
 
     computed: {
+        search_query() {
+            let joint = "?";
+            let ret = "";
+
+            if(this.query.keywords) {
+                ret += joint + "text=" + encodeURIComponent(this.query.keywords);
+                joint = "&";
+            }
+
+            if(this.query.place.near) {
+                ret += joint + "near=" + encodeURIComponent(this.query.place.near);
+                joint = "&";
+            }
+
+            if(this.query.place.lon) {
+                ret += joint + "longitude=" + encodeURIComponent(this.query.place.lon);
+                joint = "&";
+            }
+
+            if(this.query.place.lat) {
+                ret += joint + "latitude=" + encodeURIComponent(this.query.place.lat);
+                joint = "&";
+            }
+
+            if(this.query.place.radius) {
+                ret += joint + "proximity=" + encodeURIComponent(this.query.place.radius);
+                joint = "&";
+            }
+
+            if(!this.query.include_online) {
+                ret += joint + "online=false";
+                joint = "&";
+            }
+
+            if(this.query.date_from !== null) {
+                ret += joint + "beginning=" + encodeURIComponent(this.query.date_from.toISOString());
+                joint = "&";
+            }
+
+            if(this.query.date_until !== null) {
+                ret += joint + "ending=" + encodeURIComponent(this.query.date_until.toISOString());
+                joint = "&";
+            }
+
+            return ret;
+        },
+
         authenticated() {
             return this.$store.state.user.authenticated;
         },
@@ -285,6 +405,11 @@ export default {
     },
 
     methods: {
+        find() {
+            this.search = false;
+            this.$router.push("/find" + this.search_query);
+        },
+
         logout() {
             // !!!
         }
