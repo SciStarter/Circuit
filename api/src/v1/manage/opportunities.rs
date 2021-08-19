@@ -8,8 +8,9 @@ use common::{
     },
     Database,
 };
-use http_types::Method;
+use http_types::{mime, Method};
 use serde::Deserialize;
+use tide::{Response, StatusCode};
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
@@ -18,9 +19,12 @@ use uuid::Uuid;
 
 use crate::v1::redirect;
 
+use super::BASE;
+
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .get(search)
+        .post(add_opportunity)
         .at(":uid", |r| r.get(opportunity).post(opportunity))
 }
 
@@ -102,9 +106,36 @@ struct OpportunityForm {
     slug: String,
     entity_type: String,
     partner_name: String,
+    partner_opp_url: String,
     tags: String,
     accepted: Option<String>,
     withdrawn: Option<String>,
+}
+
+impl OpportunityForm {
+    fn apply(self, opportunity: &mut Opportunity) -> Result<(), tide::Error> {
+        opportunity.interior.accepted = self.accepted.is_some();
+        opportunity.interior.withdrawn = self.withdrawn.is_some();
+
+        opportunity.exterior.entity_type = match self.entity_type.as_ref() {
+            "attraction" => EntityType::Attraction,
+            "opportunity" => EntityType::Opportunity,
+            "page__just_content" => EntityType::Page(PageOptions {
+                layout: PageLayout::JustContent,
+            }),
+            _ => EntityType::Opportunity,
+        };
+
+        opportunity.exterior.title = self.title;
+        opportunity.exterior.slug = self.slug;
+        opportunity.exterior.partner_name = self.partner_name;
+        opportunity.exterior.partner_opp_url = self.partner_opp_url;
+        opportunity.exterior.tags = self.tags.split(',').map(|s| s.trim().to_string()).collect();
+
+        // !!! TODO this is incomplete
+
+        Ok(())
+    }
 }
 
 async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
@@ -122,24 +153,7 @@ async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
     if let Method::Post = req.method() {
         let form: OpportunityForm = req.body_form().await?;
 
-        opportunity.interior.accepted = form.accepted.is_some();
-        opportunity.interior.withdrawn = form.withdrawn.is_some();
-
-        opportunity.exterior.entity_type = match form.entity_type.as_ref() {
-            "attraction" => EntityType::Attraction,
-            "opportunity" => EntityType::Opportunity,
-            "page__just_content" => EntityType::Page(PageOptions {
-                layout: PageLayout::JustContent,
-            }),
-            _ => EntityType::Opportunity,
-        };
-
-        opportunity.exterior.title = form.title.clone();
-        opportunity.exterior.slug = form.slug.clone();
-        opportunity.exterior.partner_name = form.partner_name.clone();
-        opportunity.exterior.tags = form.tags.split(',').map(|s| s.trim().to_string()).collect();
-
-        // TODO this is incomplete
+        form.apply(&mut opportunity)?;
 
         let db = req.state();
 
@@ -160,4 +174,31 @@ async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
     };
 
     Ok(form.into())
+}
+
+async fn add_opportunity(mut req: tide::Request<Database>) -> tide::Result {
+    let _admin = match super::authorized_admin(&req, &Permission::ManageOpportunities).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let form: OpportunityForm = req.body_form().await?;
+
+    let db = req.state();
+
+    if Opportunity::exists_by_slug(db, &form.slug).await? {
+        return Ok(redirect(req.url().path()));
+    }
+
+    let mut opportunity = Opportunity::default();
+
+    form.apply(&mut opportunity)?;
+
+    opportunity.store(db).await?;
+
+    Ok(redirect(&format!(
+        "{}{}",
+        req.url().path(),
+        opportunity.exterior.uid
+    )))
 }
