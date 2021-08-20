@@ -1,6 +1,18 @@
 <template>
-<span><a @click="$emit('click')" :title="title"><slot/></a></span>
+  <span class="arrow-button"><a :title="title" @click="$emit('click')"><slot /></a></span>
 </template>
+
+<script>
+export default {
+  props: {
+    title: {
+      type: String,
+      required: false,
+      default: ''
+    }
+  }
+}
+</script>
 
 <style lang="scss" scoped>
 a {
@@ -32,16 +44,3 @@ a::after {
     content: url(~/assets/img/button-arrow-point.svg);
 }
 </style>
-
-<script>
-export default {
-    props: {
-        title: {
-            type: String,
-            required: false,
-            default: "",
-        },
-    }
-}
-
-</script>

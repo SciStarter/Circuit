@@ -1,5 +1,5 @@
 <template>
-  <dynamic-block class="content" :group="entity.slug" item="content"/>
+  <dynamic-block class="content" :group="entity.slug" item="content" />
 </template>
 
 <script>
@@ -9,6 +9,6 @@ export default {
       type: Object,
       required: true
     }
-  },
+  }
 }
 </script>

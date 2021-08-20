@@ -7,9 +7,6 @@
   </div>
 </template>
 
-<style lang="scss" scoped>
-</style>
-
 <script>
 export default {
   props: {
@@ -17,6 +14,9 @@ export default {
       type: Object,
       required: true
     }
-  },
+  }
 }
 </script>
+
+<style lang="scss" scoped>
+</style>
