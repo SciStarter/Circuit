@@ -92,13 +92,15 @@ export default {
                 this.num_loading += 1;
 
                 this.$geolocation.getCurrentPosition()
-                    .then(({longitude, latitude}) => {
-                        this.change({longitude: longitude, latitude: latitude});
-                        this.complete_near();
+                    .then(({ coords: { latitude, longitude } }) => {
+                        this.change({longitude, latitude});
+                        this.$nextTick(() => { this.complete_near(); });
                     })
                     .finally(() => { this.num_loading -= 1 });
             }
         }
+
+        this.change(this.sanitized_value);
     },
 
     methods: {
@@ -117,18 +119,16 @@ export default {
         }, 500),
 
         complete_near() {
-            if(this.value.longitude !== 0 || this.value.latitude !== 0) {
-                this.num_loading += 1;
+            this.num_loading += 1;
 
-                this.$axios.post("/api/ui/finder/geo", {lookup: 'near', place: this.value})
-                    .then(({results}) => {
-                        if(results.length > 0) {
-                            this.change({near: results[0].near});
-                        }
-                    })
-                    .catch((error) => { console.error(error); })
-                    .finally(() => { this.num_loading -= 1 });
-            }
+            this.$axios.$post("/api/ui/finder/geo", {lookup: 'near', place: this.value})
+                .then(({payload: { places }}) => {
+                    if(places.length > 0) {
+                        this.change({near: places[0].near});
+                    }
+                })
+                .catch((error) => { console.error(error); })
+                .finally(() => { this.num_loading -= 1 });
         },
 
         change(delta) {
