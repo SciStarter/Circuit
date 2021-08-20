@@ -2,7 +2,7 @@
 <div>
 
   <header>
-    <button class="toggle-menu" @click="menu = !menu" title="Toggle menu" :aria-pressed="String(menu)">
+    <button class="toggle-menu" @click="menu = !menu" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu">
       <img v-if="alert" src="~assets/img/hamburger-alert.svg?data" >
       <img v-else src="~assets/img/hamburger.svg?data">
     </button>
@@ -11,7 +11,7 @@
       <img src="~assets/img/logo.svg?data">
     </nuxt-link>
 
-    <button class="toggle-search" @click="search = !search" title="Toggle search box" :aria-pressed="String(search)"><img src="~assets/img/search.svg?data"></button>
+    <button class="toggle-search" @click="search = !search" title="Toggle search box" :aria-pressed="String(search)" data-context="header-search"><img src="~assets/img/search.svg?data"></button>
 
     <aside :class="{toggled: search}" class="search-box">
       <b-field>
@@ -332,9 +332,9 @@ export default {
                 keywords: "",
                 place: {
                     near: "",
-                    lon: 0,
-                    lat: 0,
-                    radius: 0
+                    longitude: 0,
+                    latitude: 0,
+                    proximity: 0
                 },
                 include_online: true,
                 date_from: null,
