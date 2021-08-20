@@ -24,6 +24,14 @@ use super::PARTNER_NAMESPACE;
 pub static SLUGIFY_REPLACE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"[^\pL\pN-]+").expect("Unable to compile SLUGIFY_REPLACE regex"));
 
+#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum Pagination {
+    All,
+    One,
+    Page(u32, u32),
+}
+
 #[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum OrganizationType {
@@ -84,7 +92,7 @@ pub struct PageOptions {
     pub layout: PageLayout,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum EntityType {
     Unspecified,
@@ -568,6 +576,22 @@ impl std::fmt::Display for OpportunityReference {
     }
 }
 
+#[derive(Deserialize, Debug, Default, Copy, Clone, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum OpportunityQueryPhysical {
+    InPersonOrOnline,
+    InPerson,
+    Online,
+}
+
+#[derive(Deserialize, Debug, Default, Copy, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum OpportunityQueryOrdering {
+    Alphabetical,
+    Closest,
+    Soonest,
+}
+
 /// Each field represents one of the database fields by which
 /// Opportunity queries can be narrowed. The default value does not
 /// narrow the query at all, so to find all of the opportunities with
@@ -584,13 +608,33 @@ pub struct OpportunityQuery {
     pub tags: Option<Vec<String>>,
     pub topics: Option<Vec<Topic>>,
     pub partner: Option<Uuid>,
+    pub near: Option<(f64, f64, f64)>,
+    pub physical: Option<OpportunityQueryPhysical>,
+
+    // !!!
+    pub text: Option<String>,
+    pub beginning: Option<DateTime<FixedOffset>>,
+    pub ending: Option<DateTime<FixedOffset>>,
+    pub min_age: Option<i16>,
+    pub max_age: Option<i16>,
+    pub descriptors: Option<Vec<Descriptor>>,
+    pub cost: Option<Cost>,
+    pub venue_type: Option<VenueType>,
+    pub host: Option<String>,
+    pub sort: Option<OpportunityQueryOrdering>,
+    pub page: Option<u32>,
+    pub per_page: Option<u8>,
+    pub saved: Option<bool>,
+    pub participated: Option<bool>,
+    pub over: Option<bool>,
 }
 
 #[derive(Debug)]
 enum ParamValue {
-    // Raw means it's not converted to JSON before sending it to the
-    // database.
+    // Raw here means it's not converted to JSON before sending it to
+    // the database.
     RawString(String),
+    RawFloat(f32),
     Bool(bool),
     Uuid(Uuid),
     VecString(Vec<String>),
@@ -605,6 +649,7 @@ impl ParamValue {
     ) -> Result<Query<Postgres, PgArguments>, Error> {
         Ok(match self {
             ParamValue::RawString(val) => query.bind(val),
+            ParamValue::RawFloat(val) => query.bind(val),
             ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
@@ -627,7 +672,9 @@ impl ParamValue {
 
 fn build_matching_query(
     fields: &[&str],
-    query: OpportunityQuery,
+    query: &OpportunityQuery,
+    ordering: OpportunityQueryOrdering,
+    pagination: Pagination,
 ) -> Result<(String, Vec<ParamValue>), Error> {
     let mut clauses = Vec::new();
     let mut params = Vec::new();
@@ -653,33 +700,82 @@ fn build_matching_query(
         ));
     }
 
-    if let Some(val) = query.entity_type {
-        params.push(ParamValue::VecEntityType(val));
+    if let Some(val) = &query.entity_type {
+        params.push(ParamValue::VecEntityType(val.clone()));
         clauses.push(format!("(exterior -> 'entity_type') <@ ${}", params.len()));
     }
 
-    if let Some(val) = query.title_contains {
+    if let Some(val) = &query.title_contains {
         params.push(ParamValue::RawString(format!("%{}%", val)));
         clauses.push(format!("(exterior ->> 'title') ILIKE ${}", params.len()));
     }
 
-    if let Some(val) = query.tags {
-        params.push(ParamValue::VecString(val));
+    if let Some(val) = &query.tags {
+        params.push(ParamValue::VecString(val.clone()));
         clauses.push(format!("(exterior -> 'tags') @> ${}", params.len()));
     }
 
-    if let Some(val) = query.topics {
-        params.push(ParamValue::VecTopic(val));
+    if let Some(val) = &query.topics {
+        params.push(ParamValue::VecTopic(val.clone()));
         clauses.push(format!("(exterior -> 'topics') @> ${}", params.len()));
     }
 
-    if let Some(val) = query.partner {
-        params.push(ParamValue::Uuid(val));
+    if let Some(val) = &query.partner {
+        params.push(ParamValue::Uuid(val.clone()));
         clauses.push(format!(
             "(${}::jsonb) @> (exterior -> 'partner')",
             params.len()
         ));
     }
+
+    if let Some(physical) = &query.physical {
+        match physical {
+            OpportunityQueryPhysical::InPersonOrOnline => {}
+            OpportunityQueryPhysical::InPerson => {
+                params.push(ParamValue::Bool(false));
+                clauses.push(format!(
+                    "(${}::jsonb) @> (exterior -> 'is_online')",
+                    params.len()
+                ));
+            }
+            OpportunityQueryPhysical::Online => {
+                params.push(ParamValue::Bool(true));
+                clauses.push(format!(
+                    "(${}::jsonb) @> (exterior -> 'is_online')",
+                    params.len()
+                ));
+            }
+        }
+    }
+
+    let point = if let Some(longitude, latitude, proximity) = &query.near {
+        params.push(ParamValue::RawFloat(longitude));
+        let lon_param = params.len();
+        params.push(ParamValue::RawFloat(latitude));
+        let lat_param = params.len();
+        params.push(ParamValue::RawFloat(proximity));
+        let prox_param = params.len();
+
+        clauses.push(format!(
+            r#"(
+  (exterior ->> 'location_type') = 'any'
+  OR
+  CASE WHEN location_polygon IS NOT NULL
+    THEN ST_Intersects(ST_Buffer(ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, ${}), location_polygon)
+    ELSE false END
+  OR
+  CASE WHEN location_point IS NOT NULL
+    THEN ST_Distance(ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, location_point, false) < ${}
+    ELSE false END
+)"#,
+            lon_param, lat_param, prox_param,
+            lon_param, lat_param, prox_param
+        ));
+
+        Some((lon_param, lat_param))
+    } else {
+        None
+    };
 
     let mut query_string = "SELECT ".to_string();
 
@@ -707,7 +803,34 @@ fn build_matching_query(
         query_string.push_str(&clause);
     }
 
-    query_string.push_str(" ORDER BY (exterior ->> 'title');");
+    match ordering {
+        OpportunityQueryOrdering::Alphabetical => {
+            query_string.push_str(" ORDER BY (exterior ->> 'title')")
+        }
+        OpportunityQueryOrdering::Closest => {
+            query_string.push_str(" ORDER BY CASE WHEN location_polygon IS NOT NULL THEN sqrt(ST_Area(location_polygon, false)) / 2");
+
+            if let Some((lon_param, lat_param)) = point {
+                query_string
+                    .push_str(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)",
+                              lon_param, lat_param);
+            }
+
+            // This constant number is roughly the square root of the surface area of the earth, in meters
+            query_string.push_str(" ELSE 22585394 END ASC")
+        }
+        OpportunityQueryOrdering::Soonest => {
+            query_string.push_str(" ORDER BY (exterior ->> 'title')")
+        }
+    }
+
+    match pagination {
+        Pagination::All => query_string.push_str(";"),
+        Pagination::One => query_string.push_str(" LIMIT 1;"),
+        Pagination::Page(page, size) => {
+            query_string.push_str(format!(" LIMIT {} OFFSET {};", size, page * size).as_ref())
+        }
+    };
 
     Ok((query_string, params))
 }
@@ -751,9 +874,23 @@ impl OpportunityImportRecord {
 }
 
 impl Opportunity {
+    pub async fn count_matching(db: &Database, query: &OpportunityQuery) -> Result<u32, Error> {
+        let (query_string, query_params) =
+            build_matching_query(&["count(*) as matches"], query, Pagination::One)?;
+
+        let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
+
+        Ok(query_obj
+            .fetch_one(db)
+            .await?
+            .try_get("matches")
+            .unwrap_or(0))
+    }
+
     pub async fn load_matching_refs(
         db: &Database,
-        query: OpportunityQuery,
+        query: &OpportunityQuery,
+        pagination: Pagination,
     ) -> Result<Vec<OpportunityReference>, Error> {
         let (query_string, query_params) = build_matching_query(
             &[
@@ -764,6 +901,7 @@ impl Opportunity {
                 "(exterior -> 'short_desc') as short_desc",
             ],
             query,
+            pagination,
         )?;
 
         let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
@@ -789,9 +927,10 @@ impl Opportunity {
 
     pub async fn load_matching(
         db: &Database,
-        query: OpportunityQuery,
+        query: &OpportunityQuery,
+        pagination: Pagination,
     ) -> Result<Vec<Opportunity>, Error> {
-        let (query_string, query_params) = build_matching_query(&[], query)?;
+        let (query_string, query_params) = build_matching_query(&[], query, pagination)?;
 
         let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
 

@@ -1,9 +1,18 @@
+use std::intrinsics::ceilf32;
+
 use chrono::{DateTime, FixedOffset};
 use common::{
-    model::opportunity::{Cost, Descriptor, Topic, VenueType},
+    model::{
+        opportunity::{
+            Cost, Descriptor, OpportunityQuery, OpportunityQueryOrdering, OpportunityQueryPhysical,
+            Pagination, Topic, VenueType,
+        },
+        Opportunity,
+    },
     Database,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
@@ -153,21 +162,6 @@ pub async fn random_categories(req: tide::Request<Database>) -> tide::Result {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-enum SearchQueryPhysical {
-    InPersonOrOnline,
-    InPerson,
-    Online,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-enum SearchOrdering {
-    Closest,
-    Soonest,
-}
-
-#[derive(Deserialize)]
 struct SearchQuery {
     pub longitude: Option<f64>,
     pub latitude: Option<f64>,
@@ -176,7 +170,7 @@ struct SearchQuery {
     pub text: Option<String>,
     pub beginning: Option<DateTime<FixedOffset>>,
     pub ending: Option<DateTime<FixedOffset>>,
-    pub physical: Option<SearchQueryPhysical>,
+    pub physical: Option<OpportunityQueryPhysical>,
     pub min_age: Option<i16>,
     pub max_age: Option<i16>,
     pub topics: Option<Vec<Topic>>,
@@ -185,7 +179,7 @@ struct SearchQuery {
     pub venue_type: Option<VenueType>,
     pub host: Option<String>,
     pub partner: Option<Uuid>,
-    pub sort: Option<SearchOrdering>,
+    pub sort: Option<OpportunityQueryOrdering>,
     pub page: Option<u32>,
     pub per_page: Option<u8>,
     pub saved: Option<bool>,
@@ -198,7 +192,40 @@ struct SearchQuery {
 pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     let _person = request_person(&mut req).await?;
 
-    let query: SearchQuery = req.query()?;
+    let search: SearchQuery = req.query()?;
 
-    todo!()
+    let mut query = OpportunityQuery::default();
+
+    if let (Some(longitude), Some(latitude), Some(proximity)) =
+        (search.longitude, search.latitude, search.proximity)
+    {
+        query.near = Some((longitude, latitude, proximity));
+    }
+
+    let db = req.state();
+
+    let total = Opportunity::count_matching(db, &query).await?;
+
+    let (pagination, pages) = if let (Some(page), Some(size)) = (search.page, search.per_page) {
+        (
+            Pagination::Page(page, size.into()),
+            ((total as f32) / (size as f32)).ceil() as u32,
+        )
+    } else {
+        (Pagination::All, 1)
+    };
+
+    let matches = Opportunity::load_matching_refs(db, &query, pagination).await?;
+
+    okay(
+        "",
+        &json!({
+            "pagination": match pagination {
+                Pagination::All => json!({"page": 0, "size": total, "pages": 1}),
+                Pagination::One => json!({"page": 0, "size": 1, "pages": 1}),
+                Pagination::Page(page, size) => json!({"page": page, "size": size, "pages": pages}),
+            },
+            "matches": []
+        }),
+    )
 }

@@ -1,9 +1,8 @@
 <template>
-<div>
-
+<div class="container">
   <header>
-    <button class="toggle-menu" @click="menu = !menu" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu">
-      <img v-if="alert" src="~assets/img/hamburger-alert.svg?data" >
+    <button class="toggle-menu" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu" @click="menu = !menu">
+      <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
       <img v-else src="~assets/img/hamburger.svg?data">
     </button>
 
@@ -11,62 +10,126 @@
       <img src="~assets/img/logo.svg?data">
     </nuxt-link>
 
-    <button class="toggle-search" @click="search = !search" title="Toggle search box" :aria-pressed="String(search)" data-context="header-search"><img src="~assets/img/search.svg?data"></button>
+    <button class="toggle-search" title="Toggle search box" :aria-pressed="String(search)" data-context="header-search" @click="toggle_search">
+      <img src="~assets/img/search.svg?data">
+    </button>
 
     <aside :class="{toggled: search}" class="search-box">
       <b-field>
-        <b-input v-model="query.keywords" placeholder="e.g. astronomy, bar crawl" icon="magnify"/>
+        <b-input ref="search_keywords" v-model="query.keywords" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
       </b-field>
-      <lookup-place v-model="query.place"/>
-      <b-field>
-        <b-checkbox v-model="query.include_online">Include Online Opportunities</b-checkbox>
-      </b-field>
-      <b-field>
-        <b-field label="From">
-          <b-datepicker v-model="query.date_from"/>
+      <lookup-place v-model="query.place" />
+      <div class="centered-row">
+        <b-field>
+          <b-checkbox v-model="query.include_online">
+            Include Online Opportunities
+          </b-checkbox>
         </b-field>
-        <b-field label="Until">
-          <b-datepicker v-model="query.date_until"/>
+      </div>
+      <div class="centered-row">
+        <b-field label="From" label-position="on-border">
+          <input v-model="query.date_from" type="date">
         </b-field>
-      </b-field>
-      <arrow-button @click="find" style="color: #fff"><search-icon class="button-icon"/> Search</arrow-button>
+        <b-field label="Until" label-position="on-border">
+          <input v-model="query.date_until" type="date">
+        </b-field>
+      </div>
+      <arrow-button @click="find">
+        <search-icon class="button-icon" /> Search
+      </arrow-button>
     </aside>
 
-    <aside :class="{toggled: menu}" class="menu-box">
+    <aside :class="{toggled: menu}" class="menu-box" @click="menu = !menu">
       <div v-if="authenticated" class="authenticated">
         <ul>
-          <li><nuxt-link to="/find"><find-icon class="menu-icon"/> Find Science Opportunities</nuxt-link></li>
-          <li><nuxt-link to="/my/saved"><saved-icon class="menu-icon"/> Saved Science Opportunities</nuxt-link></li>
-          <li><nuxt-link to="/my/science"><science-icon class="menu-icon"/> My Science</nuxt-link></li>
-          <li><nuxt-link to="/my/goals"><goals-icon class="menu-icon"/> My Goals</nuxt-link></li>
-          <li><nuxt-link to="/my/profile"><profile-icon class="menu-icon"/> My Profile</nuxt-link></li>
-          <li><span class="no-icon"/><a @click="logout">Log Out</a></li>
+          <li>
+            <nuxt-link to="/find">
+              <find-icon class="menu-icon" /> Find Science Opportunities
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/my/saved">
+              <saved-icon class="menu-icon" /> Saved Science Opportunities
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/my/science">
+              <science-icon class="menu-icon" /> My Science
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/my/goals">
+              <goals-icon class="menu-icon" /> My Goals
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/my/profile">
+              <profile-icon class="menu-icon" /> My Profile
+            </nuxt-link>
+          </li>
+          <li><span class="no-icon" /><a @click="logout">Log Out</a></li>
         </ul>
       </div>
       <div v-else class="not-authenticated">
-        <button @click="show_login = true">Login</button>
-        <button @click="show_signup = true">Create Account</button>
+        <button @click="show_login = true">
+          Login
+        </button>
+        <button @click="show_signup = true">
+          Create Account
+        </button>
       </div>
     </aside>
   </header>
 
-  <nuxt/>
+  <nuxt />
 
   <footer>
     <ul>
       <li><h1>For Everyone</h1></li>
-      <li><nuxt-link to="/about">About Us</nuxt-link></li>
-      <li><nuxt-link to="/terms">Terms of Service</nuxt-link></li>
-      <li><nuxt-link to="/privacy">Privacy Policy</nuxt-link></li>
-      <li><nuxt-link to="/cookies">Cookies Policy</nuxt-link></li>
-      <li><nuxt-link to="/contact">Contact Us</nuxt-link></li>
+      <li>
+        <nuxt-link to="/about">
+          About Us
+        </nuxt-link>
+      </li>
+      <li>
+        <nuxt-link to="/terms">
+          Terms of Service
+        </nuxt-link>
+      </li>
+      <li>
+        <nuxt-link to="/privacy">
+          Privacy Policy
+        </nuxt-link>
+      </li>
+      <li>
+        <nuxt-link to="/cookies">
+          Cookies Policy
+        </nuxt-link>
+      </li>
+      <li>
+        <nuxt-link to="/contact">
+          Contact Us
+        </nuxt-link>
+      </li>
     </ul>
 
     <ul>
       <li><h1>For Science Professionals</h1></li>
-      <li><nuxt-link to="/affiliate">Be Part of Science Near Me</nuxt-link></li>
-      <li><external href="/api/docs/v1.html" content="footer-link">API documentation</external></li>
-      <li><nuxt-link to="/contact">Display Science Opportunities</nuxt-link></li>
+      <li>
+        <nuxt-link to="/affiliate">
+          Be Part of Science Near Me
+        </nuxt-link>
+      </li>
+      <li>
+        <external href="/api/docs/v1.html" content="footer-link">
+          API documentation
+        </external>
+      </li>
+      <li>
+        <nuxt-link to="/contact">
+          Display Science Opportunities
+        </nuxt-link>
+      </li>
     </ul>
 
     <div class="partner">
@@ -88,7 +151,7 @@
     <div class="card">
       <div class="card-content">
         <login-form @close="show_login=false">
-          <dynamic-block group="login-modal" item="standard" class="content"/>
+          <dynamic-block group="login-modal" item="standard" class="content" />
         </login-form>
       </div>
     </div>
@@ -98,14 +161,160 @@
     <div class="card">
       <div class="card-content">
         <signup-form @close="show_signup=false">
-          <dynamic-block group="signup-modal" item="standard" class="content"/>
+          <dynamic-block group="signup-modal" item="standard" class="content" />
         </signup-form>
       </div>
     </div>
   </b-modal>
-
 </div>
 </template>
+
+<script>
+// import Card from '~/components/Card'
+import LoginForm from '~/components/LoginForm'
+import SignupForm from '~/components/SignupForm'
+import External from '~/components/External'
+import DynamicBlock from '~/components/DynamicBlock'
+import ArrowButton from '~/components/ArrowButton'
+import LookupPlace from '~/components/LookupPlace'
+
+import FindIcon from '~/assets/img/find-science-opportunities.svg?inline'
+import SavedIcon from '~/assets/img/saved-science-opportunities.svg?inline'
+import ScienceIcon from '~/assets/img/my-science.svg?inline'
+import GoalsIcon from '~/assets/img/my-goals.svg?inline'
+import ProfileIcon from '~/assets/img/my-profile-and-settings.svg?inline'
+import SearchIcon from '~/assets/img/search.svg?inline'
+
+export default {
+    components: {
+        // Card,
+        LoginForm,
+        SignupForm,
+        External,
+        DynamicBlock,
+        ArrowButton,
+        LookupPlace,
+
+        FindIcon,
+        SavedIcon,
+        ScienceIcon,
+        GoalsIcon,
+        ProfileIcon,
+        SearchIcon
+    },
+
+    data () {
+        return {
+            alert: false,
+            menu: false,
+            search: false,
+            show_login: false,
+            show_signup: false,
+
+            query: {
+                keywords: '',
+                place: {
+                    near: '',
+                    longitude: 0,
+                    latitude: 0,
+                    proximity: 0
+                },
+                include_online: true,
+                date_from: null,
+                date_until: null
+            }
+        }
+    },
+
+    async fetch () {
+        await this.$store.dispatch('get_user')
+    },
+
+    computed: {
+        search_query() {
+            let joint = '?';
+            let ret = '';
+
+            if (this.query.keywords) {
+                ret += joint + 'text=' + encodeURIComponent(this.query.keywords);
+                joint = '&';
+            }
+
+            if (this.query.place.near) {
+                ret += joint + 'near=' + encodeURIComponent(this.query.place.near);
+                joint = '&';
+            }
+
+            if (this.query.place.longitude) {
+                ret += joint + 'longitude=' + encodeURIComponent(this.query.place.longitude);
+                joint = '&';
+            }
+
+            if (this.query.place.latitude) {
+                ret += joint + 'latitude=' + encodeURIComponent(this.query.place.latitude);
+                joint = '&';
+            }
+
+            if (this.query.place.proximity) {
+                ret += joint + 'proximity=' + encodeURIComponent(this.query.place.proximity);
+                joint = '&';
+            }
+
+            if (!this.query.include_online) {
+                ret += joint + 'online=false';
+                joint = '&';
+            }
+
+            if (this.query.date_from !== null) {
+                let date = this.query.date_from;
+                if(date.constructor !== Date) {
+                    date = new Date(date);
+                }
+                ret += joint + 'beginning=' + encodeURIComponent(date.toISOString());
+                joint = '&';
+            }
+
+            if (this.query.date_until !== null) {
+                let date = this.query.date_until;
+                if(date.constructor !== Date) {
+                    date = new Date(date);
+                }
+                ret += joint + 'ending=' + encodeURIComponent(date.toISOString());
+                joint = '&';
+            }
+
+            return ret
+        },
+
+        authenticated() {
+            return this.$store.state.user.authenticated;
+        },
+
+        username() {
+            return this.$store.state.user.username;
+        }
+    },
+
+    methods: {
+        toggle_search() {
+            this.search = !this.search;
+
+            if(this.search) {
+                this.$refs.search_keywords.focus();
+            }
+        },
+
+        find() {
+            this.search = false;
+            this.$router.push('/find' + this.search_query);
+        },
+
+        logout() {
+            this.$store.dispatch('logout');
+        }
+    }
+}
+</script>
 
 <style lang="scss" scoped>
 header {
@@ -227,7 +436,26 @@ header {
         z-index: 1;
         box-sizing: border-box;
         padding: 1rem;
-        text-align: center;
+
+        .centered-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            margin-bottom: 0.75rem;
+        }
+
+        input[type="date"] {
+            padding: 0.75rem;
+            border-radius: 10px;
+            border: 1px solid #B4B4B4;
+        }
+
+        .arrow-button {
+            color: #fff;
+            display: block;
+            margin: 1rem;
+            text-align: center;
+        }
     }
 
     .toggled {
@@ -285,134 +513,3 @@ footer {
     }
 }
 </style>
-
-<script>
-import Card from '~/components/Card'
-import LoginForm from '~/components/LoginForm'
-import SignupForm from '~/components/SignupForm'
-import External from '~/components/External'
-import DynamicBlock from '~/components/DynamicBlock'
-import ArrowButton from '~/components/ArrowButton'
-import LookupPlace from '~/components/LookupPlace'
-
-import FindIcon from '~/assets/img/find-science-opportunities.svg?inline'
-import SavedIcon from '~/assets/img/saved-science-opportunities.svg?inline'
-import ScienceIcon from '~/assets/img/my-science.svg?inline'
-import GoalsIcon from '~/assets/img/my-goals.svg?inline'
-import ProfileIcon from '~/assets/img/my-profile-and-settings.svg?inline'
-import SearchIcon from '~/assets/img/search.svg?inline'
-
-export default {
-    components: {
-        Card,
-        LoginForm,
-        SignupForm,
-        External,
-        DynamicBlock,
-        ArrowButton,
-        LookupPlace,
-
-        FindIcon,
-        SavedIcon,
-        ScienceIcon,
-        GoalsIcon,
-        ProfileIcon,
-        SearchIcon,
-    },
-
-    data() {
-        return {
-            alert: false,
-            menu: false,
-            search: false,
-            show_login: false,
-            show_signup: false,
-
-            query: {
-                keywords: "",
-                place: {
-                    near: "",
-                    longitude: 0,
-                    latitude: 0,
-                    proximity: 0
-                },
-                include_online: true,
-                date_from: null,
-                date_until: null,
-            },
-        }
-    },
-
-    computed: {
-        search_query() {
-            let joint = "?";
-            let ret = "";
-
-            if(this.query.keywords) {
-                ret += joint + "text=" + encodeURIComponent(this.query.keywords);
-                joint = "&";
-            }
-
-            if(this.query.place.near) {
-                ret += joint + "near=" + encodeURIComponent(this.query.place.near);
-                joint = "&";
-            }
-
-            if(this.query.place.lon) {
-                ret += joint + "longitude=" + encodeURIComponent(this.query.place.lon);
-                joint = "&";
-            }
-
-            if(this.query.place.lat) {
-                ret += joint + "latitude=" + encodeURIComponent(this.query.place.lat);
-                joint = "&";
-            }
-
-            if(this.query.place.radius) {
-                ret += joint + "proximity=" + encodeURIComponent(this.query.place.radius);
-                joint = "&";
-            }
-
-            if(!this.query.include_online) {
-                ret += joint + "online=false";
-                joint = "&";
-            }
-
-            if(this.query.date_from !== null) {
-                ret += joint + "beginning=" + encodeURIComponent(this.query.date_from.toISOString());
-                joint = "&";
-            }
-
-            if(this.query.date_until !== null) {
-                ret += joint + "ending=" + encodeURIComponent(this.query.date_until.toISOString());
-                joint = "&";
-            }
-
-            return ret;
-        },
-
-        authenticated() {
-            return this.$store.state.user.authenticated;
-        },
-
-        username() {
-            return this.$store.state.user.username;
-        },
-    },
-
-    async fetch() {
-        await this.$store.dispatch('get_user');
-    },
-
-    methods: {
-        find() {
-            this.search = false;
-            this.$router.push("/find" + this.search_query);
-        },
-
-        logout() {
-            // !!!
-        }
-    }
-}
-</script>

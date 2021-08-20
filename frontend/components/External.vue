@@ -1,7 +1,7 @@
-<template><a @click.stop.prevent="go" :href="href" :title="title"><slot></slot></a></template>
+<template><a :href="href" :title="title" @click.stop.prevent="go"><slot /></a></template>
 
 <script>
-  /*
+/*
 
   This component is used to create tracked links to external
   resources. It has parameters for setting the UTM query parameters on
@@ -10,124 +10,121 @@
 
   */
 export default {
-    props: {
-        href: {
-            type: String,
-            required: true,
-        },
-
-        title: {
-            type: String,
-            required: false,
-            default: "",
-        },
-
-        // If true, open link target in a new tab or window
-        newTab: {
-            type: Boolean,
-            required: false,
-            default: false
-        },
-
-        // Identifies which site sent the traffic
-        source: {
-            type: String,
-            required: false,
-            default: "sciencenearme"
-        },
-
-        // Identifies what type of link was used, such as cost per click or email.
-        medium: {
-            type: String,
-            required: false,
-            default: "web"
-        },
-
-        // Identifies a specific product promotion or strategic campaign.
-        campaign: {
-            type: String,
-            required: false,
-            default: "general"
-        },
-
-        // Identifies search terms.
-        term: {
-            type: String,
-            required: false,
-            default: ""
-        },
-
-        // Identifies what specifically was clicked to bring the user to the site, such as a banner ad or a text link.
-        content: {
-            type: String,
-            required: false,
-            default: "link"
-        },
+  props: {
+    href: {
+      type: String,
+      required: true
     },
 
-    computed: {
-        joint() {
-            if(this.href.indexOf('?') < 0) {
-                return '?';
-            }
-            else {
-                return '&';
-            }
-        },
-
-        target() {
-            let params = "";
-
-            if(this.source) {
-                params = params + (params ? '&' : '') + "utm_source=" + this.source;
-            }
-
-            if(this.medium) {
-                params = params + (params ? '&' : '') + "utm_medium=" + this.medium;
-            }
-
-            if(this.campaign) {
-                params = params + (params ? '&' : '') + "utm_campaign=" + this.campaign;
-            }
-
-            if(this.term) {
-                params = params + (params ? '&' : '') + "utm_term=" + this.term;
-            }
-
-            if(this.content) {
-                params = params + (params ? '&' : '') + "utm_content=" + this.content;
-            }
-
-            if(params.length) {
-                return this.href + this.joint + params;
-            }
-            else {
-                return this.href;
-            }
-        }
+    title: {
+      type: String,
+      required: false,
+      default: ''
     },
 
-    methods: {
-        async go() {
-            await this.$axios.$post("/api/ui/activity/external", {
-                session: window.localStorage.getItem("token") || "",
-                on_page: window.location.href,
-                href: this.href,
-                title: this.title,
-                source: this.source,
-                medium: this.medium,
-                campaign: this.campaign,
-                term: this.term,
-                content: this.content,
-            });
+    // If true, open link target in a new tab or window
+    newTab: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
 
-            if(this.newTab) {
-                window.open(this.target, "_blank");
-            }
-            else {
-                window.location = this.target;
-            }
-        }
+    // Identifies which site sent the traffic
+    source: {
+      type: String,
+      required: false,
+      default: 'sciencenearme'
+    },
+
+    // Identifies what type of link was used, such as cost per click or email.
+    medium: {
+      type: String,
+      required: false,
+      default: 'web'
+    },
+
+    // Identifies a specific product promotion or strategic campaign.
+    campaign: {
+      type: String,
+      required: false,
+      default: 'general'
+    },
+
+    // Identifies search terms.
+    term: {
+      type: String,
+      required: false,
+      default: ''
+    },
+
+    // Identifies what specifically was clicked to bring the user to the site, such as a banner ad or a text link.
+    content: {
+      type: String,
+      required: false,
+      default: 'link'
     }
+  },
+
+  computed: {
+    joint () {
+      if (!this.href.includes('?')) {
+        return '?'
+      } else {
+        return '&'
+      }
+    },
+
+    target () {
+      let params = ''
+
+      if (this.source) {
+        params = params + (params ? '&' : '') + 'utm_source=' + this.source
+      }
+
+      if (this.medium) {
+        params = params + (params ? '&' : '') + 'utm_medium=' + this.medium
+      }
+
+      if (this.campaign) {
+        params = params + (params ? '&' : '') + 'utm_campaign=' + this.campaign
+      }
+
+      if (this.term) {
+        params = params + (params ? '&' : '') + 'utm_term=' + this.term
+      }
+
+      if (this.content) {
+        params = params + (params ? '&' : '') + 'utm_content=' + this.content
+      }
+
+      if (params.length) {
+        return this.href + this.joint + params
+      } else {
+        return this.href
+      }
+    }
+  },
+
+  methods: {
+    async go () {
+      await this.$axios.$post('/api/ui/activity/external', {
+        session: window.localStorage.getItem('token') || '',
+        on_page: window.location.href,
+        href: this.href,
+        title: this.title,
+        source: this.source,
+        medium: this.medium,
+        campaign: this.campaign,
+        term: this.term,
+        content: this.content
+      })
+
+      if (this.newTab) {
+        window.open(this.target, '_blank')
+      } else {
+        window.location = this.target
+      }
+    }
+  }
 }
 </script>

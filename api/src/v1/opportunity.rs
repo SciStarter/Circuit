@@ -1,5 +1,5 @@
 use common::model::opportunity::{
-    EntityType, Opportunity, OpportunityImportRecord, OpportunityQuery,
+    EntityType, Opportunity, OpportunityImportRecord, OpportunityQuery, Pagination,
 };
 use common::Database;
 use serde_json::json;
@@ -113,7 +113,7 @@ async fn opportunity_search(req: tide::Request<Database>) -> tide::Result {
 
     let db = req.state();
 
-    let matches = Opportunity::load_matching_refs(db, query).await?;
+    let matches = Opportunity::load_matching_refs(db, &query, Pagination::All).await?;
 
     Ok(Response::builder(StatusCode::Ok)
         .content_type(mime::JSON)

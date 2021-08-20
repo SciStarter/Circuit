@@ -1,7 +1,7 @@
 use askama::Template;
 use common::{
     model::{
-        opportunity::{EntityType, OpportunityQuery, PageLayout, PageOptions},
+        opportunity::{EntityType, OpportunityQuery, PageLayout, PageOptions, Pagination},
         partner::PartnerReference,
         person::Permission,
         Opportunity, Partner, SelectOption,
@@ -64,13 +64,14 @@ async fn search(req: tide::Request<Database>) -> tide::Result {
         partners: Partner::catalog(db).await?,
         matches: Opportunity::load_matching(
             db,
-            OpportunityQuery {
+            &OpportunityQuery {
                 title_contains: form.title,
                 partner: form.partner,
                 accepted: form.accepted,
                 withdrawn: form.withdrawn,
                 ..Default::default()
             },
+            Pagination::All,
         )
         .await?,
     }

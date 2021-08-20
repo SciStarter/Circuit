@@ -25,6 +25,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("login-scistarter", |r| r.post(login_scistarter))
         .at("signup", |r| r.post(signup))
         .at("me", |r| r.get(me))
+        .at("logout", |r| r.post(logout))
 }
 
 #[derive(Default, Deserialize)]
@@ -165,4 +166,19 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
     } else {
         okay("", &json!({"authenticated": false}))
     }
+}
+
+pub async fn logout(mut req: tide::Request<Database>) -> tide::Result {
+    okay_with_cookie(
+        "",
+        &json!({"authenticated": false}),
+        Cookie::build("token", "")
+            .path("/")
+            .max_age(Duration::hours(SESSION_HOURS))
+            .domain(&*COOKIE_DOMAIN)
+            .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
+            .http_only(true)
+            .same_site(tide::http::cookies::SameSite::Lax)
+            .finish(),
+    )
 }
