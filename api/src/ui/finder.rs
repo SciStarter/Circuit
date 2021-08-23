@@ -7,7 +7,7 @@ use common::{
             Cost, Descriptor, OpportunityQuery, OpportunityQueryOrdering, OpportunityQueryPhysical,
             Pagination, Topic, VenueType,
         },
-        Opportunity,
+        Opportunity, OpportunityExterior,
     },
     Database,
 };
@@ -190,11 +190,40 @@ struct SearchQuery {
 }
 
 pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
-    let _person = request_person(&mut req).await?;
+    let db = req.state();
+
+    let person = request_person(&mut req).await?;
 
     let search: SearchQuery = req.query()?;
 
     let mut query = OpportunityQuery::default();
+
+    if let Some(p) = person {
+        match (r, w) = (search.reviewing, search.withdrawn) {
+            (Some(reviewing), None) => {
+                query.partner_member = Some(p.exterior.uid.clone());
+                query.accepted = Some(!reviewing);
+                query.withdrawn = Some(false);
+            }
+            (None, Some(withdrawn)) => {
+                query.partner_member = Some(p.exterior.uid.clone());
+                query.accepted = None;
+                query.withdrawn = withdrawn;
+            }
+            (Some(reviewing), Some(withdrawn)) => {
+                query.partner_member = Some(p.exterior.uid.clone());
+                query.accepted = Some(!reviewing);
+                query.withdrawn = withdrawn;
+            }
+            (None, None) => {
+                query.accepted = Some(true);
+                wuery.withdrawn = Some(false);
+            }
+        }
+    } else {
+        query.accepted = Some(true);
+        wuery.withdrawn = Some(false);
+    }
 
     if let (Some(longitude), Some(latitude), Some(proximity)) =
         (search.longitude, search.latitude, search.proximity)
@@ -202,7 +231,7 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
         query.near = Some((longitude, latitude, proximity));
     }
 
-    let db = req.state();
+    // !!! TODO
 
     let total = Opportunity::count_matching(db, &query).await?;
 
@@ -215,7 +244,11 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
         (Pagination::All, 1)
     };
 
-    let matches = Opportunity::load_matching_refs(db, &query, pagination).await?;
+    let matches: Vec<OpportunityExterior> = Opportunity::load_matching(db, &query, pagination)
+        .await?
+        .into_iter()
+        .map(|m| m.exterior)
+        .collect();
 
     okay(
         "",
