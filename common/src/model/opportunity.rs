@@ -576,7 +576,7 @@ impl std::fmt::Display for OpportunityReference {
     }
 }
 
-#[derive(Deserialize, Debug, Default, Copy, Clone, Eq, PartialEq)]
+#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum OpportunityQueryPhysical {
     InPersonOrOnline,
@@ -584,12 +584,25 @@ pub enum OpportunityQueryPhysical {
     Online,
 }
 
-#[derive(Deserialize, Debug, Default, Copy, Clone)]
+impl Default for OpportunityQueryPhysical {
+    fn default() -> Self {
+        OpportunityQueryPhysical::InPersonOrOnline
+    }
+}
+
+#[derive(Deserialize, Debug, Copy, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum OpportunityQueryOrdering {
     Alphabetical,
     Closest,
     Soonest,
+    Any,
+}
+
+impl Default for OpportunityQueryOrdering {
+    fn default() -> Self {
+        OpportunityQueryOrdering::Alphabetical
+    }
 }
 
 /// Each field represents one of the database fields by which
@@ -608,10 +621,9 @@ pub struct OpportunityQuery {
     pub tags: Option<Vec<String>>,
     pub topics: Option<Vec<Topic>>,
     pub partner: Option<Uuid>,
-    pub near: Option<(f64, f64, f64)>,
+    pub partner_member: Option<Uuid>,
+    pub near: Option<(f32, f32, f32)>,
     pub physical: Option<OpportunityQueryPhysical>,
-
-    // !!!
     pub text: Option<String>,
     pub beginning: Option<DateTime<FixedOffset>>,
     pub ending: Option<DateTime<FixedOffset>>,
@@ -624,9 +636,10 @@ pub struct OpportunityQuery {
     pub sort: Option<OpportunityQueryOrdering>,
     pub page: Option<u32>,
     pub per_page: Option<u8>,
+
+    // !!!
     pub saved: Option<bool>,
     pub participated: Option<bool>,
-    pub over: Option<bool>,
 }
 
 #[derive(Debug)]
@@ -635,11 +648,14 @@ enum ParamValue {
     // the database.
     RawString(String),
     RawFloat(f32),
+    RawInt(i32),
     Bool(bool),
     Uuid(Uuid),
     VecString(Vec<String>),
     VecTopic(Vec<Topic>),
     VecEntityType(Vec<EntityType>),
+    VecDescriptor(Vec<Descriptor>),
+    VecVenueType(Vec<VenueType>),
 }
 
 impl ParamValue {
@@ -650,11 +666,14 @@ impl ParamValue {
         Ok(match self {
             ParamValue::RawString(val) => query.bind(val),
             ParamValue::RawFloat(val) => query.bind(val),
+            ParamValue::RawInt(val) => query.bind(val),
             ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecTopic(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecEntityType(val) => query.bind(serde_json::to_value(val)?),
+            ParamValue::VecDescriptor(val) => query.bind(serde_json::to_value(val)?),
+            ParamValue::VecVenueType(val) => query.bind(serde_json::to_value(val)?),
         })
     }
 
@@ -728,6 +747,86 @@ fn build_matching_query(
         ));
     }
 
+    if let Some(val) = &query.partner_member {
+        params.push(ParamValue::Uuid(val.clone()));
+        let uuid_param = params.len();
+        clauses.push(format!(
+            r"jsonb_agg(
+                SELECT (exterior -> 'uid') FROM c_partner
+                  WHERE (interior -> 'authorized') @> (${}::jsonb)
+                  OR (interior -> 'prime') @> (${}::jsonb)
+            ) @> (exterior -> 'partner')",
+            uuid_param, uuid_param,
+        ));
+    }
+
+    if let Some(text) = &query.text {
+        params.push(ParamValue::RawString(text.to_string()));
+        clauses.push(format!(
+            "fulltext_english @@ websearch_to_tsquery(${})",
+            params.len()
+        ));
+    }
+
+    if let Some(beginning) = &query.beginning {
+        params.push(ParamValue::RawString(beginning.to_rfc3339()));
+        let time_param = params.len();
+        clauses.push(format!(
+            r"(EXISTS (SELECT value FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
+              OR
+              EXISTS (SELECT value FROM jsonb_array_elements_text(exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz))",
+        time_param, time_param));
+    }
+
+    if let Some(ending) = &query.ending {
+        params.push(ParamValue::RawString(ending.to_rfc3339()));
+        let time_param = params.len();
+        clauses.push(format!(
+            r"(NOT EXISTS (SELECT value FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
+              AND
+              NOT EXISTS (SELECT value FROM jsonb_array_elements_text(exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz))",
+        time_param, time_param));
+    }
+
+    if let Some(min_age) = &query.min_age {
+        params.push(ParamValue::RawInt(*min_age as i32));
+        clauses.push(format!(
+            "(exterior -> 'min_age')::integer > ${}",
+            params.len()
+        ))
+    }
+
+    if let Some(max_age) = &query.max_age {
+        params.push(ParamValue::RawInt(*max_age as i32));
+        clauses.push(format!(
+            "(exterior -> 'max_age')::integer < ${}",
+            params.len()
+        ))
+    }
+
+    if let Some(descriptors) = &query.descriptors {
+        params.push(ParamValue::VecDescriptor(descriptors.clone()));
+        clauses.push(format!("(exterior -> 'descriptors') @> ${}", params.len()))
+    }
+
+    if let Some(cost) = &query.cost {
+        params.push(ParamValue::RawString(cost.as_ref().to_owned()));
+        clauses.push(format!("(exterior ->> 'cost') = ${}", params.len()))
+    }
+
+    if let Some(venue_type) = &query.venue_type {
+        params.push(ParamValue::VecVenueType(vec![venue_type.clone()]));
+        clauses.push(format!("(exterior -> 'opp_venue') @> ${}", params.len()))
+    }
+
+    if let Some(host) = &query.host {
+        params.push(ParamValue::RawString(format!("%{}%", host)));
+        clauses.push(format!(
+            "(exterior ->> 'organization_name') ILIKE ${}",
+            params.len()
+        ))
+    }
+
     if let Some(physical) = &query.physical {
         match physical {
             OpportunityQueryPhysical::InPersonOrOnline => {}
@@ -748,12 +847,12 @@ fn build_matching_query(
         }
     }
 
-    let point = if let Some(longitude, latitude, proximity) = &query.near {
-        params.push(ParamValue::RawFloat(longitude));
+    let point = if let Some((longitude, latitude, proximity)) = &query.near {
+        params.push(ParamValue::RawFloat(*longitude));
         let lon_param = params.len();
-        params.push(ParamValue::RawFloat(latitude));
+        params.push(ParamValue::RawFloat(*latitude));
         let lat_param = params.len();
-        params.push(ParamValue::RawFloat(proximity));
+        params.push(ParamValue::RawFloat(*proximity));
         let prox_param = params.len();
 
         clauses.push(format!(
@@ -812,16 +911,27 @@ fn build_matching_query(
 
             if let Some((lon_param, lat_param)) = point {
                 query_string
-                    .push_str(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)",
-                              lon_param, lat_param);
+                    .push_str(&format!(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)",
+                              lon_param, lat_param));
             }
 
             // This constant number is roughly the square root of the surface area of the earth, in meters
             query_string.push_str(" ELSE 22585394 END ASC")
         }
         OpportunityQueryOrdering::Soonest => {
-            query_string.push_str(" ORDER BY (exterior ->> 'title')")
+            // look for the nearest future start, and fall back to
+            // sorting as if it started now if there are none.
+            //
+            // Where there is no start time, sort it far into the
+            // future.
+            query_string.push_str(
+                r#" ORDER BY CASE
+                   WHEN jsonb_array_length(exterior -> 'start_datetimes') > 0
+                   THEN COALESCE((SELECT value FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > NOW() LIMIT 1), NOW())
+                   ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
+                   END ASC"#)
         }
+        OpportunityQueryOrdering::Any => {}
     }
 
     match pagination {
@@ -875,8 +985,12 @@ impl OpportunityImportRecord {
 
 impl Opportunity {
     pub async fn count_matching(db: &Database, query: &OpportunityQuery) -> Result<u32, Error> {
-        let (query_string, query_params) =
-            build_matching_query(&["count(*) as matches"], query, Pagination::One)?;
+        let (query_string, query_params) = build_matching_query(
+            &["count(*) as matches"],
+            query,
+            OpportunityQueryOrdering::Any,
+            Pagination::One,
+        )?;
 
         let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
 
@@ -890,6 +1004,7 @@ impl Opportunity {
     pub async fn load_matching_refs(
         db: &Database,
         query: &OpportunityQuery,
+        ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<OpportunityReference>, Error> {
         let (query_string, query_params) = build_matching_query(
@@ -901,6 +1016,7 @@ impl Opportunity {
                 "(exterior -> 'short_desc') as short_desc",
             ],
             query,
+            ordering,
             pagination,
         )?;
 
@@ -928,9 +1044,10 @@ impl Opportunity {
     pub async fn load_matching(
         db: &Database,
         query: &OpportunityQuery,
+        ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<Opportunity>, Error> {
-        let (query_string, query_params) = build_matching_query(&[], query, pagination)?;
+        let (query_string, query_params) = build_matching_query(&[], query, ordering, pagination)?;
 
         let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
 

@@ -13,6 +13,7 @@ container = []
 async-std = { version = "1.9.0", features = ["attributes"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 djangohashers = "1.4.1"
+futures = "0.3.16"
 hex = "0.4.3"
 hmac = "0.11.0"
 jwt = "0.14.0"
