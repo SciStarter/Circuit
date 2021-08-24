@@ -27,30 +27,37 @@ pub async fn get_profile(_req: tide::Request<Database>) -> tide::Result {
 }
 
 pub async fn save_profile(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-save-profile", "");
     todo!()
 }
 
 pub async fn delete_profile(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-delete-profile", "");
     todo!()
 }
 
 pub async fn delete_old_saved(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-delete-old-saved", "");
     todo!()
 }
 
 pub async fn delete_saved(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-delete-saved", "");
     todo!()
 }
 
 pub async fn add_saved(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-add-saved", "");
     todo!()
 }
 
 pub async fn add_participated(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-add-participated", "");
     todo!()
 }
 
 pub async fn remove_participated(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-remove-participated", "");
     todo!()
 }
 
@@ -63,5 +70,6 @@ pub async fn get_didit(_req: tide::Request<Database>) -> tide::Result {
 }
 
 pub async fn set_didit(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-set-didit", "");
     todo!()
 }

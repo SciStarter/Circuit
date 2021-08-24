@@ -78,6 +78,17 @@ impl Participation {
             .execute(db)
             .await?;
         } else {
+            if let Some(participant) = &self.interior.participant {
+                super::involvement::Involvement::upgrade(
+                    db,
+                    participant,
+                    &self.exterior.opportunity,
+                    super::involvement::Mode::Contributed,
+                    &self.interior.location,
+                )
+                .await?;
+            }
+
             let rec = sqlx::query_file!(
                 "db/participation/insert.sql",
                 serde_json::to_value(&self.exterior)?,
@@ -87,6 +98,8 @@ impl Participation {
             .await?;
 
             self.id = Some(rec.id);
+
+            crate::log("recorded participation", self);
         };
 
         Ok(())

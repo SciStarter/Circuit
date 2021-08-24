@@ -31,6 +31,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 }
 
 pub async fn add_organization(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-add-organization", "");
     todo!()
 }
 
@@ -52,6 +53,7 @@ pub async fn get_organization(_req: tide::Request<Database>) -> tide::Result {
 }
 
 pub async fn save_organization(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-save-organization", "");
     todo!()
 }
 
@@ -60,10 +62,12 @@ pub async fn get_pending_managers(_req: tide::Request<Database>) -> tide::Result
 }
 
 pub async fn add_pending_manager(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-add-pending-manager", "");
     todo!()
 }
 
 pub async fn remove_pending_manager(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-remove-pending-manager", "");
     todo!()
 }
 
@@ -72,10 +76,12 @@ pub async fn get_managers(_req: tide::Request<Database>) -> tide::Result {
 }
 
 pub async fn add_manager(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-add-manager", "");
     todo!()
 }
 
 pub async fn remove_manager(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-remove-manager", "");
     todo!()
 }
 
@@ -89,6 +95,7 @@ pub async fn add_opportunity(_req: tide::Request<Database>) -> tide::Result {
     // )
     // .await?;
 
+    common::log("ui-add-opportunity", "");
     todo!()
 }
 
@@ -102,6 +109,7 @@ pub async fn duplicate_opportunity(_req: tide::Request<Database>) -> tide::Resul
     // )
     // .await?;
 
+    common::log("ui-duplicate-opportunity", "");
     todo!()
 }
 
@@ -117,6 +125,7 @@ pub async fn edit_opportunity(_req: tide::Request<Database>) -> tide::Result {
     // )
     // .await?;
 
+    common::log("ui-edit-opportunity", "");
     todo!()
 }
 
@@ -132,5 +141,6 @@ pub async fn withdraw_opportunity(_req: tide::Request<Database>) -> tide::Result
     // )
     // .await?;
 
+    common::log("ui-withdraw-opportunity", "");
     todo!()
 }

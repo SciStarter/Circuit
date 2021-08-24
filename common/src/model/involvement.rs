@@ -1,16 +1,17 @@
 use chrono::{DateTime, FixedOffset};
 use futures::{Stream, TryStreamExt};
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use uuid::Uuid;
 
 use crate::{model::Error, Database};
 
-#[derive(Debug, Serialize, Deserialize, PartialOrd, Ord, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Debug, Serialize_repr, Deserialize_repr, PartialOrd, Ord, PartialEq, Eq)]
+#[repr(u8)]
 pub enum Mode {
-    Saved,
-    Logged,
-    Contributed,
+    Saved = 1,
+    Logged = 2,
+    Contributed = 3,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -39,6 +40,26 @@ pub struct Involvement {
 
 impl Involvement {
     pub fn validate(&mut self) -> Result<(), Error> {
+        Ok(())
+    }
+
+    pub async fn upgrade(
+        db: &Database,
+        participant: &Uuid,
+        opportunity: &Uuid,
+        mode: Mode,
+        location: &Option<serde_json::Value>,
+    ) -> Result<(), Error> {
+        sqlx::query_file!(
+            "db/involvement/upgrade.sql",
+            serde_json::to_value(participant)?,
+            serde_json::to_value(opportunity)?,
+            serde_json::to_value(mode)?,
+            serde_json::to_value(location)?
+        )
+        .execute(db)
+        .await?;
+
         Ok(())
     }
 

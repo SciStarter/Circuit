@@ -1,12 +1,30 @@
 use once_cell::sync::Lazy;
+use serde::Serialize;
 use sqlx::{Pool, Postgres};
 use std::collections::BTreeMap;
 use thiserror::Error;
 
 pub mod jwt;
 pub mod model;
+pub mod time;
+
+pub use time::ToFixedOffset;
 
 pub type Database = Pool<Postgres>;
+
+static LOG_ENDPOINT: Lazy<String> = Lazy::new(|| {
+    format!(
+        "http://{}:{}/internal/log",
+        std::env::var("CIRCUIT_LOGGER_SERVICE_SERVICE_HOST").unwrap_or_else(|_| std::env::var(
+            "CIRCUIT_LOGGER_SERVICE_BETA_SERVICE_HOST"
+        )
+        .unwrap_or_else(|_| "localhost".to_string())),
+        std::env::var("CIRCUIT_LOGGER_SERVICE_SERVICE_PORT").unwrap_or_else(|_| std::env::var(
+            "CIRCUIT_LOGGER_SERVICE_BETA_SERVICE_PORT"
+        )
+        .unwrap_or_else(|_| "9000".to_string())),
+    )
+});
 
 pub static LANGUAGES: Lazy<BTreeMap<String, String>> = Lazy::new(|| {
     [
@@ -140,4 +158,16 @@ pub enum Error {
 pub async fn migrate(db: &Database) -> Result<(), Error> {
     sqlx::migrate!().run(db).await?;
     Ok(())
+}
+
+pub fn log<M, T>(tag: &T, msg: &M)
+where
+    M: Serialize + ?Sized,
+    T: AsRef<str> + ?Sized,
+{
+    async_std::task::spawn(
+        surf::post(&*LOG_ENDPOINT)
+            .body(serde_json::json!({"at": chrono::Local::now(), "tag": tag.as_ref(), "msg": msg}))
+            .send(),
+    );
 }

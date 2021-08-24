@@ -560,7 +560,7 @@ impl std::fmt::Debug for Opportunity {
     }
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, FromRow)]
 #[serde(default)]
 pub struct OpportunityReference {
     pub uid: Uuid,
@@ -636,10 +636,8 @@ pub struct OpportunityQuery {
     pub sort: Option<OpportunityQueryOrdering>,
     pub page: Option<u32>,
     pub per_page: Option<u8>,
-
-    // !!!
-    pub saved: Option<bool>,
-    pub participated: Option<bool>,
+    pub saved: Option<Uuid>,
+    pub participated: Option<Uuid>,
 }
 
 #[derive(Debug)]
@@ -649,6 +647,7 @@ enum ParamValue {
     RawString(String),
     RawFloat(f32),
     RawInt(i32),
+    RawUuid(Uuid),
     Bool(bool),
     Uuid(Uuid),
     VecString(Vec<String>),
@@ -667,6 +666,7 @@ impl ParamValue {
             ParamValue::RawString(val) => query.bind(val),
             ParamValue::RawFloat(val) => query.bind(val),
             ParamValue::RawInt(val) => query.bind(val),
+            ParamValue::RawUuid(val) => query.bind(val),
             ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
@@ -715,6 +715,26 @@ fn build_matching_query(
         params.push(ParamValue::Bool(val));
         clauses.push(format!(
             "(${}::jsonb) @> (interior -> 'withdrawn')",
+            params.len()
+        ));
+    }
+
+    if let Some(person) = query.saved {
+        params.push(ParamValue::RawUuid(person));
+        clauses.push(format!(
+            r"EXISTS (SELECT 1 FROM c_person_bookmark
+              WHERE person = ${} AND opportunity = (exterior ->> 'uid')::uuid)",
+            params.len()
+        ));
+    }
+
+    if let Some(person) = query.participated {
+        params.push(ParamValue::Uuid(person));
+        clauses.push(format!(
+            r"EXISTS (SELECT 1 FROM c_involvement AS inv
+              WHERE (inv.exterior -> 'opportunity') @> (primary.exterior -> 'uid')
+              AND (inv.interior -> 'participant') @> ${}::jsonb
+              AND (inv.exterior -> 'mode') @> '3'::jsonb)",
             params.len()
         ));
     }
@@ -884,7 +904,7 @@ fn build_matching_query(
         _ => query_string.push_str(&fields.join(", ")),
     }
 
-    query_string.push_str(" FROM c_opportunity");
+    query_string.push_str(" FROM c_opportunity AS primary");
 
     if !clauses.is_empty() {
         query_string.push_str(" WHERE");
