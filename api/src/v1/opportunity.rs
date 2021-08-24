@@ -1,5 +1,6 @@
 use common::model::opportunity::{
-    EntityType, Opportunity, OpportunityImportRecord, OpportunityQuery, Pagination,
+    EntityType, Opportunity, OpportunityImportRecord, OpportunityQuery, OpportunityQueryOrdering,
+    Pagination,
 };
 use common::Database;
 use serde_json::json;
@@ -113,7 +114,13 @@ async fn opportunity_search(req: tide::Request<Database>) -> tide::Result {
 
     let db = req.state();
 
-    let matches = Opportunity::load_matching_refs(db, &query, Pagination::All).await?;
+    let matches = Opportunity::load_matching_refs(
+        db,
+        &query,
+        OpportunityQueryOrdering::Alphabetical,
+        Pagination::All,
+    )
+    .await?;
 
     Ok(Response::builder(StatusCode::Ok)
         .content_type(mime::JSON)
@@ -126,8 +133,8 @@ struct RecommendQuery {
     tags: Option<Vec<String>>,
     topics: Option<Vec<common::model::opportunity::Topic>>,
     r#abstract: Option<String>,
-    longitude: Option<f64>,
-    latitude: Option<f64>,
+    longitude: Option<f32>,
+    latitude: Option<f32>,
 }
 
 async fn opportunity_recommend(req: tide::Request<Database>) -> tide::Result {

@@ -1,7 +1,10 @@
 use askama::Template;
 use common::{
     model::{
-        opportunity::{EntityType, OpportunityQuery, PageLayout, PageOptions, Pagination},
+        opportunity::{
+            EntityType, OpportunityQuery, OpportunityQueryOrdering, PageLayout, PageOptions,
+            Pagination,
+        },
         partner::PartnerReference,
         person::Permission,
         Opportunity, Partner, SelectOption,
@@ -71,6 +74,7 @@ async fn search(req: tide::Request<Database>) -> tide::Result {
                 withdrawn: form.withdrawn,
                 ..Default::default()
             },
+            OpportunityQueryOrdering::Alphabetical,
             Pagination::All,
         )
         .await?,

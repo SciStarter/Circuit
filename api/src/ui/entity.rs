@@ -40,14 +40,17 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
 }
 
 pub async fn add_like(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-like", "");
     todo!()
 }
 
 pub async fn add_review(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-review", "");
     todo!()
 }
 
 pub async fn report_review(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-report-review", "");
     todo!()
 }
 
@@ -60,5 +63,6 @@ pub async fn recommended(_req: tide::Request<Database>) -> tide::Result {
 }
 
 pub async fn request_page_management(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-request-page-management", "");
     todo!()
 }

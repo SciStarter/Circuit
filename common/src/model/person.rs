@@ -1,14 +1,19 @@
-use super::{partner::Partner, Error};
-use crate::Database;
+use super::{opportunity::OpportunityReference, partner::Partner, Error};
+use crate::{Database, ToFixedOffset};
 
 use chrono::{DateTime, FixedOffset, Utc};
+use futures::Stream;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use sqlx;
+use sqlx::prelude::*;
 use uuid::Uuid;
 
-fn fixed_offset_now() -> DateTime<FixedOffset> {
-    Utc::now().with_timezone(&FixedOffset::west(0))
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "kebab-case")]
+pub struct Bookmark {
+    person: Uuid,
+    opportunity: Uuid,
+    saved: DateTime<FixedOffset>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -146,8 +151,8 @@ impl Default for PersonInterior {
             gender: Default::default(),
             home_location: Default::default(),
             last_location: Default::default(),
-            joined_at: fixed_offset_now(),
-            active_at: fixed_offset_now(),
+            joined_at: Utc::now().to_fixed_offset(),
+            active_at: Utc::now().to_fixed_offset(),
             phone: Default::default(),
             whatsapp: Default::default(),
             zip_code: Default::default(),
@@ -187,6 +192,67 @@ pub struct Person {
 }
 
 impl Person {
+    pub async fn is_bookmarked(&self, db: &Database, opportunity: &Uuid) -> Result<bool, Error> {
+        Ok(sqlx::query_file!(
+            "db/person/is_bookmarked.sql",
+            &self.exterior.uid,
+            opportunity
+        )
+        .map(|rec| rec.bookmarked)
+        .fetch_one(db)
+        .await?
+        .unwrap_or(false))
+    }
+
+    pub async fn set_bookmark(&self, db: &Database, opportunity: &Uuid) -> Result<(), Error> {
+        sqlx::query_file!(
+            "db/person/set_bookmark.sql",
+            &self.exterior.uid,
+            opportunity
+        )
+        .execute(db)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn clear_bookmark(&self, db: &Database, opportunity: &Uuid) -> Result<(), Error> {
+        sqlx::query_file!(
+            "db/person/clear_bookmark.sql",
+            &self.exterior.uid,
+            opportunity
+        )
+        .execute(db)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn all_bookmarked<'db>(
+        &self,
+        db: &'db Database,
+    ) -> Result<impl Stream<Item = Result<OpportunityReference, sqlx::Error>> + 'db, Error> {
+        Ok(
+            sqlx::query_file!("db/person/get_bookmarked.sql", &self.exterior.uid)
+                .try_map(|rec| {
+                    Ok(OpportunityReference {
+                        uid: rec.uid.ok_or_else(|| sqlx::Error::ColumnDecode {
+                            index: "uid".to_string(),
+                            source: Box::new(Error::Missing("uid".to_string())),
+                        })?,
+                        slug: rec.slug.ok_or_else(|| sqlx::Error::ColumnDecode {
+                            index: "slug".to_string(),
+                            source: Box::new(Error::Missing("slug".to_string())),
+                        })?,
+                        title: rec.title.unwrap_or_else(|| String::new()),
+                        image_url: rec.image_url.unwrap_or_else(|| String::new()),
+                        short_desc: rec.short_desc.unwrap_or_else(|| String::new()),
+                    })
+                })
+                .fetch(db),
+        )
+    }
+
     pub fn check_permission(&self, perm: &Permission) -> bool {
         Permission::check(&self.interior.permissions, perm)
     }
@@ -262,7 +328,7 @@ impl Person {
     }
 
     pub async fn note_activity(&mut self, db: &Database) -> Result<(), Error> {
-        self.interior.active_at = fixed_offset_now();
+        self.interior.active_at = Utc::now().to_fixed_offset();
         self.store(db).await
     }
 

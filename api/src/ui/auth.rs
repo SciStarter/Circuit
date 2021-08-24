@@ -59,6 +59,8 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
     if person.check_password(&form.password) {
         let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
 
+        common::log("ui-login", &jwt);
+
         okay_with_cookie(
             "Logged in",
             &person_json(&person, &jwt),
@@ -83,6 +85,8 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
             return error(400, "Login failed", &["email and password are required"]);
         }
     };
+
+    common::log("ui-login-via-scistarter", "");
 
     todo!()
 }
@@ -131,6 +135,8 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
 
     let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
 
+    common::log("ui-signup", &jwt);
+
     okay_with_cookie(
         "Your account has been created",
         &person_json(&person, &jwt),
@@ -168,7 +174,9 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
     }
 }
 
-pub async fn logout(mut req: tide::Request<Database>) -> tide::Result {
+pub async fn logout(_req: tide::Request<Database>) -> tide::Result {
+    common::log("ui-logout", "");
+
     okay_with_cookie(
         "",
         &json!({"authenticated": false}),
