@@ -25,7 +25,7 @@ pub static SLUGIFY_REPLACE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"[^\pL\pN-]+").expect("Unable to compile SLUGIFY_REPLACE regex"));
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case")]
 pub enum Pagination {
     All,
     One,
@@ -577,7 +577,7 @@ impl std::fmt::Display for OpportunityReference {
 }
 
 #[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case")]
 pub enum OpportunityQueryPhysical {
     InPersonOrOnline,
     InPerson,
@@ -591,7 +591,7 @@ impl Default for OpportunityQueryPhysical {
 }
 
 #[derive(Deserialize, Debug, Copy, Clone)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case")]
 pub enum OpportunityQueryOrdering {
     Alphabetical,
     Closest,
@@ -732,7 +732,7 @@ fn build_matching_query(
         params.push(ParamValue::Uuid(person));
         clauses.push(format!(
             r"EXISTS (SELECT 1 FROM c_involvement AS inv
-              WHERE (inv.exterior -> 'opportunity') @> (primary.exterior -> 'uid')
+              WHERE (inv.exterior -> 'opportunity') @> (primary_table.exterior -> 'uid')
               AND (inv.interior -> 'participant') @> ${}::jsonb
               AND (inv.exterior -> 'mode') @> '3'::jsonb)",
             params.len()
@@ -904,7 +904,7 @@ fn build_matching_query(
         _ => query_string.push_str(&fields.join(", ")),
     }
 
-    query_string.push_str(" FROM c_opportunity AS primary");
+    query_string.push_str(" FROM c_opportunity AS primary_table");
 
     if !clauses.is_empty() {
         query_string.push_str(" WHERE");

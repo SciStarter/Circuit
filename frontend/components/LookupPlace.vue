@@ -1,5 +1,6 @@
 <template>
-  <b-field label="Near" class="lookup-place" label-position="on-border">
+<b-field class="lookup-place">
+  <b-field label="Near" :label-position="labelPosition">
     <b-autocomplete
       :loading="loading"
       :data="matches"
@@ -9,7 +10,9 @@
       @typing="completions"
       @select="change($event)"
       @input="change({near: $event})"
-    />
+      />
+  </b-field>
+  <b-field label="Distance" :label-position="labelPosition">
     <b-select :value="sanitized_value.proximity" @input="change({proximity: $event})">
       <option :value="80467">
         50 miles
@@ -28,6 +31,7 @@
       </option>
     </b-select>
   </b-field>
+</b-field>
 </template>
 
 <script>
@@ -36,96 +40,102 @@ import debounce from 'lodash/debounce'
 const MILES = 0.000621371
 
 export default {
-  props: {
-    value: {
-      type: Object,
-      required: false,
-      default: () => {
-        return {
-          near: '',
-          longitude: 0,
-          latitude: 0,
-          proximity: 0
+    props: {
+        value: {
+            type: Object,
+            required: false,
+            default: () => {
+                return {
+                    near: '',
+                    longitude: 0,
+                    latitude: 0,
+                    proximity: 0
+                }
+            }
+        },
+
+        labelPosition: {
+            type: String,
+            required: false,
+            default: 'on-border'
         }
-      }
-    }
-  },
-
-  data () {
-    return {
-      matches: [],
-      num_loading: 0
-    }
-  },
-
-  computed: {
-    loading () {
-      return this.num_loading > 0
     },
 
-    sanitized_value () {
-      const patch = {}
-
-      if (!this.value.proximity || this.value.proximity < 1 || this.value.proximity > 100000) {
-        patch.proximity = 80467
-      }
-
-      if (!this.value.longitude) {
-        patch.longitude = 0
-      }
-
-      if (!this.value.latitude) {
-        patch.latitude = 0
-      }
-
-      if (!this.value.near) {
-        patch.near = ''
-      }
-
-      return Object.assign({}, this.value, patch)
+    data () {
+        return {
+            matches: [],
+            num_loading: 0
+        }
     },
 
-    value_miles () {
-      return (this.value.proximity * MILES).toFixed(2)
-    }
-  },
+    computed: {
+        loading () {
+            return this.num_loading > 0
+        },
 
-  mounted () {
-    if (this.value && this.value.near === '') {
-      if (this.value.longitude !== 0 || this.value.latitude !== 0) {
-        this.complete_near()
-      } else if (this.$geolocation.checkSupport()) {
-        this.num_loading += 1
+        sanitized_value () {
+            const patch = {}
 
-        this.$geolocation.getCurrentPosition()
-          .then(({ coords: { latitude, longitude } }) => {
-            this.change({ longitude, latitude })
-            this.$nextTick(() => { this.complete_near() })
-          })
-          .finally(() => { this.num_loading -= 1 })
-      }
-    }
+            if (!this.value.proximity || this.value.proximity < 1 || this.value.proximity > 100000) {
+                patch.proximity = 80467
+            }
 
-    this.change(this.sanitized_value)
-  },
+            if (!this.value.longitude) {
+                patch.longitude = 0
+            }
 
-  methods: {
-    completions: debounce(function (near) {
-      if (near.length < 3) {
-        this.matches = []
-        return
-      }
+            if (!this.value.latitude) {
+                patch.latitude = 0
+            }
 
-      this.num_loading += 1
+            if (!this.value.near) {
+                patch.near = ''
+            }
 
-      this.$axios.$post('/api/ui/finder/geo', { lookup: 'coords', place: this.sanitized_value })
-        .then(({ payload: { places } }) => { this.matches = places })
-        .catch((error) => { this.matches = []; console.error(error) })
-        .finally(() => { this.num_loading -= 1 })
-    }, 500),
+            return Object.assign({}, this.value, patch)
+        },
 
-    complete_near () {
-      this.num_loading += 1
+        value_miles () {
+            return (this.value.proximity * MILES).toFixed(2)
+        }
+    },
+
+    mounted () {
+        if (this.value && this.value.near === '') {
+            if (this.value.longitude !== 0 || this.value.latitude !== 0) {
+                this.complete_near()
+            } else if (this.$geolocation.checkSupport()) {
+                this.num_loading += 1
+
+                this.$geolocation.getCurrentPosition()
+                    .then(({ coords: { latitude, longitude } }) => {
+                        this.change({ longitude, latitude })
+                        this.$nextTick(() => { this.complete_near() })
+                    })
+                    .finally(() => { this.num_loading -= 1 })
+            }
+        }
+
+        this.change(this.sanitized_value)
+    },
+
+    methods: {
+        completions: debounce(function (near) {
+            if (near.length < 3) {
+                this.matches = []
+                return
+            }
+
+            this.num_loading += 1
+
+            this.$axios.$post('/api/ui/finder/geo', { lookup: 'coords', place: this.sanitized_value })
+                .then(({ payload: { places } }) => { this.matches = places })
+                .catch((error) => { this.matches = []; console.error(error) })
+                .finally(() => { this.num_loading -= 1 })
+        }, 500),
+
+        complete_near () {
+            this.num_loading += 1
 
       this.$axios.$post('/api/ui/finder/geo', { lookup: 'near', place: this.value })
         .then(({ payload: { places } }) => {
