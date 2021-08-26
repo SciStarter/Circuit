@@ -28,10 +28,10 @@
       </div>
       <div class="centered-row">
         <b-field label="From" label-position="on-border">
-          <input v-model="query.date_from" type="date">
+          <input v-model="query.date_from" class="control" type="date">
         </b-field>
         <b-field label="Until" label-position="on-border">
-          <input v-model="query.date_until" type="date">
+          <input v-model="query.date_until" class="control" type="date">
         </b-field>
       </div>
       <arrow-button @click="find">
@@ -261,7 +261,7 @@ export default {
             }
 
             if (!this.query.include_online) {
-                ret += joint + 'online=false';
+                ret += joint + 'physical=in-person';
                 joint = '&';
             }
 
@@ -321,6 +321,13 @@ header {
     height: 45px;
     background-color: $snm-color-background-medlight;
     border-top: 2px solid $snm-color-background-dark;
+
+    .centered-row {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        margin-bottom: 0.75rem;
+    }
 
     .button-icon {
         @include svg-fill;
@@ -385,7 +392,7 @@ header {
         top: 45px;
         left: 0px;
         right: 0px;
-        z-index: 1;
+        z-index: 20;
         background-color: $snm-color-element-dark;
         text-align: left;
         box-shadow: 0px 3px 6px $snm-color-shadow;
@@ -433,16 +440,9 @@ header {
         box-shadow: 0px 3px 6px $snm-color-shadow;
         background-color: $snm-color-background;
         min-height: 4rem;
-        z-index: 1;
+        z-index: 10;
         box-sizing: border-box;
         padding: 1rem;
-
-        .centered-row {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-evenly;
-            margin-bottom: 0.75rem;
-        }
 
         input[type="date"] {
             padding: 0.75rem;
@@ -511,5 +511,9 @@ footer {
             margin: 16px 16px 16px 0px;
         }
     }
+}
+
+@media only screen and (min-width: $fullsize-screen) {
+
 }
 </style>

@@ -1,10 +1,6 @@
-@import "~bulma/sass/utilities/_all";
-
 $link: #817878;
+$primary: #ffbf40;
 
-// Import bulma styles
+@import "~bulma/sass/utilities/_all";
 @import "~bulma";
-
-// Import buefy styles
 @import "~buefy/src/scss/buefy";
-

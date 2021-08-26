@@ -115,6 +115,7 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
         no_annotations: 1,
     };
 
+    // Alternative: we may be able to use https://www.geonames.org/export/web-services.html
     let mut result: OpenCageResult = surf::get("https://api.opencagedata.com/geocode/v1/json")
         .query(&query)?
         .recv_json()
