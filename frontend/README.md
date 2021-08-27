@@ -7,12 +7,6 @@ contained in this folder, which renders the front-end of the site. The
 other two parts are a PostgreSQL database, and an API server which is
 contained in the ../api folder.
 
-It may not be needed to run a full local instance, if all you’re doing
-is layout, style, and client-side scripting. For such development,
-simply running the Nuxt server using ```yarn dev``` may be sufficient.
-A full local instance becomes useful when interactions with the API
-server are relevant to your work.
-
 To run a full local instance, we need to:
 
 1. set up and run PostgreSQL
@@ -61,7 +55,7 @@ JWT_SIGNING_KEY    | Set this to some random value. For example: ```JWT_SIGNING_
 SUPERUSER_EMAIL    | Set this to the email address you want to use for accessing the [management area](http://127.0.0.1:8000/api/v1/manage/) of your local install.
 SUPERUSER_PASSWORD | Set this to the password you want to use for accessing the management area.
 
-Now we can run the server by changing to the ../api folder and doing:
+Now we can run the server opening a command line window in the api folder and doing:
 
     cargo run
 

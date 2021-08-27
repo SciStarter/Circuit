@@ -1,11 +1,12 @@
 use chrono::{DateTime, FixedOffset};
 use common::{
     model::{
+        self,
         opportunity::{
             Cost, Descriptor, OpportunityQuery, OpportunityQueryOrdering, OpportunityQueryPhysical,
             Pagination, Topic, VenueType,
         },
-        Opportunity, OpportunityExterior,
+        Opportunity, OpportunityExterior, SelectOption,
     },
     Database,
 };
@@ -21,20 +22,41 @@ use crate::ui::{error, okay, request_person};
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
-        .at("filters", |r| r.get(filters))
-        .at("topics", |r| r.get(filters))
+        .at("partners", |r| r.get(partners))
+        .at("descriptors", |r| r.get(descriptors))
+        .at("topics", |r| r.get(topics))
         .at("activities", |r| r.get(activities))
         .at("random-categories", |r| r.get(random_categories))
         .at("search", |r| r.get(search))
         .at("geo", |r| r.post(geo))
 }
 
-pub async fn filters(_req: tide::Request<Database>) -> tide::Result {
-    todo!()
+pub async fn partners(req: tide::Request<Database>) -> tide::Result {
+    let db = req.state();
+
+    let refs = common::model::Partner::catalog(db).await?;
+
+    okay("", &refs)
+}
+
+pub async fn descriptors(_req: tide::Request<Database>) -> tide::Result {
+    okay(
+        "",
+        &json!(Descriptor::all_options()
+            .into_iter()
+            .map(|(a, b, _)| (a, b))
+            .collect::<Vec<_>>()),
+    )
 }
 
 pub async fn topics(_req: tide::Request<Database>) -> tide::Result {
-    todo!()
+    okay(
+        "",
+        &json!(Topic::all_options()
+            .into_iter()
+            .map(|(a, b, _)| (a, b))
+            .collect::<Vec<_>>()),
+    )
 }
 
 pub async fn activities(_req: tide::Request<Database>) -> tide::Result {

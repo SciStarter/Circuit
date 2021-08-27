@@ -11,31 +11,49 @@ export const state = () => ({
         authenticated: false
     },
 
-    language: 'en'
+    language: 'en',
+
+    partners: [],
+
+    topics: [],
+
+    descriptors: {}
 });
 
 export const mutations = {
-    save_dynamic_block (state, { language, group, item, content }) {
+    save_dynamic_block(state, { language, group, item, content }) {
         Vue.set(state.dynamic_blocks, block_key(language, group, item), content);
     },
 
-    save_user (state, user) {
+    save_user(state, user) {
         state.user = user;
     },
 
-    save_language (state, language) {
+    save_language(state, language) {
         state.language = language;
+    },
+
+    save_partners(state, partners) {
+        state.partners = partners;
+    },
+
+    save_topics(state, topics) {
+        state.topics = topics;
+    },
+
+    save_descriptors(state, descriptors) {
+        state.descriptors = descriptors;
     }
 };
 
 export const actions = {
-    get_language ({ commit, state }) {
+    get_language({ commit, state }) {
         // Load language preference here if we decide to support
         // multiple site translations.
         return state.language || 'en';
     },
 
-    async get_dynamic_block ({ commit, state }, { language, group, item }) {
+    async get_dynamic_block({ commit, state }, { language, group, item }) {
         const key = block_key(language, group, item);
 
         if (state.dynamic_blocks[key] === undefined) {
@@ -57,7 +75,7 @@ export const actions = {
         return state.dynamic_blocks[key] || null;
     },
 
-    async login ({ commit, state }, { email, password }) {
+    async login({ commit, state }, { email, password }) {
         let user = { authenticated: false };
 
         try {
@@ -85,7 +103,7 @@ export const actions = {
         return user;
     },
 
-    async signup ({ commit, state }, { email, username, password, zip_code, phone }) {
+    async signup({ commit, state }, { email, username, password, zip_code, phone }) {
         const params = {
             email,
             password
@@ -126,7 +144,7 @@ export const actions = {
         return user;
     },
 
-    async logout ({ commit, state }) {
+    async logout({ commit, state }) {
         let user = state.user;
 
         try {
@@ -150,7 +168,7 @@ export const actions = {
         return user;
     },
 
-    async get_user ({ commit, state }) {
+    async get_user({ commit, state }) {
         let token = null;
 
         let user = {
@@ -180,5 +198,41 @@ export const actions = {
         commit('save_user', user);
 
         return user;
+    },
+
+    async get_partners({ commit, state }) {
+        if(state.partners.length > 0) {
+            return state.partners;
+        }
+
+        const { payload: partners } = await this.$axios.$get('/api/ui/finder/partners');
+
+        commit('save_partners', partners);
+
+        return partners;
+    },
+
+    async get_topics({ commit, state }) {
+        if(state.topics.length > 0) {
+            return state.topics;
+        }
+
+        const { payload: topics } = await this.$axios.$get('/api/ui/finder/topics');
+
+        commit('save_topics', topics);
+
+        return topics;
+    },
+
+    async get_descriptors({ commit, state }) {
+        if(state.descriptors.length > 0) {
+            return state.descriptors;
+        }
+
+        const { payload: descriptors } = await this.$axios.$get('/api/ui/finder/descriptors');
+
+        commit('save_descriptors', descriptors);
+
+        return descriptors;
     }
 }

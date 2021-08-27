@@ -73,8 +73,8 @@ impl Partner {
     }
 
     pub async fn catalog(db: &Database) -> Result<Vec<PartnerReference>, Error> {
-        sqlx::query_file!("db/partner/catalog.sql")
-            .map(|row| {
+        Ok(sqlx::query_file!("db/partner/catalog.sql")
+            .map(|row| -> Result<PartnerReference, Error> {
                 Ok(PartnerReference {
                     id: row.id,
                     uid: serde_json::from_value(
@@ -88,7 +88,11 @@ impl Partner {
             .fetch_all(db)
             .await?
             .into_iter()
-            .collect()
+            // remove this flatten() and the top-level Ok() to change
+            // the semantics to fail if any row fails, rather than
+            // ignoring failing rows
+            .flatten()
+            .collect())
     }
 
     pub async fn load_persons(&self, db: &Database) -> Result<Vec<Result<Person, Error>>, Error> {
