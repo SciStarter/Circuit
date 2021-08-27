@@ -65,7 +65,14 @@ impl super::SelectOption for OrganizationType {
         let code = self.as_ref();
         let name = super::separate_camel_case(code);
 
-        (code.to_string(), name, *self)
+        (
+            serde_json::to_string(&self)
+                .expect("Serializing simple enum variants should never fail")
+                .trim_matches('"')
+                .to_owned(),
+            name,
+            *self,
+        )
     }
 }
 
@@ -176,7 +183,14 @@ impl super::SelectOption for VenueType {
         let code = self.as_ref();
         let name = super::separate_camel_case(code);
 
-        (code.to_string(), name, *self)
+        (
+            serde_json::to_string(&self)
+                .expect("Serializing simple enum variants should never fail")
+                .trim_matches('"')
+                .to_owned(),
+            name,
+            *self,
+        )
     }
 }
 
@@ -208,7 +222,14 @@ impl super::SelectOption for Domain {
         let code = self.as_ref();
         let name = super::separate_camel_case(code);
 
-        (code.to_string(), name, *self)
+        (
+            serde_json::to_string(&self)
+                .expect("Serializing simple enum variants should never fail")
+                .trim_matches('"')
+                .to_owned(),
+            name,
+            *self,
+        )
     }
 }
 
@@ -278,7 +299,14 @@ impl super::SelectOption for Descriptor {
         let code = self.as_ref();
         let name = super::separate_camel_case(code);
 
-        (code.to_string(), name, *self)
+        (
+            serde_json::to_string(&self)
+                .expect("Serializing simple enum variants should never fail")
+                .trim_matches('"')
+                .to_owned(),
+            name,
+            *self,
+        )
     }
 }
 
@@ -333,7 +361,14 @@ impl super::SelectOption for Topic {
         let code = self.as_ref();
         let name = super::separate_camel_case(code);
 
-        (code.to_string(), name, *self)
+        (
+            serde_json::to_string(&self)
+                .expect("Serializing simple enum variants should never fail")
+                .trim_matches('"')
+                .to_owned(),
+            name,
+            *self,
+        )
     }
 }
 
@@ -373,7 +408,14 @@ impl super::SelectOption for Cost {
         let code = self.as_ref();
         let name = super::separate_camel_case(code);
 
-        (code.to_string(), name, *self)
+        (
+            serde_json::to_string(&self)
+                .expect("Serializing simple enum variants should never fail")
+                .trim_matches('"')
+                .to_owned(),
+            name,
+            *self,
+        )
     }
 }
 
@@ -410,7 +452,14 @@ impl super::SelectOption for LocationType {
         let code = self.as_ref();
         let name = super::separate_camel_case(code);
 
-        (code.to_string(), name, *self)
+        (
+            serde_json::to_string(&self)
+                .expect("Serializing simple enum variants should never fail")
+                .trim_matches('"')
+                .to_owned(),
+            name,
+            *self,
+        )
     }
 }
 
