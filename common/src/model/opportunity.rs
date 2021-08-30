@@ -14,7 +14,7 @@ use strum::IntoEnumIterator;
 use strum_macros::{AsRefStr, EnumIter, EnumString};
 use uuid::Uuid;
 
-use super::PARTNER_NAMESPACE;
+use super::{Pagination, PARTNER_NAMESPACE};
 
 // This regular expression matches any sequence of characters that
 // does not consist of letters, numbers, or the dash character. The
@@ -23,14 +23,6 @@ use super::PARTNER_NAMESPACE;
 // that text using non-Latin characters will be retained when slugified.
 pub static SLUGIFY_REPLACE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"[^\pL\pN-]+").expect("Unable to compile SLUGIFY_REPLACE regex"));
-
-#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum Pagination {
-    All,
-    One,
-    Page(u32, u32),
-}
 
 #[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -1006,8 +998,8 @@ fn build_matching_query(
     match pagination {
         Pagination::All => query_string.push_str(";"),
         Pagination::One => query_string.push_str(" LIMIT 1;"),
-        Pagination::Page(page, size) => {
-            query_string.push_str(format!(" LIMIT {} OFFSET {};", size, page * size).as_ref())
+        Pagination::Page { index, size } => {
+            query_string.push_str(format!(" LIMIT {} OFFSET {};", size, index * size).as_ref())
         }
     };
 

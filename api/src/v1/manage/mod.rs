@@ -1,5 +1,6 @@
 use super::{check_csrf, check_jwt, issue_jwt, random_string, redirect, set_csrf_cookie};
 use askama::Template;
+use common::model::Pagination;
 use common::model::{partner::PartnerReference, person::Permission, Partner, Person};
 use common::Database;
 use once_cell::sync::Lazy;
@@ -20,6 +21,11 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .get(manage)
         .at("authorize", |r| r.get(authorize).post(authorize))
+        .at("persons/", |r| {
+            r.get(persons)
+                .post(persons)
+                .at(":uid", |r| r.get(person).post(person))
+        })
         .at("partners/", |r| {
             r.get(partners)
                 .post(partners)
@@ -148,9 +154,10 @@ async fn partners(mut req: tide::Request<Database>) -> tide::Result {
             let db = req.state();
 
             let csrf = random_string();
+            let secret = random_string();
             let page = PartnersPage {
                 partners: Partner::catalog(db).await?,
-                suggested_secret: csrf.to_string(),
+                suggested_secret: secret.to_string(),
                 csrf: csrf.to_string(),
             };
             Ok(set_csrf_cookie(page.into(), &csrf))
@@ -242,4 +249,194 @@ async fn authorized_admin(
     }
 
     Ok(person)
+}
+
+#[derive(Template, Default)]
+#[template(path = "manage/persons.html")]
+struct PersonsPage {
+    pub persons: Vec<Person>,
+    pub suggested_password: String,
+    pub csrf: String,
+    pub total: u32,
+    pub page_size: u32,
+    pub cur_page: u32,
+    pub last_page: u32,
+}
+
+#[derive(Default, Serialize, Deserialize)]
+struct PersonsForm {
+    csrf: String,
+    name: String,
+    email: String,
+    password: String,
+}
+
+async fn persons(mut req: tide::Request<Database>) -> tide::Result {
+    let _admin = match authorized_admin(&req, &Permission::ManagePersons).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let pagination: Pagination = match req.query() {
+        Ok(pagination) => pagination,
+        Err(_) => Pagination::default(),
+    };
+
+    match req.method() {
+        Method::Get => {
+            let db = req.state();
+
+            let total = Person::total(db).await?;
+            let last_index = total - 1;
+            let (cur_page, last_page, page_size) = match pagination {
+                Pagination::All => (0, 0, total),
+                Pagination::One => (0, 0, 1),
+                Pagination::Page { index, size } => (
+                    index,
+                    (last_index as f64 / size as f64).floor() as u32,
+                    size,
+                ),
+            };
+
+            let csrf = random_string();
+            let password = random_string();
+            let page = PersonsPage {
+                persons: Person::catalog(db, pagination).await?,
+                suggested_password: password.to_string(),
+                csrf: csrf.to_string(),
+                total,
+                page_size,
+                cur_page,
+                last_page,
+            };
+            Ok(set_csrf_cookie(page.into(), &csrf))
+        }
+        Method::Post => {
+            let form: PersonsForm = req.body_form().await?;
+
+            if !check_csrf(&req, &form.csrf) {
+                return Ok("CSRF validation failed".into());
+            }
+
+            let mut person = Person::default();
+
+            person.exterior.username = Some(form.name);
+            person.interior.email = form.email;
+
+            person.set_password(&form.password);
+
+            let db = req.state();
+
+            person.store(db).await?;
+
+            Ok(redirect(&person.exterior.uid.to_string()))
+        }
+        _ => unimplemented!(),
+    }
+}
+
+#[derive(Template, Default)]
+#[template(path = "manage/person.html")]
+struct PersonPage {
+    pub person: Person,
+    pub csrf: String,
+}
+
+#[derive(Default, Serialize, Deserialize)]
+struct PersonForm {
+    csrf: String,
+    username: String,
+    email: String,
+    manage_opportunitues: Option<bool>,
+    manage_partners: Option<bool>,
+    manage_persons: Option<bool>,
+    manage_content: Option<bool>,
+    new_password: Option<String>,
+}
+
+fn set_permission(person: &mut Person, perm: Permission, state: bool) {
+    match (
+        state,
+        person.interior.permissions.iter().any(|x| x == &perm),
+    ) {
+        (true, true) => {}
+        (true, false) => person.interior.permissions.push(perm),
+        (false, true) => {
+            person.interior.permissions = person
+                .interior
+                .permissions
+                .iter()
+                .copied()
+                .filter(|x| *x != Permission::ManageContent)
+                .collect();
+        }
+        (false, false) => {}
+    }
+}
+
+async fn person(mut req: tide::Request<Database>) -> tide::Result {
+    let _admin = match authorized_admin(&req, &Permission::ManagePersons).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let uid = Uuid::parse_str(req.param("uid")?)?;
+
+    match req.method() {
+        Method::Get => {
+            let db = req.state();
+            let csrf = random_string();
+            let person = Person::load_by_uid(db, &uid).await?;
+            let page = PersonPage {
+                person,
+                csrf: csrf.clone(),
+            };
+            Ok(set_csrf_cookie(page.into(), &csrf))
+        }
+        Method::Post => {
+            let form: PersonForm = req.body_form().await?;
+
+            if !check_csrf(&req, &form.csrf) {
+                return Ok("CSRF validation failed".into());
+            }
+
+            let db = req.state();
+            let mut person = Person::load_by_uid(db, &uid).await?;
+
+            person.exterior.username = Some(form.username);
+            person.interior.email = form.email;
+
+            set_permission(
+                &mut person,
+                Permission::ManageContent,
+                form.manage_content.unwrap_or(false),
+            );
+            set_permission(
+                &mut person,
+                Permission::ManagePartners,
+                form.manage_partners.unwrap_or(false),
+            );
+            set_permission(
+                &mut person,
+                Permission::ManagePersons,
+                form.manage_persons.unwrap_or(false),
+            );
+            set_permission(
+                &mut person,
+                Permission::ManageOpportunities,
+                form.manage_opportunitues.unwrap_or(false),
+            );
+
+            if let Some(password) = form.new_password {
+                if !password.is_empty() {
+                    person.set_password(&password);
+                }
+            }
+
+            person.store(db).await?;
+
+            Ok(redirect(&person.exterior.uid.to_string()))
+        }
+        _ => unimplemented!(),
+    }
 }
