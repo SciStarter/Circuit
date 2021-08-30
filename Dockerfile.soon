@@ -1,0 +1,12 @@
+FROM rust:1 as builder
+ADD common/ /usr/src/common/
+ADD soon/ /usr/src/soon/
+WORKDIR /usr/src/soon/
+RUN cargo install --path .
+RUN strip /usr/local/cargo/bin/soon
+
+FROM debian:stable-slim
+EXPOSE 8000
+COPY --from=builder /usr/local/cargo/bin/soon /usr/local/bin/soon
+COPY --from=builder /usr/src/soon/static/ static/
+CMD ["soon"]

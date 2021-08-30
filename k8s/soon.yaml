@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-soon-deploy
+  labels:
+    app: circuit-soon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circuit-soon
+  template:
+    metadata:
+      labels:
+        app: circuit-soon
+    spec:
+      containers:
+      - name: circuit-soon
+        image: scistarter/circuit-soon:0.1.2
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret-beta
+              key: DATABASE_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circuit-soon-service
+spec:
+  selector:
+    app: circuit-soon
+  ports:
+    - protocol: TCP
+      port: 8000
+

@@ -9,6 +9,8 @@ spec:
   tls:
   - hosts:
       - beta.sciencenearme.org
+      - www.sciencenearme.org
+      - sciencenearme.org
     secretName: cert-beta
   rules:
   - host: beta.sciencenearme.org
@@ -49,6 +51,18 @@ spec:
             name: circuit-frontend-service-beta
             port:
               number: 3000
+  - host: sciencenearme.org
+    http: &http_rules
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: circuit-soon-service
+            port:
+              number: 8000
+  - host: www.sciencenearme.org
+    http: *http_rules
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
