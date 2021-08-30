@@ -1,12 +1,11 @@
 use chrono::{DateTime, FixedOffset};
 use common::{
     model::{
-        self,
         opportunity::{
             Cost, Descriptor, OpportunityQuery, OpportunityQueryOrdering, OpportunityQueryPhysical,
-            Pagination, Topic, VenueType,
+            Topic, VenueType,
         },
-        Opportunity, OpportunityExterior, SelectOption,
+        Opportunity, OpportunityExterior, Pagination, SelectOption,
     },
     Database,
 };
@@ -296,7 +295,10 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
 
     let (pagination, pages) = if let (Some(page), Some(size)) = (search.page, search.per_page) {
         (
-            Pagination::Page(page, size.into()),
+            Pagination::Page {
+                index: page,
+                size: size.into(),
+            },
             ((total as f32) / (size as f32)).ceil() as u32,
         )
     } else {
@@ -318,7 +320,7 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
             "pagination": match pagination {
                 Pagination::All => json!({"page": 0, "size": total, "pages": 1}),
                 Pagination::One => json!({"page": 0, "size": 1, "pages": 1}),
-                Pagination::Page(page, size) => json!({"page": page, "size": size, "pages": pages}),
+                Pagination::Page{index, size} => json!({"page": index, "size": size, "pages": pages}),
             },
             "matches": []
         }),

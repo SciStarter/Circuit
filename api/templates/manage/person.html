@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/api/docs/bulma.css">
+    <link rel="stylesheet" href="/api/docs/manage.css">
+    <title>Person : {{person.interior.email}}</title>
+  </head>
+  <body>
+    <section class="section">
+      <div class="container">
+        <a href=".">Back to person list</a>
+        <h1 class="title">Person : {{person.interior.email}}</h1>
+        <form method="post">
+          <input type="hidden" name="csrf" value="{{csrf}}">
+          <div class="field">
+            <label class="label">Username</label>
+            <div class="control">
+              <input class="input" type="text" name="username" value="{{person.exterior.username.clone().unwrap_or_default()}}">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Email</label>
+            <div class="control">
+              <input class="input" type="text" name="email" value="{{person.interior.email}}">
+            </div>
+          </div>
+          <div class="field">
+            <div class="control">
+              <label class="checkbox">
+                <input type="checkbox" value="true" name="manage_content"{% if person.check_permission(Permission::ManageContent) %} checked{% endif %}>
+                Manage Content
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" value="true" name="manage_partners"{% if person.check_permission(Permission::ManagePartners) %} checked{% endif %}>
+                Manage Partners
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" value="true" name="manage_persons"{% if person.check_permission(Permission::ManagePersons) %} checked{% endif %}>
+                Manage Persons
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" value="true" name="manage_opportunitues"{% if person.check_permission(Permission::ManageOpportunities) %} checked{% endif %}>
+                Manage Opportunities
+              </label>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Change Password</label>
+            <div class="control">
+              <input class="input" type="text" name="new_password">
+            </div>
+          </div>
+          <input type="submit" value="Save">
+        </form>
+      </div>
+    </section>
+  </body>
+</html>

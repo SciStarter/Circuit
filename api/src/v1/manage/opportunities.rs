@@ -3,11 +3,10 @@ use common::{
     model::{
         opportunity::{
             EntityType, OpportunityQuery, OpportunityQueryOrdering, PageLayout, PageOptions,
-            Pagination,
         },
         partner::PartnerReference,
         person::Permission,
-        Opportunity, Partner, SelectOption,
+        Opportunity, Pagination, Partner, SelectOption,
     },
     Database,
 };

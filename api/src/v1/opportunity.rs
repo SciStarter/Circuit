@@ -1,7 +1,7 @@
 use common::model::opportunity::{
     EntityType, Opportunity, OpportunityImportRecord, OpportunityQuery, OpportunityQueryOrdering,
-    Pagination,
 };
+use common::model::Pagination;
 use common::Database;
 use serde_json::json;
 use tide::http::{mime, StatusCode};

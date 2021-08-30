@@ -2,6 +2,7 @@ use once_cell::sync::Lazy;
 pub use opportunity::{Opportunity, OpportunityExterior, OpportunityInterior};
 pub use partner::Partner;
 pub use person::Person;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub mod block;
@@ -29,6 +30,20 @@ pub enum Error {
     SQLx(#[from] sqlx::Error),
     #[error("JSON error")]
     JSON(#[from] serde_json::Error),
+}
+
+#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+pub enum Pagination {
+    All,
+    One,
+    Page { index: u32, size: u32 },
+}
+
+impl Default for Pagination {
+    fn default() -> Self {
+        Pagination::Page { index: 0, size: 10 }
+    }
 }
 
 /// Returns a string containing spaces inserted before each capital

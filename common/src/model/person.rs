@@ -1,4 +1,4 @@
-use super::{opportunity::OpportunityReference, partner::Partner, Error};
+use super::{opportunity::OpportunityReference, partner::Partner, Error, Pagination};
 use crate::{Database, ToFixedOffset};
 
 use chrono::{DateTime, FixedOffset, Utc};
@@ -69,7 +69,7 @@ impl Default for IncomeLevel {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum Permission {
     All,
@@ -192,6 +192,38 @@ pub struct Person {
 }
 
 impl Person {
+    pub async fn total(db: &Database) -> Result<u32, Error> {
+        Ok(sqlx::query("SELECT COUNT(*) FROM c_person")
+            .fetch_one(db)
+            .await?
+            .get::<i64, usize>(0) as u32)
+    }
+
+    pub async fn catalog(db: &Database, pagination: Pagination) -> Result<Vec<Person>, Error> {
+        let (limit, offset) = match pagination {
+            Pagination::All => (None, None),
+            Pagination::One => (Some(1), None),
+            Pagination::Page { index, size } => {
+                (Some(size as i64), Some(index as i64 * size as i64))
+            }
+        };
+
+        sqlx::query_file!("db/person/catalog.sql", limit, offset)
+            .map(|rec| {
+                Ok(Person {
+                    id: Some(rec.id),
+                    exterior: serde_json::from_value(rec.exterior)
+                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
+                    interior: serde_json::from_value(rec.interior)
+                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
+                })
+            })
+            .fetch_all(db)
+            .await?
+            .into_iter()
+            .collect()
+    }
+
     pub async fn is_bookmarked(&self, db: &Database, opportunity: &Uuid) -> Result<bool, Error> {
         Ok(sqlx::query_file!(
             "db/person/is_bookmarked.sql",

@@ -271,6 +271,21 @@
       ]
     }
   },
+  "42aeff0b3f4e842b6e554b89136413119fabda020c3ecb09e01f4540b30b092d": {
+    "query": "insert into c_involvement (exterior, interior)\nvalues (\n  jsonb_build_object('opportunity', $2::jsonb, 'first', to_jsonb(now()), 'latest', to_jsonb(now()), 'mode', $3::jsonb),\n  jsonb_build_object('participant', $1::jsonb, 'location', $4::jsonb)\n)\non conflict ((exterior -> 'opportunity'), (interior -> 'participant')) do\nupdate set\n  exterior = jsonb_set(\n    jsonb_set(c_involvement.exterior, '{latest}', to_jsonb(now())),\n    '{mode}',\n    greatest((c_involvement.exterior -> 'mode'), $3::jsonb)\n  ),\n  interior = case when ($4::jsonb = 'null'::jsonb) then c_involvement.interior else jsonb_set(c_involvement.interior, '{location}', $4::jsonb) end\n;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Jsonb",
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "45ee1a6d2f0e1e3adf61cfa87a0dec09e0552712400a512a224cfa79fbf7e4b6": {
     "query": "update c_opportunity set exterior = $2, interior = $3 where id = $1;\n",
     "describe": {
@@ -531,6 +546,19 @@
       ]
     }
   },
+  "70030c72b45b799bc3176f60912a4c1426f34068552ddf16802ff223f15f092b": {
+    "query": "delete from c_person_bookmark where person = $1 and opportunity = $2;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "731e1957cf8705f40d16d13e85efb39ea753be689994ab6ee729c4a1e12072b8": {
     "query": "select id, exterior, interior from c_person where (interior -> 'email_hashes') ? $1;\n",
     "describe": {
@@ -680,6 +708,19 @@
       ]
     }
   },
+  "8a9d81d349e600a37c295b081067d06dffe6f8e317e268ca63d47024984ab672": {
+    "query": "insert into c_person_bookmark (person, opportunity, saved)\nvalues ($1, $2, now())\non conflict do nothing;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "9181b3c3f337b0be8c5a8b9afbe43f5bc99314996da13a2a59d61daf089e837d": {
     "query": "select id, exterior, interior from c_partner where ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n",
     "describe": {
@@ -805,6 +846,39 @@
       "parameters": {
         "Left": [
           "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "9ee25f1bfe3973a5360212a5fb21a6442c95c310e32fc8cfffa395c84e60eecd": {
+    "query": "select id, exterior, interior from c_person order by (interior -> 'email') limit $1 offset $2;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
         ]
       },
       "nullable": [
@@ -944,6 +1018,50 @@
         ]
       },
       "nullable": [
+        null
+      ]
+    }
+  },
+  "c73db5ad67387018e2a0b98336bb7288dcf004d5ac3ad5f177d2ff054281667b": {
+    "query": "select\n  (opp.exterior ->> 'uid')::uuid as uid,\n  (opp.exterior ->> 'slug') as slug,\n  (opp.exterior ->> 'title') as title,\n  (opp.exterior ->> 'image_url') as image_url,\n  (opp.exterior ->> 'short_desc') as short_desc\nfrom c_opportunity as opp inner join c_person_bookmark as mark on\n  (opp.exterior -> 'uid') @> to_jsonb(mark.opportunity)\nwhere\n  mark.person = $1::uuid and opp.exterior ? 'uid' and opp.exterior ? 'slug';\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "uid",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "slug",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "title",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "image_url",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "short_desc",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        null,
+        null,
+        null,
+        null,
         null
       ]
     }
@@ -1163,6 +1281,27 @@
         false,
         false,
         false
+      ]
+    }
+  },
+  "f2b76710d1d1cde965dda9b1aaee9f1cd47c2d567c49c5b038302d19356922f8": {
+    "query": "select exists (select 1 from c_person_bookmark where person = $1 and opportunity = $2) as bookmarked;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "bookmarked",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        null
       ]
     }
   },
