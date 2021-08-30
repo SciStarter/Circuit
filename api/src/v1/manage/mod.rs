@@ -367,7 +367,7 @@ fn set_permission(person: &mut Person, perm: Permission, state: bool) {
                 .permissions
                 .iter()
                 .copied()
-                .filter(|x| *x != Permission::ManageContent)
+                .filter(|x| *x != perm)
                 .collect();
         }
         (false, false) => {}
