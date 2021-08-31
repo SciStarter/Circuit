@@ -2,15 +2,15 @@
 <div id="content" :class="{filtering: filtering}">
   <div id="filters-general">
     <div class="basic-filter-backdrop">
-      <b-field>
+      <b-field data-context="find-keywords">
         <b-input ref="search_keywords" v-model="query.text" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
       </b-field>
-      <lookup-place v-model="place" label-position="inside" />
+      <lookup-place v-model="place" label-position="inside" data-context="find-lookup-place" />
       <div class="centered-row">
-        <b-field label="From" label-position="inside">
+        <b-field label="From" label-position="inside" data-context="find-beginning">
           <input v-model="beginning" class="control" type="date">
         </b-field>
-        <b-field label="Until" label-position="inside">
+        <b-field label="Until" label-position="inside" data-context="find-ending">
           <input v-model="ending" class="control" type="date">
         </b-field>
       </div>
@@ -18,17 +18,17 @@
   </div>
   <div id="filters-ordering">
     <b-field id="filter-physical">
-      <b-radio-button v-model="query.physical" native-value="in-person-or-online">
+      <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online">
         <span class="radio-label">In-Person<br> &amp;&nbsp;Online</span>
       </b-radio-button>
-      <b-radio-button v-model="query.physical" native-value="in-person">
+      <b-radio-button v-model="query.physical" native-value="in-person" data-context="find-sort-in-person">
         <span class="radio-label">In-Person<br> Only</span>
       </b-radio-button>
-      <b-radio-button v-model="query.physical" native-value="online">
+      <b-radio-button v-model="query.physical" native-value="online" data-context="find-sort-online">
         <span class="radio-label">Online Only</span>
       </b-radio-button>
     </b-field>
-    <mini-select id="filter-sort" v-model="query.sort" label="Sort:">
+    <mini-select id="filter-sort" v-model="query.sort" label="Sort:" data-context="find-sort-order" @input="search">
       <option value="closest">
         Closest
       </option>
@@ -36,11 +36,14 @@
         Soonest
       </option>
     </mini-select>
+    <action-button id="filter-trigger" contrast-fg @click="filtering = true">
+      Refine results
+    </action-button>
   </div>
   <div id="filters-refine">
     <fieldset>
       <label>Age</label>
-      <b-field label="Minimum Age">
+      <b-field label="Minimum Age" data-context="find-minimum-age">
         <b-checkbox v-model="min_age_active" />
         <b-slider v-model="min_age" :disabled="!min_age_active" :min="0" :max="120" :step="1" size="is-medium" rounded>
           <b-slider-tick :value="12">
@@ -64,7 +67,7 @@
         </b-slider>
         <input v-model="min_age" type="text" :disabled="!min_age_active" class="slider-direct">
       </b-field>
-      <b-field label="Maximum Age">
+      <b-field label="Maximum Age" data-context="find-maximum-age">
         <b-checkbox v-model="max_age_active" />
         <b-slider v-model="max_age" :disabled="!max_age_active" :min="0" :max="120" :step="1" size="is-medium" rounded>
           <b-slider-tick :value="12">
@@ -91,13 +94,13 @@
     </fieldset>
     <fieldset>
       <label>Activity Type</label>
-      <b-taginput v-model="selected_descriptors" :data="suggested_descriptors" field="1" open-on-focus autocomplete @typing="descriptor_text = $event.toLowerCase()" />
+      <b-taginput v-model="selected_descriptors" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="descriptor_text = $event.toLowerCase()" />
     </fieldset>
     <fieldset>
       <label>Topic</label>
-      <b-taginput v-model="selected_topics" :data="suggested_topics" field="1" open-on-focus autocomplete @typing="topic_text = $event.toLowerCase()" />
+      <b-taginput v-model="selected_topics" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="topic_text = $event.toLowerCase()" />
     </fieldset>
-    <fieldset>
+    <fieldset data-context="find-cost">
       <label>Cost</label>
       <p>
         <b-radio v-model="cost" native-value="any">
@@ -114,7 +117,7 @@
       implies four possible states: both checked, one box checked, the
       other box checked, or neither checked. We actually only have
       three meaningful states, so use a select instead. -->
-      <b-select v-model="venue_type">
+      <b-select v-model="venue_type" data-context="find-venue-type">
         <option value="either">
           Any
         </option>
@@ -126,11 +129,11 @@
         </option>
       </b-select>
     </fieldset>
-    <fieldset>
+    <fieldset data-context="find-organization">
       <label>Host Organization</label>
       <b-input :value="get_query('host', '')" type="text" @input="set_query('host', $event, '')" />
     </fieldset>
-    <fieldset>
+    <fieldset data-context="find-partner">
       <label>Partner Organization</label>
       <b-autocomplete
         v-model="partner_text"
@@ -144,18 +147,33 @@
     </fieldset>
   </div>
   <section id="results">
-    <article>{{ matches }}</article>
+    <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" />
   </section>
-  <div id="filter-submit">
-    <button title="close filters" @click="filtering = false">
+  <section id="pagination">
+    <div>
+      <action-button primary :disabled="pagination.page_index <= 0" @click="set_query('page', pagination.page_index - 1) || search()">
+        &laquo; Prev
+      </action-button>
+      <action-button primary :disabled="pagination.page_index >= pagination.last_page" @click="set_query('page', pagination.page_index + 1) || search()">
+        Next &raquo;
+      </action-button>
+    </div>
+    <div>
+      <h1>Share Your Results</h1>
+      <p>Share the list by copying the link below</p>
+      <a @click="copy_query">Copy Link</a>
+    </div>
+  </section>
+  <div id="filters-submit">
+    <button title="close filters" class="close" @click="filtering = false">
       &times;
     </button>
-    <b-button @click="clear">
+    <action-button @click="clear">
       Clear Filters
-    </b-button>
-    <b-button @click="search">
+    </action-button>
+    <action-button primary @click="search">
       Apply
-    </b-button>
+    </action-button>
   </div>
 </div>
 </template>
@@ -163,6 +181,8 @@
 <script>
 import Vue from 'vue'
 import MiniSelect from '~/components/MiniSelect'
+import OpportunityCard from '~/components/OpportunityCard'
+import copy from 'copy-to-clipboard'
 
 function from_qs (qs, names) {
     const dest = {}
@@ -171,18 +191,27 @@ function from_qs (qs, names) {
         const val = qs[name];
 
         if (val !== undefined) {
-            dest[name.endsWith('[]') ? name.slice(0, -2) : name] = val;
+            const is_array = name.endsWith('[]');
+            dest[is_array ? name.slice(0, -2) : name] = (is_array && !Array.isArray(val)) ? [val] : val;
         }
     }
 
     return dest;
 }
 
+function empty_query() {
+    return {
+        physical: 'in-person-or-online',
+        sort: 'closest'
+    };
+}
+
 export default {
     name: 'Find',
 
     components: {
-        MiniSelect
+        MiniSelect,
+        OpportunityCard
     },
 
     async asyncData (context) {
@@ -222,9 +251,10 @@ export default {
         const local = {
             filtering: false,
             pagination: {
-                page: 0,
+                page_index: 0,
                 per_page: query.per_page ? parseInt(query.per_page) : 10,
-                num_pages: 0
+                last_page: 0,
+                total: 0
             },
             partners,
             descriptors,
@@ -237,7 +267,7 @@ export default {
 
     data() {
         return {
-            query: Object.assign({sort: 'closest'}, this.$route.query),
+            query: Object.assign(empty_query(), this.$route.query),
             partner_text: "",
             descriptor_text: "",
             topic_text: ""
@@ -419,6 +449,24 @@ export default {
     watchQuery: true,
 
     methods: {
+        copy_query() {
+            const url = 'https://sciencenearme.org' + this.$route.fullPath;
+
+            if(navigator.clipboard !== undefined) {
+                // Future: may need to request permission using the
+                // navigator.permissions API. As of late 2021, no
+                // browser supports the requesting permissions via the
+                // permissions API.
+                navigator.clipboard.writeText(url).then(() => null, () => copy(url));
+            }
+            else {
+                // This function uses the now-deprecated but currently
+                // very well supported execCommand API to copy to the
+                // clipboard.
+                copy(url);
+            }
+        },
+
         get_query(name, fallback) {
             if(Object.getOwnPropertyDescriptor(this.query, name) !== undefined) {
                 return this.query[name];
@@ -437,10 +485,11 @@ export default {
         },
 
         clear() {
-            this.query = JSON.parse('{"physical": "in-person-or-online"}');
+            this.query = empty_query();
         },
 
         search() {
+            this.filtering = false;
             this.$router.push({ name: 'find', query: this.query });
         },
     }
@@ -449,6 +498,7 @@ export default {
 
 <style lang="scss" scoped>
 #filters-general {
+    display: none;
     background-color: $snm-color-background-medium;
     padding: 0.75rem 0.75rem 0px;
 
@@ -465,18 +515,75 @@ export default {
     }
 }
 
+.filtering #filters-general {
+    display: block;
+}
+
 #filters-ordering {
     padding: 0.75rem;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 #filter-physical {
+    display: none;
+}
+
+.filtering #filter-physical {
+    display: block;
     margin: 0px auto 0.75rem;
 }
 
 #filter-sort {
+    display: block;
+    flex-grow: 0
+}
+
+.filtering #filter-sort {
     display: none;
+}
+
+#filter-trigger {
+    display: block;
+    flex-grow: 0;
+}
+
+.filtering #filter-trigger {
+    display: none;
+}
+
+#filters-refine {
+    display: none;
+}
+
+.filtering #filters-refine {
+    display: block;
+}
+
+#filters-submit {
+    display: none;
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background-color: $snm-color-background-medium;
+    flex-direction: row;
+
+    button.close {
+        background-color: transparent;
+        border: none;
+        padding: 0px;
+        margin: 0px 0.5rem;
+        font-size: 40px;
+        cursor: pointer;
+        flex-shrink: 0;
+        flex-grow: 0;
+    }
+}
+
+.filtering #filters-submit {
+    display: flex;
 }
 
 ::v-deep label.b-radio.radio.button {

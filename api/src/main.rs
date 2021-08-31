@@ -40,7 +40,7 @@ async fn main() -> tide::Result<()> {
     #[cfg(not(debug_assertions))]
     log::with_level(log::LevelFilter::Warn);
     #[cfg(debug_assertions)]
-    log::with_level(log::LevelFilter::Info);
+    log::with_level(log::LevelFilter::Debug);
 
     initialize(&pool).await?;
 
@@ -52,7 +52,11 @@ async fn main() -> tide::Result<()> {
         use tide::security::{CorsMiddleware, Origin};
 
         let cors = CorsMiddleware::new()
-            .allow_methods("GET, POST, OPTIONS".parse::<HeaderValue>().unwrap())
+            .allow_methods(
+                "GET, POST, PUT, DELETE, OPTIONS"
+                    .parse::<HeaderValue>()
+                    .unwrap(),
+            )
             .allow_origin(Origin::from("*"))
             .allow_credentials(true);
 

@@ -2,8 +2,8 @@ use chrono::{DateTime, FixedOffset};
 use common::{
     model::{
         opportunity::{
-            Cost, Descriptor, OpportunityQuery, OpportunityQueryOrdering, OpportunityQueryPhysical,
-            Topic, VenueType,
+            Cost, Descriptor, EntityType, OpportunityQuery, OpportunityQueryOrdering,
+            OpportunityQueryPhysical, Topic, VenueType,
         },
         Opportunity, OpportunityExterior, Pagination, SelectOption,
     },
@@ -181,7 +181,7 @@ pub async fn random_categories(req: tide::Request<Database>) -> tide::Result {
     todo!()
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct SearchQuery {
     pub longitude: Option<f32>,
     pub latitude: Option<f32>,
@@ -216,6 +216,12 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     let search: SearchQuery = req.query()?;
 
     let mut query = OpportunityQuery::default();
+
+    query.entity_type = Some(vec![
+        EntityType::Opportunity,
+        EntityType::Attraction,
+        EntityType::Unspecified,
+    ]);
 
     query.text = search.text;
     query.beginning = search.beginning;
@@ -291,18 +297,16 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
         (None, None) => {}
     }
 
-    let total = Opportunity::count_matching(db, &query).await?;
-
-    let (pagination, pages) = if let (Some(page), Some(size)) = (search.page, search.per_page) {
-        (
-            Pagination::Page {
-                index: page,
-                size: size.into(),
-            },
-            ((total as f32) / (size as f32)).ceil() as u32,
-        )
+    let pagination = if let Some(page) = search.page {
+        Pagination::Page {
+            index: page,
+            size: search.per_page.unwrap_or(10).into(),
+        }
     } else {
-        (Pagination::All, 1)
+        Pagination::Page {
+            index: 0,
+            size: search.per_page.unwrap_or(10).into(),
+        }
     };
 
     let matches: Vec<OpportunityExterior> =
@@ -312,17 +316,22 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
             .map(|m| m.exterior)
             .collect();
 
+    let total = Opportunity::count_matching(db, &query).await?;
+
+    let (page_index, last_page, per_page) = pagination.expand(total);
+
     common::log("ui-search", &req.url().query());
 
     okay(
         "",
         &json!({
-            "pagination": match pagination {
-                Pagination::All => json!({"page": 0, "size": total, "pages": 1}),
-                Pagination::One => json!({"page": 0, "size": 1, "pages": 1}),
-                Pagination::Page{index, size} => json!({"page": index, "size": size, "pages": pages}),
+            "pagination": {
+                "page_index": page_index,
+                "per_page": per_page,
+                "last_page": last_page,
+                "total": total,
             },
-            "matches": []
+            "matches": matches
         }),
     )
 }

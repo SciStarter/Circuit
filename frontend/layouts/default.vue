@@ -71,12 +71,12 @@
         </ul>
       </div>
       <div v-else class="not-authenticated">
-        <button @click="show_login = true">
+        <action-button primary contrast-bg @click="show_login = true">
           Login
-        </button>
-        <button @click="show_signup = true">
+        </action-button>
+        <action-button primary contrast-bg @click="show_signup = true">
           Create Account
-        </button>
+        </action-button>
       </div>
     </aside>
   </header>
@@ -177,6 +177,7 @@ import External from '~/components/External'
 import DynamicBlock from '~/components/DynamicBlock'
 import ArrowButton from '~/components/ArrowButton'
 import LookupPlace from '~/components/LookupPlace'
+import ActionButton from '~/components/ActionButton'
 
 import FindIcon from '~/assets/img/find-science-opportunities.svg?inline'
 import SavedIcon from '~/assets/img/saved-science-opportunities.svg?inline'
@@ -194,6 +195,7 @@ export default {
         DynamicBlock,
         ArrowButton,
         LookupPlace,
+        ActionButton,
 
         FindIcon,
         SavedIcon,
@@ -399,19 +401,10 @@ header {
 
         .not-authenticated {
             text-align: center;
+            background-color: $snm-color-element-med;
 
             button {
-                font-family: $snm-font-content;
-                font-size: 16px;
-                color: $snm-color-element-light;
-                background-color: $snm-color-background-meddark;
-                border: 1px solid $snm-color-element-light;
-                border-radius: 6px;
-                margin: 10px 1rem;
-                padding: 10px;
-                box-shadow: 0px 3px 6px $snm-color-shadow;
                 min-width: 9rem;
-                font-weight: bold;
             }
         }
 
