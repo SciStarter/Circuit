@@ -46,6 +46,26 @@ impl Default for Pagination {
     }
 }
 
+impl Pagination {
+    pub fn expand(&self, total: u32) -> (u32, u32, u32) {
+        if total == 0 {
+            return (0, 0, 0);
+        }
+
+        let last_index = total - 1;
+
+        match self {
+            Pagination::All => (0, 0, total),
+            Pagination::One => (0, 0, 1),
+            Pagination::Page { index, size } => (
+                *index,
+                (last_index as f64 / *size as f64).floor() as u32,
+                *size,
+            ),
+        }
+    }
+}
+
 /// Returns a string containing spaces inserted before each capital
 /// letter (except the first, if the first capital is also the first
 /// letter of the input string)

@@ -4,7 +4,8 @@ document.body.addEventListener('click', async function (event) {
         on_page: window.location.pathname + window.location.search + window.location.hash,
         element_type: event.target.nodeName,
         element_id: event.target.id,
-        element_class: event.target.className
+        element_class: event.target.className,
+        title: event.target.title
     };
 
     const context = event.target.closest('[data-context]');
@@ -21,6 +22,7 @@ document.body.addEventListener('click', async function (event) {
     case 'BUTTON':
         params.name = event.target.name;
         params.value = event.target.value;
+        params.text = event.target.innerText.slice(0, 32).replace('\n', ' ');
         break;
     case 'DIV':
     case 'SPAN':

@@ -287,16 +287,7 @@ async fn persons(mut req: tide::Request<Database>) -> tide::Result {
             let db = req.state();
 
             let total = Person::total(db).await?;
-            let last_index = total - 1;
-            let (cur_page, last_page, page_size) = match pagination {
-                Pagination::All => (0, 0, total),
-                Pagination::One => (0, 0, 1),
-                Pagination::Page { index, size } => (
-                    index,
-                    (last_index as f64 / size as f64).floor() as u32,
-                    size,
-                ),
-            };
+            let (cur_page, last_page, page_size) = pagination.expand(total);
 
             let csrf = random_string();
             let password = random_string();

@@ -988,7 +988,7 @@ fn build_matching_query(
             query_string.push_str(
                 r#" ORDER BY CASE
                    WHEN jsonb_array_length(exterior -> 'start_datetimes') > 0
-                   THEN COALESCE((SELECT value FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > NOW() LIMIT 1), NOW())
+                   THEN COALESCE((SELECT value::timestamptz FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > NOW() LIMIT 1), NOW())
                    ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
                    END ASC"#)
         }
@@ -1058,8 +1058,8 @@ impl Opportunity {
         Ok(query_obj
             .fetch_one(db)
             .await?
-            .try_get("matches")
-            .unwrap_or(0))
+            .try_get::<i64, _>("matches")
+            .unwrap_or(0) as u32)
     }
 
     pub async fn load_matching_refs(
