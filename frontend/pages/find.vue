@@ -555,6 +555,24 @@ export default {
 
 #filters-refine {
     display: none;
+
+    fieldset {
+        margin: 2rem 32px;
+
+        > label {
+            color: $snm-color-background-dark;
+            font-weight: bold;
+            font-family: $snm-font-heading;
+            font-size: 16px;
+        }
+
+        ::v-deep label.label {
+            font-family: $snm-font-content;
+            font-weight: normal;
+            font-size: 14px;
+            color: $snm-color-element-sublabel;
+        }
+    }
 }
 
 .filtering #filters-refine {
@@ -569,6 +587,7 @@ export default {
     right: 0px;
     background-color: $snm-color-background-medium;
     flex-direction: row;
+    z-index: 10;
 
     button.close {
         background-color: transparent;
@@ -584,6 +603,39 @@ export default {
 
 .filtering #filters-submit {
     display: flex;
+}
+
+#results {
+    display: block;
+}
+
+.filtering #results {
+    display: none;
+}
+
+#pagination {
+    display: block;
+
+    div:first-child {
+        display: flex;
+    }
+
+    div:last-child {
+        margin: 32px;
+
+        h1 {
+            font-size: 24px;
+            font-family: $snm-font-heading;
+            line-height: 28px;
+            letter-spacing: 0px;
+            color: $snm-color-element-dark;
+            font-weight: bold;
+        }
+    }
+}
+
+.filtering #pagination {
+    display: none;
 }
 
 ::v-deep label.b-radio.radio.button {
