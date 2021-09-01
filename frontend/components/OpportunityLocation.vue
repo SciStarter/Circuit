@@ -1,0 +1,59 @@
+<template>
+<div class="opportunity-location">
+  <span v-if="opportunity.location_type == 'online'">Online</span>
+  <span v-else-if="opportunity.location_type == 'any'">Anywhere</span>
+  <ul v-else-if="opportunity.location_type == 'at'">
+    <li v-if="opportunity.location_name">
+      {{ opportunity.location_name }}
+    </li>
+    <li v-if="opportunity.address_street">
+      {{ opportunity.address_street }}
+    </li>
+    <li v-if="opportunity.address_city">
+      {{ opportunity.address_city }}
+    </li>
+    <li v-if="opportunity.address_state || opportunity.address_zip">
+      {{ opportunity.address_state }} {{ opportunity.address_zip }}
+    </li>
+    <li v-if="opportunity.address_country">
+      {{ opportunity.address_country }}
+    </li>
+  </ul>
+  <div v-else-if="opportunity.location_type == 'near'">
+    <p v-if="opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
+      !!! TODO
+    </p>
+    <p v-else-if="opportunity.location_point && opportunity.location_point.type === 'Point'">
+      !!! TODO
+    </p>
+    <p v-else>
+      Unknown location
+    </p>
+  </div>
+  <span v-else>Unrecognized location type {{ opportunity.location_type }}</span>
+</div>
+</template>
+
+<script>
+export default {
+    props: {
+        opportunity: {
+            type: Object,
+            required: true
+        }
+    }
+}
+</script>
+
+<style lang="scss" scoped>
+ul {
+    display: inline-block;
+}
+
+li {
+    font-family: $snm-font-content;
+    letter-spacing: 0px;
+    color: $snm-color-element-dark;
+    font-size: 14px;
+}
+</style>

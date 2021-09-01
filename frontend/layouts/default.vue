@@ -506,7 +506,7 @@ footer {
     }
 }
 
-@media only screen and (min-width: $fullsize-screen) {
+@media (min-width: $fullsize-screen) {
 
 }
 </style>
