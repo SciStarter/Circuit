@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-soon
-        image: scistarter/circuit-soon:0.1.2
+        image: scistarter/circuit-soon:0.1.4
         ports:
         - containerPort: 8000
         env:
