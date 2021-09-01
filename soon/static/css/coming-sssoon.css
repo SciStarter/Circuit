@@ -745,8 +745,8 @@ h1 small, h2 small, h3 small, h1 .small, h2 .small, h3 .small {
     position: relative;
     z-index: 4;
 }
-.main .motto{
-    min-height: 140px;
+.main {
+    min-height: 100%;
 }
 .main .motto, .main .subscribe .info-text{
     font-size: 28px;
