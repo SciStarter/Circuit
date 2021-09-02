@@ -1,12 +1,12 @@
 <template>
 <article class="opportunity">
-  <img :src="image" class="opportunity-image">
+  <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
 
   <div class="map">
     map
   </div>
 
-  <h2>{{ subtitle }}</h2>
+  <strong>{{ subtitle }}</strong>
   <h1>{{ opportunity.title }}</h1>
 
   <p>
@@ -45,7 +45,8 @@
     title="Find out more"
     campaign="opp-page"
     content="find-out-more"
-    class="find-out-more">
+    class="find-out-more"
+    >
     <strong>Find out more</strong>
     <span>{{ opportunity.partner_opp_url }}</span>
   </external>
@@ -53,40 +54,84 @@
   <div class="partner-and-org">
     <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
       <figcaption>As Featured On</figcaption>
-      <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name + ' logo'">
-      <span v-else>{{ opportunity.partner_name }}</span>
+      <component :is="opportunity.partner_website ? 'external' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on" new-tab>
+        <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name + ' logo'">
+        <span v-else>{{ opportunity.partner_name }}</span>
+      </component>
     </figure>
     <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
       <figcaption>Hosted By</figcaption>
-      <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name + ' logo'">
-      <span v-else>{{ opportunity.organization_name }}</span>
+      <component :is="opportunity.organization_website ? 'external' : 'span'" :href="opportunity.organization_website" campaign="opp-page" content="hosted-by" new-tab>
+        <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name + ' logo'">
+        <span v-else>{{ opportunity.organization_name }}</span>
+      </component>
     </figure>
   </div>
 
   <div class="more-info">
-    
+    <h2>More Information</h2>
+    <p v-if="has_value(opportunity.cost)" class="item">
+      Cost: {{ opportunity.cost !== 'free' ? 'Yes' : 'No' }}
+    </p>
+    <p v-if="has_value(opportunity.ticket_required)" class="item">
+      Ticket Required: {{ opportunity.ticket_required ? 'Yes' : 'No' }}
+    </p>
+    <p v-if="has_value(opportunity.opp_venue)" class="item">
+      Venue Type: {{ venue_type }}
+    </p>
+    <p v-if="has_value(opportunity.min_age) && opportunity.min_age > 0" class="item">
+      Minimum Age: {{ opportunity.min_age }}
+    </p>
+    <p v-if="has_value(opportunity.max_age) && opportunity.max_age < 999" class="item">
+      Maximum Age: {{ opportunity.max_age }}
+    </p>
+    <p v-if="has_value(opportunity.languages)" class="item">
+      Languages: {{ opportunity.languages.join(', ') }}
+    </p>
   </div>
 
-  <pre>
-    {{ JSON.stringify(opportunity, null, 2) }}
+  <vue-markdown :source="opportunity.description" class="description" />
+
+  <div v-if="has_value(opportunity.tags)" class="tags">
+    <span v-for="tag in opportunity.tags" :key="tag">{{ tag }}</span>
+  </div>
+
+  <div class="social">
+    {{ opportunity.opp_hashtags.join(', ') }}
+    <pre>
+      {{ JSON.stringify(opportunity.opp_social_handles, null, 2) }}
     </pre>
-  </article>
+  </div>
+
+  <div v-if="has_value(reviews)" class="reviews">
+    <h2>Reviews</h2>
+    {{ reviews }}
+  </div>
+
+  <div v-if="has_value(recommended)" class="related">
+    <h2>Nearby &amp; Similar Opportunities</h2>
+    {{ recommended }}
+  </div>
+</article>
 </template>
 
 <script>
+import VueMarkdown from "vue-markdown"
+
 import OpportunityLocation from "~/components/OpportunityLocation"
 import OpportunityTime from "~/components/OpportunityTime"
 import OpportunityKeywords from "~/components/OpportunityKeywords"
 import OpportunityNotice from "~/components/OpportunityNotice"
 import External from "~/components/External"
 
-import NoImage from "~/assets/img/no-image.svg?data"
 import LocationIcon from '~/assets/img/location-marker.svg?inline'
 import TimeIcon from '~/assets/img/calendar.svg?inline'
 import KeywordsIcon from '~/assets/img/speech-bubble.svg?inline'
 
 export default {
     components: {
+        VueMarkdown,
+
         OpportunityLocation,
         OpportunityTime,
         OpportunityKeywords,
@@ -105,13 +150,33 @@ export default {
         }
     },
 
+    data() {
+        return {
+            reviews: null,
+            recommended: null
+        }
+    },
+
+    async fetch() {
+        const fetch_reviews = async () => {
+            let resp = this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/reviews');
+            this.reviews = resp.payload;
+        }
+
+        const fetch_recommended = async () => {
+            let resp = this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/recommended');
+            this.recommended = resp.payload;
+        }
+
+        await Promise.all([
+            fetch_reviews(),
+            fetch_recommended()
+        ]);
+    },
+
     computed: {
         opportunity() {
             return this.entity;
-        },
-
-        image() {
-            return this.opportunity.image_url || NoImage;
         },
 
         subtitle() {
@@ -120,6 +185,53 @@ export default {
 
         elevator_pitch() {
             return this.opportunity.short_desc || (this.opportunity.description.split('. ')[0].slice(0, 117) + '...');
+        },
+
+        venue_type() {
+            const indoors = this.opportunity.opp_venue.indexOf('indoors') >= 0;
+            const outdoors = this.opportunity.opp_venue.indexOf('outdoors') >= 0;
+
+            if(indoors && outdoors) {
+                return "Indoors and outdoors";
+            }
+            else if(indoors) {
+                return "Indoors";
+            }
+            else if(outdoors) {
+                return "Outdoors";
+            }
+            else {
+                return "We don't know";
+            }
+        }
+    },
+
+    methods: {
+        has_value(item, test_result) {
+            if(test_result !== undefined) {
+                return test_result;
+            }
+
+            if(item === undefined || item === null) {
+                return false;
+            }
+
+            if(Array.isArray(item)) {
+                if(item.length == 0) {
+                    return false;
+                }
+                if(item.length == 1 && item[0] === '') {
+                    return false;
+                }
+            }
+
+            if(typeof(item) === 'string') {
+                if(item === '') {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

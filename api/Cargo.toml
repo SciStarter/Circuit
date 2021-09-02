@@ -3,6 +3,7 @@ name = "server"
 version = "0.1.0"
 authors = ["Daniel Arbuckle <daniel@arbuckle-everything.com>"]
 edition = "2018"
+default-run = "server"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -33,3 +34,4 @@ uuid = { version = "0.8.2", features = ["v4", "v5", "serde"] }
 http-types = "2.11.1"
 chrono = { version = "0.4.19", features = ["serde"] }
 surf = { version = "2.2.0", default-features = false, features = ["h1-client-rustls"] }
+shellfish = { version = "0.5.1", features = ["rustyline", "async", "async-std"] }

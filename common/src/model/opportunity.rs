@@ -638,6 +638,7 @@ pub enum OpportunityQueryOrdering {
     Closest,
     Soonest,
     Any,
+    Native,
 }
 
 impl Default for OpportunityQueryOrdering {
@@ -992,6 +993,7 @@ fn build_matching_query(
                    ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
                    END ASC"#)
         }
+        OpportunityQueryOrdering::Native => query_string.push_str(" ORDER BY id"),
         OpportunityQueryOrdering::Any => {}
     }
 
@@ -1164,6 +1166,8 @@ impl Opportunity {
             .into();
 
         self.exterior.title = self.exterior.title.trim_matches(char::is_whitespace).into();
+
+        self.exterior.description = ammonia::clean(&self.exterior.description);
 
         if self.exterior.partner_name.is_empty() {
             return Err(Error::Missing("partner_name".into()));

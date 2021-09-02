@@ -12,6 +12,7 @@ async fn initialize(db: &Database) -> tide::Result {
     let superuser_email = std::env::var("SUPERUSER_EMAIL")?;
     let superuser_password = std::env::var("SUPERUSER_PASSWORD")?;
 
+    // Ensure that the superuser exists
     if !model::person::Person::exists_by_email(db, &superuser_email).await? {
         log::info!("Creating superuser...");
         let mut superuser = model::person::Person::default();
