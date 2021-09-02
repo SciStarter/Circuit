@@ -1,5 +1,5 @@
 <template>
-<div class="container">
+<div id="page" class="container">
   <header>
     <button class="toggle-menu" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu" @click="menu = !menu">
       <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
@@ -319,6 +319,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+#page {
+    width: 100vw;
+}
+
 header {
     height: 45px;
     background-color: $snm-color-background-medlight;
