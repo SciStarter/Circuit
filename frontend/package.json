@@ -26,7 +26,8 @@
         "nuxt": "^2.15.3",
         "nuxt-buefy": "^0.4.4",
         "sortablejs": "^1.14.0",
-        "vue-geolocation-api": "^0.1.21"
+        "vue-geolocation-api": "^0.1.21",
+        "vue-markdown": "^2.2.4"
     },
     "devDependencies": {
         "@nuxt/test-utils": "^0.2.2",

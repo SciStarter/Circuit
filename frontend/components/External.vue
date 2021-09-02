@@ -1,4 +1,4 @@
-<template><a :href="href" :title="title" @click.stop.prevent="go"><slot /></a></template>
+<template><a :href="href" :title="title" rel="noopener" @click.stop.prevent="go"><slot /></a></template>
 
 <script>
 /*
@@ -120,7 +120,7 @@ export default {
       })
 
       if (this.newTab) {
-        window.open(this.target, '_blank')
+        window.open(this.target, '_blank', "noopener=yes")
       } else {
         window.location = this.target
       }

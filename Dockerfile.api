@@ -4,9 +4,11 @@ ADD api/ /usr/src/api/
 WORKDIR /usr/src/api/
 RUN cargo install --path . --features container
 RUN strip /usr/local/cargo/bin/server
+RUN strip /usr/local/cargo/bin/toolkit
 
 FROM debian:stable-slim
 EXPOSE 8000
 COPY --from=builder /usr/local/cargo/bin/server /usr/local/bin/server
+COPY --from=builder /usr/local/cargo/bin/toolkit /usr/local/bin/toolkit
 COPY --from=builder /usr/src/api/static/ static/
 CMD ["server"]

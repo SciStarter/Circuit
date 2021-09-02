@@ -38,7 +38,7 @@ import OpportunityTime from "~/components/OpportunityTime"
 import OpportunityKeywords from "~/components/OpportunityKeywords"
 import OpportunityNotice from "~/components/OpportunityNotice"
 
-import NoImage from "~/assets/img/no-image.svg?data"
+import NoImage from "~/assets/img/no-image-thumb.jpg"
 import LocationIcon from '~/assets/img/location-marker.svg?inline'
 import TimeIcon from '~/assets/img/calendar.svg?inline'
 import KeywordsIcon from '~/assets/img/speech-bubble.svg?inline'
@@ -87,7 +87,7 @@ export default {
         width: 80px;
         height: 80px;
         border: none;
-        border-radius: 20px;
+        border-radius: 10px;
         overflow: hidden;
         flex-shrink: 0;
         flex-grow: 0;
