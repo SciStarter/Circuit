@@ -161,7 +161,7 @@
     <div>
       <h1>Share Your Results</h1>
       <p>Share the list by copying the link below</p>
-      <a @click="copy_query">Copy Link</a>
+      <a :href="query_link" @click.prevent="copy_query"><link-icon />Copy Link</a>
     </div>
   </section>
   <div id="filters-submit">
@@ -180,9 +180,12 @@
 
 <script>
 import Vue from 'vue'
+import copy from 'copy-to-clipboard'
+
 import MiniSelect from '~/components/MiniSelect'
 import OpportunityCard from '~/components/OpportunityCard'
-import copy from 'copy-to-clipboard'
+
+import LinkIcon from '~/assets/img/link.svg?inline'
 
 function from_qs (qs, names) {
     const dest = {}
@@ -211,7 +214,9 @@ export default {
 
     components: {
         MiniSelect,
-        OpportunityCard
+        OpportunityCard,
+
+        LinkIcon
     },
 
     async asyncData (context) {
@@ -443,6 +448,10 @@ export default {
             set(value) {
                 this.set_query('venue_type', value, 'either');
             }
+        },
+
+        query_link() {
+            return 'https://sciencenearme.org' + this.$route.fullPath;
         }
     },
 
@@ -450,20 +459,26 @@ export default {
 
     methods: {
         copy_query() {
-            const url = 'https://sciencenearme.org' + this.$route.fullPath;
-
             if(navigator.clipboard !== undefined) {
                 // Future: may need to request permission using the
                 // navigator.permissions API. As of late 2021, no
-                // browser supports the requesting permissions via the
-                // permissions API.
-                navigator.clipboard.writeText(url).then(() => null, () => copy(url));
+                // browser supports requesting permissions via the
+                // permissions API, much less requires it, but that's
+                // what the spec says.
+                navigator.clipboard.writeText(this.query_link).then(
+                    () => this.$buefy.toast.open({
+                        message: 'Copied to clipboard',
+                        type: 'is-success'
+                    }),
+                    () => copy(this.query_link));
             }
             else {
                 // This function uses the now-deprecated but currently
                 // very well supported execCommand API to copy to the
-                // clipboard.
-                copy(url);
+                // clipboard, and falls back to using a prompt to
+                // provide the text to copy if execCommand isn't
+                // available.
+                copy(this.query_link);
             }
         },
 
@@ -630,6 +645,16 @@ export default {
             letter-spacing: 0px;
             color: $snm-color-element-dark;
             font-weight: bold;
+        }
+
+        a {
+            text-decoration: underline;
+        }
+
+        svg,img {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.75rem;
         }
     }
 }
