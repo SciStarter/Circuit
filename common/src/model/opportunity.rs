@@ -2,6 +2,7 @@ use super::Error;
 use crate::Database;
 
 use chrono::{DateTime, FixedOffset, Utc};
+use futures::StreamExt;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -680,6 +681,8 @@ pub struct OpportunityQuery {
     pub per_page: Option<u8>,
     pub saved: Option<Uuid>,
     pub participated: Option<Uuid>,
+    /// probability of retaining any given result in the match set, in the range (0-1).
+    pub sample: Option<f32>,
 }
 
 #[derive(Debug)]
@@ -938,6 +941,11 @@ fn build_matching_query(
         None
     };
 
+    if let Some(probability) = query.sample {
+        params.push(ParamValue::RawFloat(probability));
+        clauses.push(format!("random() < ${}", params.len()));
+    }
+
     let mut query_string = "SELECT ".to_string();
 
     match fields.len() {
@@ -1046,6 +1054,69 @@ impl OpportunityImportRecord {
     }
 }
 
+#[derive(Debug, Serialize)]
+pub struct Review {
+    pub person: Uuid,
+    pub rating: i16,
+    pub comment: String,
+    pub when: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct Reviews {
+    pub average: f32,
+    pub reviews: Vec<Review>,
+}
+
+pub async fn reviews_for_slug(db: &Database, slug: &str) -> Result<Reviews, Error> {
+    let mut ret = Reviews {
+        average: 0.0,
+        reviews: vec![],
+    };
+
+    let mut stream = sqlx::query_file_as!(Review, "db/opportunity/all_reviews.sql", slug).fetch(db);
+
+    while let Some(result) = stream.next().await {
+        let review = result?;
+        ret.average += review.rating as f32;
+        ret.reviews.push(review);
+    }
+
+    // Divide by zero produces a NaN value, which is serialized into
+    // JSON as null
+    ret.average /= ret.reviews.len() as f32;
+
+    Ok(ret)
+}
+
+pub async fn likes_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
+    Ok(sqlx::query_file!("db/opportunity/count_likes.sql", slug)
+        .map(|row| row.likes)
+        .fetch_one(db)
+        .await?
+        .unwrap_or(0) as u32)
+}
+
+pub async fn saves_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
+    Ok(
+        sqlx::query_file!("db/opportunity/count_saves_by_slug.sql", slug)
+            .map(|row| row.saves)
+            .fetch_one(db)
+            .await?
+            .unwrap_or(0) as u32,
+    )
+}
+
+pub async fn didit_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
+    Ok(
+        sqlx::query_file!("db/opportunity/count_didit_by_slug.sql", slug)
+            .map(|row| row.didit)
+            .fetch_one(db)
+            .await?
+            .unwrap_or(0) as u32,
+    )
+}
+
 impl Opportunity {
     pub async fn count_matching(db: &Database, query: &OpportunityQuery) -> Result<u32, Error> {
         let (query_string, query_params) = build_matching_query(
@@ -1152,6 +1223,14 @@ impl Opportunity {
         Ok(super::partner::Partner::load_by_uid(db, &self.exterior.partner).await?)
     }
 
+    pub async fn reviews(&mut self, db: &Database) -> Result<Reviews, Error> {
+        reviews_for_slug(db, &self.exterior.slug).await
+    }
+
+    pub async fn likes(&mut self, db: &Database) -> Result<u32, Error> {
+        likes_for_slug(db, &self.exterior.slug).await
+    }
+
     pub fn validate(&mut self) -> Result<(), Error> {
         self.exterior.partner_name = self
             .exterior
@@ -1168,6 +1247,20 @@ impl Opportunity {
         self.exterior.title = self.exterior.title.trim_matches(char::is_whitespace).into();
 
         self.exterior.description = ammonia::clean(&self.exterior.description);
+
+        if let Some(point) = &self.exterior.location_point {
+            let geom = &point["geometry"];
+            if geom.is_object() {
+                self.exterior.location_point = Some(geom.clone());
+            }
+        }
+
+        if let Some(poly) = &self.exterior.location_polygon {
+            let geom = &poly["geometry"];
+            if geom.is_object() {
+                self.exterior.location_polygon = Some(geom.clone());
+            }
+        }
 
         if self.exterior.partner_name.is_empty() {
             return Err(Error::Missing("partner_name".into()));

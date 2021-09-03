@@ -20,8 +20,7 @@ export default {
     },
 
     async asyncData ({ params, $axios }) {
-        const resp = await $axios.$get('/api/ui/entity/' + params.slug);
-        const entity = resp.payload;
+        const entity = await $axios.$get('/api/ui/entity/' + params.slug);
         const layout = entity.entity_type.page ? entity.entity_type.page.layout : entity.entity_type;
 
         return { entity, layout };

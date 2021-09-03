@@ -1,10 +1,18 @@
 use tide::Request;
 
-async fn from_frontend(_req: Request<()>) -> tide::Result {
+async fn from_frontend(mut req: Request<()>) -> tide::Result {
+    let content = req.body_string().await?;
+
+    println!("FRONTEND {}", content);
+
     Ok("logged".into())
 }
 
-async fn from_backend(_req: Request<()>) -> tide::Result {
+async fn from_backend(mut req: Request<()>) -> tide::Result {
+    let content = req.body_string().await?;
+
+    println!("BACKEND {}", content);
+
     Ok("logged".into())
 }
 

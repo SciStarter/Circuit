@@ -31,56 +31,27 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("content", |r| r.get(content))
 }
 
-pub fn okay<M, P>(message: &M, payload: &P) -> tide::Result<Response>
+pub fn okay<P>(payload: &P) -> tide::Result<Response>
 where
-    M: ToString + ?Sized,
     P: Serialize + ?Sized,
 {
     Ok(Response::builder(StatusCode::Ok)
         .content_type(mime::JSON)
-        .body(json!({
-            "status": true,
-            "code": 200,
-            "message": message.to_string(),
-            "errors": [],
-            "payload": payload
-        }))
+        .body(serde_json::to_value(payload)?)
         .build())
 }
 
-pub fn okay_with_cookie<M, P>(
-    message: &M,
-    payload: &P,
-    cookie: Cookie<'static>,
-) -> tide::Result<Response>
+pub fn okay_with_cookie<P>(payload: &P, cookie: Cookie<'static>) -> tide::Result<Response>
 where
-    M: ToString + ?Sized,
     P: Serialize + ?Sized,
 {
-    match okay(message, payload) {
+    match okay(payload) {
         Ok(mut resp) => {
             resp.insert_cookie(cookie);
             Ok(resp)
         }
         Err(e) => Err(e),
     }
-}
-
-pub fn error<M, E>(code: u16, message: &M, errors: &[&E]) -> tide::Result<Response>
-where
-    M: ToString + ?Sized,
-    E: ToString + ?Sized,
-{
-    Ok(Response::builder(StatusCode::try_from(code)?)
-        .content_type(mime::JSON)
-        .body(json!({
-            "status": false,
-            "code": code,
-            "message": message.to_string(),
-            "errors": errors.iter().map(|e| e.to_string()).collect::<Vec<String>>(),
-            "payload": {}
-        }))
-        .build())
 }
 
 /// Generates a JSON object which represents a person, suitable for

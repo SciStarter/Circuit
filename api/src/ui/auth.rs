@@ -3,7 +3,7 @@ use http_types::Cookie;
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde_json::json;
-use tide::{Response, StatusCode};
+use tide::{prelude::*, Response, StatusCode};
 pub use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
@@ -12,7 +12,7 @@ use time::Duration;
 
 use crate::ui::{okay, okay_with_cookie};
 
-use super::{error, person_json, request_person, UI_AUDIENCE};
+use super::{person_json, request_person, UI_AUDIENCE};
 
 pub static COOKIE_DOMAIN: Lazy<String> =
     Lazy::new(|| std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string()));
@@ -40,19 +40,20 @@ struct LoginForm {
 /// ```#[cfg(not(debug_assertions))]```) Secure flags, and also
 /// return the token in the response body for script use.
 pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
-    let form: LoginForm = match req.body_json().await {
-        Ok(parsed) => parsed,
-        Err(_) => {
-            return error(400, "Login failed", &["email and password are required"]);
-        }
-    };
+    let form: LoginForm = req.body_json().await.map_err(|mut e| {
+        e.set_status(400);
+        e
+    })?;
 
     let db = req.state();
 
     let person = match Person::load_by_email(db, &form.email).await {
         Ok(loaded) => loaded,
         Err(_) => {
-            return error(403, "Login failed", &["email or password not recognized"]);
+            return Err(tide::Error::from_str(
+                403,
+                "email or password not recognized",
+            ));
         }
     };
 
@@ -62,7 +63,6 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
         common::log("ui-login", &jwt);
 
         okay_with_cookie(
-            "Logged in",
             &person_json(&person, &jwt),
             Cookie::build("token", jwt)
                 .path("/")
@@ -74,17 +74,18 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
                 .finish(),
         )
     } else {
-        error(403, "", &["email or password not recognized"])
+        Err(tide::Error::from_str(
+            403,
+            "email or password not recognized",
+        ))
     }
 }
 
 pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result {
-    let _form: LoginForm = match req.body_json().await {
-        Ok(parsed) => parsed,
-        Err(_) => {
-            return error(400, "Login failed", &["email and password are required"]);
-        }
-    };
+    let _form: LoginForm = req.body_json().await.map_err(|mut e| {
+        e.set_status(400);
+        e
+    })?;
 
     common::log("ui-login-via-scistarter", "");
 
@@ -138,7 +139,6 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
     common::log("ui-signup", &jwt);
 
     okay_with_cookie(
-        "Your account has been created",
         &person_json(&person, &jwt),
         Cookie::build("token", jwt)
             .path("/")
@@ -158,7 +158,6 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
         let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
 
         okay_with_cookie(
-            "",
             &person_json(&person, &jwt),
             Cookie::build("token", jwt)
                 .path("/")
@@ -170,7 +169,7 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
                 .finish(),
         )
     } else {
-        okay("", &json!({"authenticated": false}))
+        okay(&json!({"authenticated": false}))
     }
 }
 
@@ -178,7 +177,6 @@ pub async fn logout(_req: tide::Request<Database>) -> tide::Result {
     common::log("ui-logout", "");
 
     okay_with_cookie(
-        "",
         &json!({"authenticated": false}),
         Cookie::build("token", "")
             .path("/")

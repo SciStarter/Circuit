@@ -79,12 +79,10 @@ export const actions = {
         let user = { authenticated: false };
 
         try {
-            const resp = await this.$axios.$post('/api/ui/auth/login', {
+            user = await this.$axios.$post('/api/ui/auth/login', {
                 email,
                 password
             });
-
-            user = resp.payload;
         } catch (error) {
             console.error(error);
             return { authenticated: false };
@@ -124,8 +122,7 @@ export const actions = {
         let user = { authenticated: false };
 
         try {
-            const resp = await this.$axios.$post('/api/ui/auth/signup', params);
-            user = resp.payload;
+            user = await this.$axios.$post('/api/ui/auth/signup', params);
         } catch (error) {
             console.error(error);
             return { authenticated: false };
@@ -148,8 +145,7 @@ export const actions = {
         let user = state.user;
 
         try {
-            const resp = await this.$axios.$post('/api/ui/auth/logout');
-            user = resp.payload;
+            user = await this.$axios.$post('/api/ui/auth/logout');
         } catch (error) {
             console.error(error);
             return { authenticated: false };
@@ -186,13 +182,11 @@ export const actions = {
         if (state.user.authenticated) {
             user = state.user;
         } else if (token) {
-            const resp = await this.$axios.$get('/api/ui/auth/me', {
+            user = await this.$axios.$get('/api/ui/auth/me', {
                 headers: {
                     Authorization: 'Bearer ' + token
                 }
             });
-
-            user = resp.payload;
         }
 
         commit('save_user', user);
@@ -205,7 +199,7 @@ export const actions = {
             return state.partners;
         }
 
-        const { payload: partners } = await this.$axios.$get('/api/ui/finder/partners');
+        const partners = await this.$axios.$get('/api/ui/finder/partners');
 
         commit('save_partners', partners);
 
@@ -217,7 +211,7 @@ export const actions = {
             return state.topics;
         }
 
-        const { payload: topics } = await this.$axios.$get('/api/ui/finder/topics');
+        const topics = await this.$axios.$get('/api/ui/finder/topics');
 
         commit('save_topics', topics);
 
@@ -229,7 +223,7 @@ export const actions = {
             return state.descriptors;
         }
 
-        const { payload: descriptors } = await this.$axios.$get('/api/ui/finder/descriptors');
+        const descriptors = await this.$axios.$get('/api/ui/finder/descriptors');
 
         commit('save_descriptors', descriptors);
 

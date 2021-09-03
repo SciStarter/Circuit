@@ -247,7 +247,7 @@ export default {
             'over'
         ]);
 
-        const { payload: results } = await context.$axios.$get('/api/ui/finder/search', { params: query });
+        const results = await context.$axios.$get('/api/ui/finder/search', { params: query });
 
         const partners = await context.store.dispatch('get_partners');
         const descriptors = await context.store.dispatch('get_descriptors');

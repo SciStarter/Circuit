@@ -6,18 +6,30 @@
     map
   </div>
 
-  <strong>{{ subtitle }}</strong>
-  <h1>{{ opportunity.title }}</h1>
+  <div class="opportunity-name">
+    <strong>{{ subtitle }}</strong>
+    <h1>{{ opportunity.title }}</h1>
+  </div>
 
-  <p>
+  <p class="elevator-pitch">
     {{ elevator_pitch }}
   </p>
 
   <div class="involvement">
-    <reviews />
-    <likes />
-    <interested />
-    <participated />
+    <div class="reviews-likes">
+      <span v-if="reviews !== null">
+        <stars v-model="reviews.average" />
+        {{ reviews.reviews.length }} reviews
+      </span>
+      <span v-if="likes !== null">
+        <like-icon />
+        {{ likes }} likes
+      </span>
+    </div>
+    <!-- <reviews /> -->
+    <!-- <likes /> -->
+    <!-- <interested /> -->
+    <!-- <participated /> -->
   </div>
 
   <div class="secondary">
@@ -103,14 +115,16 @@
     </pre>
   </div>
 
-  <div v-if="has_value(reviews)" class="reviews">
+  <div class="reviews">
     <h2>Reviews</h2>
     {{ reviews }}
+    <b-loading v-model="loading_reviews" :is-full-page="false" />
   </div>
 
-  <div v-if="has_value(recommended)" class="related">
+  <div class="related">
     <h2>Nearby &amp; Similar Opportunities</h2>
     {{ recommended }}
+    <b-loading v-model="loading_recommended" :is-full-page="false" />
   </div>
 </article>
 </template>
@@ -123,10 +137,12 @@ import OpportunityTime from "~/components/OpportunityTime"
 import OpportunityKeywords from "~/components/OpportunityKeywords"
 import OpportunityNotice from "~/components/OpportunityNotice"
 import External from "~/components/External"
+import Stars from "~/components/Stars"
 
 import LocationIcon from '~/assets/img/location-marker.svg?inline'
 import TimeIcon from '~/assets/img/calendar.svg?inline'
 import KeywordsIcon from '~/assets/img/speech-bubble.svg?inline'
+import LikeIcon from '~/assets/img/like.svg?inline'
 
 export default {
     components: {
@@ -137,10 +153,12 @@ export default {
         OpportunityKeywords,
         OpportunityNotice,
         External,
+        Stars,
 
         LocationIcon,
         TimeIcon,
-        KeywordsIcon
+        KeywordsIcon,
+        LikeIcon,
     },
 
     props: {
@@ -153,28 +171,52 @@ export default {
     data() {
         return {
             reviews: null,
-            recommended: null
+            likes: null,
+            recommended: null,
+            saves: null,
+            didit: null,
         }
     },
 
     async fetch() {
+        const fetch_likes = async () => {
+            this.likes = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/likes');
+        };
+
         const fetch_reviews = async () => {
-            let resp = this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/reviews');
-            this.reviews = resp.payload;
-        }
+            this.reviews = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/reviews');
+        };
 
         const fetch_recommended = async () => {
-            let resp = this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/recommended');
-            this.recommended = resp.payload;
-        }
+            this.recommended = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/recommended');
+        };
+
+        const fetch_saves = async () => {
+            this.saves = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/saves');
+        };
+
+        const fetch_didit = async () => {
+            this.didit = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/didit');
+        };
 
         await Promise.all([
             fetch_reviews(),
-            fetch_recommended()
+            fetch_recommended(),
+            fetch_likes(),
+            fetch_saves(),
+            fetch_didit(),
         ]);
     },
 
     computed: {
+        loading_reviews() {
+            return this.reviews === null;
+        },
+
+        loading_recommended() {
+            return this.recommended === null;
+        },
+
         opportunity() {
             return this.entity;
         },
@@ -184,7 +226,17 @@ export default {
         },
 
         elevator_pitch() {
-            return this.opportunity.short_desc || (this.opportunity.description.split('. ')[0].slice(0, 117) + '...');
+            if(this.opportunity.short_desc) {
+                return this.opportunity.short_desc;
+            }
+
+            const first_sentence = this.opportunity.description.split('. ')[0];
+
+            if(first_sentence.length < 120) {
+                return first_sentence;
+            }
+
+            return first_sentence.slice(0, 117) + '…';
         },
 
         venue_type() {
@@ -246,6 +298,62 @@ img.opportunity-image {
     overflow: hidden;
 }
 
+.opportunity-name {
+    margin: 17px;
+
+    strong {
+        font-family: $snm-font-content;
+        font-weight: bold;
+        font-size: 14px;
+        color: $snm-color-element-dark;
+        line-height: 16px;
+        letter-spacing: 0px;
+    }
+
+    h1 {
+        font-family: $snm-font-heading;
+        font-weight: bold;
+        font-size: 24px;
+        color: $snm-color-info;
+        line-height: 28px;
+        letter-spacing: 0px
+    }
+}
+
+.elevator-pitch {
+    margin: 17px;
+    font-family: $snm-font-content;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 22px;
+    letter-spacing: 0.16px;
+    color: $snm-color-glance;
+}
+
+.involvement {
+    border-top: 1px solid $snm-color-border;
+    border-bottom: 1px solid $snm-color-border;
+    padding: 17px;
+
+    .reviews-likes {
+        span {
+            font-family: $snm-font-content;
+            font-size: 16px;
+            line-height: 19px;
+            letter-spacing: 0px;
+            color: $snm-color-element-dark;
+
+            > :first-child {
+                margin-right: 0.75rem;
+            }
+        }
+
+        span:not(:first-of-type) {
+            margin-left: 3rem;
+        }
+    }
+}
+
 .find-out-more {
     display: block;
     width: 100%;
@@ -256,6 +364,16 @@ img.opportunity-image {
     strong {
         display: block;
     }
+}
+
+.related {
+    position: relative;
+    min-height: 3rem;
+}
+
+.reviews {
+    position: relative;
+    min-height: 3rem;
 }
 
 @media (min-width: $fullsize-screen) {
