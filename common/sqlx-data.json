@@ -53,6 +53,26 @@
       ]
     }
   },
+  "24322dbcb5dfca20f59b8d9a383d985ab6ade161dc9fd156563fe8370db368cc": {
+    "query": "select count(*) didit\nfrom c_involvement I inner join c_opportunity O\non (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')\nwhere (I.exterior -> 'mode')::integer >= 2 and (O.exterior ->> 'slug') = $1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "didit",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
   "2926fdcfb5c1566b98ce5db414ffcc2f504370e626736795d063305676c6adec": {
     "query": "select id, exterior, interior from c_involvement where ($1::jsonb) @> (interior -> 'participant') and ($2::jsonb) @> (exterior -> 'opportunity') limit 1;\n",
     "describe": {
@@ -938,6 +958,44 @@
       ]
     }
   },
+  "b7f0b1bb9831bd1954ed3c20cce3d43089748ff909e404cc96d54a3f77625967": {
+    "query": "select R.\"person\", R.\"rating\", R.\"comment\", R.\"when\"\nfrom c_opportunity_review R inner join c_opportunity O on R.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1 order by r.\"when\" desc;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "person",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "rating",
+          "type_info": "Int2"
+        },
+        {
+          "ordinal": 2,
+          "name": "comment",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "when",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "c0425047604adf0d688a217b964e5787c81262a6d2f5c32654d53c6bf148c4ca": {
     "query": "select id, exterior, interior from c_person where (interior -> 'email_hashes') ? $1 order by id limit 1;\n",
     "describe": {
@@ -1010,6 +1068,26 @@
           "ordinal": 0,
           "name": "exists",
           "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "c5c668ea7468befe6d3178a72cb9bc80e164d29eff271dbc09c7a1b5fac45f81": {
+    "query": "select count(*) saves\nfrom c_involvement I inner join c_opportunity O\non (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')\nwhere (I.exterior -> 'mode')::integer = 1 and (O.exterior ->> 'slug') = $1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "saves",
+          "type_info": "Int8"
         }
       ],
       "parameters": {
@@ -1151,6 +1229,26 @@
       "parameters": {
         "Left": [
           "Jsonb"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "db2d6322979f071f919119e42c4ebcffd92abff51b7b4ab5a2d1ac8b57fed5bf": {
+    "query": "select count(*) likes\nfrom c_opportunity_like L inner join c_opportunity O on L.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "likes",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
         ]
       },
       "nullable": [

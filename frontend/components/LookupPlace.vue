@@ -129,7 +129,7 @@ export default {
             this.num_loading += 1
 
             this.$axios.$post('/api/ui/finder/geo', { lookup: 'coords', place: this.sanitized_value })
-                .then(({ payload: { places } }) => { this.matches = places })
+                .then(({ places }) => { this.matches = places })
                 .catch((error) => { this.matches = []; console.error(error) })
                 .finally(() => { this.num_loading -= 1 })
         }, 500),
@@ -138,7 +138,7 @@ export default {
             this.num_loading += 1
 
       this.$axios.$post('/api/ui/finder/geo', { lookup: 'near', place: this.value })
-        .then(({ payload: { places } }) => {
+        .then(({ places }) => {
           if (places.length > 0) {
             this.change({ near: places[0].near })
           }

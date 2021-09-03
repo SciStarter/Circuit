@@ -17,7 +17,7 @@ use tide_fluent_routes::{
 };
 use uuid::Uuid;
 
-use crate::ui::{error, okay, request_person};
+use crate::ui::{okay, request_person};
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
@@ -35,27 +35,21 @@ pub async fn partners(req: tide::Request<Database>) -> tide::Result {
 
     let refs = common::model::Partner::catalog(db).await?;
 
-    okay("", &refs)
+    okay(&refs)
 }
 
 pub async fn descriptors(_req: tide::Request<Database>) -> tide::Result {
-    okay(
-        "",
-        &json!(Descriptor::all_options()
-            .into_iter()
-            .map(|(a, b, _)| (a, b))
-            .collect::<Vec<_>>()),
-    )
+    okay(&json!(Descriptor::all_options()
+        .into_iter()
+        .map(|(a, b, _)| (a, b))
+        .collect::<Vec<_>>()))
 }
 
 pub async fn topics(_req: tide::Request<Database>) -> tide::Result {
-    okay(
-        "",
-        &json!(Topic::all_options()
-            .into_iter()
-            .map(|(a, b, _)| (a, b))
-            .collect::<Vec<_>>()),
-    )
+    okay(&json!(Topic::all_options()
+        .into_iter()
+        .map(|(a, b, _)| (a, b))
+        .collect::<Vec<_>>()))
 }
 
 pub async fn activities(_req: tide::Request<Database>) -> tide::Result {
@@ -143,11 +137,10 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
         .await?;
 
     if result.status.code != 200 {
-        return error(
+        return Err(tide::Error::from_str(
             result.status.code,
             "Geographic lookup failed",
-            &[&result.status.message],
-        );
+        ));
     }
 
     result
@@ -167,7 +160,7 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
             .collect(),
     };
 
-    okay("", &places)
+    okay(&places)
 }
 
 #[derive(Deserialize)]
@@ -322,16 +315,13 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
 
     common::log("ui-search", &req.url().query());
 
-    okay(
-        "",
-        &json!({
-            "pagination": {
-                "page_index": page_index,
-                "per_page": per_page,
-                "last_page": last_page,
-                "total": total,
-            },
-            "matches": matches
-        }),
-    )
+    okay(&json!({
+        "pagination": {
+            "page_index": page_index,
+            "per_page": per_page,
+            "last_page": last_page,
+            "total": total,
+        },
+        "matches": matches
+    }))
 }
