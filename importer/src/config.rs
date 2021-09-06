@@ -69,6 +69,9 @@ where
             }
             OneOrMany::Many(vec) => {
                 for mut item in vec {
+                    // Auto-accept imported opportunities
+                    item.interior.accepted = true;
+
                     item.set_id_if_necessary(&db).await?;
                     let created = item.id.is_none();
                     item.store(&db).await?;

@@ -54,3 +54,8 @@ Create file secrets/opencage.env containing OPENCAGE_API_KEY
 containing the api.opencage.com key, then
 
     kubectl create secret generic opencage --from-env-file=secrets/opencage.env
+
+Create file secrets/mapbox.env containing MAPBOX_TOKEN
+containing the mapbox.com key, then
+
+    kubectl create secret generic mapbox --from-env-file=secrets/mapbox.env
