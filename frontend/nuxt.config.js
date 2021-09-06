@@ -82,6 +82,10 @@ export default {
     }
   },
 
+  env: {
+    MAPBOX_TOKEN: process.env.MAPBOX_TOKEN,
+  },
+
   // In production, these requests won't normally make it to the
   // Nuxt server, so this is mostly for local development.
   proxy: {

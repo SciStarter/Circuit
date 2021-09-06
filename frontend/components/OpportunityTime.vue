@@ -80,7 +80,7 @@ export default {
             if(pair[1] < now) {
                 return "Finished " + pair[1].toLocaleString();
             }
-            else if(pair[0] < now || pair[1] > now) {
+            else if(pair[0] < now && pair[1] > now) {
                 return "Ongoing";
             }
             else {

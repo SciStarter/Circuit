@@ -2,8 +2,9 @@
 <article class="opportunity">
   <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
 
-  <div class="map">
-    map
+  <div class="map" :class="{'open': show_map}">
+    <a @click="show_map = false">&laquo; back</a>
+    <div ref="map_display" />
   </div>
 
   <div class="opportunity-name">
@@ -26,10 +27,12 @@
         {{ likes }} likes
       </span>
     </div>
-    <!-- <reviews /> -->
-    <!-- <likes /> -->
-    <!-- <interested /> -->
-    <!-- <participated /> -->
+    <p>
+      {{ saves }} People Interested
+    </p>
+    <p>
+      {{ didit }} People Report Doing This Opportunity
+    </p>
   </div>
 
   <div class="secondary">
@@ -39,12 +42,16 @@
         <opportunity-location :opportunity="opportunity" />
         <opportunity-notice :opportunity="opportunity" mode="place" />
       </div>
+      <a v-if="has_value(location_geojson)" @click="show_map = true">see on map</a>
     </div>
     <div class="info time">
       <time-icon />
       <div>
         <opportunity-time :opportunity="opportunity" />
         <opportunity-notice :opportunity="opportunity" mode="time" />
+        <action-button v-if="has_value(opportunity.start_datetimes)" secondary @click="calendar_add">
+          Add to calendar
+        </action-button>
       </div>
     </div>
     <div class="info keywords">
@@ -130,6 +137,9 @@
 </template>
 
 <script>
+import 'mapbox-gl/dist/mapbox-gl.css'
+import mapboxgl from 'mapbox-gl'
+import extent from 'geojson-extent'
 import VueMarkdown from "vue-markdown"
 
 import OpportunityLocation from "~/components/OpportunityLocation"
@@ -143,6 +153,7 @@ import LocationIcon from '~/assets/img/location-marker.svg?inline'
 import TimeIcon from '~/assets/img/calendar.svg?inline'
 import KeywordsIcon from '~/assets/img/speech-bubble.svg?inline'
 import LikeIcon from '~/assets/img/like.svg?inline'
+import MapMarker from '~/assets/img/marker.png'
 
 export default {
     components: {
@@ -170,11 +181,13 @@ export default {
 
     data() {
         return {
+            map_widget: null,
             reviews: null,
             likes: null,
             recommended: null,
             saves: null,
             didit: null,
+            show_map: false,
         }
     },
 
@@ -255,10 +268,95 @@ export default {
             else {
                 return "We don't know";
             }
-        }
+        },
+
+        location_geojson() {
+            let geom;
+            let props = {};
+
+            if(this.has_value(this.opportunity.location_polygon)) {
+                geom = this.opportunity.location_polygon;
+                props.mode = 'polys';
+            }
+            else if(this.has_value(this.opportunity.location_point)) {
+                geom = this.opportunity.location_point;
+                props.mode = 'points';
+            }
+            else {
+                return null;
+            }
+
+            return {
+                'type': 'Feature',
+                'geometry': geom,
+                'properties': props,
+            };
+        },
+    },
+
+    mounted() {
+        this.map_widget = new mapboxgl.Map({
+            accessToken: process.env.MAPBOX_TOKEN,
+            container: this.$refs.map_display,
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [-98, 39],
+            zoom: 2
+        });
+
+        this.map_widget.on('load', () => {
+            this.map_widget.loadImage(MapMarker, (error, image) => {
+                if(error) {
+                    throw error;
+                }
+
+                this.map_widget.addImage("snm-marker", image);
+
+                this.map_widget.addSource('opportunity', {
+                    'type': 'geojson',
+                    'data': this.location_geojson
+                });
+
+                if(this.location_geojson.properties.mode === 'points') {
+                    // https://docs.mapbox.com/mapbox-gl-js/example/geojson-markers/
+                    this.map_widget.addLayer({
+                        'id': 'opportunity',
+                        'type': 'symbol',
+                        'source': 'opportunity',
+                        'layout': {
+                            'icon-image': 'snm-marker',
+                            'icon-allow-overlap': true,
+                        },
+                    });
+                }
+                else if(this.location_geojson.properties.mode === 'polys') {
+                    // https://docs.mapbox.com/mapbox-gl-js/example/geojson-polygon/
+                    this.map_widget.addLayer({
+                        'id': 'opportunity',
+                        'type': 'fill',
+                        'source': 'opportunity',
+                        'layout': {},
+                        'paint': {
+                            'fill-color': '#ffbf40',
+                            'fill-opacity': 0.5,
+                        },
+                    });
+                }
+                else {
+                    console.warning("Unrecognized map mode: ", this.location_geojson.properties.mode);
+                    return;
+                }
+
+                let bounds = extent(this.location_geojson);
+                this.map_widget.fitBounds([[bounds[0]-0.01, bounds[1]-0.01], [bounds[2]+0.01, bounds[3]+0.01]]);
+            });
+        });
     },
 
     methods: {
+        calendar_add() {
+            console.warning("Not implemented");
+        },
+
         has_value(item, test_result) {
             if(test_result !== undefined) {
                 return test_result;
@@ -273,6 +371,12 @@ export default {
                     return false;
                 }
                 if(item.length == 1 && item[0] === '') {
+                    return false;
+                }
+            }
+
+            if(item.constructor === Object) {
+                if(Object.keys(item).length === 0) {
                     return false;
                 }
             }
@@ -296,6 +400,32 @@ img.opportunity-image {
     object-fit: contain;
     object-position: center center;
     overflow: hidden;
+}
+
+.map {
+    position: fixed;
+    top: 10vh;
+    right: 0vw;
+    width: 0vw;
+    opacity: 0;
+    background-color: $snm-color-background;
+    overflow: hidden;
+    transition: width 0.5s, opacity 0.5s, right 0.5s;
+    box-sizing: border-box;
+    border: 2px solid $snm-color-border;
+    padding: 5px 1rem 1rem 1rem;
+
+    &.open {
+        right: 1vw;
+        width: 98vw;
+        opacity: 1;
+    }
+
+    div {
+        display: block;
+        width: calc(98vw - 2rem);
+        height: calc(98vw - 2rem);
+    }
 }
 
 .opportunity-name {
@@ -351,6 +481,31 @@ img.opportunity-image {
         span:not(:first-of-type) {
             margin-left: 3rem;
         }
+    }
+
+    > p {
+        margin-top: 10px;
+    }
+}
+
+.secondary {
+    padding: 17px;
+}
+
+.info {
+    display: flex;
+
+    > svg {
+        height: 1rem;
+        width: auto;
+        margin-right: 2rem;
+        flex-grow: 0;
+    }
+
+    > a {
+        display: block;
+        margin-left: 2rem;
+        flex-grow: 0;
     }
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <button class="action-button" :class="{'primary': primary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg}" :disabled="disabled" @click="$emit('click')">
+  <button class="action-button" :class="{'primary': primary, 'secondary': secondary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg}" :disabled="disabled" @click="$emit('click')">
     <slot />
   </button>
 </template>
@@ -8,6 +8,11 @@
 export default {
     props: {
         primary: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
+        secondary: {
             type: Boolean,
             required: false,
             default: false
@@ -91,6 +96,13 @@ button.action-button {
             color: $snm-color-disabled;
             border-color: $snm-color-disabled;
         }
+    }
+
+    &.secondary {
+        border-color: $snm-color-action;
+        background-color: $snm-color-background;
+        color: $snm-color-element-dark;
+        border-radius: 10px;
     }
 }
 </style>

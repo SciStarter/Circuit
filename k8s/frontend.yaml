@@ -19,6 +19,12 @@ spec:
         image: scistarter/circuit-frontend:0.1.13
         ports:
         - containerPort: 3000
+        env:
+        - name: MAPBOX_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: mapbox
+              key: MAPBOX_TOKEN
 ---
 apiVersion: v1
 kind: Service

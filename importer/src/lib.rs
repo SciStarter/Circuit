@@ -26,6 +26,8 @@ pub enum Error {
     Model(#[from] common::model::Error),
     #[error("Incorrectly structured data")]
     Structure(String),
+    #[error("Unable to comprehend data")]
+    Comprehension,
 }
 
 #[async_trait]

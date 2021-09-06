@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-importer-beta
-        image: scistarter/circuit-importer:0.1.3
+        image: scistarter/circuit-importer:0.1.5
         env:
         - name: DATABASE_URL
           valueFrom:
@@ -32,4 +32,4 @@ spec:
           valueFrom:
             secretKeyRef:
               name: scienceworks-beta
-              key: SCIENCEWORKS_AOPI_KEY
+              key: SCIENCEWORKS_API_KEY
