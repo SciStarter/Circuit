@@ -1,8 +1,11 @@
 <template>
-<div class="opportunity-keywords">
+<div v-if="keywords.length > 0" class="opportunity-keywords">
   <span v-for="kw in keywords" :key="kw">
     {{ kw }}
   </span>
+</div>
+<div v-else class="opportunity-keywords">
+  <em>no keywords assigned</em>
 </div>
 </template>
 
@@ -31,14 +34,6 @@ export default {
                 for(let topic of this.opportunity.opp_topics) {
                     if(topic) {
                         ret.push(topic);
-                    }
-                }
-            }
-
-            if(this.opportunity.tags) {
-                for(let tag of this.opportunity.tags) {
-                    if(tag) {
-                        ret.push(tag);
                     }
                 }
             }

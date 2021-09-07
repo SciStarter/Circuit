@@ -21,6 +21,27 @@
       ]
     }
   },
+  "16274e812e6865e37e4b4f3cea7a6cb0af3410c99e8090cffdfcee78dd082de9": {
+    "query": "insert\ninto c_opportunity (exterior, interior)\nvalues (\n  $1::jsonb,\n  case\n    when ($2::jsonb -> 'accepted') = 'null'::jsonb\n    then jsonb_set($2::jsonb, '{accepted}', 'false'::jsonb)\n    else $2::jsonb\n  end\n) returning id;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
   "232db60cfb4ba3a2fd8869075ca90f615000a51968582c00b28f66aa687e63e7": {
     "query": "select id, exterior, interior from c_partner where id = $1 limit 1;\n",
     "describe": {
@@ -306,18 +327,60 @@
       "nullable": []
     }
   },
-  "45ee1a6d2f0e1e3adf61cfa87a0dec09e0552712400a512a224cfa79fbf7e4b6": {
-    "query": "update c_opportunity set exterior = $2, interior = $3 where id = $1;\n",
+  "43784b21a51db579012c74c0de34cdbe83d73615c41e78408c2472b4ed75d364": {
+    "query": "select R.\"id\", R.\"person\", R.\"rating\", R.\"comment\", R.\"when\",\n  case when P.\"exterior\" is not null then (P.\"exterior\" ->> 'username') else '' end as \"username\",\n  case when P.\"exterior\" is not null then (P.\"exterior\" ->> 'image_url') else '' end as \"image_url\"\nfrom c_opportunity_review R\ninner join c_opportunity O on R.opportunity_id = O.id\nleft outer join c_person P on R.person = (P.exterior ->> 'uid')::uuid\nwhere (O.exterior ->> 'slug') = $1 order by r.\"when\" desc;\n",
     "describe": {
-      "columns": [],
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "person",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "rating",
+          "type_info": "Int2"
+        },
+        {
+          "ordinal": 3,
+          "name": "comment",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "when",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 5,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "image_url",
+          "type_info": "Text"
+        }
+      ],
       "parameters": {
         "Left": [
-          "Int4",
-          "Jsonb",
-          "Jsonb"
+          "Text"
         ]
       },
-      "nullable": []
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        null,
+        null
+      ]
     }
   },
   "4952cde5a0390226da36688f8a2d32e5a52749b7efd1a69be726110fb2669323": {
@@ -430,6 +493,20 @@
       ]
     }
   },
+  "4eddd9bfc58cd771141b4f9b2c289a485f05e303b6c1d848dc002d187cad7d0e": {
+    "query": "update c_opportunity\nset\n  exterior = $2::jsonb,\n  interior =\n    case\n      when ($3::jsonb -> 'accepted') = 'null'::jsonb\n      then jsonb_set($3::jsonb, '{accepted}', c_opportunity.interior -> 'accepted')\n      else $3::jsonb\n    end\nwhere id = $1;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Jsonb",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "58321d77d0c4de7155c40c1f954c8345da576c96162f6c594163052fc92bea8a": {
     "query": "update c_partner set exterior = $2, interior = $3 where id = $1;\n",
     "describe": {
@@ -509,27 +586,6 @@
         false,
         false,
         false,
-        false
-      ]
-    }
-  },
-  "680c3e5c532b96a75b01a3d33c94c664a4a3318515d31a4c908a5a2193348c02": {
-    "query": "insert into c_opportunity (exterior, interior) values ($1, $2) returning id;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Jsonb",
-          "Jsonb"
-        ]
-      },
-      "nullable": [
         false
       ]
     }
@@ -952,44 +1008,6 @@
         ]
       },
       "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
-  },
-  "b7f0b1bb9831bd1954ed3c20cce3d43089748ff909e404cc96d54a3f77625967": {
-    "query": "select R.\"person\", R.\"rating\", R.\"comment\", R.\"when\"\nfrom c_opportunity_review R inner join c_opportunity O on R.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1 order by r.\"when\" desc;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "person",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "rating",
-          "type_info": "Int2"
-        },
-        {
-          "ordinal": 2,
-          "name": "comment",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "when",
-          "type_info": "Timestamptz"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
-      "nullable": [
-        false,
         false,
         false,
         false

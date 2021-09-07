@@ -505,9 +505,11 @@ pub struct OpportunityExterior {
     pub short_desc: String,
     pub image_url: String,
     pub image_credit: String,
+    // 2021-09-07 bug prevents alias from working here https://github.com/serde-rs/serde/issues/1504
     #[serde(alias = "start_dates")]
     pub start_datetimes: Vec<DateTime<FixedOffset>>,
     pub has_end: bool,
+    // 2021-09-07 bug prevents alias from working here https://github.com/serde-rs/serde/issues/1504
     #[serde(alias = "end_dates")]
     pub end_datetimes: Vec<DateTime<FixedOffset>>,
     pub attraction_hours: Option<OpenDays>,
@@ -543,7 +545,7 @@ impl std::fmt::Debug for OpportunityExterior {
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityInterior {
-    pub accepted: bool,
+    pub accepted: Option<bool>,
     pub withdrawn: bool,
     pub contact_name: String,
     pub contact_email: String,
@@ -554,8 +556,8 @@ pub struct OpportunityInterior {
 impl Default for OpportunityInterior {
     fn default() -> Self {
         OpportunityInterior {
-            accepted: false,  // editors have accepted it for publication
-            withdrawn: false, // partner has withdrawn it from publication
+            accepted: Some(false), // editors have accepted it for publication
+            withdrawn: false,      // partner has withdrawn it from publication
             contact_name: Default::default(),
             contact_email: Default::default(),
             contact_phone: Default::default(),
@@ -954,6 +956,40 @@ fn build_matching_query(
         _ => query_string.push_str(&fields.join(", ")),
     }
 
+    let mut calc_sort = || {
+        query_string.push_str(
+            ", CASE WHEN location_polygon IS NOT NULL THEN sqrt(ST_Area(location_polygon, false)) / 2",
+        );
+
+        if let Some((lon_param, lat_param)) = point {
+            query_string
+                .push_str(&format!(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)",
+                                   lon_param, lat_param));
+        }
+
+        // This constant number is roughly the square root of the surface area of the earth, in meters
+        query_string.push_str(" ELSE 22585394 END AS _sort_distance");
+
+        // look for the nearest future start, and fall back to
+        // sorting as if it started now if there are none.
+        //
+        // Where there is no start time, sort it far into the
+        // future.
+        query_string.push_str(r#",
+            CASE
+              WHEN jsonb_array_length(exterior -> 'start_datetimes') > 0
+              THEN COALESCE((SELECT value::timestamptz FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > NOW() LIMIT 1), NOW())
+              ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
+            END AS _sort_time
+        "#);
+    };
+
+    if let OpportunityQueryOrdering::Closest = ordering {
+        calc_sort();
+    } else if let OpportunityQueryOrdering::Soonest = ordering {
+        calc_sort();
+    }
+
     query_string.push_str(" FROM c_opportunity AS primary_table");
 
     if !clauses.is_empty() {
@@ -974,34 +1010,15 @@ fn build_matching_query(
 
     match ordering {
         OpportunityQueryOrdering::Alphabetical => {
-            query_string.push_str(" ORDER BY (exterior ->> 'title')")
+            query_string.push_str(" ORDER BY (exterior ->> 'title') ASC");
         }
         OpportunityQueryOrdering::Closest => {
-            query_string.push_str(" ORDER BY CASE WHEN location_polygon IS NOT NULL THEN sqrt(ST_Area(location_polygon, false)) / 2");
-
-            if let Some((lon_param, lat_param)) = point {
-                query_string
-                    .push_str(&format!(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)",
-                              lon_param, lat_param));
-            }
-
-            // This constant number is roughly the square root of the surface area of the earth, in meters
-            query_string.push_str(" ELSE 22585394 END ASC")
+            query_string.push_str(" ORDER BY _sort_distance ASC, _sort_time ASC");
         }
         OpportunityQueryOrdering::Soonest => {
-            // look for the nearest future start, and fall back to
-            // sorting as if it started now if there are none.
-            //
-            // Where there is no start time, sort it far into the
-            // future.
-            query_string.push_str(
-                r#" ORDER BY CASE
-                   WHEN jsonb_array_length(exterior -> 'start_datetimes') > 0
-                   THEN COALESCE((SELECT value::timestamptz FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > NOW() LIMIT 1), NOW())
-                   ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
-                   END ASC"#)
+            query_string.push_str(" ORDER BY _sort_time ASC, _sort_distance ASC")
         }
-        OpportunityQueryOrdering::Native => query_string.push_str(" ORDER BY id"),
+        OpportunityQueryOrdering::Native => query_string.push_str(" ORDER BY id ASC"),
         OpportunityQueryOrdering::Any => {}
     }
 
@@ -1056,7 +1073,10 @@ impl OpportunityImportRecord {
 
 #[derive(Debug, Serialize)]
 pub struct Review {
+    pub id: i32,
     pub person: Uuid,
+    pub username: Option<String>,
+    pub image_url: Option<String>,
     pub rating: i16,
     pub comment: String,
     pub when: DateTime<Utc>,
@@ -1087,6 +1107,14 @@ pub async fn reviews_for_slug(db: &Database, slug: &str) -> Result<Reviews, Erro
     ret.average /= ret.reviews.len() as f32;
 
     Ok(ret)
+}
+
+pub async fn report_review(db: &Database, id: i32) -> Result<(), Error> {
+    sqlx::query("update c_opportunity_review set reports = reports + 1 where id = $1")
+        .bind(id)
+        .execute(db)
+        .await?;
+    Ok(())
 }
 
 pub async fn likes_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {

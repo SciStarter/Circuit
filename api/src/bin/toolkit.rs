@@ -229,7 +229,15 @@ async fn revalidate_opportunities(state: &mut State) -> Result<(), DynError> {
 
 async fn accept_opportunities(state: &mut State, accepted: bool) -> Result<(), DynError> {
     update_opportunities(state, |opp: &mut _| {
-        opp.interior.accepted = accepted;
+        opp.interior.accepted = Some(accepted);
+        Ok(())
+    })
+    .await
+}
+
+async fn withdraw_opportunities(state: &mut State, withdrawn: bool) -> Result<(), DynError> {
+    update_opportunities(state, |opp: &mut _| {
+        opp.interior.withdrawn = withdrawn;
         Ok(())
     })
     .await
@@ -314,6 +322,21 @@ async fn accept(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     Ok(())
 }
 
+async fn withdraw(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+    let mut args = args.into_iter().skip(1);
+
+    let withdrawn = args.next().map(|s| s != "false").unwrap_or(true);
+
+    match state.table {
+        Table::Opportunity => withdraw_opportunities(state, withdrawn).await?,
+        _ => {
+            return Err("select a table before trying this".into());
+        }
+    };
+
+    Ok(())
+}
+
 #[async_std::main]
 async fn main() -> Result<(), DynError> {
     let mut shell = Shell::new_async(State::new().await?, "SNM Toolkit $ ");
@@ -355,6 +378,15 @@ async fn main() -> Result<(), DynError> {
         Command::new_async(
             "mark matching rows accepted, or not accepted with `accept false`".into(),
             async_fn!(State, accept),
+        )
+        .await,
+    );
+
+    shell.commands.insert(
+        "withdraw".into(),
+        Command::new_async(
+            "mark matching rows withdrawn, or not withdrawn with `withdraw false`".into(),
+            async_fn!(State, withdraw),
         )
         .await,
     );

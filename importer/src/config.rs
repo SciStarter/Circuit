@@ -57,6 +57,7 @@ where
             OneOrMany::One(mut item) => {
                 item.set_id_if_necessary(&db).await?;
                 let created = item.id.is_none();
+                item.interior.accepted = if created { Some(true) } else { None };
                 item.store(&db).await?;
                 OpportunityImportRecord::store(
                     &db,
@@ -69,11 +70,9 @@ where
             }
             OneOrMany::Many(vec) => {
                 for mut item in vec {
-                    // Auto-accept imported opportunities
-                    item.interior.accepted = true;
-
                     item.set_id_if_necessary(&db).await?;
                     let created = item.id.is_none();
+                    item.interior.accepted = if created { Some(true) } else { None };
                     item.store(&db).await?;
                     OpportunityImportRecord::store(
                         &db,

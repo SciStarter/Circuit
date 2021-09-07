@@ -71,7 +71,7 @@
           <div class="field">
             <label class="label">Accepted</label>
             <div class="control">
-              <label class="checkbox"><input type="checkbox" name="accepted" value="true"{% if opportunity.interior.accepted %} checked{% endif %}>Has the opportunity been accepted for publication?</label>
+              <label class="checkbox"><input type="checkbox" name="accepted" value="true"{% match opportunity.interior.accepted %}{% when Some with (true) %} checked{% else %}{% endmatch %}>Has the opportunity been accepted for publication?</label>
             </div>
           </div>
 
