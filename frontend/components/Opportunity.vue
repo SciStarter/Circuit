@@ -42,7 +42,7 @@
         <opportunity-location :opportunity="opportunity" />
         <opportunity-notice :opportunity="opportunity" mode="place" />
       </div>
-      <a v-if="has_value(location_geojson)" @click="show_map = true">see on map</a>
+      <a v-if="has_value(location_geojson)" @click="show_map = true">see&nbsp;on&nbsp;map</a>
     </div>
     <div class="info time">
       <time-icon />
@@ -56,6 +56,7 @@
     </div>
     <div class="info keywords">
       <keywords-icon />
+      <opportunity-keywords :opportunity="opportunity" />
     </div>
   </div>
 
@@ -109,22 +110,39 @@
     </p>
   </div>
 
-  <vue-markdown :source="opportunity.description" class="description" />
+  <div class="description">
+    <h2>About This Science Opportunity</h2>
+    <vue-markdown :source="opportunity.description" class="content" :class="{'closed': description_closed}" />
+    <a v-if="description_closed" @click="description_closed = false">read more</a>
+  </div>
 
   <div v-if="has_value(opportunity.tags)" class="tags">
-    <span v-for="tag in opportunity.tags" :key="tag">{{ tag }}</span>
+    <h2>Tags</h2>
+    <nuxt-link v-for="tag in opportunity.tags" :key="tag" :to="'/find?text=' + encodeURIComponent(tag)">
+      {{ tag }}
+    </nuxt-link>
   </div>
 
   <div class="social">
-    {{ opportunity.opp_hashtags.join(', ') }}
-    <pre>
-      {{ JSON.stringify(opportunity.opp_social_handles, null, 2) }}
-    </pre>
+    <h2>Social Media</h2>
+    <p>
+      <strong>Hashtags:</strong>
+      {{ opportunity.opp_hashtags.join(', ') || '#science' }}
+    </p>
+    <p v-for="(value, key) in opportunity.opp_social_handles" :key="key">
+      <strong>{{ title_case(key) }}:</strong>
+      {{ value }}
+    </p>
   </div>
 
   <div class="reviews">
     <h2>Reviews</h2>
-    {{ reviews }}
+    <div v-for="review in reviews.reviews" :key="review.id" class="review">
+      <stars v-model="review.rating" />
+      <a class="report" @click="report_review(review.id)">Report</a>
+      {{ review.username }} &bull; {{ (new Date(review.when)).toLocaleString() }}
+      <vue-markdown :source="review.comment" />
+    </div>
     <b-loading v-model="loading_reviews" :is-full-page="false" />
   </div>
 
@@ -140,6 +158,7 @@
 import 'mapbox-gl/dist/mapbox-gl.css'
 import mapboxgl from 'mapbox-gl'
 import extent from 'geojson-extent'
+import startCase from 'lodash/startCase'
 import VueMarkdown from "vue-markdown"
 
 import OpportunityLocation from "~/components/OpportunityLocation"
@@ -188,6 +207,7 @@ export default {
             saves: null,
             didit: null,
             show_map: false,
+            description_closed: true,
         }
     },
 
@@ -295,66 +315,81 @@ export default {
     },
 
     mounted() {
-        this.map_widget = new mapboxgl.Map({
-            accessToken: process.env.MAPBOX_TOKEN,
-            container: this.$refs.map_display,
-            style: 'mapbox://styles/mapbox/streets-v11',
-            center: [-98, 39],
-            zoom: 2
-        });
-
-        this.map_widget.on('load', () => {
-            this.map_widget.loadImage(MapMarker, (error, image) => {
-                if(error) {
-                    throw error;
-                }
-
-                this.map_widget.addImage("snm-marker", image);
-
-                this.map_widget.addSource('opportunity', {
-                    'type': 'geojson',
-                    'data': this.location_geojson
-                });
-
-                if(this.location_geojson.properties.mode === 'points') {
-                    // https://docs.mapbox.com/mapbox-gl-js/example/geojson-markers/
-                    this.map_widget.addLayer({
-                        'id': 'opportunity',
-                        'type': 'symbol',
-                        'source': 'opportunity',
-                        'layout': {
-                            'icon-image': 'snm-marker',
-                            'icon-allow-overlap': true,
-                        },
-                    });
-                }
-                else if(this.location_geojson.properties.mode === 'polys') {
-                    // https://docs.mapbox.com/mapbox-gl-js/example/geojson-polygon/
-                    this.map_widget.addLayer({
-                        'id': 'opportunity',
-                        'type': 'fill',
-                        'source': 'opportunity',
-                        'layout': {},
-                        'paint': {
-                            'fill-color': '#ffbf40',
-                            'fill-opacity': 0.5,
-                        },
-                    });
-                }
-                else {
-                    console.warning("Unrecognized map mode: ", this.location_geojson.properties.mode);
-                    return;
-                }
-
-                let bounds = extent(this.location_geojson);
-                this.map_widget.fitBounds([[bounds[0]-0.01, bounds[1]-0.01], [bounds[2]+0.01, bounds[3]+0.01]]);
+        if(this.location_geojson) {
+            this.map_widget = new mapboxgl.Map({
+                accessToken: process.env.MAPBOX_TOKEN,
+                container: this.$refs.map_display,
+                style: 'mapbox://styles/mapbox/streets-v11',
+                center: [-98, 39],
+                zoom: 2
             });
-        });
+
+            this.map_widget.on('load', () => {
+                this.map_widget.loadImage(MapMarker, (error, image) => {
+                    if(error) {
+                        throw error;
+                    }
+
+                    this.map_widget.addImage("snm-marker", image);
+
+                    this.map_widget.addSource('opportunity', {
+                        'type': 'geojson',
+                        'data': this.location_geojson
+                    });
+
+                    if(this.location_geojson.properties.mode === 'points') {
+                        // https://docs.mapbox.com/mapbox-gl-js/example/geojson-markers/
+                        this.map_widget.addLayer({
+                            'id': 'opportunity',
+                            'type': 'symbol',
+                            'source': 'opportunity',
+                            'layout': {
+                                'icon-image': 'snm-marker',
+                                'icon-allow-overlap': true,
+                            },
+                        });
+                    }
+                    else if(this.location_geojson.properties.mode === 'polys') {
+                        // https://docs.mapbox.com/mapbox-gl-js/example/geojson-polygon/
+                        this.map_widget.addLayer({
+                            'id': 'opportunity',
+                            'type': 'fill',
+                            'source': 'opportunity',
+                            'layout': {},
+                            'paint': {
+                                'fill-color': '#ffbf40',
+                                'fill-opacity': 0.5,
+                            },
+                        });
+                    }
+                    else {
+                        console.warning("Unrecognized map mode: ", this.location_geojson.properties.mode);
+                        return;
+                    }
+
+                    let bounds = extent(this.location_geojson);
+                    this.map_widget.fitBounds([[bounds[0]-0.01, bounds[1]-0.01], [bounds[2]+0.01, bounds[3]+0.01]]);
+                });
+            });
+        }
     },
 
     methods: {
         calendar_add() {
             console.warning("Not implemented");
+        },
+
+        report_review(id) {
+            this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/report-review', {id: id}).then(() => {
+                this.$buefy.toast.open({
+                    message: 'Reported review',
+                    type: 'is-success'
+                });
+            });
+        },
+
+        title_case(s) {
+            return startCase(s);
         },
 
         has_value(item, test_result) {
@@ -493,13 +528,16 @@ img.opportunity-image {
 }
 
 .info {
+    margin-top: 5px;
     display: flex;
+    align-items: top;
 
     > svg {
         height: 1rem;
-        width: auto;
-        margin-right: 2rem;
+        width: 16px;;
+        margin: 0.25rem 20px 0px 0px;
         flex-grow: 0;
+        flex-shrink: 0;
     }
 
     > a {
@@ -515,20 +553,198 @@ img.opportunity-image {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    background-color: $snm-color-element-med;
+    box-shadow: 0px 1px 7px $snm-color-shadow;
+    color: $snm-color-element-ondark;
+    padding: 17px;
 
     strong {
+        font-family: $snm-font-heading;
+        font-weight: bold;
+        font-size: 21px;
+        line-height: 26px;
+        letter-spacing: 0px;
         display: block;
+    }
+
+    span {
+        font-family: $snm-font-content;
+        font-weight: normal;
+        font-size: 14px;
+        line-height: 16px;
+        letter-spacing: 0px;
+    }
+}
+
+.find-out-more:hover {
+    color: $snm-color-element-ondark;
+}
+
+.partner-and-org {
+    display: flex;
+
+    figure {
+        margin: 17px;
+        text-align: center;
+
+        figcaption {
+            font-family: $snm-font-heading;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 17px;
+            letter-spacing: 0px;
+            color: $snm-color-caption;
+            margin-bottom: 1rem;
+        }
+
+        img {
+            object-fit: contain;
+            object-position: center center;
+        }
+    }
+}
+
+.more-info {
+    border-top: 1px solid $snm-color-border;
+    border-bottom: 1px solid $snm-color-border;
+    padding: 17px 0px 17px 17px;
+
+    > *:not(:first-child) {
+        border-top: 1px solid $snm-color-border;
+        margin-top: 17px;
+        padding-top: 17px;
+    }
+
+    h2 {
+        font-family: $snm-font-heading;
+        font-weight: bold;
+        font-size: 16px;
+        line-height: 22px;
+        letter-spacing: 0px;
+        color: $snm-color-background-dark;
+    }
+}
+
+.description {
+    border-top: 1px solid $snm-color-border;
+    border-bottom: 1px solid $snm-color-border;
+    padding: 17px;
+
+    > h2 {
+        font-family: $snm-font-heading;
+        font-weight: bold;
+        font-size: 16px;
+        line-height: 19px;
+        letter-spacing: 0px;
+        color: $snm-color-background-dark;
+        margin-bottom: 17px;
+    }
+
+    > div {
+        position: relative;
+        overflow: hidden;
+
+        &.closed {
+            max-height: 8rem;
+
+            &:after {
+                content  : "";
+                position : absolute;
+                z-index  : 1;
+                bottom   : 0;
+                left     : 0;
+                pointer-events   : none;
+                background-image : linear-gradient(to bottom, change-color($snm-color-background, $alpha: 0), $snm-color-background 90%);
+                width    : 100%;
+                height   : 2rem;
+            }
+        }
+    }
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid $snm-color-border;
+    border-bottom: 1px solid $snm-color-border;
+    padding: 17px;
+
+    h2 {
+        width: 100%;
+        margin-bottom: 1rem;
+        font-family: $snm-font-heading;
+        font-weight: bold;
+        font-size: 16px;
+        line-height: 22px;
+        letter-spacing: 0px;
+        color: $snm-color-background-dark;
+    }
+
+    a {
+        display: block;
+        padding: 8px;
+        border: 1px solid $snm-color-element-med;
+        border-radius: 10px;
+        margin: 8px;
+    }
+}
+
+.social {
+    border-top: 1px solid $snm-color-border;
+    padding: 17px;
+    font-family: $snm-font-content;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 19px;
+    letter-spacing: 0px;
+
+    h2 {
+        font-family: $snm-font-heading;
+        font-weight: bold;
+        font-size: 16px;
+        line-height: 22px;
+        letter-spacing: 0px;
+        color: $snm-color-background-dark;
+
+    }
+
+    p {
+        margin: 11px 0px;
+
+        strong {
+            font-weight: bold;
+        }
+    }
+}
+
+.reviews {
+    position: relative;
+    min-height: 3rem;
+
+    h2 {
+        color: $snm-color-element-light;
+        background-color: $snm-color-element-med;
+        font-family: $snm-font-heading;
+        font-weight: bold;
+        font-size: 16px;
+        line-height: 19px;
+        padding: 17px;
     }
 }
 
 .related {
     position: relative;
     min-height: 3rem;
-}
 
-.reviews {
-    position: relative;
-    min-height: 3rem;
+    h2 {
+        color: $snm-color-element-light;
+        background-color: $snm-color-info;
+        font-family: $snm-font-heading;
+        font-weight: bold;
+        font-size: 16px;
+        line-height: 19px;
+        padding: 17px;
+    }
 }
 
 @media (min-width: $fullsize-screen) {

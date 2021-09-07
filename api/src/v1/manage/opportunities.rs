@@ -118,7 +118,7 @@ struct OpportunityForm {
 
 impl OpportunityForm {
     fn apply(self, opportunity: &mut Opportunity) -> Result<(), tide::Error> {
-        opportunity.interior.accepted = self.accepted.is_some();
+        opportunity.interior.accepted = Some(self.accepted.is_some());
         opportunity.interior.withdrawn = self.withdrawn.is_some();
 
         opportunity.exterior.entity_type = match self.entity_type.as_ref() {

@@ -34,7 +34,7 @@
               <a href="{{opp.exterior.uid}}">{{opp.exterior.title}}</a>
             </td>
             <td>
-              {% if opp.interior.accepted %}<span style="color: #007C03">✓</span>{% endif %}
+              {% match opp.interior.accepted %}{% when Some with (true) %}<span style="color: #007C03">✓</span>{% else %}{% endmatch %}
             </td>
             <td>
               {% if opp.interior.withdrawn %}<span style="color: #650071">✓</span>{% endif %}

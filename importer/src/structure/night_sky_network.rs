@@ -174,10 +174,16 @@ impl Structure for NightSkyNetwork {
                         obj["end_datetimes"] = obj["end_dates"].take();
                     }
 
+                    let event_id = obj["event_id"].as_str().map(|x| x.to_owned());
+                    let event_title = obj["title"].as_str().map(|x| x.to_owned());
+
                     let mut input: Opportunity = match from_value(obj) {
                         Ok(opp) => opp,
                         Err(err) => {
-                            println!("Error importing record: {:?}", err);
+                            println!(
+                                "Error importing record {:?} {:?}: {:?}",
+                                event_id, event_title, err
+                            );
                             continue;
                         }
                     };

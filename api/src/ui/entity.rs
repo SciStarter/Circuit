@@ -6,6 +6,8 @@ use common::{
     },
     Database,
 };
+use serde::Deserialize;
+use serde_json::json;
 use tide::{Status, StatusCode};
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
@@ -37,7 +39,7 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
         .await
         .with_status(|| StatusCode::NotFound)?;
 
-    if opp.interior.accepted
+    if opp.interior.accepted.unwrap_or(false)
         || person
             .map(|p| p.check_permission(&Permission::ManageOpportunities))
             .unwrap_or(false)
@@ -76,9 +78,22 @@ pub async fn add_review(_req: tide::Request<Database>) -> tide::Result {
     todo!()
 }
 
-pub async fn report_review(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-report-review", "");
-    todo!()
+#[derive(Deserialize)]
+struct ReviewReport {
+    id: i32,
+}
+
+pub async fn report_review(mut req: tide::Request<Database>) -> tide::Result {
+    if let Some(person) = request_person(&mut req).await? {
+        let report: ReviewReport = req.body_json().await?;
+        let db = req.state();
+        common::model::opportunity::report_review(db, report.id).await?;
+        common::log(
+            "ui-report-review",
+            &json!({"person": person.exterior.uid, "review": report.id}),
+        );
+    }
+    okay("")
 }
 
 pub async fn reviews(req: tide::Request<Database>) -> tide::Result {
@@ -115,7 +130,7 @@ pub async fn recommended(req: tide::Request<Database>) -> tide::Result {
     if point.is_some() {
         query.near = point;
         ordering = OpportunityQueryOrdering::Closest;
-    } else {
+    } else if !opp.exterior.opp_topics.is_empty() {
         // Look for opportunities with mostly the same topics.
         // "Mostly" here means that each topic of the current
         // opportunity after the first has a 25% chance to be dropped,
@@ -136,10 +151,13 @@ pub async fn recommended(req: tide::Request<Database>) -> tide::Result {
                 })
                 .collect(),
         );
-        // Then we randomly drop half of the matches. Our
-        // recommendations are the first five survivors
+        ordering = OpportunityQueryOrdering::Soonest;
+    } else {
+        // Sample all published upportunities, since this opportunity
+        // doesn't seem have a location or topics. Random
+        // opportunities are better than no opportunities.
         query.sample = Some(0.5);
-        ordering = OpportunityQueryOrdering::Any;
+        ordering = OpportunityQueryOrdering::Soonest;
     }
 
     let matches = Opportunity::load_matching(db, &query, ordering, pagination).await?;
