@@ -6,16 +6,16 @@
     <li v-if="opportunity.location_name">
       {{ opportunity.location_name }}
     </li>
-    <li v-if="opportunity.address_street">
+    <li v-if="opportunity.address_street && (!short || !opportunity.location_name)">
       {{ opportunity.address_street }}
     </li>
-    <li v-if="opportunity.address_city">
+    <li v-if="opportunity.address_city && !short">
       {{ opportunity.address_city }}
     </li>
-    <li v-if="opportunity.address_state || opportunity.address_zip">
+    <li v-if="(opportunity.address_state || opportunity.address_zip) && !short">
       {{ opportunity.address_state }} {{ opportunity.address_zip }}
     </li>
-    <li v-if="opportunity.address_country">
+    <li v-if="opportunity.address_country && !short">
       {{ opportunity.address_country }}
     </li>
   </ul>
@@ -40,6 +40,12 @@ export default {
         opportunity: {
             type: Object,
             required: true
+        },
+
+        short: {
+            type: Boolean,
+            required: false,
+            default: false
         }
     }
 }

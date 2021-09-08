@@ -685,6 +685,7 @@ pub struct OpportunityQuery {
     pub participated: Option<Uuid>,
     /// probability of retaining any given result in the match set, in the range (0-1).
     pub sample: Option<f32>,
+    pub exclude: Option<Vec<Uuid>>,
 }
 
 #[derive(Debug)]
@@ -702,6 +703,7 @@ enum ParamValue {
     VecEntityType(Vec<EntityType>),
     VecDescriptor(Vec<Descriptor>),
     VecVenueType(Vec<VenueType>),
+    VecUuid(Vec<Uuid>),
 }
 
 impl ParamValue {
@@ -721,6 +723,7 @@ impl ParamValue {
             ParamValue::VecEntityType(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecDescriptor(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecVenueType(val) => query.bind(serde_json::to_value(val)?),
+            ParamValue::VecUuid(val) => query.bind(serde_json::to_value(val)?),
         })
     }
 
@@ -948,6 +951,11 @@ fn build_matching_query(
         clauses.push(format!("random() < ${}", params.len()));
     }
 
+    if let Some(exclusions) = &query.exclude {
+        params.push(ParamValue::VecUuid(exclusions.clone()));
+        clauses.push(format!("NOT ((exterior -> 'uid') <@ ${})", params.len()));
+    }
+
     let mut query_string = "SELECT ".to_string();
 
     match fields.len() {
@@ -955,6 +963,8 @@ fn build_matching_query(
         1 => query_string.push_str(fields[0]),
         _ => query_string.push_str(&fields.join(", ")),
     }
+
+    query_string.push_str(" FROM (SELECT *");
 
     let mut calc_sort = || {
         query_string.push_str(
@@ -990,7 +1000,7 @@ fn build_matching_query(
         calc_sort();
     }
 
-    query_string.push_str(" FROM c_opportunity AS primary_table");
+    query_string.push_str(" FROM c_opportunity) AS primary_table");
 
     if !clauses.is_empty() {
         query_string.push_str(" WHERE");

@@ -47,11 +47,24 @@
     <div class="info time">
       <time-icon />
       <div>
-        <opportunity-time :opportunity="opportunity" />
+        <opportunity-time :opportunity="opportunity" @upcoming="upcoming = $event" />
         <opportunity-notice :opportunity="opportunity" mode="time" />
-        <action-button v-if="has_value(opportunity.start_datetimes)" secondary @click="calendar_add">
-          Add to calendar
-        </action-button>
+        <b-tooltip v-if="has_value(opportunity.start_datetimes)" :triggers="['click']" :auto-close="['outside', 'escape']" type="is-light">
+          <template #content>
+            <div v-for="pair in upcoming" :key="pair[0].toISOString()" class="calendar-row">
+              <label>
+                {{ pair[0].toLocaleString() }}
+              </label>
+              <calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" />
+              <calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" />
+              <calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" />
+              <calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" />
+            </div>
+          </template>
+          <action-button secondary>
+            Add to calendar
+          </action-button>
+        </b-tooltip>
       </div>
     </div>
     <div class="info keywords">
@@ -137,18 +150,32 @@
 
   <div class="reviews">
     <h2>Reviews</h2>
-    <div v-for="review in reviews.reviews" :key="review.id" class="review">
-      <stars v-model="review.rating" />
-      <a class="report" @click="report_review(review.id)">Report</a>
-      {{ review.username }} &bull; {{ (new Date(review.when)).toLocaleString() }}
-      <vue-markdown :source="review.comment" />
-    </div>
+    <template v-if="!loading_reviews">
+      <div v-for="review in reviews.reviews" :key="review.id" class="review">
+        <stars v-model="review.rating" />
+        <a class="report" @click="report_review(review.id)">Report</a>
+        {{ review.username }} &bull; {{ (new Date(review.when)).toLocaleString() }}
+        <vue-markdown :source="review.comment" />
+      </div>
+    </template>
     <b-loading v-model="loading_reviews" :is-full-page="false" />
   </div>
 
   <div class="related">
     <h2>Nearby &amp; Similar Opportunities</h2>
-    {{ recommended }}
+    <template v-if="!loading_recommended">
+      <nuxt-link v-for="rec in recommended" :key="rec.uid" :to="'/' + rec.slug">
+        <h3>{{ rec.title }}</h3>
+        <div>
+          <location-icon />
+          <opportunity-location :opportunity="rec" short />
+        </div>
+        <div>
+          <time-icon />
+          <opportunity-time :opportunity="rec" />
+        </div>
+      </nuxt-link>
+    </template>
     <b-loading v-model="loading_recommended" :is-full-page="false" />
   </div>
 </article>
@@ -167,6 +194,7 @@ import OpportunityKeywords from "~/components/OpportunityKeywords"
 import OpportunityNotice from "~/components/OpportunityNotice"
 import External from "~/components/External"
 import Stars from "~/components/Stars"
+import CalendarAdd from "~/components/CalendarAdd"
 
 import LocationIcon from '~/assets/img/location-marker.svg?inline'
 import TimeIcon from '~/assets/img/calendar.svg?inline'
@@ -184,6 +212,7 @@ export default {
         OpportunityNotice,
         External,
         Stars,
+        CalendarAdd,
 
         LocationIcon,
         TimeIcon,
@@ -200,6 +229,7 @@ export default {
 
     data() {
         return {
+            upcoming: [],
             map_widget: null,
             reviews: null,
             likes: null,
@@ -296,6 +326,7 @@ export default {
 
             if(this.has_value(this.opportunity.location_polygon)) {
                 geom = this.opportunity.location_polygon;
+                console.log('X', geom);
                 props.mode = 'polys';
             }
             else if(this.has_value(this.opportunity.location_point)) {
@@ -363,7 +394,7 @@ export default {
                         });
                     }
                     else {
-                        console.warning("Unrecognized map mode: ", this.location_geojson.properties.mode);
+                        console.warn("Unrecognized map mode: ", this.location_geojson.properties.mode);
                         return;
                     }
 
@@ -375,10 +406,6 @@ export default {
     },
 
     methods: {
-        calendar_add() {
-            console.warning("Not implemented");
-        },
-
         report_review(id) {
             this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/report-review', {id: id}).then(() => {
                 this.$buefy.toast.open({
@@ -405,14 +432,11 @@ export default {
                 if(item.length == 0) {
                     return false;
                 }
-                if(item.length == 1 && item[0] === '') {
+                else if(item.length == 1 && item[0] === '') {
                     return false;
                 }
-            }
-
-            if(item.constructor === Object) {
-                if(Object.keys(item).length === 0) {
-                    return false;
+                else {
+                    return true;
                 }
             }
 
@@ -420,6 +444,13 @@ export default {
                 if(item === '') {
                     return false;
                 }
+                else {
+                    return true;
+                }
+            }
+
+            if(!Object.keys(item).some(x => x[0] != '_')) {
+                return false;
             }
 
             return true;
@@ -545,6 +576,28 @@ img.opportunity-image {
         margin-left: 2rem;
         flex-grow: 0;
     }
+}
+
+.calendar-row {
+    display: flex;
+    flex-wrap: wrap;
+    width: 200px;
+
+    label {
+        display: block;
+        font-family: $snm-font-content;
+        font-weight: bold;
+        color: $snm-color-element-dark;
+        width: 100%;
+    }
+
+    .calendar-add {
+        margin-right: 8px;
+    }
+}
+
+.calendar-row:not(:last-child) {
+    margin-bottom: 1rem;
 }
 
 .find-out-more {
@@ -744,6 +797,35 @@ img.opportunity-image {
         font-size: 16px;
         line-height: 19px;
         padding: 17px;
+    }
+
+    > a {
+        display: block;
+        font-family: $snm-font-content;
+        font-weight: normal;
+        font-size: 14px;
+        line-height: 16px;
+        color: $snm-color-element-dark;
+        margin: 17px;
+
+        h3 {
+            font-family: $snm-font-heading;
+            font-size: 21px;
+            font-weight: bold;
+            line-height: 26px;
+            color: $snm-color-element-med;
+            text-decoration: underline;
+        }
+
+        div {
+            display: flex;
+            margin: 3px 0px;
+
+            svg {
+                margin-right: 0.75rem;
+                align-self: center;
+            }
+        }
     }
 }
 

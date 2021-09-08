@@ -1,10 +1,11 @@
+use chrono::{DateTime, Utc};
 use common::{
     model::{
         opportunity::{Opportunity, OpportunityQuery, OpportunityQueryOrdering},
         person::Permission,
         Pagination,
     },
-    Database,
+    Database, ToFixedOffset,
 };
 use serde::Deserialize;
 use serde_json::json;
@@ -126,6 +127,9 @@ pub async fn recommended(req: tide::Request<Database>) -> tide::Result {
     let ordering;
     let pagination = Pagination::Page { index: 0, size: 5 };
     let mut query = OpportunityQuery::default();
+
+    query.beginning = Some(Utc::now().to_fixed_offset());
+    query.exclude = Some(vec![opp.exterior.uid.clone()]);
 
     if point.is_some() {
         query.near = point;
