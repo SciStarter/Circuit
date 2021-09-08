@@ -206,6 +206,7 @@ export default {
     },
 
     data () {
+        const now = new Date();
         return {
             alert: false,
             menu: false,
@@ -222,8 +223,9 @@ export default {
                     proximity: 0
                 },
                 include_online: true,
-                date_from: null,
-                date_until: null
+                date_from: now.toISOString().split('T')[0],
+                date_until: null,
+                sort: 'closest'
             }
         }
     },
@@ -282,6 +284,11 @@ export default {
                     date = new Date(date);
                 }
                 ret += joint + 'ending=' + encodeURIComponent(date.toISOString());
+                joint = '&';
+            }
+
+            if (this.query.sort !== null) {
+                ret += joint + 'sort=' + this.query.sort;
                 joint = '&';
             }
 

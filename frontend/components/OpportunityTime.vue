@@ -73,6 +73,10 @@ export default {
         },
     },
 
+    mounted() {
+        this.$emit('upcoming', this.upcoming);
+    },
+
     methods: {
         display(pair) {
             const now = new Date();
