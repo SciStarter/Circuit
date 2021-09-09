@@ -30,6 +30,8 @@ pub enum Error {
     SQLx(#[from] sqlx::Error),
     #[error("JSON error")]
     JSON(#[from] serde_json::Error),
+    #[error("No such item exists")]
+    NoSuch(&'static str),
 }
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]

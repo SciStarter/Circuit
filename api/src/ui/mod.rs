@@ -70,7 +70,7 @@ async fn request_person(req: &mut tide::Request<Database>) -> tide::Result<Optio
     let token = if let Some(val) = req.header("Authorization").and_then(|vals| vals.get(0)) {
         if let Some((mode, token)) = val.as_str().split_once(" ") {
             if mode == "Bearer" {
-                token
+                token.to_string()
             } else {
                 return Ok(None);
             }
@@ -78,10 +78,14 @@ async fn request_person(req: &mut tide::Request<Database>) -> tide::Result<Optio
             return Ok(None);
         }
     } else {
-        return Ok(None);
+        if let Some(val) = req.cookie("token") {
+            val.value().to_string()
+        } else {
+            return Ok(None);
+        }
     };
 
-    let uid = match common::jwt::check_jwt(token, &UI_AUDIENCE) {
+    let uid = match common::jwt::check_jwt(&token, &UI_AUDIENCE) {
         Ok(checked) => checked,
         Err(_) => return Ok(None),
     };

@@ -81,7 +81,7 @@
     </aside>
   </header>
 
-  <nuxt />
+  <nuxt @login="show_login = true" @signup="show_signup = true" />
 
   <footer>
     <ul>
@@ -149,21 +149,17 @@
 
   <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
     <div class="card">
-      <div class="card-content">
-        <login-form @close="show_login=false">
-          <dynamic-block group="login-modal" item="standard" class="content" />
-        </login-form>
-      </div>
+      <login-form @close="show_login=false">
+        <dynamic-block group="login-modal" item="standard" class="content" />
+      </login-form>
     </div>
   </b-modal>
 
   <b-modal v-model="show_signup" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
     <div class="card">
-      <div class="card-content">
-        <signup-form @close="show_signup=false">
-          <dynamic-block group="signup-modal" item="standard" class="content" />
-        </signup-form>
-      </div>
+      <signup-form @close="show_signup=false">
+        <dynamic-block group="signup-modal" item="standard" class="content" />
+      </signup-form>
     </div>
   </b-modal>
 </div>
@@ -519,5 +515,12 @@ footer {
 
 @media (min-width: $fullsize-screen) {
 
+}
+</style>
+
+<style lang="scss">
+.modal .card {
+    margin: 1rem;
+    padding: 1rem;
 }
 </style>
