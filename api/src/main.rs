@@ -47,7 +47,7 @@ async fn main() -> tide::Result<()> {
 
     let mut app = tide::with_state(pool);
 
-    #[cfg(debug_assertions)]
+    #[cfg(not(debug_assertions))]
     {
         use http_types::headers::HeaderValue;
         use tide::security::{CorsMiddleware, Origin};
@@ -58,7 +58,10 @@ async fn main() -> tide::Result<()> {
                     .parse::<HeaderValue>()
                     .unwrap(),
             )
-            .allow_origin(Origin::from("*"))
+            .allow_origin(Origin::List(vec![
+                std::env::var("DOMAIN")?,
+                format!("www.{}", std::env::var("DOMAIN")?),
+            ]))
             .allow_credentials(true);
 
         app.with(cors);

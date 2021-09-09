@@ -1,4 +1,5 @@
 use super::Error;
+use crate::model::involvement::{self, Involvement};
 use crate::Database;
 
 use chrono::{DateTime, FixedOffset, Utc};
@@ -1119,11 +1120,56 @@ pub async fn reviews_for_slug(db: &Database, slug: &str) -> Result<Reviews, Erro
     Ok(ret)
 }
 
+pub async fn add_review_for_slug(
+    db: &Database,
+    slug: &str,
+    person: &Uuid,
+    rating: i16,
+    comment: &str,
+) -> Result<i32, Error> {
+    let opp_id = Opportunity::id_by_slug(db, slug)
+        .await?
+        .ok_or_else(|| Error::NoSuch("opportunity"))?;
+
+    let result = sqlx::query(
+        r"
+            insert into c_opportunity_review (opportunity_id, person, rating, comment)
+            values ($1, $2, $3, $4)
+            returning id
+        ",
+    )
+    .bind(opp_id)
+    .bind(person)
+    .bind(rating)
+    .bind(comment)
+    .map(|row| row.get::<i32, _>(0))
+    .fetch_one(db)
+    .await?;
+
+    Ok(result)
+}
+
 pub async fn report_review(db: &Database, id: i32) -> Result<(), Error> {
-    sqlx::query("update c_opportunity_review set reports = reports + 1 where id = $1")
+    sqlx::query("update c_opportunity_review set flags = flags + 1 where id = $1")
         .bind(id)
         .execute(db)
         .await?;
+    Ok(())
+}
+
+pub async fn add_like_for_slug(
+    db: &Database,
+    slug: &str,
+    person: &Option<Uuid>,
+) -> Result<(), Error> {
+    let opp_id = Opportunity::id_by_slug(db, slug)
+        .await?
+        .ok_or_else(|| Error::NoSuch("opportunity"))?;
+
+    sqlx::query_file!("db/opportunity/add_like.sql", opp_id, person.clone())
+        .execute(db)
+        .await?;
+
     Ok(())
 }
 
@@ -1133,6 +1179,20 @@ pub async fn likes_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
         .fetch_one(db)
         .await?
         .unwrap_or(0) as u32)
+}
+
+pub async fn likes_for_slug_and_person(
+    db: &Database,
+    slug: &str,
+    person: &Uuid,
+) -> Result<u32, Error> {
+    Ok(
+        sqlx::query_file!("db/opportunity/count_person_likes.sql", slug, person)
+            .map(|row| row.likes)
+            .fetch_one(db)
+            .await?
+            .unwrap_or(0) as u32,
+    )
 }
 
 pub async fn saves_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
@@ -1145,7 +1205,17 @@ pub async fn saves_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
     )
 }
 
-pub async fn didit_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
+pub async fn add_save_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
+    let uid = Opportunity::uid_by_slug(db, slug)
+        .await?
+        .ok_or_else(|| Error::NoSuch("opportunity"))?;
+
+    Involvement::upgrade(db, person, &uid, involvement::Mode::Saved, &None).await?;
+
+    Ok(())
+}
+
+pub async fn didits_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
     Ok(
         sqlx::query_file!("db/opportunity/count_didit_by_slug.sql", slug)
             .map(|row| row.didit)
@@ -1153,6 +1223,16 @@ pub async fn didit_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
             .await?
             .unwrap_or(0) as u32,
     )
+}
+
+pub async fn add_didit_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
+    let uid = Opportunity::uid_by_slug(db, slug)
+        .await?
+        .ok_or_else(|| Error::NoSuch("opportunity"))?;
+
+    Involvement::upgrade(db, person, &uid, involvement::Mode::Logged, &None).await?;
+
+    Ok(())
 }
 
 impl Opportunity {
@@ -1398,6 +1478,14 @@ impl Opportunity {
             .await?;
 
         Ok(rec.map(|row| row.id))
+    }
+
+    pub async fn uid_by_slug(db: &Database, slug: &str) -> Result<Option<Uuid>, Error> {
+        let rec = sqlx::query_file!("db/opportunity/uid_by_slug.sql", slug)
+            .fetch_optional(db)
+            .await?;
+
+        Ok(rec.map(|row| row.uid).flatten())
     }
 
     pub async fn exists_by_slug(db: &Database, slug: &str) -> Result<bool, Error> {

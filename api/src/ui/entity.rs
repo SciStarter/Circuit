@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use common::{
     model::{
+        involvement::{Involvement, Mode},
         opportunity::{Opportunity, OpportunityQuery, OpportunityQueryOrdering},
         person::Permission,
         Pagination,
@@ -20,9 +21,10 @@ use super::{okay, request_person};
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes.at(":slug", |r| {
         r.get(entity)
+            .at("me", |r| r.get(get_me))
             .at("likes", |r| r.get(get_likes).post(add_like))
-            .at("saves", |r| r.get(get_saves))
-            .at("didit", |r| r.get(get_didit))
+            .at("saves", |r| r.get(get_saves).post(add_save))
+            .at("didit", |r| r.get(get_didit).post(add_didit))
             .at("reviews", |r| r.post(add_review).get(reviews))
             .at("report-review", |r| r.post(report_review))
             .at("recommended", |r| r.get(recommended))
@@ -54,13 +56,48 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn get_didit(req: tide::Request<Database>) -> tide::Result {
     let slug = req.param("slug")?;
     let db = req.state();
-    okay(&common::model::opportunity::didit_for_slug(db, &slug).await?)
+    okay(&common::model::opportunity::didits_for_slug(db, &slug).await?)
+}
+
+pub async fn add_didit(mut req: tide::Request<Database>) -> tide::Result {
+    let slug = req.param("slug")?.to_string();
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
+    let db = req.state();
+
+    common::model::opportunity::add_save_for_slug(db, &slug, &person.exterior.uid).await?;
+
+    common::log(
+        "ui-didit",
+        &json!({"person": person.exterior.uid, "opportunity": slug}),
+    );
+
+    okay("")
 }
 
 pub async fn get_saves(req: tide::Request<Database>) -> tide::Result {
     let slug = req.param("slug")?;
     let db = req.state();
+
     okay(&common::model::opportunity::saves_for_slug(db, &slug).await?)
+}
+
+pub async fn add_save(mut req: tide::Request<Database>) -> tide::Result {
+    let slug = req.param("slug")?.to_string();
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
+    let db = req.state();
+
+    common::model::opportunity::add_save_for_slug(db, &slug, &person.exterior.uid).await?;
+
+    common::log(
+        "ui-save",
+        &json!({"person": person.exterior.uid, "opportunity": slug}),
+    );
+
+    okay("")
 }
 
 pub async fn get_likes(req: tide::Request<Database>) -> tide::Result {
@@ -69,14 +106,57 @@ pub async fn get_likes(req: tide::Request<Database>) -> tide::Result {
     okay(&common::model::opportunity::likes_for_slug(db, &slug).await?)
 }
 
-pub async fn add_like(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-like", "");
-    todo!()
+pub async fn add_like(mut req: tide::Request<Database>) -> tide::Result {
+    let slug = req.param("slug")?.to_string();
+    let person = request_person(&mut req).await?;
+    let db = req.state();
+
+    common::model::opportunity::add_like_for_slug(
+        db,
+        &slug,
+        &person.as_ref().map(|p| p.exterior.uid),
+    )
+    .await?;
+
+    common::log(
+        "ui-like",
+        &json!({"person": person.map(|p| p.exterior.uid), "opportunity": slug}),
+    );
+
+    okay("")
 }
 
-pub async fn add_review(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-review", "");
-    todo!()
+#[derive(Deserialize)]
+struct AddReview {
+    rating: i16,
+    comment: String,
+}
+
+pub async fn add_review(mut req: tide::Request<Database>) -> tide::Result {
+    let slug = req.param("slug")?.to_string();
+    let review: AddReview = req.body_json().await?;
+
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
+
+    let db = req.state();
+
+    let id = common::model::opportunity::add_review_for_slug(
+        db,
+        &slug,
+        &person.exterior.uid,
+        review.rating,
+        &review.comment,
+    )
+    .await?;
+
+    common::log(
+        "ui-review",
+        &json!({"person": person.exterior.uid, "opportunity": slug}),
+    );
+
+    okay(&json!({ "id": id }))
 }
 
 #[derive(Deserialize)]
@@ -172,4 +252,37 @@ pub async fn recommended(req: tide::Request<Database>) -> tide::Result {
 pub async fn request_page_management(_req: tide::Request<Database>) -> tide::Result {
     common::log("ui-request-page-management", "");
     todo!()
+}
+
+pub async fn get_me(mut req: tide::Request<Database>) -> tide::Result {
+    if let Some(person) = request_person(&mut req).await? {
+        let slug = req.param("slug")?.to_string();
+        let db = req.state();
+
+        let opp = Opportunity::uid_by_slug(db, &slug)
+            .await?
+            .ok_or_else(|| tide::Error::from_str(404, "no such opportunity"))?;
+
+        if let Some(involvement) =
+            Involvement::load_by_participant_and_opportunity(db, &person.exterior.uid, &opp).await?
+        {
+            okay(&json!({
+                "like": common::model::opportunity::likes_for_slug_and_person(db, &slug, &person.exterior.uid).await? > 0,
+                "save": involvement.exterior.mode >= Mode::Saved,
+                "didit": involvement.exterior.mode >= Mode::Logged,
+            }))
+        } else {
+            okay(&json!({
+                "like": common::model::opportunity::likes_for_slug_and_person(db, &slug, &person.exterior.uid).await? > 0,
+                "save": false,
+                "didit": false,
+            }))
+        }
+    } else {
+        okay(&json!({
+            "like": false,
+            "save": false,
+            "didit": false,
+        }))
+    }
 }

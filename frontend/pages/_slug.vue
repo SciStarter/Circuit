@@ -1,9 +1,9 @@
 <template>
 <div>
   <!-- Selects a top level component to display based on the data pulled from the server -->
-  <!-- If we add more top level components, they need to be added between just-content and opportunity, with a v-else-if="LOGIC" attribute -->
-  <just-content v-if="layout == 'just_content'" :entity="entity" />
-  <opportunity v-else :entity="entity" />
+  <!-- If we add more top level components, they need to be added between just-content and opportunity, with a v-else-if="LOGIC" attribute, and should use the same @login and @signup handlers -->
+  <just-content v-if="layout == 'just_content'" :entity="entity" :user="user" @login="$parent.$emit('login')" @signup="$parent.$emit('signup')" />
+  <opportunity v-else :entity="entity" :user="user" @login="$parent.$emit('login')" @signup="$parent.$emit('signup')" />
 </div>
 </template>
 
@@ -28,8 +28,14 @@ export default {
 
     head () {
         return {
-            title: this.entity.title + ' - Science Near Me'
-    };
-  }
+            'title': this.entity.title + ' - Science Near Me',
+        };
+    },
+
+    computed: {
+        user() {
+            return this.$store.state.user;
+        },
+    },
 }
 </script>

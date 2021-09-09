@@ -280,6 +280,10 @@ export default {
     },
 
     computed: {
+        user() {
+            return this.$store.state.user;
+        },
+
         min_age_active: {
             get() {
                 return this.get_query('min_age') !== undefined;

@@ -33,6 +33,35 @@
     <p>
       {{ didit }} People Report Doing This Opportunity
     </p>
+    <b-modal
+      v-model="show_bookmark_add"
+      has-modal-card
+      trap-focus
+      :destroy-on-hide="false"
+      aria-role="dialog"
+      aria-label="Add a Review"
+      aria-modal
+      >
+      <div class="card">
+        <h2>You must be signed in to save an opportunity</h2>
+        <action-button primary @click="(show_bookmark_add = false) || $emit('login')">
+          Sign In
+        </action-button>
+        <h2>Don't have an account?</h2>
+        <action-button secondary @click="(show_bookmark_add = false) || $emit('signup')">
+          Create an Account
+        </action-button>
+      </div>
+    </b-modal>
+    <action-button class="no-mobile" principal :disabled="did.save" @click="do_save">
+      <saved-icon /> <span v-if="did.save">Saved</span><span v-else>Save for Later</span>
+    </action-button>
+    <action-button :disabled="did.like" class="no-mobile" secondary @click="do_like">
+      <like-icon /> <span v-if="did.like">You liked this</span><span v-else>Like</span>
+    </action-button>
+    <social-button mode="facebook" :opportunity="opportunity" class="no-mobile" />
+    <social-button mode="twitter" :opportunity="opportunity" class="no-mobile" />
+    <social-button mode="linkedin" :opportunity="opportunity" class="no-mobile" />
   </div>
 
   <div class="secondary">
@@ -49,8 +78,16 @@
       <div>
         <opportunity-time :opportunity="opportunity" @upcoming="upcoming = $event" />
         <opportunity-notice :opportunity="opportunity" mode="time" />
-        <b-tooltip v-if="has_value(opportunity.start_datetimes)" :triggers="['click']" :auto-close="['outside', 'escape']" type="is-light">
-          <template #content>
+        <b-modal
+          v-model="show_calendar_add"
+          has-modal-card
+          trap-focus
+          :destroy-on-hide="false"
+          aria-role="dialog"
+          aria-label="Add to calendar"
+          aria-modal
+          >
+          <div class="card">
             <div v-for="pair in upcoming" :key="pair[0].toISOString()" class="calendar-row">
               <label>
                 {{ pair[0].toLocaleString() }}
@@ -60,11 +97,11 @@
               <calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" />
               <calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" />
             </div>
-          </template>
-          <action-button secondary>
-            Add to calendar
-          </action-button>
-        </b-tooltip>
+          </div>
+        </b-modal>
+        <action-button v-if="has_value(opportunity.start_datetimes)" secondary class="no-mobile" @click="show_calendar_add = true">
+          Add to calendar
+        </action-button>
       </div>
     </div>
     <div class="info keywords">
@@ -150,6 +187,46 @@
 
   <div class="reviews">
     <h2>Reviews</h2>
+    <b-modal
+      v-model="show_review_add"
+      has-modal-card
+      trap-focus
+      :destroy-on-hide="false"
+      aria-role="dialog"
+      aria-label="Add a Review"
+      aria-modal
+      >
+      <div class="card">
+        <div v-if="user.authenticated">
+          <h2>Rate & Review</h2>
+          <div>
+            <stars v-model="new_review.rating" editable />
+          </div>
+          <b-input v-model="new_review.comment" type="textarea" />
+          <div class="buttons">
+            <action-button tertiary @click="show_review_add = false">
+              Cancel
+            </action-button>
+            <action-button primary @click="do_review">
+              Submit
+            </action-button>
+          </div>
+        </div>
+        <div v-else>
+          <h2>You must be signed in to add a review</h2>
+          <action-button primary @click="(show_review_add = false) || $emit('login')">
+            Sign In
+          </action-button>
+          <h2>Don't have an account?</h2>
+          <action-button tertiary @click="(show_review_add = false) || $emit('signup')">
+            Create an Account
+          </action-button>
+        </div>
+      </div>
+    </b-modal>
+    <action-button class="no-mobile" secondary @click="show_review_add = true">
+      <star-icon /> Add Review
+    </action-button>
     <template v-if="!loading_reviews">
       <div v-for="review in reviews.reviews" :key="review.id" class="review">
         <stars v-model="review.rating" />
@@ -195,12 +272,15 @@ import OpportunityNotice from "~/components/OpportunityNotice"
 import External from "~/components/External"
 import Stars from "~/components/Stars"
 import CalendarAdd from "~/components/CalendarAdd"
+import SocialButton from "~/components/SocialButton"
 
+import MapMarker from '~/assets/img/marker.png'
 import LocationIcon from '~/assets/img/location-marker.svg?inline'
 import TimeIcon from '~/assets/img/calendar.svg?inline'
 import KeywordsIcon from '~/assets/img/speech-bubble.svg?inline'
 import LikeIcon from '~/assets/img/like.svg?inline'
-import MapMarker from '~/assets/img/marker.png'
+import SavedIcon from '~/assets/img/saved-science-opportunities.svg?inline'
+import StarIcon from '~/assets/img/star-on.svg?inline'
 
 export default {
     components: {
@@ -213,22 +293,43 @@ export default {
         External,
         Stars,
         CalendarAdd,
+        SocialButton,
 
         LocationIcon,
         TimeIcon,
         KeywordsIcon,
         LikeIcon,
+        SavedIcon,
+        StarIcon,
     },
 
     props: {
         entity: {
             type: Object,
             required: true
-        }
+        },
+
+        user: {
+            type: Object,
+            required: true,
+        },
     },
 
     data() {
         return {
+            new_review: {
+                rating: 3,
+                comment: "",
+            },
+            did: {
+                like: false,
+                save: false,
+                didit: false,
+            },
+            show_didit_add: false,
+            show_bookmark_add: false,
+            show_review_add: false,
+            show_calendar_add: false,
             upcoming: [],
             map_widget: null,
             reviews: null,
@@ -259,6 +360,7 @@ export default {
         };
 
         const fetch_didit = async () => {
+            // this.didit is how many people have done it
             this.didit = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/didit');
         };
 
@@ -345,7 +447,15 @@ export default {
         },
     },
 
-    mounted() {
+    watch: {
+        "user.authenticated": async (new_val, old_val) => {
+            if(new_val) {
+                this.did = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/me', { withCredentials: true });
+            }
+        }
+    },
+
+    async mounted() {
         if(this.location_geojson) {
             this.map_widget = new mapboxgl.Map({
                 accessToken: process.env.MAPBOX_TOKEN,
@@ -403,15 +513,69 @@ export default {
                 });
             });
         }
+
+        if(this.user.authenticated) {
+            this.did = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/me', { withCredentials: true });
+        }
     },
 
     methods: {
-        report_review(id) {
-            this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/report-review', {id: id}).then(() => {
-                this.$buefy.toast.open({
-                    message: 'Reported review',
-                    type: 'is-success'
-                });
+        async do_like() {
+            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/likes', {}, { withCredentials: true });
+            this.did.like = true;
+            this.likes += 1;
+        },
+
+        async do_didit() {
+            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/didit', {}, { withCredentials: true });
+            this.did.didit = true;
+        },
+
+        async do_save() {
+            if(this.user.authenticated) {
+                await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/saves', {}, { withCredentials: true });
+                this.did.save= true;
+            }
+            else {
+                this.show_bookmark_add = true;
+            }
+        },
+
+        async do_review() {
+            let {id} = await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/reviews', this.new_review, { withCredentials: true });
+
+            this.show_review_add = false;
+
+            this.reviews.average = ((this.reviews.average * this.reviews.reviews.length) + this.new_review.rating)
+                / (this.reviews.reviews.length + 1);
+
+            this.reviews.reviews.push({
+                id,
+                person: this.user.uid,
+                username: this.user.username,
+                image_url: this.user.image_url,
+                rating: this.new_review.rating,
+                comment: this.new_review.comment,
+                when: (new Date()).toISOFormat(),
+            });
+
+            this.new_review = {
+                rating: 3,
+                comment: "",
+            };
+
+            this.$buefy.toast.open({
+                message: 'Review saved',
+                type: 'is-success'
+            });
+        },
+
+        async report_review(id) {
+            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/report-review', {id: id}, { withCredentials: true });
+
+            this.$buefy.toast.open({
+                message: 'Reported review',
+                type: 'is-success'
             });
         },
 
@@ -455,7 +619,7 @@ export default {
 
             return true;
         }
-    }
+    },
 }
 </script>
 
@@ -783,6 +947,25 @@ img.opportunity-image {
         line-height: 19px;
         padding: 17px;
     }
+
+    .modal {
+        h2 {
+            font-size: 21px;
+            line-height: 26px;
+            font-weight: bold;
+            background-color: transparent;
+            color: $snm-color-caption;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: right;
+
+            > * {
+                flex-grow: 0;
+            }
+        }
+    }
 }
 
 .related {
@@ -830,6 +1013,12 @@ img.opportunity-image {
 }
 
 @media (min-width: $fullsize-screen) {
-
+    .reviews {
+        .modal {
+            .buttons {
+                width: 400px;
+            }
+        }
+    }
 }
 </style>

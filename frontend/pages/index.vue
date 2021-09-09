@@ -36,10 +36,6 @@ export default {
         }
     },
 
-    async fetch () {
-        await this.$store.dispatch('get_user');
-    },
-
     computed: {
         username () {
             return this.$store.state.user.username;

@@ -1,5 +1,5 @@
 <template>
-  <button class="action-button" :class="{'primary': primary, 'secondary': secondary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg}" :disabled="disabled" @click="$emit('click')">
+  <button class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg}" :disabled="disabled" @click="$emit('click')">
     <slot />
   </button>
 </template>
@@ -7,6 +7,11 @@
 <script>
 export default {
     props: {
+        principal: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
         primary: {
             type: Boolean,
             required: false,
@@ -16,6 +21,11 @@ export default {
             type: Boolean,
             required: false,
             default: false
+        },
+        tertiary: {
+            type: Boolean,
+            required: false,
+            default: false,
         },
         contrastBg: {
             type: Boolean,
@@ -51,6 +61,20 @@ button.action-button {
     flex-shrink: 1;
     flex-grow: 1;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+
+    svg {
+        &:first-child {
+            position: relative;
+            left: -0.7rem;
+        }
+
+        * {
+            fill: currentColor;
+        }
+    }
 
     &:hover,&:active {
         background-color: $snm-color-background-meddark;
@@ -65,10 +89,28 @@ button.action-button {
         border-color: $snm-color-background-medium;
     }
 
-    &:disabled {
-        background-color: $snm-color-background-light;
-        color: $snm-color-disabled;
-        border-color: $snm-color-disabled;
+    &.tertiary {
+        color: $snm-color-element-med;
+        border-color: $snm-color-element-med;
+        background-color: $snm-color-element-light;
+    }
+
+    &.principal {
+        border-color: $snm-color-action-border;
+        background-color: $snm-color-action;
+        color: $snm-color-element-dark;
+        flex-grow: 2;
+        flex-shrink: 0;
+
+        &:hover,&:active {
+            background-color: $snm-color-heading-ondark;
+        }
+
+        &:disabled {
+            background-color: $snm-color-background-light;
+            color: $snm-color-disabled;
+            border-color: $snm-color-disabled;
+        }
     }
 
     &.primary {
@@ -103,6 +145,12 @@ button.action-button {
         background-color: $snm-color-background;
         color: $snm-color-element-dark;
         border-radius: 10px;
+    }
+
+    &:disabled {
+        background-color: $snm-color-background-light;
+        color: $snm-color-disabled;
+        border-color: $snm-color-disabled;
     }
 }
 </style>
