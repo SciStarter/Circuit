@@ -1135,6 +1135,7 @@ pub async fn add_review_for_slug(
         r"
             insert into c_opportunity_review (opportunity_id, person, rating, comment)
             values ($1, $2, $3, $4)
+            on conflict (opportunity_id, person) do update set rating = $3, comment = $4
             returning id
         ",
     )

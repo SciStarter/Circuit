@@ -43,7 +43,7 @@ export const mutations = {
 
     save_descriptors(state, descriptors) {
         state.descriptors = descriptors;
-    }
+    },
 };
 
 export const actions = {
@@ -75,7 +75,7 @@ export const actions = {
         return state.dynamic_blocks[key] || null;
     },
 
-    async login({ commit, state }, { email, password }) {
+    async login({ commit, dispatch, state }, { email, password }) {
         let user = { authenticated: false };
 
         try {
@@ -98,10 +98,12 @@ export const actions = {
 
         commit('save_user', user);
 
+        dispatch('sync_local_to_server');
+
         return user;
     },
 
-    async signup({ commit, state }, { email, username, password, zip_code, phone }) {
+    async signup({ commit, dispatch, state }, { email, username, password, zip_code, phone }) {
         const params = {
             email,
             password
@@ -138,6 +140,8 @@ export const actions = {
 
         commit('save_user', user);
 
+        dispatch('sync_local_to_server');
+
         return user;
     },
 
@@ -164,7 +168,7 @@ export const actions = {
         return user;
     },
 
-    async get_user({ commit, state }) {
+    async get_user({ commit, dispatch, state }) {
         let token = null;
 
         let user = {
@@ -182,14 +186,19 @@ export const actions = {
         if (state.user.authenticated) {
             user = state.user;
         } else if (token) {
-            user = await this.$axios.$get('/api/ui/auth/me', {
-                headers: {
-                    Authorization: 'Bearer ' + token
-                }
-            });
+            try {
+                user = await this.$axios.$get('/api/ui/auth/me', {
+                    headers: {
+                        Authorization: 'Bearer ' + token
+                    }
+                }, { withCredentials: true });
+            }
+            catch(error) {}
         }
 
         commit('save_user', user);
+
+        dispatch('sync_local_to_server');
 
         return user;
     },
@@ -228,5 +237,48 @@ export const actions = {
         commit('save_descriptors', descriptors);
 
         return descriptors;
-    }
+    },
+
+    async sync_local_to_server({ commit, dispatch, state }) {
+        if(process.server || !state.user.authenticated) {
+            return;
+        }
+
+        let local = await dispatch('get_local');
+
+        // sync "I did this" records
+        let didit = local.didit || [];
+        try {
+            for(let slug of didit) {
+                console.log(slug);
+                await this.$axios.$post('/api/ui/entity/' + slug + '/didit', {}, { withCredentials: true });
+            }
+            local.didit = [];
+        }
+        catch(error) {
+            // abort and try again later
+            return;
+        }
+
+        await dispatch('set_local', local);
+    },
+
+    // Doesn't actually operate on the store; it's here because it's
+    // logically related.
+    async get_local({commit, state}) {
+        if (process.client) {
+            return JSON.parse(window.localStorage.getItem('local_state') || '{}');
+        }
+        else {
+            return {};
+        }
+    },
+
+    // Doesn't actually operate on the store; it's here because it's
+    // logically related.
+    async set_local({commit, state}, local) {
+        if (process.client) {
+            window.localStorage.setItem('local_state', JSON.stringify(local));
+        }
+    },
 }

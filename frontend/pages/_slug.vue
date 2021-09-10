@@ -29,6 +29,14 @@ export default {
     head () {
         return {
             'title': this.entity.title + ' - Science Near Me',
+            'meta': [
+                { hid: 'description', name: 'description', content: this.entity.short_desc || this.entity.description },
+                { hid: 'og:description', property: 'og:description', content: this.entity.short_desc || this.entity.description },
+                { hid: 'og:title', property: 'og:title', content: this.entity.title + ' - Science Near Me'},
+                { hid: 'og:url', property: 'og:url', content: 'https://sciencenearme.org/' + this.entity.slug },
+                { hid: 'og:image', property: 'og:image', content: this.entity.image_url || require('~/assets/img/logo.jpg') },
+                { hid: 'og:type', property: 'og:type', content: 'article' },
+            ]
         };
     },
 

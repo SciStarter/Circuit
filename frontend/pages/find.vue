@@ -205,6 +205,7 @@ function from_qs (qs, names) {
 function empty_query() {
     return {
         physical: 'in-person-or-online',
+        beginning: (new Date()).toISOString(),
         sort: 'closest'
     };
 }
@@ -247,6 +248,10 @@ export default {
             'over'
         ]);
 
+        if(!Object.keys(query).length) {
+            context.redirect({ name: 'find', query: empty_query() });
+        }
+
         const results = await context.$axios.$get('/api/ui/finder/search', { params: query });
 
         const partners = await context.store.dispatch('get_partners');
@@ -276,6 +281,16 @@ export default {
             partner_text: "",
             descriptor_text: "",
             topic_text: ""
+        };
+    },
+
+    head() {
+        return {
+            'title': 'Science Near Me Opportunities',
+            'meta': [
+                { hid: 'og:title', property: 'og:title', content: 'Science Near Me Opportunities' },
+                { hid: 'og:image', property: 'og:image', content: require('~/assets/img/logo.jpg') },
+            ]
         };
     },
 

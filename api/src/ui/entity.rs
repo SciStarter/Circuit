@@ -66,7 +66,7 @@ pub async fn add_didit(mut req: tide::Request<Database>) -> tide::Result {
         .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
     let db = req.state();
 
-    common::model::opportunity::add_save_for_slug(db, &slug, &person.exterior.uid).await?;
+    common::model::opportunity::add_didit_for_slug(db, &slug, &person.exterior.uid).await?;
 
     common::log(
         "ui-didit",

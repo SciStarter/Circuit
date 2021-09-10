@@ -36,11 +36,19 @@ export default {
         }
     },
 
+    head() {
+        return {
+            'meta': [
+                { hid: 'og:image', property: 'og:image', content: require('~/assets/img/logo.jpg') },
+            ]
+        };
+    },
+
     computed: {
         username () {
             return this.$store.state.user.username;
         }
-    }
+    },
 }
 </script>
 

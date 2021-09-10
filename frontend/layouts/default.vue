@@ -300,6 +300,10 @@ export default {
         }
     },
 
+    async mounted() {
+        await this.$store.dispatch('sync_local_to_server');
+    },
+
     methods: {
         toggle_search() {
             this.search = !this.search;
@@ -522,5 +526,17 @@ footer {
 .modal .card {
     margin: 1rem;
     padding: 1rem;
+}
+
+@media (max-width: $mobile-screen) {
+    .no-mobile {
+        display: none !important;
+    }
+}
+
+@media (min-width: $fullsize-screen) {
+    .mobile-only {
+        display: none !important;
+    }
 }
 </style>
