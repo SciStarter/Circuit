@@ -3,7 +3,7 @@ const DOMAIN = 'beta.sciencenearme.org';
 export default {
     // Global page headers: https://go.nuxtjs.dev/config-head
     head: {
-        title: 'frontend',
+        title: 'Science Near Me',
 
         htmlAttrs: {
             lang: 'en'
@@ -12,7 +12,11 @@ export default {
         meta: [
             { charset: 'utf-8' },
             { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-            { hid: 'description', name: 'description', content: 'Find opportunities to do real science, anywhere.' }
+            { hid: 'description', name: 'description', content: 'Find opportunities to do real science, anywhere.' },
+            { hid: 'og:description', property: 'og:description', content: 'Find opportunities to do real science, anywhere.' },
+            { hid: 'og:title', property: 'og:title', content: 'Science Near Me' },
+            { hid: 'og:url', property: 'og:url', content: 'https://sciencenearme.org/' },
+            { hid: 'og:type', property: 'og:type', content: 'website' },
         ],
 
         link: [

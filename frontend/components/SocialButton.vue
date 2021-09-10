@@ -1,5 +1,5 @@
 <template>
-<a :href="href" target="_blank" rel="noopener" class="social-button">
+<a :href="href" target="_blank" rel="noopener" class="social-button" @click="$emit('click')">
   <twitter-icon v-if="mode == 'twitter'" />
   <facebook-icon v-else-if="mode == 'facebook'" />
   <linkedin-icon v-else-if="mode == 'linkedin'" />

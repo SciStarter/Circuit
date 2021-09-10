@@ -1,6 +1,96 @@
 <template>
 <article class="opportunity">
+  <div class="mobile-menu" :class="{'closed': !mobile_menu_open}" data-context="mobile-menu">
+    <external
+      :href="opportunity.partner_opp_url"
+      title="Find out more"
+      campaign="opp-page"
+      content="find-out-more"
+      >
+      <link-icon /> Find Out More
+    </external>
+    <a @click="do_save">
+      <saved-icon /> Save for Later
+    </a>
+    <a @click="do_like">
+      <like-icon /> Like
+    </a>
+    <a @click="show_calendar_add = true">
+      <time-icon /> Add to Calendar
+    </a>
+    <a @click="show_review_add = true">
+      <star-icon /> Add Review
+    </a>
+    <div>
+      <social-button mode="facebook" :opportunity="opportunity" />
+      <social-button mode="twitter" :opportunity="opportunity" />
+      <social-button mode="linkedin" :opportunity="opportunity" />
+    </div>
+  </div>
+
+  <button class="mobile-menu-toggle mobile-only" title="Toggle menu" :aria-pressed="String(mobile_menu_open)" @click="mobile_menu_open = !mobile_menu_open">
+    <span v-if="mobile_menu_open" title="close mobile menu">&times;</span>
+    <img v-else src="~assets/img/hamburger.svg?data" title="open mobile menu">
+  </button>
+
   <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
+
+  <div class="ididthis no-mobile">
+    <h2>
+      <atom-icon /> <span v-if="did.didit">Thanks for letting us know!</span><span v-else>Help Scientists!</span>
+    </h2>
+    <p v-if="did.didit">
+      You're helping scientists study public engagement in science!
+      You can now find this logged in your
+      <nuxt-link to="/my/science">
+        My Science
+      </nuxt-link>
+      activity list.
+    </p>
+    <p v-else>
+      You can help scientists studying public participation in science
+      by logging your participation in this science opportunity.
+    </p>
+    <b-modal
+      v-model="show_didit_logged_out"
+      has-modal-card
+      trap-focus
+      :destroy-on-hide="false"
+      aria-role="dialog"
+      aria-label="Add a Review"
+      aria-modal
+      >
+      <div class="card">
+        <h2>Thanks for letting us know! But&hellip; <span class="close" @click="show_didit_logged_out = false">&times;</span></h2>
+        <p>
+          We love hearing about people engaged in science, and to
+          better support these opportunities we could use some
+          additional information about you!
+        </p>
+        <p>
+          For now we'll save that you've done this activity in your
+          browser's storage, but making an account will make sure you
+          don't lose credit for your participation.
+        </p>
+        <p>
+          Besides helping science, you'll get better recommendations
+          plus the ability to save opportunities for later and track
+          your progress in science learning.
+        </p>
+        <div>
+          <action-button tertiary @click="(show_didit_logged_out = false) || $emit('signup')">
+            Create an account
+          </action-button>
+          <action-button primary @click="(show_didit_logged_out = false) || $emit('login')">
+            Sign In
+          </action-button>
+        </div>
+      </div>
+    </b-modal>
+    <action-button v-if="!did.didit" principal @click="do_didit">
+      I Did This!
+    </action-button>
+  </div>
 
   <div class="map" :class="{'open': show_map}">
     <a @click="show_map = false">&laquo; back</a>
@@ -12,9 +102,9 @@
     <h1>{{ opportunity.title }}</h1>
   </div>
 
-  <p class="elevator-pitch">
-    {{ elevator_pitch }}
-  </p>
+  <div class="elevator-pitch">
+    <vue-markdown :source="elevator_pitch" class="content" />
+  </div>
 
   <div class="involvement">
     <div class="reviews-likes">
@@ -23,7 +113,7 @@
         {{ reviews.reviews.length }} reviews
       </span>
       <span v-if="likes !== null">
-        <like-icon />
+        <like-icon :class="{'liked': did.like}" />
         {{ likes }} likes
       </span>
     </div>
@@ -162,8 +252,9 @@
 
   <div class="description">
     <h2>About This Science Opportunity</h2>
-    <vue-markdown :source="opportunity.description" class="content" :class="{'closed': description_closed}" />
-    <a v-if="description_closed" @click="description_closed = false">read more</a>
+    <read-more v-model="description_open">
+      <vue-markdown :source="opportunity.description" class="content" />
+    </read-more>
   </div>
 
   <div v-if="has_value(opportunity.tags)" class="tags">
@@ -229,10 +320,16 @@
     </action-button>
     <template v-if="!loading_reviews">
       <div v-for="review in reviews.reviews" :key="review.id" class="review">
-        <stars v-model="review.rating" />
-        <a class="report" @click="report_review(review.id)">Report</a>
-        {{ review.username }} &bull; {{ (new Date(review.when)).toLocaleString() }}
-        <vue-markdown :source="review.comment" />
+        <div>
+          <stars v-model="review.rating" />
+          <a class="report" @click="report_review(review.id)"><flag-icon /> Report</a>
+        </div>
+        <div>
+          {{ review.username }} &bull; {{ (new Date(review.when)).toLocaleString() }}
+        </div>
+        <read-more v-model="review.expanded">
+          <vue-markdown :source="review.comment" />
+        </read-more>
       </div>
     </template>
     <b-loading v-model="loading_reviews" :is-full-page="false" />
@@ -273,6 +370,7 @@ import External from "~/components/External"
 import Stars from "~/components/Stars"
 import CalendarAdd from "~/components/CalendarAdd"
 import SocialButton from "~/components/SocialButton"
+import ReadMore from "~/components/ReadMore"
 
 import MapMarker from '~/assets/img/marker.png'
 import LocationIcon from '~/assets/img/location-marker.svg?inline'
@@ -281,6 +379,9 @@ import KeywordsIcon from '~/assets/img/speech-bubble.svg?inline'
 import LikeIcon from '~/assets/img/like.svg?inline'
 import SavedIcon from '~/assets/img/saved-science-opportunities.svg?inline'
 import StarIcon from '~/assets/img/star-on.svg?inline'
+import FlagIcon from '~/assets/img/flag.svg?inline'
+import LinkIcon from '~/assets/img/link.svg?inline'
+import AtomIcon from '~/assets/img/atom.svg?inline'
 
 export default {
     components: {
@@ -294,6 +395,7 @@ export default {
         Stars,
         CalendarAdd,
         SocialButton,
+        ReadMore,
 
         LocationIcon,
         TimeIcon,
@@ -301,6 +403,9 @@ export default {
         LikeIcon,
         SavedIcon,
         StarIcon,
+        FlagIcon,
+        LinkIcon,
+        AtomIcon,
     },
 
     props: {
@@ -326,7 +431,7 @@ export default {
                 save: false,
                 didit: false,
             },
-            show_didit_add: false,
+            show_didit_logged_out: false,
             show_bookmark_add: false,
             show_review_add: false,
             show_calendar_add: false,
@@ -338,7 +443,8 @@ export default {
             saves: null,
             didit: null,
             show_map: false,
-            description_closed: true,
+            description_open: false,
+            mobile_menu_open: false,
         }
     },
 
@@ -448,7 +554,8 @@ export default {
     },
 
     watch: {
-        "user.authenticated": async (new_val, old_val) => {
+        "user.authenticated": async function(new_val, old_val) {
+            console.log(this, new_val, old_val);
             if(new_val) {
                 this.did = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/me', { withCredentials: true });
             }
@@ -524,17 +631,64 @@ export default {
             await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/likes', {}, { withCredentials: true });
             this.did.like = true;
             this.likes += 1;
+
+            this.$buefy.toast.open({
+                message: 'Liked it',
+                type: 'is-success'
+            });
         },
 
         async do_didit() {
-            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/didit', {}, { withCredentials: true });
-            this.did.didit = true;
+            if(this.user.authenticated) {
+                try {
+                    await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/didit', {}, { withCredentials: true });
+
+                    this.did.didit = true;
+
+                    this.$buefy.toast.open({
+                        message: 'Logged participation',
+                        type: 'is-success',
+                    });
+                }
+                catch(error) {
+                    this.did.didit = true;
+
+                    let state = await this.$store.dispatch('get_local');
+                    let didit = state.didit || [];
+
+                    didit.push(this.opportunity.slug);
+
+                    state.didit = didit;
+                    await this.$store.dispatch('set_local', state);
+
+                    this.$buefy.toast.open({
+                        message: "Saved in your browser, we'll log it later",
+                        type: 'is-info',
+                    });
+                }
+            }
+            else {
+                let state = await this.$store.dispatch('get_local');
+                let didit = state.didit || [];
+
+                didit.push(this.opportunity.slug);
+
+                state.didit = didit;
+                await this.$store.dispatch('set_local', state);
+
+                this.show_didit_logged_out = true;
+            }
         },
 
         async do_save() {
             if(this.user.authenticated) {
                 await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/saves', {}, { withCredentials: true });
                 this.did.save= true;
+
+                this.$buefy.toast.open({
+                    message: 'Opportunity saved',
+                    type: 'is-success'
+                });
             }
             else {
                 this.show_bookmark_add = true;
@@ -543,6 +697,10 @@ export default {
 
         async do_review() {
             let {id} = await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/reviews', this.new_review, { withCredentials: true });
+
+            // Consider handling the case where the id matches an id
+            // in the existing reviews list -- the user updated their
+            // review instead of creating a new one.
 
             this.show_review_add = false;
 
@@ -556,7 +714,7 @@ export default {
                 image_url: this.user.image_url,
                 rating: this.new_review.rating,
                 comment: this.new_review.comment,
-                when: (new Date()).toISOFormat(),
+                when: (new Date()).toISOString(),
             });
 
             this.new_review = {
@@ -624,12 +782,125 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.mobile-menu-toggle {
+    position: fixed;
+    overflow: hidden;
+    bottom: 17px;
+    right: 17px;
+    background-color: $snm-color-action;
+    color: $snm-color-element-dark;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    border: 0px;
+    box-shadow: 0px 3px 6px $snm-color-shadow;
+    font-size: 30px;
+}
+
+.mobile-menu {
+    display: flex;
+    position: fixed;
+    bottom: 74px;
+    right: 17px;
+    border-radius: 6px;
+    overflow: hidden;
+    width: 284px;
+    flex-direction: column;
+    background-color: $snm-color-background;
+    border: 1px solid $snm-color-border-ondark;
+    z-index: 20;
+
+    &.closed {
+        display: none;
+    }
+
+    > a {
+        display: flex;
+        background-color: $snm-color-action;
+        color: $snm-color-element-dark;
+        border-bottom: 1px solid $snm-color-background;
+        font-family: $snm-font-content;
+        font-weight: bold;
+        font-size: 16px;
+        letter-spacing: 0px;
+        padding: 17px;
+        align-items: center;
+
+        svg {
+            width: 20px;
+            margin-right: 0.5rem;
+
+            * {
+                fill: currentColor;
+            }
+        }
+    }
+
+    div {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+
+        a {
+            width: 35px;
+            height: 35px;
+            margin: 15px 27px;
+        }
+    }
+}
+
 img.opportunity-image {
     width: 100vw;
     height: 158px;
     object-fit: contain;
     object-position: center center;
     overflow: hidden;
+}
+
+.ididthis {
+    .modal {
+        .card {
+            h2 {
+                font-family: $snm-font-heading;
+                font-weight: bold;
+                font-size: 21px;
+                line-height: 26px;
+                letter-spacing: 0px;
+                color: $snm-color-background-dark;
+
+                .close {
+                    float: right;
+                    font-size: 30px;
+                    position: relative;
+                    top: -10px;
+                    cursor: pointer;
+                }
+            }
+
+            p {
+                font-family: $snm-font-content;
+                font-weight: normal;
+                font-size: 16px;
+                line-height: 22px;
+                letter-spacing: 0px;
+                color: $snm-color-tldr;
+                margin: 1rem 0px;
+            }
+
+            div:last-child {
+                display: flex;
+                justify-content: right;
+
+                > * {
+                    flex-grow: 0;
+                }
+            }
+        }
+    }
 }
 
 .map {
@@ -705,6 +976,10 @@ img.opportunity-image {
 
             > :first-child {
                 margin-right: 0.75rem;
+            }
+
+            svg.liked * {
+                fill: $snm-color-info;
             }
         }
 
@@ -856,27 +1131,6 @@ img.opportunity-image {
         color: $snm-color-background-dark;
         margin-bottom: 17px;
     }
-
-    > div {
-        position: relative;
-        overflow: hidden;
-
-        &.closed {
-            max-height: 8rem;
-
-            &:after {
-                content  : "";
-                position : absolute;
-                z-index  : 1;
-                bottom   : 0;
-                left     : 0;
-                pointer-events   : none;
-                background-image : linear-gradient(to bottom, change-color($snm-color-background, $alpha: 0), $snm-color-background 90%);
-                width    : 100%;
-                height   : 2rem;
-            }
-        }
-    }
 }
 
 .tags {
@@ -938,7 +1192,7 @@ img.opportunity-image {
     position: relative;
     min-height: 3rem;
 
-    h2 {
+    > h2 {
         color: $snm-color-element-light;
         background-color: $snm-color-element-med;
         font-family: $snm-font-heading;
@@ -946,6 +1200,39 @@ img.opportunity-image {
         font-size: 16px;
         line-height: 19px;
         padding: 17px;
+    }
+
+    .review {
+        padding: 17px;
+        border-bottom: 1px solid $snm-color-border;
+        border-top: 1px solid $snm-color-border;
+
+        > :nth-child(1) {
+            display: flex;
+            justify-content: space-between;
+
+            > :last-child {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 3.5rem;
+                font-family: $snm-font-meta;
+                font-weight: normal;
+                font-size: 12px;
+                line-height: 15px;
+                color: $snm-color-element-med;
+            }
+        }
+
+        > :nth-child(2) {
+            font-family: $snm-font-meta;
+            font-weight: normal;
+            font-style: italic;
+            font-size: 14px;
+            line-height: 40px;
+            letter-spacing: 0px;
+            color: $snm-color-caption;
+        }
     }
 
     .modal {
