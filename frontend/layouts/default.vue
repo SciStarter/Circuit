@@ -1,7 +1,7 @@
 <template>
-<div id="page" class="container">
+<div id="page" :class="{'authenticated': authenticated, 'not-authenticated': !authenticated}">
   <header>
-    <button class="toggle-menu" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu" @click="menu = !menu">
+    <button class="toggle-menu mobile-only" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu" @click="menu = !menu">
       <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
       <img v-else src="~assets/img/hamburger.svg?data">
     </button>
@@ -41,28 +41,29 @@
 
     <aside :class="{toggled: menu}" class="menu-box" @click="menu = !menu">
       <div v-if="authenticated" class="authenticated">
+        <span class="no-mobile" data-context="header-username">{{ username }}</span>
         <ul>
-          <li>
+          <li class="mobile-only">
             <nuxt-link to="/find">
               <find-icon class="menu-icon" /> Find Science Opportunities
             </nuxt-link>
           </li>
-          <li>
+          <li class="mobile-only">
             <nuxt-link to="/my/saved">
               <saved-icon class="menu-icon" /> Saved Science Opportunities
             </nuxt-link>
           </li>
-          <li>
+          <li class="mobile-only">
             <nuxt-link to="/my/science">
               <science-icon class="menu-icon" /> My Science
             </nuxt-link>
           </li>
-          <li>
+          <li class="mobile-only">
             <nuxt-link to="/my/goals">
               <goals-icon class="menu-icon" /> My Goals
             </nuxt-link>
           </li>
-          <li>
+          <li class="mobile-only">
             <nuxt-link to="/my/profile">
               <profile-icon class="menu-icon" /> My Profile
             </nuxt-link>
@@ -81,7 +82,57 @@
     </aside>
   </header>
 
-  <nuxt @login="show_login = true" @signup="show_signup = true" />
+  <section id="main">
+    <div id="content">
+      <nuxt @login="show_login = true" @signup="show_signup = true" />
+    </div>
+
+    <nav>
+      <strong v-if="owner">My Participation</strong>
+
+      <nuxt-link to="/find">
+        <find-icon /> Find Science Opportunities
+      </nuxt-link>
+
+      <nuxt-link to="/my/saved">
+        <saved-icon /> Saved Science Opportunities
+      </nuxt-link>
+
+      <nuxt-link to="/my/science">
+        <science-icon /> My Science
+      </nuxt-link>
+
+      <nuxt-link to="/my/goals">
+        <goals-icon /> My Goals
+      </nuxt-link>
+
+      <nuxt-link to="/my/profile">
+        <profile-icon /> My Profile &amp; Settings
+      </nuxt-link>
+
+      <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
+
+      <nuxt-link v-if="owner" to="/my/opportunities">
+        <science-icon /> Current Opportunities
+      </nuxt-link>
+
+      <nuxt-link v-if="owner" to="/my/draft-or-closed">
+        <science-icon /> Draft &amp; Closed Opportunities
+      </nuxt-link>
+
+      <nuxt-link v-if="owner" to="/my/organization">
+        <science-icon /> Your Organization
+      </nuxt-link>
+
+      <nuxt-link v-if="owner" to="/my/submit-opportunity">
+        <science-icon /> Submit an Opportunity
+      </nuxt-link>
+    </nav>
+
+    <nuxt-link to="/" class="logo" title="Science Near Me logo">
+      <img src="~assets/img/logo.svg?data">
+    </nuxt-link>
+  </section>
 
   <footer>
     <ul>
@@ -209,6 +260,7 @@ export default {
             search: false,
             show_login: false,
             show_signup: false,
+            show_person_dropdown: false,
 
             query: {
                 keywords: '',
@@ -292,12 +344,20 @@ export default {
         },
 
         authenticated() {
-            return this.$store.state.user.authenticated;
+            return !!this.$store.state.user.authenticated;
+        },
+
+        owner() {
+            if(!this.authenticated) {
+                return false;
+            }
+
+            return this.$store.state.user.num_partners > 0;
         },
 
         username() {
             return this.$store.state.user.username;
-        }
+        },
     },
 
     async mounted() {
@@ -326,6 +386,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+/* Increase if wider menu items are added */
+$user-menu-width: 10rem;
+
+/* Increase if more menu items are added */
+$user-menu-height: 2rem;
+
 #page {
     width: 100vw;
 }
@@ -364,13 +431,18 @@ header {
         margin-left: 1rem;
     }
 
-    .logo img {
+    .logo {
         position: absolute;
         top: 3px;
         left: 75px;
         left: calc(50% - 36px);
         height: 39px;
         width: auto;
+
+        img {
+            width: 100%;
+            height: 100%;
+        }
     }
 
     .toggle-menu {
@@ -391,6 +463,7 @@ header {
         padding: 5px;
         width: 24px;
         height: 24px;
+        box-shadow: 0px 3px 6px $snm-color-shadow;
 
         img {
             display: block;
@@ -411,11 +484,21 @@ header {
         box-shadow: 0px 3px 6px $snm-color-shadow;
 
         .not-authenticated {
-            text-align: center;
+            display: flex;
+            justify-content: space-evenly;
             background-color: $snm-color-element-med;
 
             button {
-                min-width: 9rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 9rem;
+                box-shadow: 0px 3px 6px $snm-color-shadow;
+
+                &:hover,&:active {
+                    color: $snm-color-element-med;
+                    background-color: $snm-color-element-light;
+                }
             }
         }
 
@@ -517,8 +600,273 @@ footer {
     }
 }
 
-@media (min-width: $fullsize-screen) {
+#main {
+    >nav,>.logo {
+        display: none;
+    }
+}
 
+@media only screen and (min-width: $fullsize-screen) {
+    header {
+        height: 100px;
+        border-top: 10px solid $snm-color-prehead;
+
+        .logo {
+            top: 25px;
+            left: 30px;
+            width: 180px;
+            height: auto;
+        }
+
+        .toggle-search {
+            top: 30px;
+            right: 10px;
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+
+            img {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        .menu-box {
+            display: inline-block;
+            background-color: transparent;
+            box-shadow: none;
+            left: unset;
+            right: 60px;
+            top: 18px;
+
+            .not-authenticated {
+                display: inline-block;
+                background-color: transparent;
+
+                button {
+                    width: auto;
+                    box-shadow: 0px 3px 6px $snm-color-shadow;
+
+                    &:hover,&:active {
+                        color: $snm-color-element-med;
+                        background-color: $snm-color-element-light;
+                    }
+                }
+            }
+
+            .authenticated {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: right;
+                margin-top: 12px;
+                height: 40px;
+                border-radius: 6px;
+                background-color: $snm-color-background-meddark;
+                color: $snm-color-element-light;
+                box-sizing: border-box;
+                border: 1px solid $snm-color-background-dark;
+                transition: border-bottom-right-radius 0.5s, botder-bottom-left-radius 0.5s;
+                padding: 0px 1rem;
+                min-width: $user-menu-width;
+
+                > span {
+                    font-family: $snm-font-content;
+                    font-weight: bold;
+                    font-size: 16px;
+                    cursor: pointer;
+
+                    &::after {
+                        content: ">";
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-left: 1rem;
+                        width: 1.5em;
+                        height: 1.5em;
+                        border-radius: 1em;
+                        color: $snm-color-element-dark;
+                        background-color: $snm-color-element-light;
+                        transform: rotate(0.25turn);
+                        transition: transform;
+                    }
+                }
+
+                > ul {
+                    position: absolute;
+                    top: 50px;
+                    right: 5px;
+                    width: $user-menu-width;
+                    overflow: hidden;
+                    max-height: 0px;
+                    max-width: 0px;
+                    transition: max-height 0.5s, max-width 0.5s, right 0.5s;
+                    background-color: $snm-color-background-meddark;
+                    box-sizing: border-box;
+                    border: 1px solid $snm-color-background-dark;
+                    border-radius: 6px;
+                    border-top-left-radius: 0px;
+                    border-top-right-radius: 0px;
+
+                    li {
+                        border: 0px;
+                        line-height: 24px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: right;
+                        margin: 3px 1rem;
+
+                        a {
+                            color: $snm-color-element-ondark;
+                        }
+                    }
+                }
+            }
+
+            &.toggled .authenticated {
+                border-bottom-left-radius: 0px;
+                border-bottom-right-radius: 0px;
+                border-bottom: 0px;
+
+                > span {
+                    &::after {
+                        transform: rotate(-0.25turn);
+                        transition: transform;
+                    }
+                }
+
+                ul {
+                    max-width: $user-menu-width;
+                    max-height: $user-menu-height;
+
+                    right: 0px;
+                    transition: max-height 0.5s, max-width 0.5s, right 0.5s;
+                }
+            }
+        }
+    }
+
+    #content {
+        margin: 2rem 50px;
+    }
+
+    .authenticated #main {
+        display: flex;
+        flex-direction: row-reverse;
+
+        a.logo {
+            display: block;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 280px;
+            height: 120px;
+            padding: 1rem;
+            background-color: $snm-color-background-medium;
+            box-shadow: 0px 0px 6px $snm-color-shadow;
+            clip-path: inset(0px -15px 0px 0px);
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-position: center center;
+                object-fit: contain;
+            }
+        }
+
+        >:not(nav) {
+            flex-grow: 1;
+        }
+
+        nav {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            width: 280px;
+            background-color: $snm-color-background-medium;
+            flex-grow: 0;
+            box-shadow: 0px 0px 6px $snm-color-shadow;
+            clip-path: inset(0px -2rem 0px 0px);
+
+            strong {
+                font-family: $snm-font-content;
+                font-weight: bold;
+                font-size: 13px;
+                line-height: 15px;
+                letter-spacing: 0.39px;
+                text-transform: uppercase;
+                padding: 2rem 0px 0px 1rem;
+
+                &.nav-separate {
+                    margin-top: 2rem;
+                    border-top: 1px solid $snm-color-background-light;
+                }
+            }
+
+            a,a:hover,a:active {
+                display: flex;
+                color: $snm-color-element-dark;
+                background-color: transparent;
+                align-items: center;
+                font-family: $snm-font-content;
+                font-weight: normal;
+                font-size: 16px;
+                line-height: 52px;
+                padding-left: 1rem;
+                position: relative;
+                box-sizing: border-box;
+                height: 52px;
+
+                &.nuxt-link-active {
+                    background-color: $snm-color-background-meddark;
+                    color: $snm-color-element-light;
+
+                    &::after {
+                        position: absolute;
+                        right: -26px;
+                        content: "";
+                        width: 0px;
+                        height: 52px;
+                        border-left: 26px solid $snm-color-background-meddark;
+                        border-top: 26px solid transparent;
+                        border-bottom: 26px solid transparent;
+                    }
+                }
+
+                svg {
+                    margin-right: 1rem;
+
+                    * {
+                        fill: currentColor;
+                    }
+                }
+            }
+        }
+    }
+
+    footer {
+        display: flex;
+        justify-content: space-evenly;
+        padding: 60px 0px;
+
+        > ul {
+            li {
+                border: 0px;
+
+                h1 {
+                    text-decoration: underline;
+                }
+            }
+        }
+
+        > div {
+            max-width: 30vw;
+        }
+    }
+
+    .authenticated footer {
+        border-left: 280px solid $snm-color-background-medium;
+    }
 }
 </style>
 

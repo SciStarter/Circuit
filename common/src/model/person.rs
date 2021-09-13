@@ -224,66 +224,69 @@ impl Person {
             .collect()
     }
 
-    pub async fn is_bookmarked(&self, db: &Database, opportunity: &Uuid) -> Result<bool, Error> {
-        Ok(sqlx::query_file!(
-            "db/person/is_bookmarked.sql",
-            &self.exterior.uid,
-            opportunity
-        )
-        .map(|rec| rec.bookmarked)
-        .fetch_one(db)
-        .await?
-        .unwrap_or(false))
-    }
+    // These methods manipulate the legacy c_person_bookmark table.
+    // Bookmarks are represented in the c_involvement table.
 
-    pub async fn set_bookmark(&self, db: &Database, opportunity: &Uuid) -> Result<(), Error> {
-        sqlx::query_file!(
-            "db/person/set_bookmark.sql",
-            &self.exterior.uid,
-            opportunity
-        )
-        .execute(db)
-        .await?;
+    // pub async fn is_bookmarked(&self, db: &Database, opportunity: &Uuid) -> Result<bool, Error> {
+    //     Ok(sqlx::query_file!(
+    //         "db/person/is_bookmarked.sql",
+    //         &self.exterior.uid,
+    //         opportunity
+    //     )
+    //     .map(|rec| rec.bookmarked)
+    //     .fetch_one(db)
+    //     .await?
+    //     .unwrap_or(false))
+    // }
 
-        Ok(())
-    }
+    // pub async fn set_bookmark(&self, db: &Database, opportunity: &Uuid) -> Result<(), Error> {
+    //     sqlx::query_file!(
+    //         "db/person/set_bookmark.sql",
+    //         &self.exterior.uid,
+    //         opportunity
+    //     )
+    //     .execute(db)
+    //     .await?;
 
-    pub async fn clear_bookmark(&self, db: &Database, opportunity: &Uuid) -> Result<(), Error> {
-        sqlx::query_file!(
-            "db/person/clear_bookmark.sql",
-            &self.exterior.uid,
-            opportunity
-        )
-        .execute(db)
-        .await?;
+    //     Ok(())
+    // }
 
-        Ok(())
-    }
+    // pub async fn clear_bookmark(&self, db: &Database, opportunity: &Uuid) -> Result<(), Error> {
+    //     sqlx::query_file!(
+    //         "db/person/clear_bookmark.sql",
+    //         &self.exterior.uid,
+    //         opportunity
+    //     )
+    //     .execute(db)
+    //     .await?;
 
-    pub async fn all_bookmarked<'db>(
-        &self,
-        db: &'db Database,
-    ) -> Result<impl Stream<Item = Result<OpportunityReference, sqlx::Error>> + 'db, Error> {
-        Ok(
-            sqlx::query_file!("db/person/get_bookmarked.sql", &self.exterior.uid)
-                .try_map(|rec| {
-                    Ok(OpportunityReference {
-                        uid: rec.uid.ok_or_else(|| sqlx::Error::ColumnDecode {
-                            index: "uid".to_string(),
-                            source: Box::new(Error::Missing("uid".to_string())),
-                        })?,
-                        slug: rec.slug.ok_or_else(|| sqlx::Error::ColumnDecode {
-                            index: "slug".to_string(),
-                            source: Box::new(Error::Missing("slug".to_string())),
-                        })?,
-                        title: rec.title.unwrap_or_else(|| String::new()),
-                        image_url: rec.image_url.unwrap_or_else(|| String::new()),
-                        short_desc: rec.short_desc.unwrap_or_else(|| String::new()),
-                    })
-                })
-                .fetch(db),
-        )
-    }
+    //     Ok(())
+    // }
+
+    // pub async fn all_bookmarked<'db>(
+    //     &self,
+    //     db: &'db Database,
+    // ) -> Result<impl Stream<Item = Result<OpportunityReference, sqlx::Error>> + 'db, Error> {
+    //     Ok(
+    //         sqlx::query_file!("db/person/get_bookmarked.sql", &self.exterior.uid)
+    //             .try_map(|rec| {
+    //                 Ok(OpportunityReference {
+    //                     uid: rec.uid.ok_or_else(|| sqlx::Error::ColumnDecode {
+    //                         index: "uid".to_string(),
+    //                         source: Box::new(Error::Missing("uid".to_string())),
+    //                     })?,
+    //                     slug: rec.slug.ok_or_else(|| sqlx::Error::ColumnDecode {
+    //                         index: "slug".to_string(),
+    //                         source: Box::new(Error::Missing("slug".to_string())),
+    //                     })?,
+    //                     title: rec.title.unwrap_or_else(|| String::new()),
+    //                     image_url: rec.image_url.unwrap_or_else(|| String::new()),
+    //                     short_desc: rec.short_desc.unwrap_or_else(|| String::new()),
+    //                 })
+    //             })
+    //             .fetch(db),
+    //     )
+    // }
 
     pub fn check_permission(&self, perm: &Permission) -> bool {
         Permission::check(&self.interior.permissions, perm)
@@ -312,6 +315,17 @@ impl Person {
         } else {
             false
         }
+    }
+
+    pub async fn count_partners(&self, db: &Database) -> Result<i32, Error> {
+        Ok(sqlx::query_file!(
+            "db/person/count_partners.sql",
+            serde_json::to_value(self.exterior.uid)?
+        )
+        .map(|row| row.total)
+        .fetch_one(db)
+        .await?
+        .unwrap_or(0) as i32)
     }
 
     pub async fn load_partners(&self, db: &Database) -> Result<Vec<Result<Partner, Error>>, Error> {
