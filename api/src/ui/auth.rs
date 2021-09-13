@@ -60,10 +60,13 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
     if person.check_password(&form.password) {
         let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
 
+        let mut p_json = person_json(&person, &jwt);
+        p_json["num_partners"] = person.count_partners(db).await?.into();
+
         common::log("ui-login", &jwt);
 
         okay_with_cookie(
-            &person_json(&person, &jwt),
+            &p_json,
             Cookie::build("token", jwt)
                 .path("/")
                 .max_age(Duration::hours(SESSION_HOURS))
@@ -136,10 +139,13 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
 
     let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
 
+    let mut p_json = person_json(&person, &jwt);
+    p_json["num_partners"] = 0.into();
+
     common::log("ui-signup", &jwt);
 
     okay_with_cookie(
-        &person_json(&person, &jwt),
+        &p_json,
         Cookie::build("token", jwt)
             .path("/")
             .max_age(Duration::hours(SESSION_HOURS))
@@ -157,8 +163,11 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
     if let Some(person) = request_person(&mut req).await? {
         let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
 
+        let mut p_json = person_json(&person, &jwt);
+        p_json["num_partners"] = person.count_partners(req.state()).await?.into();
+
         okay_with_cookie(
-            &person_json(&person, &jwt),
+            &p_json,
             Cookie::build("token", jwt)
                 .path("/")
                 .max_age(Duration::hours(SESSION_HOURS))

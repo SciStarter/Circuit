@@ -21,6 +21,38 @@
       ]
     }
   },
+  "13cf1910ed943c8638d6c2beb75ff84a97c7d75a16a67d660f7e49f18ef53628": {
+    "query": "select id, exterior, interior\nfrom c_partner\nwhere ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "16274e812e6865e37e4b4f3cea7a6cb0af3410c99e8090cffdfcee78dd082de9": {
     "query": "insert\ninto c_opportunity (exterior, interior)\nvalues (\n  $1::jsonb,\n  case\n    when ($2::jsonb -> 'accepted') = 'null'::jsonb\n    then jsonb_set($2::jsonb, '{accepted}', 'false'::jsonb)\n    else $2::jsonb\n  end\n) returning id;\n",
     "describe": {
@@ -173,6 +205,26 @@
       "nullable": [
         false,
         null,
+        null
+      ]
+    }
+  },
+  "369aab45590c7324468f76defaaca4885ad0ca6a935d53eb7d056a4fd6871577": {
+    "query": "select (exterior ->> 'uid')::uuid as uid from c_opportunity where lower($1::text) = lower(exterior ->> 'slug') limit 1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "uid",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
         null
       ]
     }
@@ -590,6 +642,19 @@
       ]
     }
   },
+  "5cea81409892578b39454103d129bbbe8a23b5c04a24b94be72347b3313cf8a5": {
+    "query": "insert\ninto c_opportunity_like (opportunity_id, person)\nvalues ($1, $2)\non conflict do nothing;\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "6ff3efed7a7e1ae0be5f36b8c802bbbf4991f826f62254d1ace3051d6d4995aa": {
     "query": "select id, exterior, interior from c_opportunity where id = $1 limit 1;\n",
     "describe": {
@@ -620,19 +685,6 @@
         false,
         false
       ]
-    }
-  },
-  "70030c72b45b799bc3176f60912a4c1426f34068552ddf16802ff223f15f092b": {
-    "query": "delete from c_person_bookmark where person = $1 and opportunity = $2;\n",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid"
-        ]
-      },
-      "nullable": []
     }
   },
   "731e1957cf8705f40d16d13e85efb39ea753be689994ab6ee729c4a1e12072b8": {
@@ -780,51 +832,6 @@
         ]
       },
       "nullable": [
-        false
-      ]
-    }
-  },
-  "8a9d81d349e600a37c295b081067d06dffe6f8e317e268ca63d47024984ab672": {
-    "query": "insert into c_person_bookmark (person, opportunity, saved)\nvalues ($1, $2, now())\non conflict do nothing;\n",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid"
-        ]
-      },
-      "nullable": []
-    }
-  },
-  "9181b3c3f337b0be8c5a8b9afbe43f5bc99314996da13a2a59d61daf089e837d": {
-    "query": "select id, exterior, interior from c_partner where ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "exterior",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 2,
-          "name": "interior",
-          "type_info": "Jsonb"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Jsonb"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
         false
       ]
     }
@@ -1014,6 +1021,27 @@
       ]
     }
   },
+  "b5e0a2e00c94e1d37e6ef7ab175d524ebaca9100d64453e9cc60de99489a4f90": {
+    "query": "select count(*) likes\nfrom c_opportunity_like L inner join c_opportunity O on L.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1 and L.person = $2;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "likes",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
   "c0425047604adf0d688a217b964e5787c81262a6d2f5c32654d53c6bf148c4ca": {
     "query": "select id, exterior, interior from c_person where (interior -> 'email_hashes') ? $1 order by id limit 1;\n",
     "describe": {
@@ -1114,50 +1142,6 @@
         ]
       },
       "nullable": [
-        null
-      ]
-    }
-  },
-  "c73db5ad67387018e2a0b98336bb7288dcf004d5ac3ad5f177d2ff054281667b": {
-    "query": "select\n  (opp.exterior ->> 'uid')::uuid as uid,\n  (opp.exterior ->> 'slug') as slug,\n  (opp.exterior ->> 'title') as title,\n  (opp.exterior ->> 'image_url') as image_url,\n  (opp.exterior ->> 'short_desc') as short_desc\nfrom c_opportunity as opp inner join c_person_bookmark as mark on\n  (opp.exterior -> 'uid') @> to_jsonb(mark.opportunity)\nwhere\n  mark.person = $1::uuid and opp.exterior ? 'uid' and opp.exterior ? 'slug';\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "uid",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "slug",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "title",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "image_url",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "short_desc",
-          "type_info": "Text"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      },
-      "nullable": [
-        null,
-        null,
-        null,
-        null,
         null
       ]
     }
@@ -1400,27 +1384,6 @@
       ]
     }
   },
-  "f2b76710d1d1cde965dda9b1aaee9f1cd47c2d567c49c5b038302d19356922f8": {
-    "query": "select exists (select 1 from c_person_bookmark where person = $1 and opportunity = $2) as bookmarked;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "bookmarked",
-          "type_info": "Bool"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid"
-        ]
-      },
-      "nullable": [
-        null
-      ]
-    }
-  },
   "f6f4075f2a6e539d490b730364c608936865aa275e126a84899f8674dfb8a2dd": {
     "query": "SELECT DISTINCT \"group\" FROM c_block WHERE \"language\" LIKE $1 ORDER BY \"group\";\n",
     "describe": {
@@ -1557,6 +1520,26 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "fed9e4bb161392626d007451daca648e4f0fa9f7324dc837ca5faae946c7eedb": {
+    "query": "select count(*) as total\nfrom c_partner\nwhere ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "total",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        null
+      ]
     }
   }
 }
