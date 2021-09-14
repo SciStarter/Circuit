@@ -8,14 +8,6 @@ use sha2::{Digest, Sha256};
 use sqlx::prelude::*;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
-#[serde(rename_all = "kebab-case")]
-pub struct Bookmark {
-    person: Uuid,
-    opportunity: Uuid,
-    saved: DateTime<FixedOffset>,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Gender {
@@ -223,70 +215,6 @@ impl Person {
             .into_iter()
             .collect()
     }
-
-    // These methods manipulate the legacy c_person_bookmark table.
-    // Bookmarks are represented in the c_involvement table.
-
-    // pub async fn is_bookmarked(&self, db: &Database, opportunity: &Uuid) -> Result<bool, Error> {
-    //     Ok(sqlx::query_file!(
-    //         "db/person/is_bookmarked.sql",
-    //         &self.exterior.uid,
-    //         opportunity
-    //     )
-    //     .map(|rec| rec.bookmarked)
-    //     .fetch_one(db)
-    //     .await?
-    //     .unwrap_or(false))
-    // }
-
-    // pub async fn set_bookmark(&self, db: &Database, opportunity: &Uuid) -> Result<(), Error> {
-    //     sqlx::query_file!(
-    //         "db/person/set_bookmark.sql",
-    //         &self.exterior.uid,
-    //         opportunity
-    //     )
-    //     .execute(db)
-    //     .await?;
-
-    //     Ok(())
-    // }
-
-    // pub async fn clear_bookmark(&self, db: &Database, opportunity: &Uuid) -> Result<(), Error> {
-    //     sqlx::query_file!(
-    //         "db/person/clear_bookmark.sql",
-    //         &self.exterior.uid,
-    //         opportunity
-    //     )
-    //     .execute(db)
-    //     .await?;
-
-    //     Ok(())
-    // }
-
-    // pub async fn all_bookmarked<'db>(
-    //     &self,
-    //     db: &'db Database,
-    // ) -> Result<impl Stream<Item = Result<OpportunityReference, sqlx::Error>> + 'db, Error> {
-    //     Ok(
-    //         sqlx::query_file!("db/person/get_bookmarked.sql", &self.exterior.uid)
-    //             .try_map(|rec| {
-    //                 Ok(OpportunityReference {
-    //                     uid: rec.uid.ok_or_else(|| sqlx::Error::ColumnDecode {
-    //                         index: "uid".to_string(),
-    //                         source: Box::new(Error::Missing("uid".to_string())),
-    //                     })?,
-    //                     slug: rec.slug.ok_or_else(|| sqlx::Error::ColumnDecode {
-    //                         index: "slug".to_string(),
-    //                         source: Box::new(Error::Missing("slug".to_string())),
-    //                     })?,
-    //                     title: rec.title.unwrap_or_else(|| String::new()),
-    //                     image_url: rec.image_url.unwrap_or_else(|| String::new()),
-    //                     short_desc: rec.short_desc.unwrap_or_else(|| String::new()),
-    //                 })
-    //             })
-    //             .fetch(db),
-    //     )
-    // }
 
     pub fn check_permission(&self, perm: &Permission) -> bool {
         Permission::check(&self.interior.permissions, perm)

@@ -557,7 +557,7 @@ export default {
         "user.authenticated": async function(new_val, old_val) {
             console.log(this, new_val, old_val);
             if(new_val) {
-                this.did = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/me', { withCredentials: true });
+                this.did = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/me', this.$store.state.auth);
             }
         }
     },
@@ -622,13 +622,13 @@ export default {
         }
 
         if(this.user.authenticated) {
-            this.did = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/me', { withCredentials: true });
+            this.did = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/me', this.$store.state.auth);
         }
     },
 
     methods: {
         async do_like() {
-            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/likes', {}, { withCredentials: true });
+            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/likes', {}, this.$store.state.auth);
             this.did.like = true;
             this.likes += 1;
 
@@ -641,7 +641,7 @@ export default {
         async do_didit() {
             if(this.user.authenticated) {
                 try {
-                    await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/didit', {}, { withCredentials: true });
+                    await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/didit', {}, this.$store.state.auth);
 
                     this.did.didit = true;
 
@@ -682,7 +682,7 @@ export default {
 
         async do_save() {
             if(this.user.authenticated) {
-                await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/saves', {}, { withCredentials: true });
+                await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/saves', {}, this.$store.state.auth);
                 this.did.save= true;
 
                 this.$buefy.toast.open({
@@ -696,7 +696,7 @@ export default {
         },
 
         async do_review() {
-            let {id} = await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/reviews', this.new_review, { withCredentials: true });
+            let {id} = await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/reviews', this.new_review, this.$store.state.auth);
 
             // Consider handling the case where the id matches an id
             // in the existing reviews list -- the user updated their
@@ -729,7 +729,7 @@ export default {
         },
 
         async report_review(id) {
-            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/report-review', {id: id}, { withCredentials: true });
+            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/report-review', {id: id}, this.$store.state.auth);
 
             this.$buefy.toast.open({
                 message: 'Reported review',

@@ -113,19 +113,19 @@
       <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
 
       <nuxt-link v-if="owner" to="/my/opportunities">
-        <science-icon /> Current Opportunities
+        <my-opportunities-icon /> Current Opportunities
       </nuxt-link>
 
       <nuxt-link v-if="owner" to="/my/draft-or-closed">
-        <science-icon /> Draft &amp; Closed Opportunities
+        <my-past-opportunities-icon /> Draft &amp; Closed Opportunities
       </nuxt-link>
 
       <nuxt-link v-if="owner" to="/my/organization">
-        <science-icon /> Your Organization
+        <my-organization-icon /> Your Organization
       </nuxt-link>
 
       <nuxt-link v-if="owner" to="/my/submit-opportunity">
-        <science-icon /> Submit an Opportunity
+        <submit-opportunity-icon /> Submit an Opportunity
       </nuxt-link>
     </nav>
 
@@ -232,6 +232,10 @@ import ScienceIcon from '~/assets/img/my-science.svg?inline'
 import GoalsIcon from '~/assets/img/my-goals.svg?inline'
 import ProfileIcon from '~/assets/img/my-profile-and-settings.svg?inline'
 import SearchIcon from '~/assets/img/search.svg?inline'
+import MyOpportunitiesIcon from '~/assets/img/current-opportunities.svg?inline'
+import MyPastOpportunitiesIcon from '~/assets/img/past-opportunities.svg?inline'
+import MyOrganizationIcon from '~/assets/img/your-organization.svg?inline'
+import SubmitOpportunityIcon from '~/assets/img/submit-opportunity.svg?inline'
 
 export default {
     components: {
@@ -249,7 +253,11 @@ export default {
         ScienceIcon,
         GoalsIcon,
         ProfileIcon,
-        SearchIcon
+        SearchIcon,
+        MyOpportunitiesIcon,
+        MyPastOpportunitiesIcon,
+        MyOrganizationIcon,
+        SubmitOpportunityIcon,
     },
 
     data () {
@@ -747,7 +755,7 @@ footer {
     }
 
     #content {
-        margin: 2rem 50px;
+        margin: 34px 170px 10px 190px;
     }
 
     .authenticated #main {
@@ -785,6 +793,7 @@ footer {
             width: 280px;
             background-color: $snm-color-background-medium;
             flex-grow: 0;
+            flex-shrink: 0;
             box-shadow: 0px 0px 6px $snm-color-shadow;
             clip-path: inset(0px -2rem 0px 0px);
 

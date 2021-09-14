@@ -1,11 +1,14 @@
 <template>
-<article class="opportunity-card">
+<article v-if="!hidden" class="opportunity-card">
+  <button v-if="trash" class="trash" @click="$emit('trash', opportunity)">
+    <trash-icon />
+  </button>
   <nuxt-link :to="'/' + opportunity.slug" class="primary">
     <img :src="image">
     <div>
       <h2>{{ subtitle }}</h2>
       <h1>{{ opportunity.title }}</h1>
-      <small>bar{{ opportunity.short_desc }}</small>
+      <small>{{ opportunity.short_desc }}</small>
       <opportunity-notice :opportunity="opportunity" mode="all" />
     </div>
   </nuxt-link>
@@ -42,6 +45,7 @@ import NoImage from "~/assets/img/no-image-thumb.jpg"
 import LocationIcon from '~/assets/img/location-marker.svg?inline'
 import TimeIcon from '~/assets/img/calendar.svg?inline'
 import KeywordsIcon from '~/assets/img/speech-bubble.svg?inline'
+import TrashIcon from '~/assets/img/trash.svg?inline'
 
 export default {
     components: {
@@ -52,14 +56,27 @@ export default {
 
         LocationIcon,
         TimeIcon,
-        KeywordsIcon
+        KeywordsIcon,
+        TrashIcon,
     },
 
     props: {
         opportunity: {
             type: Object,
             required: true
-        }
+        },
+
+        trash: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+
+        hidden: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
     },
 
     computed: {
@@ -78,6 +95,24 @@ export default {
 .opportunity-card {
     padding: 16px;
     border-bottom: 2px solid $snm-color-border;
+}
+
+.trash {
+    float: right;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    color: $snm-color-element-med;
+    border: 1px solid $snm-color-element-med;
+    border-radius: 10px;
+    box-shadow: 0px 3px 6px $snm-color-shadow;
+    cursor: pointer;
+
+    svg * {
+        fill: currentColor;
+    }
 }
 
 .primary {
@@ -153,6 +188,10 @@ export default {
         div {
             small {
                 display: block;
+                font-family: $snm-font-content;
+                font-size: 14px;
+                color: $snm-color-element-dark;
+                letter-spacing: 0.14px;
             }
 
             .opportunity-notice {
@@ -162,10 +201,20 @@ export default {
     }
 
     .secondary {
+        display: flex;
+        flex-wrap: wrap;
+
         .info {
+            width: 20vw;
+            min-width: 13rem;
+
             .opportunity-notice {
                 display: block;
             }
+        }
+
+        > :last-child {
+            width: 100%;
         }
     }
 }
