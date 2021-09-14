@@ -9,6 +9,7 @@ use crate::{model::Error, Database};
 #[derive(Debug, Serialize_repr, Deserialize_repr, PartialOrd, Ord, PartialEq, Eq)]
 #[repr(u8)]
 pub enum Mode {
+    Deleted = 0,
     Saved = 1,
     Logged = 2,
     Contributed = 3,

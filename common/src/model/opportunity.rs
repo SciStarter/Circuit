@@ -1,6 +1,6 @@
 use super::Error;
 use crate::model::involvement::{self, Involvement};
-use crate::Database;
+use crate::{Database, ToFixedOffset};
 
 use chrono::{DateTime, FixedOffset, Utc};
 use futures::StreamExt;
@@ -771,10 +771,12 @@ fn build_matching_query(
     }
 
     if let Some(person) = query.saved {
-        params.push(ParamValue::RawUuid(person));
+        params.push(ParamValue::Uuid(person));
         clauses.push(format!(
-            r"EXISTS (SELECT 1 FROM c_person_bookmark
-              WHERE person = ${} AND opportunity = (exterior ->> 'uid')::uuid)",
+            r"EXISTS (SELECT 1 FROM c_involvement AS inv
+              WHERE (inv.exterior -> 'opportunity') @> (primary_table.exterior -> 'uid')
+              AND (inv.interior -> 'participant') @> ${}::jsonb
+              AND (inv.exterior ->> 'mode')::integer = 1)",
             params.len()
         ));
     }
@@ -785,7 +787,7 @@ fn build_matching_query(
             r"EXISTS (SELECT 1 FROM c_involvement AS inv
               WHERE (inv.exterior -> 'opportunity') @> (primary_table.exterior -> 'uid')
               AND (inv.interior -> 'participant') @> ${}::jsonb
-              AND (inv.exterior -> 'mode') @> '3'::jsonb)",
+              AND (inv.exterior ->> 'mode')::integer >= 2)",
             params.len()
         ));
     }
@@ -1237,6 +1239,29 @@ pub async fn add_didit_for_slug(db: &Database, slug: &str, person: &Uuid) -> Res
 }
 
 impl Opportunity {
+    pub fn current_as_of(&self, now: &DateTime<FixedOffset>) -> bool {
+        let num_starts = self.exterior.start_datetimes.len();
+        let num_ends = self.exterior.end_datetimes.len();
+        let start_in_future = self.exterior.start_datetimes.iter().any(|dt| dt > now);
+        let end_in_future = self.exterior.end_datetimes.iter().any(|dt| dt > now);
+
+        (num_starts == 1 && num_ends == 0) || start_in_future || end_in_future
+    }
+
+    pub fn ended_as_of(&self, now: &DateTime<FixedOffset>) -> bool {
+        !self.current_as_of(now)
+    }
+
+    pub fn current(&self) -> bool {
+        let now = chrono::Utc::now().to_fixed_offset();
+        self.current_as_of(&now)
+    }
+
+    pub fn ended(&self) -> bool {
+        let now = chrono::Utc::now().to_fixed_offset();
+        self.ended_as_of(&now)
+    }
+
     pub async fn count_matching(db: &Database, query: &OpportunityQuery) -> Result<u32, Error> {
         let (query_string, query_params) = build_matching_query(
             &["count(*) as matches"],

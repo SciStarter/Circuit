@@ -11,6 +11,8 @@ export const state = () => ({
         authenticated: false
     },
 
+    auth: {},
+
     language: 'en',
 
     partners: [],
@@ -27,6 +29,17 @@ export const mutations = {
 
     save_user(state, user) {
         state.user = user;
+        if(user.authenticated) {
+            state.auth = {
+                headers: {
+                    'Authorization': 'Bearer ' + user.token,
+                },
+                withCredentials: true,
+            };
+        }
+        else {
+            state.auth = {};
+        }
     },
 
     save_language(state, language) {
@@ -98,6 +111,8 @@ export const actions = {
 
         commit('save_user', user);
 
+        this.$router.go(0);
+
         dispatch('sync_local_to_server');
 
         return user;
@@ -140,6 +155,8 @@ export const actions = {
 
         commit('save_user', user);
 
+        this.$router.go(0);
+
         dispatch('sync_local_to_server');
 
         return user;
@@ -165,6 +182,8 @@ export const actions = {
 
         commit('save_user', user);
 
+        this.$router.go(0);
+
         return user;
     },
 
@@ -189,9 +208,10 @@ export const actions = {
             try {
                 user = await this.$axios.$get('/api/ui/auth/me', {
                     headers: {
-                        Authorization: 'Bearer ' + token
-                    }
-                }, { withCredentials: true });
+                        Authorization: 'Bearer ' + token,
+                    },
+                    withCredentials: true
+                });
             }
             catch(error) {}
         }
