@@ -1,4 +1,11 @@
-use common::{jwt::issue_jwt, model::Person, Database};
+use common::{
+    jwt::issue_jwt,
+    model::{
+        involvement::{self, Involvement},
+        Person,
+    },
+    Database,
+};
 use http_types::Cookie;
 use once_cell::sync::Lazy;
 use serde::Deserialize;
@@ -165,6 +172,14 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
 
         let mut p_json = person_json(&person, &jwt);
         p_json["num_partners"] = person.count_partners(req.state()).await?.into();
+        p_json["reports_pending"] = Involvement::count_for_participant(
+            req.state(),
+            &person.exterior.uid,
+            Some(involvement::Mode::Interest),
+            Some(involvement::Mode::Saved),
+        )
+        .await?
+        .into();
 
         okay_with_cookie(
             &p_json,

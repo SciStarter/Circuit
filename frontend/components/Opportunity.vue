@@ -182,10 +182,10 @@
               <label>
                 {{ pair[0].toLocaleString() }}
               </label>
-              <calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" />
-              <calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" />
-              <calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" />
-              <calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" />
+              <calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+              <calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+              <calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+              <calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
             </div>
           </div>
         </b-modal>
@@ -206,6 +206,7 @@
     campaign="opp-page"
     content="find-out-more"
     class="find-out-more"
+    @before="register_interest"
     >
     <strong>Find out more</strong>
     <span>{{ opportunity.partner_opp_url }}</span>
@@ -627,6 +628,10 @@ export default {
     },
 
     methods: {
+        async register_interest() {
+            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/interest', {}, this.$store.state.auth);
+        },
+
         async do_like() {
             await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/likes', {}, this.$store.state.auth);
             this.did.like = true;

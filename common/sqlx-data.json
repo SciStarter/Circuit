@@ -106,26 +106,6 @@
       ]
     }
   },
-  "24322dbcb5dfca20f59b8d9a383d985ab6ade161dc9fd156563fe8370db368cc": {
-    "query": "select count(*) didit\nfrom c_involvement I inner join c_opportunity O\non (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')\nwhere (I.exterior -> 'mode')::integer >= 2 and (O.exterior ->> 'slug') = $1;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "didit",
-          "type_info": "Int8"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
-      "nullable": [
-        null
-      ]
-    }
-  },
   "2926fdcfb5c1566b98ce5db414ffcc2f504370e626736795d063305676c6adec": {
     "query": "select id, exterior, interior from c_involvement where ($1::jsonb) @> (interior -> 'participant') and ($2::jsonb) @> (exterior -> 'opportunity') limit 1;\n",
     "describe": {
@@ -655,6 +635,26 @@
       "nullable": []
     }
   },
+  "62ffbbac0271bf049852727ee7a6ebda23461fdc03384c2cd5549d9c1d16e4d7": {
+    "query": "select count(*) saves\nfrom c_involvement I inner join c_opportunity O\non (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')\nwhere (I.exterior -> 'mode')::integer = 20 and (O.exterior ->> 'slug') = $1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "saves",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
   "6ff3efed7a7e1ae0be5f36b8c802bbbf4991f826f62254d1ace3051d6d4995aa": {
     "query": "select id, exterior, interior from c_opportunity where id = $1 limit 1;\n",
     "describe": {
@@ -1021,6 +1021,26 @@
       ]
     }
   },
+  "af342c0fce25415935f95b38e359fffbc643147b51eee8f0f69108aa1d9a57f5": {
+    "query": "select count(*) didit\nfrom c_involvement I inner join c_opportunity O\non (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')\nwhere (I.exterior -> 'mode')::integer >= 30 and (O.exterior ->> 'slug') = $1;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "didit",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
   "b5e0a2e00c94e1d37e6ef7ab175d524ebaca9100d64453e9cc60de99489a4f90": {
     "query": "select count(*) likes\nfrom c_opportunity_like L inner join c_opportunity O on L.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1 and L.person = $2;\n",
     "describe": {
@@ -1114,26 +1134,6 @@
           "ordinal": 0,
           "name": "exists",
           "type_info": "Bool"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
-      "nullable": [
-        null
-      ]
-    }
-  },
-  "c5c668ea7468befe6d3178a72cb9bc80e164d29eff271dbc09c7a1b5fac45f81": {
-    "query": "select count(*) saves\nfrom c_involvement I inner join c_opportunity O\non (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')\nwhere (I.exterior -> 'mode')::integer = 1 and (O.exterior ->> 'slug') = $1;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "saves",
-          "type_info": "Int8"
         }
       ],
       "parameters": {

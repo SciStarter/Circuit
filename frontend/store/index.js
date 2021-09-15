@@ -42,6 +42,14 @@ export const mutations = {
         }
     },
 
+    set_user_reports_pending(state, num) {
+        if(!state.user.authenticated) {
+            return;
+        }
+
+        state.user.reports_pending = num;
+    },
+
     save_language(state, language) {
         state.language = language;
     },

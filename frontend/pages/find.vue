@@ -652,6 +652,10 @@ export default {
 
     div:first-child {
         display: flex;
+
+        > * {
+            flex-grow: 0;
+        }
     }
 
     div:last-child {

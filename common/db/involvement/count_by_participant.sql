@@ -1,4 +1,4 @@
-select id, exterior, interior
+select count(*) as total
 from c_involvement
 where
   ($1::jsonb) @> (interior -> 'participant')
@@ -12,5 +12,4 @@ and
     when $3::integer is null then true
     else (exterior ->> 'mode')::integer <= $3::integer
   end
-order by updated desc
-limit $4 offset $5;
+;

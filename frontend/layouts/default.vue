@@ -55,7 +55,7 @@
           </li>
           <li class="mobile-only">
             <nuxt-link to="/my/science">
-              <science-icon class="menu-icon" /> My Science
+              <science-icon class="menu-icon" /> My Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
             </nuxt-link>
           </li>
           <li class="mobile-only">
@@ -99,7 +99,7 @@
       </nuxt-link>
 
       <nuxt-link to="/my/science">
-        <science-icon /> My Science
+        <science-icon /> My Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
       </nuxt-link>
 
       <nuxt-link to="/my/goals">
@@ -263,7 +263,6 @@ export default {
     data () {
         const now = new Date();
         return {
-            alert: false,
             menu: false,
             search: false,
             show_login: false,
@@ -291,6 +290,18 @@ export default {
     },
 
     computed: {
+        user() {
+            return this.$store.state.user;
+        },
+
+        alert() {
+            if(!this.user || !this.user.authenticated) {
+                return false;
+            }
+
+            return this.user.reports_pending > 0;
+        },
+
         search_query() {
             let joint = '?';
             let ret = '';
@@ -895,5 +906,20 @@ footer {
     .mobile-only {
         display: none !important;
     }
+}
+
+.bubble {
+    position: relative;
+    top: -0.25em;
+    display: inline-flex;
+    font-size: 8pt;
+    color: $snm-color-element-light;
+    background-color: $snm-color-info;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5em;
+    height: 1.5em;
+    margin-left: 0.5em;
 }
 </style>
