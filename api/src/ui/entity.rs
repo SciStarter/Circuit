@@ -16,12 +16,15 @@ use tide_fluent_routes::{
     RouteSegment,
 };
 
+use crate::ui::okay_empty;
+
 use super::{okay, request_person};
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes.at(":slug", |r| {
         r.get(entity)
             .at("me", |r| r.get(get_me))
+            .at("interest", |r| r.post(register_interest))
             .at("likes", |r| r.get(get_likes).post(add_like))
             .at("saves", |r| r.get(get_saves).post(add_save))
             .at("didit", |r| r.get(get_didit).post(add_didit))
@@ -73,7 +76,7 @@ pub async fn add_didit(mut req: tide::Request<Database>) -> tide::Result {
         &json!({"person": person.exterior.uid, "opportunity": slug}),
     );
 
-    okay("")
+    okay_empty()
 }
 
 pub async fn get_saves(req: tide::Request<Database>) -> tide::Result {
@@ -97,7 +100,7 @@ pub async fn add_save(mut req: tide::Request<Database>) -> tide::Result {
         &json!({"person": person.exterior.uid, "opportunity": slug}),
     );
 
-    okay("")
+    okay_empty()
 }
 
 pub async fn get_likes(req: tide::Request<Database>) -> tide::Result {
@@ -123,7 +126,7 @@ pub async fn add_like(mut req: tide::Request<Database>) -> tide::Result {
         &json!({"person": person.map(|p| p.exterior.uid), "opportunity": slug}),
     );
 
-    okay("")
+    okay_empty()
 }
 
 #[derive(Deserialize)]
@@ -174,7 +177,7 @@ pub async fn report_review(mut req: tide::Request<Database>) -> tide::Result {
             &json!({"person": person.exterior.uid, "review": report.id}),
         );
     }
-    okay("")
+    okay_empty()
 }
 
 pub async fn reviews(req: tide::Request<Database>) -> tide::Result {
@@ -285,4 +288,21 @@ pub async fn get_me(mut req: tide::Request<Database>) -> tide::Result {
             "didit": false,
         }))
     }
+}
+
+pub async fn register_interest(mut req: tide::Request<Database>) -> tide::Result {
+    let slug = req.param("slug")?.to_string();
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
+    let db = req.state();
+
+    common::model::opportunity::add_interest_for_slug(db, &slug, &person.exterior.uid).await?;
+
+    common::log(
+        "ui-interest",
+        &json!({"person": person.exterior.uid, "opportunity": slug}),
+    );
+
+    okay_empty()
 }

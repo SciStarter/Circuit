@@ -6,13 +6,20 @@ use uuid::Uuid;
 
 use crate::{model::Error, Database};
 
-#[derive(Debug, Serialize_repr, Deserialize_repr, PartialOrd, Ord, PartialEq, Eq)]
+use super::Pagination;
+
+#[derive(Debug, Serialize_repr, Deserialize_repr, PartialOrd, Ord, PartialEq, Eq, Clone, Copy)]
+// This repr is harder to maintain than a normal enum but it maps into
+// the database as an integer, which allows database range operators
+// to be applied
 #[repr(u8)]
 pub enum Mode {
     Deleted = 0,
-    Saved = 1,
-    Logged = 2,
-    Contributed = 3,
+    Ignored = 5,
+    Interest = 10,
+    Saved = 20,
+    Logged = 30,
+    Contributed = 40,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -64,25 +71,79 @@ impl Involvement {
         Ok(())
     }
 
+    pub async fn count_for_participant<'db>(
+        db: &'db Database,
+        participant: &Uuid,
+        min_mode: Option<Mode>,
+        max_mode: Option<Mode>,
+    ) -> Result<u32, Error> {
+        Ok(sqlx::query_file!(
+            "db/involvement/count_by_participant.sql",
+            serde_json::to_value(participant)?,
+            min_mode.map(|x| x as i32),
+            max_mode.map(|x| x as i32),
+        )
+        .map(|row| row.total)
+        .fetch_one(db)
+        .await?
+        .unwrap_or(0) as u32)
+    }
+
     pub async fn all_for_participant<'db>(
         db: &'db Database,
         participant: &Uuid,
+        min_mode: Option<Mode>,
+        max_mode: Option<Mode>,
+        text: Option<String>,
+        pagination: Pagination,
     ) -> Result<impl Stream<Item = Result<Involvement, Error>> + 'db, Error> {
-        Ok(sqlx::query_file!(
-            "db/involvement/all_by_participant.sql",
-            serde_json::to_value(participant)?
-        )
-        .try_map(|rec| {
-            Ok(Involvement {
-                id: Some(rec.id),
-                exterior: serde_json::from_value(rec.exterior)
-                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-                interior: serde_json::from_value(rec.interior)
-                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
+        let (limit, offset) = if let Pagination::Page { index, size } = pagination {
+            (Some(size as i64), Some((index * size) as i64))
+        } else {
+            (None, None)
+        };
+
+        Ok(match text {
+            Some(text) if !text.is_empty() => sqlx::query_file!(
+                "db/involvement/all_by_participant_and_text.sql",
+                serde_json::to_value(participant)?,
+                min_mode.map(|x| x as i32),
+                max_mode.map(|x| x as i32),
+                text,
+                limit,
+                offset,
+            )
+            .try_map(|rec| {
+                Ok(Involvement {
+                    id: Some(rec.id),
+                    exterior: serde_json::from_value(rec.exterior)
+                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
+                    interior: serde_json::from_value(rec.interior)
+                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
+                })
             })
+            .fetch(db)
+            .err_into(),
+            _ => sqlx::query_file!(
+                "db/involvement/all_by_participant.sql",
+                serde_json::to_value(participant)?,
+                min_mode.map(|x| x as i32),
+                max_mode.map(|x| x as i32),
+                limit,
+                offset,
+            )
+            .try_map(|rec| {
+                Ok(Involvement {
+                    id: Some(rec.id),
+                    exterior: serde_json::from_value(rec.exterior)
+                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
+                    interior: serde_json::from_value(rec.interior)
+                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
+                })
+            })
+            .fetch(db)
+            .err_into(),
         })
-        .fetch(db)
-        .err_into())
     }
 
     pub async fn all_for_opportunity<'db>(

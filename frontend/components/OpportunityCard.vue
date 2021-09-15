@@ -1,5 +1,5 @@
 <template>
-<article v-if="!hidden" class="opportunity-card">
+<article v-if="!hidden" class="opportunity-card" :class="{'rule': rule}">
   <button v-if="trash" class="trash" @click="$emit('trash', opportunity)">
     <trash-icon />
   </button>
@@ -72,6 +72,12 @@ export default {
             default: false,
         },
 
+        rule: {
+            type: Boolean,
+            required: false,
+            default: true,
+        },
+
         hidden: {
             type: Boolean,
             required: false,
@@ -94,7 +100,10 @@ export default {
 <style lang="scss" scoped>
 .opportunity-card {
     padding: 16px;
-    border-bottom: 2px solid $snm-color-border;
+
+    &.rule {
+        border-bottom: 2px solid $snm-color-border;
+    }
 }
 
 .trash {

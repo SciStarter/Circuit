@@ -1,5 +1,7 @@
 <template>
-<a :href="url" target="_blank" class="calendar-add"><img :src="icon.url" :alt="icon.alt" :title="icon.title"></a>
+<a :href="url" target="_blank" class="calendar-add" @click="$emit('before', calendar)">
+  <img :src="icon.url" :alt="icon.alt" :title="icon.title">
+</a>
 </template>
 
 <script>

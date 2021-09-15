@@ -31,6 +31,10 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("content", |r| r.get(content))
 }
 
+pub fn okay_empty() -> tide::Result<Response> {
+    Ok(Response::builder(StatusCode::NoContent).build())
+}
+
 pub fn okay<P>(payload: &P) -> tide::Result<Response>
 where
     P: Serialize + ?Sized,

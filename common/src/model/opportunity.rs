@@ -682,6 +682,7 @@ pub struct OpportunityQuery {
     pub sort: Option<OpportunityQueryOrdering>,
     pub page: Option<u32>,
     pub per_page: Option<u8>,
+    pub involved: Option<Uuid>,
     pub saved: Option<Uuid>,
     pub participated: Option<Uuid>,
     /// probability of retaining any given result in the match set, in the range (0-1).
@@ -697,6 +698,7 @@ enum ParamValue {
     RawFloat(f32),
     RawInt(i32),
     RawUuid(Uuid),
+
     Bool(bool),
     Uuid(Uuid),
     VecString(Vec<String>),
@@ -708,6 +710,11 @@ enum ParamValue {
 }
 
 impl ParamValue {
+    fn append(self, params: &mut Vec<ParamValue>) -> usize {
+        params.push(self);
+        params.len()
+    }
+
     fn add_to_query(
         self,
         query: Query<Postgres, PgArguments>,
@@ -755,74 +762,89 @@ fn build_matching_query(
     // https://postgis.net/docs/ST_Intersects.html
 
     if let Some(val) = query.accepted {
-        params.push(ParamValue::Bool(val));
         clauses.push(format!(
             "(${}::jsonb) @> (interior -> 'accepted')",
-            params.len()
+            ParamValue::Bool(val).append(&mut params)
         ));
     }
 
     if let Some(val) = query.withdrawn {
-        params.push(ParamValue::Bool(val));
         clauses.push(format!(
             "(${}::jsonb) @> (interior -> 'withdrawn')",
-            params.len()
+            ParamValue::Bool(val).append(&mut params)
+        ));
+    }
+
+    if let Some(person) = query.involved {
+        clauses.push(format!(
+            r"EXISTS (SELECT 1 FROM c_involvement AS inv
+              WHERE (inv.exterior -> 'opportunity') @> (primary_table.exterior -> 'uid')
+              AND (inv.interior -> 'participant') @> ${}::jsonb
+              AND (inv.exterior ->> 'mode')::integer >= ${})",
+            ParamValue::Uuid(person).append(&mut params),
+            ParamValue::RawInt(involvement::Mode::Interest as i32).append(&mut params),
         ));
     }
 
     if let Some(person) = query.saved {
-        params.push(ParamValue::Uuid(person));
         clauses.push(format!(
             r"EXISTS (SELECT 1 FROM c_involvement AS inv
               WHERE (inv.exterior -> 'opportunity') @> (primary_table.exterior -> 'uid')
               AND (inv.interior -> 'participant') @> ${}::jsonb
-              AND (inv.exterior ->> 'mode')::integer = 1)",
-            params.len()
+              AND (inv.exterior ->> 'mode')::integer = ${})",
+            ParamValue::Uuid(person).append(&mut params),
+            ParamValue::RawInt(involvement::Mode::Saved as i32).append(&mut params),
         ));
     }
 
     if let Some(person) = query.participated {
-        params.push(ParamValue::Uuid(person));
         clauses.push(format!(
             r"EXISTS (SELECT 1 FROM c_involvement AS inv
               WHERE (inv.exterior -> 'opportunity') @> (primary_table.exterior -> 'uid')
               AND (inv.interior -> 'participant') @> ${}::jsonb
-              AND (inv.exterior ->> 'mode')::integer >= 2)",
-            params.len()
+              AND (inv.exterior ->> 'mode')::integer >= ${})",
+            ParamValue::Uuid(person).append(&mut params),
+            ParamValue::RawInt(involvement::Mode::Logged as i32).append(&mut params),
         ));
     }
 
     if let Some(val) = &query.entity_type {
-        params.push(ParamValue::VecEntityType(val.clone()));
-        clauses.push(format!("(exterior -> 'entity_type') <@ ${}", params.len()));
+        clauses.push(format!(
+            r"(exterior -> 'entity_type') <@ ${}",
+            ParamValue::VecEntityType(val.clone()).append(&mut params)
+        ));
     }
 
     if let Some(val) = &query.title_contains {
-        params.push(ParamValue::RawString(format!("%{}%", val)));
-        clauses.push(format!("(exterior ->> 'title') ILIKE ${}", params.len()));
+        clauses.push(format!(
+            "(exterior ->> 'title') ILIKE ${}",
+            ParamValue::RawString(format!("%{}%", val)).append(&mut params)
+        ));
     }
 
     if let Some(val) = &query.tags {
-        params.push(ParamValue::VecString(val.clone()));
-        clauses.push(format!("(exterior -> 'tags') @> ${}", params.len()));
+        clauses.push(format!(
+            "(exterior -> 'tags') @> ${}",
+            ParamValue::VecString(val.clone()).append(&mut params)
+        ));
     }
 
     if let Some(val) = &query.topics {
-        params.push(ParamValue::VecTopic(val.clone()));
-        clauses.push(format!("(exterior -> 'topics') @> ${}", params.len()));
+        clauses.push(format!(
+            "(exterior -> 'topics') @> ${}",
+            ParamValue::VecTopic(val.clone()).append(&mut params)
+        ));
     }
 
     if let Some(val) = &query.partner {
-        params.push(ParamValue::Uuid(val.clone()));
         clauses.push(format!(
             "(${}::jsonb) @> (exterior -> 'partner')",
-            params.len()
+            ParamValue::Uuid(val.clone()).append(&mut params)
         ));
     }
 
     if let Some(val) = &query.partner_member {
-        params.push(ParamValue::Uuid(val.clone()));
-        let uuid_param = params.len();
+        let uuid_param = ParamValue::Uuid(val.clone()).append(&mut params);
         clauses.push(format!(
             r"jsonb_agg(
                 SELECT (exterior -> 'uid') FROM c_partner
@@ -834,16 +856,14 @@ fn build_matching_query(
     }
 
     if let Some(text) = &query.text {
-        params.push(ParamValue::RawString(text.to_string()));
         clauses.push(format!(
             "fulltext_english @@ websearch_to_tsquery(${})",
-            params.len()
+            ParamValue::RawString(text.to_string()).append(&mut params)
         ));
     }
 
     if let Some(beginning) = &query.beginning {
-        params.push(ParamValue::RawString(beginning.to_rfc3339()));
-        let time_param = params.len();
+        let time_param = ParamValue::RawString(beginning.to_rfc3339()).append(&mut params);
         clauses.push(format!(
             r"(EXISTS (SELECT value FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
               OR
@@ -852,8 +872,7 @@ fn build_matching_query(
     }
 
     if let Some(ending) = &query.ending {
-        params.push(ParamValue::RawString(ending.to_rfc3339()));
-        let time_param = params.len();
+        let time_param = ParamValue::RawString(ending.to_rfc3339()).append(&mut params);
         clauses.push(format!(
             r"(NOT EXISTS (SELECT value FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
               AND
@@ -862,41 +881,44 @@ fn build_matching_query(
     }
 
     if let Some(min_age) = &query.min_age {
-        params.push(ParamValue::RawInt(*min_age as i32));
         clauses.push(format!(
             "(exterior -> 'min_age')::integer > ${}",
-            params.len()
+            ParamValue::RawInt(*min_age as i32).append(&mut params)
         ))
     }
 
     if let Some(max_age) = &query.max_age {
-        params.push(ParamValue::RawInt(*max_age as i32));
         clauses.push(format!(
             "(exterior -> 'max_age')::integer < ${}",
-            params.len()
+            ParamValue::RawInt(*max_age as i32).append(&mut params)
         ))
     }
 
     if let Some(descriptors) = &query.descriptors {
-        params.push(ParamValue::VecDescriptor(descriptors.clone()));
-        clauses.push(format!("(exterior -> 'descriptors') @> ${}", params.len()))
+        clauses.push(format!(
+            "(exterior -> 'descriptors') @> ${}",
+            ParamValue::VecDescriptor(descriptors.clone()).append(&mut params)
+        ))
     }
 
     if let Some(cost) = &query.cost {
-        params.push(ParamValue::RawString(cost.as_ref().to_owned()));
-        clauses.push(format!("(exterior ->> 'cost') = ${}", params.len()))
+        clauses.push(format!(
+            "(exterior ->> 'cost') = ${}",
+            ParamValue::RawString(cost.as_ref().to_owned()).append(&mut params)
+        ))
     }
 
     if let Some(venue_type) = &query.venue_type {
-        params.push(ParamValue::VecVenueType(vec![venue_type.clone()]));
-        clauses.push(format!("(exterior -> 'opp_venue') @> ${}", params.len()))
+        clauses.push(format!(
+            "(exterior -> 'opp_venue') @> ${}",
+            ParamValue::VecVenueType(vec![venue_type.clone()]).append(&mut params)
+        ))
     }
 
     if let Some(host) = &query.host {
-        params.push(ParamValue::RawString(format!("%{}%", host)));
         clauses.push(format!(
             "(exterior ->> 'organization_name') ILIKE ${}",
-            params.len()
+            ParamValue::RawString(format!("%{}%", host)).append(&mut params)
         ))
     }
 
@@ -904,29 +926,24 @@ fn build_matching_query(
         match physical {
             OpportunityQueryPhysical::InPersonOrOnline => {}
             OpportunityQueryPhysical::InPerson => {
-                params.push(ParamValue::Bool(false));
                 clauses.push(format!(
                     "(${}::jsonb) @> (exterior -> 'is_online')",
-                    params.len()
+                    ParamValue::Bool(false).append(&mut params)
                 ));
             }
             OpportunityQueryPhysical::Online => {
-                params.push(ParamValue::Bool(true));
                 clauses.push(format!(
                     "(${}::jsonb) @> (exterior -> 'is_online')",
-                    params.len()
+                    ParamValue::Bool(true).append(&mut params)
                 ));
             }
         }
     }
 
     let point = if let Some((longitude, latitude, proximity)) = &query.near {
-        params.push(ParamValue::RawFloat(*longitude));
-        let lon_param = params.len();
-        params.push(ParamValue::RawFloat(*latitude));
-        let lat_param = params.len();
-        params.push(ParamValue::RawFloat(*proximity));
-        let prox_param = params.len();
+        let lon_param = ParamValue::RawFloat(*longitude).append(&mut params);
+        let lat_param = ParamValue::RawFloat(*latitude).append(&mut params);
+        let prox_param = ParamValue::RawFloat(*proximity).append(&mut params);
 
         clauses.push(format!(
             r#"(
@@ -950,13 +967,17 @@ fn build_matching_query(
     };
 
     if let Some(probability) = query.sample {
-        params.push(ParamValue::RawFloat(probability));
-        clauses.push(format!("random() < ${}", params.len()));
+        clauses.push(format!(
+            "random() < ${}",
+            ParamValue::RawFloat(probability).append(&mut params)
+        ));
     }
 
     if let Some(exclusions) = &query.exclude {
-        params.push(ParamValue::VecUuid(exclusions.clone()));
-        clauses.push(format!("NOT ((exterior -> 'uid') <@ ${})", params.len()));
+        clauses.push(format!(
+            "NOT ((exterior -> 'uid') <@ ${})",
+            ParamValue::VecUuid(exclusions.clone()).append(&mut params)
+        ));
     }
 
     let mut query_string = "SELECT ".to_string();
@@ -1214,6 +1235,16 @@ pub async fn add_save_for_slug(db: &Database, slug: &str, person: &Uuid) -> Resu
         .ok_or_else(|| Error::NoSuch("opportunity"))?;
 
     Involvement::upgrade(db, person, &uid, involvement::Mode::Saved, &None).await?;
+
+    Ok(())
+}
+
+pub async fn add_interest_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
+    let uid = Opportunity::uid_by_slug(db, slug)
+        .await?
+        .ok_or_else(|| Error::NoSuch("opportunity"))?;
+
+    Involvement::upgrade(db, person, &uid, involvement::Mode::Interest, &None).await?;
 
     Ok(())
 }
