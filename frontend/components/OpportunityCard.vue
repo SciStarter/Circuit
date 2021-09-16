@@ -142,7 +142,7 @@ export default {
 
     div {
         h2 {
-            font-size: 14px;
+            font-size: $snm-font-smaller;
             font-weight: bold;
             font-family: $snm-font-content;
             letter-spacing: 0px;
@@ -155,7 +155,7 @@ export default {
             color: $snm-color-element-med;
             font-family: $snm-font-heading;
             letter-spacing: 0px;
-            font-size: 16px;
+            font-size: $snm-font-small;
             font-weight: bold;
             line-height: 22px;
             margin-bottom: 8px;
@@ -186,7 +186,7 @@ export default {
 
         .opportunity-notice {
             display: none;
-            font-size: 12px;
+            font-size: $snm-font-smallest;
             line-height: 14px;
         }
     }
@@ -198,7 +198,7 @@ export default {
             small {
                 display: block;
                 font-family: $snm-font-content;
-                font-size: 14px;
+                font-size: $snm-font-smaller;
                 color: $snm-color-element-dark;
                 letter-spacing: 0.14px;
             }

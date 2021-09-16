@@ -151,7 +151,7 @@ export default {
 h1 {
     font-family: $snm-font-heading;
     font-weight: bold;
-    font-size: 16px;
+    font-size: $snm-font-small;
     line-height: 19px;
     letter-spacing: 0px;
     color: $snm-color-background-dark;
@@ -169,7 +169,7 @@ h1 {
     ::v-deep label {
         font-family: $snm-font-content;
         font-weight: normal;
-        font-size: 14px;
+        font-size: $snm-font-smaller;
         line-height: 16px;
         letter-spacing: 0px;
         color: $snm-color-element-dark;
@@ -202,7 +202,7 @@ h1 {
 
 @media (min-width: $fullsize-screen) {
     h1 {
-        font-size: 24px;
+        font-size: $snm-font-large;
         line-height: 28px;
         padding: 0px;
     }

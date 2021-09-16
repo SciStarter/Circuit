@@ -597,13 +597,13 @@ export default {
             color: $snm-color-background-dark;
             font-weight: bold;
             font-family: $snm-font-heading;
-            font-size: 16px;
+            font-size: $snm-font-small;
         }
 
         ::v-deep label.label {
             font-family: $snm-font-content;
             font-weight: normal;
-            font-size: 14px;
+            font-size: $snm-font-smaller;
             color: $snm-color-element-sublabel;
         }
     }
@@ -662,7 +662,7 @@ export default {
         margin: 32px;
 
         h1 {
-            font-size: 24px;
+            font-size: $snm-font-large;
             font-family: $snm-font-heading;
             line-height: 28px;
             letter-spacing: 0px;
@@ -693,7 +693,7 @@ export default {
     span {
         font-family: $snm-font-content;
         font-weight: normal;
-        font-size: 14px;
+        font-size: $snm-font-smaller;
     }
 }
 
@@ -733,7 +733,7 @@ export default {
         span {
             font-family: $snm-font-content;
             font-weight: normal;
-            font-size: 16px;
+            font-size: $snm-font-small;
         }
     }
 }

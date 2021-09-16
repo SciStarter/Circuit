@@ -34,9 +34,11 @@
           <input v-model="query.date_until" class="control" type="date">
         </b-field>
       </div>
-      <arrow-button @click="find">
-        <search-icon class="button-icon" /> Search
-      </arrow-button>
+      <div class="centered-row">
+        <action-button primary arrow @click="find">
+          <search-icon class="button-icon" /> Search
+        </action-button>
+      </div>
     </aside>
 
     <aside :class="{toggled: menu}" class="menu-box" @click="menu = !menu">
@@ -222,7 +224,6 @@ import LoginForm from '~/components/LoginForm'
 import SignupForm from '~/components/SignupForm'
 import External from '~/components/External'
 import DynamicBlock from '~/components/DynamicBlock'
-import ArrowButton from '~/components/ArrowButton'
 import LookupPlace from '~/components/LookupPlace'
 import ActionButton from '~/components/ActionButton'
 
@@ -244,7 +245,6 @@ export default {
         SignupForm,
         External,
         DynamicBlock,
-        ArrowButton,
         LookupPlace,
         ActionButton,
 
@@ -555,13 +555,6 @@ header {
             border-radius: 10px;
             border: 1px solid #B4B4B4;
         }
-
-        .arrow-button {
-            color: #fff;
-            display: block;
-            margin: 1rem;
-            text-align: center;
-        }
     }
 
     .toggled {
@@ -580,7 +573,7 @@ footer {
         h1 {
             color: $snm-color-heading-ondark;
             font-family: $snm-font-heading;
-            font-size: 14px;
+            font-size: $snm-font-smaller;
             font-weight: bold;
             letter-spacing: 0.7px;
         }
@@ -588,7 +581,7 @@ footer {
         a {
             color: $snm-color-element-ondark;
             font-family: $snm-font-content;
-            font-size: 16px;
+            font-size: $snm-font-small;
             letter-spacing: 0px;
         }
     }
@@ -611,7 +604,7 @@ footer {
         .description {
             color: $snm-color-element-ondark;
             font-family: $snm-font-content;
-            font-size: 14px;
+            font-size: $snm-font-smaller;
             line-height: 22px;
             letter-spacing: 0px;
             margin: 16px 16px 16px 0px;
@@ -692,7 +685,7 @@ footer {
                 > span {
                     font-family: $snm-font-content;
                     font-weight: bold;
-                    font-size: 16px;
+                    font-size: $snm-font-small;
                     cursor: pointer;
 
                     &::after {
@@ -811,7 +804,7 @@ footer {
             strong {
                 font-family: $snm-font-content;
                 font-weight: bold;
-                font-size: 13px;
+                font-size: $snm-font-smallest;
                 line-height: 15px;
                 letter-spacing: 0.39px;
                 text-transform: uppercase;
@@ -830,12 +823,13 @@ footer {
                 align-items: center;
                 font-family: $snm-font-content;
                 font-weight: normal;
-                font-size: 16px;
-                line-height: 52px;
+                font-size: $snm-font-small;
+                line-height: 0.9rem;
                 padding-left: 1rem;
                 position: relative;
                 box-sizing: border-box;
                 height: 52px;
+                margin-top: 0.75rem;
 
                 &.nuxt-link-active {
                     background-color: $snm-color-background-meddark;

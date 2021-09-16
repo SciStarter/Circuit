@@ -803,7 +803,7 @@ export default {
     z-index: 20;
     border: 0px;
     box-shadow: 0px 3px 6px $snm-color-shadow;
-    font-size: 30px;
+    font-size: $snm-font-larger;
 }
 
 .mobile-menu {
@@ -830,7 +830,7 @@ export default {
         border-bottom: 1px solid $snm-color-background;
         font-family: $snm-font-content;
         font-weight: bold;
-        font-size: 16px;
+        font-size: $snm-font-small;
         letter-spacing: 0px;
         padding: 17px;
         align-items: center;
@@ -872,14 +872,14 @@ img.opportunity-image {
             h2 {
                 font-family: $snm-font-heading;
                 font-weight: bold;
-                font-size: 21px;
+                font-size: $snm-font-medium;
                 line-height: 26px;
                 letter-spacing: 0px;
                 color: $snm-color-background-dark;
 
                 .close {
                     float: right;
-                    font-size: 30px;
+                    font-size: $snm-font-larger;
                     position: relative;
                     top: -10px;
                     cursor: pointer;
@@ -889,7 +889,7 @@ img.opportunity-image {
             p {
                 font-family: $snm-font-content;
                 font-weight: normal;
-                font-size: 16px;
+                font-size: $snm-font-small;
                 line-height: 22px;
                 letter-spacing: 0px;
                 color: $snm-color-tldr;
@@ -940,7 +940,7 @@ img.opportunity-image {
     strong {
         font-family: $snm-font-content;
         font-weight: bold;
-        font-size: 14px;
+        font-size: $snm-font-smaller;
         color: $snm-color-element-dark;
         line-height: 16px;
         letter-spacing: 0px;
@@ -949,7 +949,7 @@ img.opportunity-image {
     h1 {
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 24px;
+        font-size: $snm-font-large;
         color: $snm-color-info;
         line-height: 28px;
         letter-spacing: 0px
@@ -960,7 +960,7 @@ img.opportunity-image {
     margin: 17px;
     font-family: $snm-font-content;
     font-weight: normal;
-    font-size: 16px;
+    font-size: $snm-font-small;
     line-height: 22px;
     letter-spacing: 0.16px;
     color: $snm-color-glance;
@@ -974,7 +974,7 @@ img.opportunity-image {
     .reviews-likes {
         span {
             font-family: $snm-font-content;
-            font-size: 16px;
+            font-size: $snm-font-small;
             line-height: 19px;
             letter-spacing: 0px;
             color: $snm-color-element-dark;
@@ -1058,7 +1058,7 @@ img.opportunity-image {
     strong {
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 21px;
+        font-size: $snm-font-medium;
         line-height: 26px;
         letter-spacing: 0px;
         display: block;
@@ -1067,7 +1067,7 @@ img.opportunity-image {
     span {
         font-family: $snm-font-content;
         font-weight: normal;
-        font-size: 14px;
+        font-size: $snm-font-smaller;
         line-height: 16px;
         letter-spacing: 0px;
     }
@@ -1087,7 +1087,7 @@ img.opportunity-image {
         figcaption {
             font-family: $snm-font-heading;
             font-weight: bold;
-            font-size: 14px;
+            font-size: $snm-font-smaller;
             line-height: 17px;
             letter-spacing: 0px;
             color: $snm-color-caption;
@@ -1115,7 +1115,7 @@ img.opportunity-image {
     h2 {
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 16px;
+        font-size: $snm-font-small;
         line-height: 22px;
         letter-spacing: 0px;
         color: $snm-color-background-dark;
@@ -1130,7 +1130,7 @@ img.opportunity-image {
     > h2 {
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 16px;
+        font-size: $snm-font-small;
         line-height: 19px;
         letter-spacing: 0px;
         color: $snm-color-background-dark;
@@ -1150,7 +1150,7 @@ img.opportunity-image {
         margin-bottom: 1rem;
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 16px;
+        font-size: $snm-font-small;
         line-height: 22px;
         letter-spacing: 0px;
         color: $snm-color-background-dark;
@@ -1170,14 +1170,14 @@ img.opportunity-image {
     padding: 17px;
     font-family: $snm-font-content;
     font-weight: normal;
-    font-size: 16px;
+    font-size: $snm-font-small;
     line-height: 19px;
     letter-spacing: 0px;
 
     h2 {
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 16px;
+        font-size: $snm-font-small;
         line-height: 22px;
         letter-spacing: 0px;
         color: $snm-color-background-dark;
@@ -1202,7 +1202,7 @@ img.opportunity-image {
         background-color: $snm-color-element-med;
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 16px;
+        font-size: $snm-font-small;
         line-height: 19px;
         padding: 17px;
     }
@@ -1223,7 +1223,7 @@ img.opportunity-image {
                 width: 3.5rem;
                 font-family: $snm-font-meta;
                 font-weight: normal;
-                font-size: 12px;
+                font-size: $snm-font-smallest;
                 line-height: 15px;
                 color: $snm-color-element-med;
             }
@@ -1233,7 +1233,7 @@ img.opportunity-image {
             font-family: $snm-font-meta;
             font-weight: normal;
             font-style: italic;
-            font-size: 14px;
+            font-size: $snm-font-smaller;
             line-height: 40px;
             letter-spacing: 0px;
             color: $snm-color-caption;
@@ -1242,7 +1242,7 @@ img.opportunity-image {
 
     .modal {
         h2 {
-            font-size: 21px;
+            font-size: $snm-font-medium;
             line-height: 26px;
             font-weight: bold;
             background-color: transparent;
@@ -1269,7 +1269,7 @@ img.opportunity-image {
         background-color: $snm-color-info;
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 16px;
+        font-size: $snm-font-small;
         line-height: 19px;
         padding: 17px;
     }
@@ -1278,14 +1278,14 @@ img.opportunity-image {
         display: block;
         font-family: $snm-font-content;
         font-weight: normal;
-        font-size: 14px;
+        font-size: $snm-font-smaller;
         line-height: 16px;
         color: $snm-color-element-dark;
         margin: 17px;
 
         h3 {
             font-family: $snm-font-heading;
-            font-size: 21px;
+            font-size: $snm-font-medium;
             font-weight: bold;
             line-height: 26px;
             color: $snm-color-element-med;
