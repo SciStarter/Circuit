@@ -337,6 +337,24 @@ async fn withdraw(state: &mut State, args: Vec<String>) -> Result<(), DynError> 
     Ok(())
 }
 
+async fn db_meta(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+    if args.len() < 1 {
+        println!("Expected a database command: [analyze]");
+        return Ok(());
+    }
+
+    match &*args[0] {
+        "analyze" => {
+            sqlx::query("analyze;").execute(&state.db).await?;
+        }
+        _ => {
+            println!("Unrecognized database command: {}", &args[0]);
+        }
+    }
+
+    Ok(())
+}
+
 #[async_std::main]
 async fn main() -> Result<(), DynError> {
     let mut shell = Shell::new_async(State::new().await?, "SNM Toolkit $ ");
@@ -387,6 +405,15 @@ async fn main() -> Result<(), DynError> {
         Command::new_async(
             "mark matching rows withdrawn, or not withdrawn with `withdraw false`".into(),
             async_fn!(State, withdraw),
+        )
+        .await,
+    );
+
+    shell.commands.insert(
+        "db".into(),
+        Command::new_async(
+            "Database maintenance operations".into(),
+            async_fn!(State, db_meta),
         )
         .await,
     );

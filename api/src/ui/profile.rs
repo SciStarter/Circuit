@@ -31,6 +31,11 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         })
         .at("involved", |r| r.get(get_involved).post(set_involvement))
         .at("partners", |r| r.get(get_partners))
+        .at("goals", |r| {
+            r.get(get_goals)
+                .post(add_goal)
+                .at(":id", |r| r.put(save_goal).delete(cancel_goal))
+        })
 }
 
 pub async fn get_profile(_req: tide::Request<Database>) -> tide::Result {
@@ -245,4 +250,36 @@ pub async fn get_partners(mut req: tide::Request<Database>) -> tide::Result {
         .collect();
 
     okay(&partners)
+}
+
+pub async fn get_goals(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+
+    todo!()
+}
+
+pub async fn add_goal(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+
+    todo!()
+}
+
+pub async fn save_goal(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+
+    todo!()
+}
+
+pub async fn cancel_goal(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+
+    todo!()
 }

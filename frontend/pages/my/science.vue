@@ -48,7 +48,9 @@
         <div class="search">
           <b-field label="Search your opportunities">
             <b-input v-model="log_search.text" type="text" icon-right="close-circle" icon-right-clickable @icon-right-click="reload_log({text: ''})" />
-            <b-button @click="reload_log">Search</b-button>
+            <b-button @click="reload_log">
+              Search
+            </b-button>
           </b-field>
         </div>
       </section>
@@ -201,14 +203,14 @@ export default {
         top: 14px;
         right: 30px;
         font-family: $snm-font-content;
-        font-size: 28px;
+        font-size: $snm-font-larger;
         color: $snm-color-action-border;
     }
 
     h2 {
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 21px;
+        font-size: $snm-font-medium;
         line-height: 26px;
         color: $snm-color-background-dark;
         margin-bottom: 0.5em;
@@ -217,7 +219,7 @@ export default {
     p {
         font-family: $snm-font-content;
         font-weight: normal;
-        font-size: 16px;
+        font-size: $snm-font-small;
         line-height: 22px;
         color: $snm-color-element-dark;
     }
@@ -254,7 +256,7 @@ export default {
             color: $snm-color-element-light;
             font-family: $snm-font-heading;
             font-weight: bold;
-            font-size: 24px;
+            font-size: $snm-font-large;
         }
 
         :not(:first-child) {
@@ -263,7 +265,7 @@ export default {
             align-items: center;
             font-family: $snm-font-heading;
             font-weight: bold;
-            font-size: 16px;
+            font-size: $snm-font-small;
             margin-left: 16px;
         }
     }
@@ -277,7 +279,7 @@ export default {
         ::v-deep label {
             font-family: $snm-font-meta;
             font-weight: normal;
-            font-size: 14px;
+            font-size: $snm-font-smaller;
             line-height: 18px;
             color: $snm-color-element-dark;
         }
@@ -291,6 +293,10 @@ export default {
         border-radius: 10px;
         margin-bottom: 24px;
         padding: 0px;
+
+        .opportunity-card {
+            flex-grow: 1;
+        }
 
         .actions {
             display: flex;

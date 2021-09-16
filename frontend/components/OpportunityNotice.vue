@@ -111,7 +111,7 @@ export default {
 aside {
     display: block;
     font-family: $snm-font-content;
-    font-size: 14px;
+    font-size: $snm-font-smaller;
     color: $snm-color-info;
     letter-spacing: 0px;
     line-height: 16px;

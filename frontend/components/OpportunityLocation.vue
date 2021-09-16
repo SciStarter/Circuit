@@ -60,6 +60,6 @@ li {
     font-family: $snm-font-content;
     letter-spacing: 0px;
     color: $snm-color-element-dark;
-    font-size: 14px;
+    font-size: $snm-font-smaller;
 }
 </style>

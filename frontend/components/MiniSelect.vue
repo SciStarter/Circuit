@@ -73,7 +73,7 @@ label {
     font-weight: normal;
     letter-spacing: 0px;
     color: $snm-color-element-dark;
-    font-size: 16px;
+    font-size: $snm-font-small;
     line-height: 19px;
 }
 
@@ -88,7 +88,7 @@ select {
     font-weight: bold;
     letter-spacing: 0px;
     color: $snm-color-element-dark;
-    font-size: 16px;
+    font-size: $snm-font-small;
     line-height: 19px;
     cursor: pointer;
     background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAGCAYAAAD68A/GAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpUUqCnaQ4pChOlmQKuKoVShChVArtOpgcukXNGlIUlwcBdeCgx+LVQcXZ10dXAVB8APEzc1J0UVK/F9SaBHrwXE/3t173L0DhEaFaVbPBKDptplOJsRsblUMvCKICAYRhyAzy5iTpBS6jq97+Ph6F+NZ3c/9OfrVvMUAn0g8ywzTJt4gnt60Dc77xGFWklXic+Jxky5I/Mh1xeM3zkWXBZ4ZNjPpeeIwsVjsYKWDWcnUiKeIo6qmU76Q9VjlvMVZq9RY6578haG8vrLMdZojSGIRS5AgQkENZVRgI0arToqFNO0nuvgjrl8il0KuMhg5FlCFBtn1g//B726twmTcSwolgN4Xx/kYBQK7QLPuON/HjtM8AfzPwJXe9lcbwMwn6fW2Fj0CBraBi+u2puwBlzvA8JMhm7Ir+WkKhQLwfkbflAOGboG+Na+31j5OH4AMdZW6AQ4OgbEiZa93eXews7d/z7T6+wFr9HKkFSZPwQAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAOJgAADiYBou8l/AAAAAd0SU1FB+UIGhA2EA0E/soAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAd0lEQVQI143NsQnCUACE4e/lKUKwE9cQx3IkqyzgADZO4ASCLmBSmEJ8aJBnEQJBLPzL/467sGT+ZpNZ+M29ZBsfvKacClaYjRuBLlDVXCM8SQWXyDowGYqZ3Y0zxEF2/UWtXw6ZfctxyOP4KtGUJDQtB38QvsUH4n4dJXy3Ty0AAAAASUVORK5CYII=');

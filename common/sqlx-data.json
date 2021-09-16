@@ -906,6 +906,43 @@
       ]
     }
   },
+  "9ba5ac0a254a302fcc36e1ecbb77b0339e18cd8205c421e8146cf9a338df0092": {
+    "query": "select I.id, I.exterior, I.interior\nfrom c_involvement as I\nleft join c_opportunity as O\non (I.exterior -> 'opportunity') = (O.exterior -> 'uid')\nwhere\n  ($1::jsonb) @> (I.interior -> 'participant')\nand\n  O.fulltext_english @@ websearch_to_tsquery($4)\nand\n  case\n    when $2::integer is null then (I.exterior ->> 'mode')::integer >= 1\n    else (I.exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (I.exterior ->> 'mode')::integer <= $3::integer\n  end\norder by I.updated desc\nlimit $5 offset $6;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Int4",
+          "Int4",
+          "Text",
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "9bb0999b7e5a12c77e56c562fa3f53a8258f4997a37ee2bcde64795efc6ef8a6": {
     "query": "select id, exterior, interior from c_opportunity where lower($1::text) = lower(exterior ->> 'slug') limit 1;\n",
     "describe": {
@@ -1117,6 +1154,42 @@
       "parameters": {
         "Left": [
           "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "c0867800b477b7b4e7d7bbda6dd6c00c66d096fcb6300adef057a5cf879d0c02": {
+    "query": "select id, exterior, interior\nfrom c_involvement\nwhere\n  ($1::jsonb) @> (interior -> 'participant')\nand\n  case\n    when $2::integer is null then (exterior ->> 'mode')::integer >= 1\n    else (exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (exterior ->> 'mode')::integer <= $3::integer\n  end\norder by updated desc\nlimit $4 offset $5;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "exterior",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 2,
+          "name": "interior",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Int4",
+          "Int4",
+          "Int8",
+          "Int8"
         ]
       },
       "nullable": [
@@ -1476,35 +1549,25 @@
       ]
     }
   },
-  "fb56214e5e4cccbaf935bf0185f6fc64a4711234ff958f4ac1852f2c03a00e5b": {
-    "query": "select id, exterior, interior from c_involvement where ($1::jsonb) @> (interior -> 'participant');\n",
+  "face724cbf013b6ed241a6468cbdf58d8729772221e67b6aee66dc9ba237e3bf": {
+    "query": "select count(*) as total\nfrom c_involvement\nwhere\n  ($1::jsonb) @> (interior -> 'participant')\nand\n  case\n    when $2::integer is null then (exterior ->> 'mode')::integer >= 1\n    else (exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (exterior ->> 'mode')::integer <= $3::integer\n  end\n;\n",
     "describe": {
       "columns": [
         {
           "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "exterior",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 2,
-          "name": "interior",
-          "type_info": "Jsonb"
+          "name": "total",
+          "type_info": "Int8"
         }
       ],
       "parameters": {
         "Left": [
-          "Jsonb"
+          "Jsonb",
+          "Int4",
+          "Int4"
         ]
       },
       "nullable": [
-        false,
-        false,
-        false
+        null
       ]
     }
   },
