@@ -344,6 +344,28 @@
       ]
     }
   },
+  "3fa82b297f6002eedca5948473a6baf7ec0b3a643ebf6eeded0225231454a08e": {
+    "query": "select count(*) as \"total!\"\nfrom\n  (\n    ( -- Count each \"I did this\" in the timeframe as one\n      select\n        (I.exterior -> 'opportunity') as \"opportunity\",\n        (I.exterior -> 'latest') as \"when\"\n      from c_involvement I\n      where\n        (I.interior ->> 'participant') = $1::text\n      and\n        (I.exterior -> 'mode') = '30'::jsonb\n      and\n        (I.exterior ->> 'latest') >= $2::text\n      and\n        (I.exterior ->> 'latest') <= $3::text\n    )\n  union\n    ( -- Count each partner-reported contribution in the timeframe as one\n      select\n        (P.exterior -> 'opportunity') as \"opportunity\",\n        (P.exterior -> 'when') as \"when\"\n      from c_participation P\n      where\n        (P.interior ->> 'participant') = $1::text\n      and\n        (P.exterior ->> 'when') >= $2::text\n      and\n        (P.exterior ->> 'when') <= $3::text\n    )\n  ) as \"merged\"\n;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "total!",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
   "42aeff0b3f4e842b6e554b89136413119fabda020c3ecb09e01f4540b30b092d": {
     "query": "insert into c_involvement (exterior, interior)\nvalues (\n  jsonb_build_object('opportunity', $2::jsonb, 'first', to_jsonb(now()), 'latest', to_jsonb(now()), 'mode', $3::jsonb),\n  jsonb_build_object('participant', $1::jsonb, 'location', $4::jsonb)\n)\non conflict ((exterior -> 'opportunity'), (interior -> 'participant')) do\nupdate set\n  exterior = jsonb_set(\n    jsonb_set(c_involvement.exterior, '{latest}', to_jsonb(now())),\n    '{mode}',\n    greatest((c_involvement.exterior -> 'mode'), $3::jsonb)\n  ),\n  interior = case when ($4::jsonb = 'null'::jsonb) then c_involvement.interior else jsonb_set(c_involvement.interior, '{location}', $4::jsonb) end\n;\n",
     "describe": {
@@ -655,6 +677,34 @@
       ]
     }
   },
+  "6697921dc3c0df6ff442b11c9c0fa91f5625fdc53c6354914321b3ccb3fd9d65": {
+    "query": "select *\nfrom\n  (\n    ( -- Count each \"I did this\" in the timeframe as one\n      select\n        (I.exterior ->> 'opportunity')::uuid as \"opportunity!\",\n        (I.exterior ->> 'latest')::timestamptz as \"when!\"\n      from c_involvement I\n      where\n        (I.interior ->> 'participant') = $1::text\n      and\n        (I.exterior -> 'mode') = '30'::jsonb\n      and\n        (I.exterior ->> 'latest') >= $2::text\n      and\n        (I.exterior ->> 'latest') <= $3::text\n    )\n  union\n    ( -- Count each partner-reported contribution in the timeframe as one\n      select\n        (P.exterior ->> 'opportunity')::uuid as \"opportunity!\",\n        (P.exterior ->> 'when')::timestamptz as \"when!\"\n      from c_participation P\n      where\n        (P.interior ->> 'participant') = $1::text\n      and\n        (P.exterior ->> 'when') >= $2::text\n      and\n        (P.exterior ->> 'when') <= $3::text\n    )\n  ) as \"merged\"\norder by \"when!\" asc\n;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "opportunity!",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "when!",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        null,
+        null
+      ]
+    }
+  },
   "6ff3efed7a7e1ae0be5f36b8c802bbbf4991f826f62254d1ace3051d6d4995aa": {
     "query": "select id, exterior, interior from c_opportunity where id = $1 limit 1;\n",
     "describe": {
@@ -713,6 +763,87 @@
         ]
       },
       "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "7dec6dc80cca1dade56a8eab755c2d840116206d54f7c9b08b6dc9b470608fc0": {
+    "query": "select\n  \"id\",\n  \"person_id\",\n  \"category\",\n  \"target\",\n  \"begin\",\n  \"end\",\n  \"status\" as \"status: GoalStatus\"\nfrom\n  c_person_goals\nwhere\n    \"person_id\" = $1\n  and\n    \"status\" = $2::c_person_goals_status\norder by \"end\" asc\n;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "person_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 2,
+          "name": "category",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "target",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 4,
+          "name": "begin",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 5,
+          "name": "end",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 6,
+          "name": "status: GoalStatus",
+          "type_info": {
+            "Custom": {
+              "name": "c_person_goals_status",
+              "kind": {
+                "Enum": [
+                  "canceled",
+                  "failed",
+                  "working",
+                  "succeeded"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          {
+            "Custom": {
+              "name": "c_person_goals_status",
+              "kind": {
+                "Enum": [
+                  "canceled",
+                  "failed",
+                  "working",
+                  "succeeded"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
         false,
         false,
         false
@@ -1291,6 +1422,75 @@
       ]
     }
   },
+  "d5b62ec112d28e12699c6c7a75dee8ab657ea667bcc1d878f720ad3f0426ecff": {
+    "query": "select\n  \"id\",\n  \"person_id\",\n  \"category\",\n  \"target\",\n  \"begin\",\n  \"end\",\n  \"status\" as \"status: GoalStatus\"\nfrom\n  c_person_goals\nwhere\n    \"person_id\" = $1\n  and\n    \"id\" = $2\n;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "person_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 2,
+          "name": "category",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "target",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 4,
+          "name": "begin",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 5,
+          "name": "end",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 6,
+          "name": "status: GoalStatus",
+          "type_info": {
+            "Custom": {
+              "name": "c_person_goals_status",
+              "kind": {
+                "Enum": [
+                  "canceled",
+                  "failed",
+                  "working",
+                  "succeeded"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "d97f02bf2620ddcd59b280f5b5d37dc015d2c8e380a46c6aa692901c38e81199": {
     "query": "select exists(select 1 from c_partner where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n",
     "describe": {
@@ -1418,6 +1618,43 @@
         "Left": [
           "Jsonb",
           "Jsonb"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "ec6fdfbd3f1cf5dd4004d27742517ddae0575c7ca3c66ff34937cc1f040d5c71": {
+    "query": "insert\ninto c_person_goals (\n    \"person_id\",\n    \"category\",\n    \"target\",\n    \"begin\",\n    \"end\",\n    \"status\"\n  )\nvalues ($1, $2, $3, $4, $5, $6::c_person_goals_status)\nreturning \"id\"\n;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Varchar",
+          "Int4",
+          "Timestamptz",
+          "Timestamptz",
+          {
+            "Custom": {
+              "name": "c_person_goals_status",
+              "kind": {
+                "Enum": [
+                  "canceled",
+                  "failed",
+                  "working",
+                  "succeeded"
+                ]
+              }
+            }
+          }
         ]
       },
       "nullable": [
@@ -1580,6 +1817,36 @@
           "Int4",
           "Jsonb",
           "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "fd64e2be2fe8715ed378513a8eb679d24e502a35588c10b994052b850ff546c9": {
+    "query": "update c_person_goals\nset\n    \"category\" = $3,\n    \"target\" = $4,\n    \"begin\" = $5,\n    \"end\" = $6,\n    \"status\" = $7::c_person_goals_status\nwhere\n    \"id\" = $1\nand\n    \"person_id\" = $2\n;\n\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Varchar",
+          "Int4",
+          "Timestamptz",
+          "Timestamptz",
+          {
+            "Custom": {
+              "name": "c_person_goals_status",
+              "kind": {
+                "Enum": [
+                  "canceled",
+                  "failed",
+                  "working",
+                  "succeeded"
+                ]
+              }
+            }
+          }
         ]
       },
       "nullable": []
