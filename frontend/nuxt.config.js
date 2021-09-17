@@ -81,6 +81,12 @@ export default {
             ]
         },
 
+        extend(config) {
+            // Include the Vue compiler, so dynamic content can be
+            // compiled into Vue components.
+            config.resolve.alias['vue'] = 'vue/dist/vue.common';
+        },
+
         loaders: {
             vue: {
                 compilerOptions: {

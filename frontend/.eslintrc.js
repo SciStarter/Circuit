@@ -22,6 +22,7 @@ module.exports = {
         'space-before-function-paren': 'off',
         'no-console': 'off',
         'vue/no-v-html': 'off',
-        'vue/html-indent': 'off'
+        'vue/html-indent': 'off',
+        'vue/one-component-per-file': 'off'
     }
 }

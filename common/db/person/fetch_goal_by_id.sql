@@ -2,7 +2,6 @@ select
   "id",
   "person_id",
   "category",
-  0 as "progress!",
   "target",
   "begin",
   "end",

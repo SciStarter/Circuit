@@ -270,10 +270,24 @@ pub async fn get_goals(mut req: tide::Request<Database>) -> tide::Result {
     let mut goals = Vec::with_capacity(3);
 
     while let Some(result) = stream.next().await {
-        let mut goal = result?.into_fixed_offset();
-        goal.progress = person
-            .participation_between(req.state(), &goal.begin, &goal.end)
-            .await?;
+        let goal = result?.into_fixed_offset();
+
+        let progress = {
+            let mut progress = Vec::new();
+
+            let mut stream = person
+                .all_participation_between(req.state(), &goal.begin, &goal.end)
+                .await?;
+
+            while let Some(result) = stream.next().await {
+                progress.push(result?.expand(req.state()).await?);
+            }
+
+            progress
+        };
+
+        let mut goal = serde_json::to_value(goal)?;
+        goal["progress"] = serde_json::to_value(progress)?;
         goals.push(goal);
     }
 

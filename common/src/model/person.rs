@@ -1,4 +1,4 @@
-use super::{partner::Partner, Error, Pagination};
+use super::{partner::Partner, Error, Opportunity, OpportunityExterior, Pagination};
 use crate::{Database, ToFixedOffset};
 
 use chrono::{DateTime, FixedOffset, TimeZone, Utc};
@@ -31,7 +31,6 @@ where
     #[serde(skip)]
     pub person_id: i32,
     pub category: String,
-    pub progress: i32,
     pub target: i32,
     pub begin: DateTime<Offset>,
     pub end: DateTime<Offset>,
@@ -48,13 +47,50 @@ where
             id: self.id,
             person_id: self.person_id,
             category: self.category,
-            progress: self.progress,
             target: self.target,
             begin: self.begin.to_fixed_offset(),
             end: self.end.to_fixed_offset(),
             status: self.status,
         }
     }
+}
+
+#[derive(Debug)]
+pub struct ParticipationRow {
+    pub opportunity: Uuid,
+    pub when: DateTime<Utc>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Participation {
+    pub opportunity: Uuid,
+    pub when: DateTime<FixedOffset>,
+}
+
+impl From<ParticipationRow> for Participation {
+    fn from(row: ParticipationRow) -> Self {
+        Participation {
+            opportunity: row.opportunity,
+            when: row.when.to_fixed_offset(),
+        }
+    }
+}
+
+impl Participation {
+    pub async fn expand(self, db: &Database) -> Result<ExpandedParticipation, Error> {
+        Ok(ExpandedParticipation {
+            opportunity: Opportunity::load_by_uid(db, &self.opportunity)
+                .await?
+                .exterior,
+            when: self.when,
+        })
+    }
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ExpandedParticipation {
+    pub opportunity: OpportunityExterior,
+    pub when: DateTime<FixedOffset>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -233,7 +269,7 @@ pub struct Person {
 }
 
 impl Person {
-    pub async fn participation_between(
+    pub async fn count_participation_between(
         &self,
         db: &Database,
         begin: &DateTime<FixedOffset>,
@@ -241,13 +277,30 @@ impl Person {
     ) -> Result<i32, Error> {
         Ok(sqlx::query_file!(
             "db/person/count_participation_between.sql",
-            dbg!(self.exterior.uid.to_string()),
-            dbg!(begin.to_rfc3339()),
-            dbg!(end.to_rfc3339()),
+            self.exterior.uid.to_string(),
+            begin.to_rfc3339(),
+            end.to_rfc3339(),
         )
         .fetch_one(db)
         .await?
         .total as i32)
+    }
+
+    pub async fn all_participation_between<'db>(
+        &self,
+        db: &'db Database,
+        begin: &DateTime<FixedOffset>,
+        end: &DateTime<FixedOffset>,
+    ) -> Result<impl Stream<Item = Result<Participation, sqlx::Error>> + 'db, Error> {
+        Ok(sqlx::query_file_as!(
+            ParticipationRow,
+            "db/person/all_participation_between.sql",
+            self.exterior.uid.to_string(),
+            begin.to_rfc3339(),
+            end.to_rfc3339(),
+        )
+        .map(|row| row.into())
+        .fetch(db))
     }
 
     pub async fn goal_by_id(&self, db: &Database, id: i32) -> Result<Goal<Utc>, Error> {
