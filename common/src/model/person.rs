@@ -1,12 +1,61 @@
-use super::{opportunity::OpportunityReference, partner::Partner, Error, Pagination};
+use super::{partner::Partner, Error, Pagination};
 use crate::{Database, ToFixedOffset};
 
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset, TimeZone, Utc};
 use futures::Stream;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sqlx::prelude::*;
 use uuid::Uuid;
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[derive(sqlx::Type)]
+#[sqlx(type_name = "c_person_goals_status", rename_all = "snake_case")]
+pub enum GoalStatus {
+    Canceled,
+    Failed,
+    Working,
+    Succeeded,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(bound = "")] // The derive macro assumes an unecessary trait bound
+pub struct Goal<Offset>
+where
+    Offset: TimeZone,
+    DateTime<Offset>: DeserializeOwned,
+{
+    #[serde(default)]
+    pub id: i32,
+    #[serde(skip)]
+    pub person_id: i32,
+    pub category: String,
+    pub progress: i32,
+    pub target: i32,
+    pub begin: DateTime<Offset>,
+    pub end: DateTime<Offset>,
+    pub status: GoalStatus,
+}
+
+impl<Offset> Goal<Offset>
+where
+    Offset: TimeZone,
+    DateTime<Offset>: DeserializeOwned + ToFixedOffset,
+{
+    pub fn into_fixed_offset(self) -> Goal<FixedOffset> {
+        Goal::<FixedOffset> {
+            id: self.id,
+            person_id: self.person_id,
+            category: self.category,
+            progress: self.progress,
+            target: self.target,
+            begin: self.begin.to_fixed_offset(),
+            end: self.end.to_fixed_offset(),
+            status: self.status,
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -184,6 +233,92 @@ pub struct Person {
 }
 
 impl Person {
+    pub async fn participation_between(
+        &self,
+        db: &Database,
+        begin: &DateTime<FixedOffset>,
+        end: &DateTime<FixedOffset>,
+    ) -> Result<i32, Error> {
+        Ok(sqlx::query_file!(
+            "db/person/count_participation_between.sql",
+            dbg!(self.exterior.uid.to_string()),
+            dbg!(begin.to_rfc3339()),
+            dbg!(end.to_rfc3339()),
+        )
+        .fetch_one(db)
+        .await?
+        .total as i32)
+    }
+
+    pub async fn goal_by_id(&self, db: &Database, id: i32) -> Result<Goal<Utc>, Error> {
+        if let Some(person_id) = self.id {
+            Ok(
+                sqlx::query_file_as!(Goal, "db/person/fetch_goal_by_id.sql", person_id, id)
+                    .fetch_one(db)
+                    .await?,
+            )
+        } else {
+            Err(Error::NoSuch("Person has no id"))
+        }
+    }
+
+    pub async fn goals_by_status<'db>(
+        &self,
+        db: &'db Database,
+        status: GoalStatus,
+    ) -> Result<impl Stream<Item = Result<Goal<Utc>, sqlx::Error>> + 'db, Error> {
+        if let Some(id) = self.id {
+            Ok(sqlx::query_file_as!(
+                Goal,
+                "db/person/fetch_goals_by_status.sql",
+                id,
+                status as GoalStatus
+            )
+            .fetch(db))
+        } else {
+            Err(Error::NoSuch("Person has no id"))
+        }
+    }
+
+    pub async fn add_goal(&self, db: &Database, goal: Goal<FixedOffset>) -> Result<i32, Error> {
+        if let Some(id) = self.id {
+            Ok(sqlx::query_file!(
+                "db/person/add_goal.sql",
+                id,
+                goal.category,
+                goal.target,
+                goal.begin,
+                goal.end,
+                goal.status as GoalStatus
+            )
+            .fetch_one(db)
+            .await?
+            .id)
+        } else {
+            Err(Error::NoSuch("Person has no id"))
+        }
+    }
+
+    pub async fn save_goal(&self, db: &Database, goal: Goal<FixedOffset>) -> Result<(), Error> {
+        if let Some(id) = self.id {
+            sqlx::query_file!(
+                "db/person/save_goal.sql",
+                goal.id,
+                id,
+                goal.category,
+                goal.target,
+                goal.begin,
+                goal.end,
+                goal.status as GoalStatus
+            )
+            .execute(db)
+            .await?;
+            Ok(())
+        } else {
+            Err(Error::NoSuch("Person has no id"))
+        }
+    }
+
     pub async fn total(db: &Database) -> Result<u32, Error> {
         Ok(sqlx::query("SELECT COUNT(*) FROM c_person")
             .fetch_one(db)

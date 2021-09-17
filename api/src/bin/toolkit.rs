@@ -1,4 +1,3 @@
-use async_std::prelude::*;
 use shellfish::{async_fn, Command, Shell};
 use sqlx::postgres::PgPoolOptions;
 
@@ -144,14 +143,17 @@ fn reset_opportunity(state: &mut State) -> Result<(), DynError> {
 }
 
 fn narrow_opportunity(
-    state: &mut State,
+    _state: &mut State,
     args: impl Iterator<Item = String>,
 ) -> Result<(), DynError> {
     for op in operations(args, "=")? {
         match op {
-            Operator::Equal { attribute, value } => {
+            Operator::Equal {
+                attribute: _,
+                value: _,
+            } => {
+                //println!("{} = {}", &attribute, &value);
                 todo!();
-                println!("{} = {}", &attribute, &value);
             }
         }
     }
@@ -255,8 +257,10 @@ fn table(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     match identifier.as_ref() {
         "opportunity" => state.table = Table::Opportunity,
         "opp" => state.table = Table::Opportunity,
+        "ambiguous" => state.table = Table::Ambiguous,
+        "amb" => state.table = Table::Ambiguous,
         _ => {
-            return Err("valid identifiers: opp|opportunity".into());
+            return Err("valid identifiers: opp|opportunity|amb|ambiguous".into());
         }
     };
 
@@ -266,7 +270,7 @@ fn table(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
 fn reset(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => reset_opportunity(state)?,
-        _ => {
+        Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
     };
@@ -277,7 +281,7 @@ fn reset(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
 fn narrow(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => narrow_opportunity(state, args.into_iter().skip(1))?,
-        _ => {
+        Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
     };
@@ -288,7 +292,7 @@ fn narrow(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
 async fn first(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => first_opportunity(state).await?,
-        _ => {
+        Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
     };
@@ -299,7 +303,7 @@ async fn first(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
 async fn revalidate(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => revalidate_opportunities(state).await?,
-        _ => {
+        Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
     };
@@ -314,7 +318,7 @@ async fn accept(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
 
     match state.table {
         Table::Opportunity => accept_opportunities(state, accepted).await?,
-        _ => {
+        Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
     };
@@ -329,7 +333,7 @@ async fn withdraw(state: &mut State, args: Vec<String>) -> Result<(), DynError> 
 
     match state.table {
         Table::Opportunity => withdraw_opportunities(state, withdrawn).await?,
-        _ => {
+        Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
     };
@@ -338,17 +342,21 @@ async fn withdraw(state: &mut State, args: Vec<String>) -> Result<(), DynError> 
 }
 
 async fn db_meta(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
-    if args.len() < 1 {
-        println!("Expected a database command: [analyze]");
-        return Ok(());
-    }
+    let mut args = args.into_iter().skip(1);
 
-    match &*args[0] {
+    let command = args.next().unwrap_or_else(|| "help".into());
+
+    match command.as_ref() {
+        "help" => {
+            println!("help         -- Print out this help text");
+            println!("analyze      -- Have the database collect statistics to improve query execution time");
+        }
         "analyze" => {
             sqlx::query("analyze;").execute(&state.db).await?;
+            println!("Analysis completed");
         }
         _ => {
-            println!("Unrecognized database command: {}", &args[0]);
+            println!("Unrecognized database command: {}", &command);
         }
     }
 

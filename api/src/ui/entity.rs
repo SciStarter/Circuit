@@ -59,7 +59,7 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn get_didit(req: tide::Request<Database>) -> tide::Result {
     let slug = req.param("slug")?;
     let db = req.state();
-    okay(&common::model::opportunity::didits_for_slug(db, &slug).await?)
+    okay(&common::model::opportunity::for_slug::didits_for_slug(db, &slug).await?)
 }
 
 pub async fn add_didit(mut req: tide::Request<Database>) -> tide::Result {
@@ -69,7 +69,8 @@ pub async fn add_didit(mut req: tide::Request<Database>) -> tide::Result {
         .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
     let db = req.state();
 
-    common::model::opportunity::add_didit_for_slug(db, &slug, &person.exterior.uid).await?;
+    common::model::opportunity::for_slug::add_didit_for_slug(db, &slug, &person.exterior.uid)
+        .await?;
 
     common::log(
         "ui-didit",
@@ -83,7 +84,7 @@ pub async fn get_saves(req: tide::Request<Database>) -> tide::Result {
     let slug = req.param("slug")?;
     let db = req.state();
 
-    okay(&common::model::opportunity::saves_for_slug(db, &slug).await?)
+    okay(&common::model::opportunity::for_slug::saves_for_slug(db, &slug).await?)
 }
 
 pub async fn add_save(mut req: tide::Request<Database>) -> tide::Result {
@@ -93,7 +94,8 @@ pub async fn add_save(mut req: tide::Request<Database>) -> tide::Result {
         .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
     let db = req.state();
 
-    common::model::opportunity::add_save_for_slug(db, &slug, &person.exterior.uid).await?;
+    common::model::opportunity::for_slug::add_save_for_slug(db, &slug, &person.exterior.uid)
+        .await?;
 
     common::log(
         "ui-save",
@@ -106,7 +108,7 @@ pub async fn add_save(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn get_likes(req: tide::Request<Database>) -> tide::Result {
     let slug = req.param("slug")?;
     let db = req.state();
-    okay(&common::model::opportunity::likes_for_slug(db, &slug).await?)
+    okay(&common::model::opportunity::for_slug::likes_for_slug(db, &slug).await?)
 }
 
 pub async fn add_like(mut req: tide::Request<Database>) -> tide::Result {
@@ -114,7 +116,7 @@ pub async fn add_like(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req).await?;
     let db = req.state();
 
-    common::model::opportunity::add_like_for_slug(
+    common::model::opportunity::for_slug::add_like_for_slug(
         db,
         &slug,
         &person.as_ref().map(|p| p.exterior.uid),
@@ -145,7 +147,7 @@ pub async fn add_review(mut req: tide::Request<Database>) -> tide::Result {
 
     let db = req.state();
 
-    let id = common::model::opportunity::add_review_for_slug(
+    let id = common::model::opportunity::for_slug::add_review_for_slug(
         db,
         &slug,
         &person.exterior.uid,
@@ -171,7 +173,7 @@ pub async fn report_review(mut req: tide::Request<Database>) -> tide::Result {
     if let Some(person) = request_person(&mut req).await? {
         let report: ReviewReport = req.body_json().await?;
         let db = req.state();
-        common::model::opportunity::report_review(db, report.id).await?;
+        common::model::opportunity::for_slug::report_review(db, report.id).await?;
         common::log(
             "ui-report-review",
             &json!({"person": person.exterior.uid, "review": report.id}),
@@ -183,7 +185,7 @@ pub async fn report_review(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn reviews(req: tide::Request<Database>) -> tide::Result {
     let slug = req.param("slug")?;
     let db = req.state();
-    okay(&common::model::opportunity::reviews_for_slug(db, &slug).await?)
+    okay(&common::model::opportunity::for_slug::reviews_for_slug(db, &slug).await?)
 }
 
 pub async fn recommended(req: tide::Request<Database>) -> tide::Result {
@@ -270,13 +272,13 @@ pub async fn get_me(mut req: tide::Request<Database>) -> tide::Result {
             Involvement::load_by_participant_and_opportunity(db, &person.exterior.uid, &opp).await?
         {
             okay(&json!({
-                "like": common::model::opportunity::likes_for_slug_and_person(db, &slug, &person.exterior.uid).await? > 0,
+                "like": common::model::opportunity::for_slug::likes_for_slug_and_person(db, &slug, &person.exterior.uid).await? > 0,
                 "save": involvement.exterior.mode >= Mode::Saved,
                 "didit": involvement.exterior.mode >= Mode::Logged,
             }))
         } else {
             okay(&json!({
-                "like": common::model::opportunity::likes_for_slug_and_person(db, &slug, &person.exterior.uid).await? > 0,
+                "like": common::model::opportunity::for_slug::likes_for_slug_and_person(db, &slug, &person.exterior.uid).await? > 0,
                 "save": false,
                 "didit": false,
             }))
@@ -297,7 +299,8 @@ pub async fn register_interest(mut req: tide::Request<Database>) -> tide::Result
         .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
     let db = req.state();
 
-    common::model::opportunity::add_interest_for_slug(db, &slug, &person.exterior.uid).await?;
+    common::model::opportunity::for_slug::add_interest_for_slug(db, &slug, &person.exterior.uid)
+        .await?;
 
     common::log(
         "ui-interest",

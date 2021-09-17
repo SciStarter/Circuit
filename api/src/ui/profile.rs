@@ -1,14 +1,16 @@
 use async_std::stream::StreamExt;
+use chrono::{FixedOffset, Utc};
 use common::{
     model::{
-        involvement::{self, Involvement, Mode},
+        involvement::{Involvement, Mode},
+        person::{Goal, GoalStatus},
         Opportunity, Pagination,
     },
     Database, ToFixedOffset,
 };
 use serde::Deserialize;
 use serde_json::json;
-use tide::StatusCode;
+use tide::{Status, StatusCode};
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
@@ -224,7 +226,11 @@ pub async fn set_involvement(mut req: tide::Request<Database>) -> tide::Result {
         ));
     }
 
-    inv.exterior.mode = target.mode;
+    // We're not using Involvement::upgrade here because the user can
+    // manually downgrade their involvement. So, we need to also set
+    // the latest change datetime.
+    inv.exterior.mode = target.mode.min(Mode::Logged);
+    inv.exterior.latest = Utc::now().to_fixed_offset();
 
     inv.store(req.state()).await?;
 
@@ -257,7 +263,21 @@ pub async fn get_goals(mut req: tide::Request<Database>) -> tide::Result {
         .await?
         .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
 
-    todo!()
+    let mut stream = person
+        .goals_by_status(req.state(), GoalStatus::Working)
+        .await?;
+
+    let mut goals = Vec::with_capacity(3);
+
+    while let Some(result) = stream.next().await {
+        let mut goal = result?.into_fixed_offset();
+        goal.progress = person
+            .participation_between(req.state(), &goal.begin, &goal.end)
+            .await?;
+        goals.push(goal);
+    }
+
+    okay(&goals)
 }
 
 pub async fn add_goal(mut req: tide::Request<Database>) -> tide::Result {
@@ -265,7 +285,16 @@ pub async fn add_goal(mut req: tide::Request<Database>) -> tide::Result {
         .await?
         .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
 
-    todo!()
+    let goal: Goal<FixedOffset> = req.body_json().await?;
+
+    let goal_id = person.add_goal(req.state(), goal).await?;
+
+    common::log(
+        "ui-add-goal",
+        &json!({"person": person.exterior.uid, "goal": goal_id}),
+    );
+
+    okay(&goal_id)
 }
 
 pub async fn save_goal(mut req: tide::Request<Database>) -> tide::Result {
@@ -273,7 +302,21 @@ pub async fn save_goal(mut req: tide::Request<Database>) -> tide::Result {
         .await?
         .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
 
-    todo!()
+    let mut goal: Goal<FixedOffset> = req.body_json().await?;
+    let goal_id = req.param("id")?.parse()?;
+    goal.id = goal_id;
+
+    person
+        .save_goal(req.state(), goal)
+        .await
+        .with_status(|| StatusCode::BadRequest)?;
+
+    common::log(
+        "ui-save-goal",
+        &json!({"person": person.exterior.uid, "goal": goal_id}),
+    );
+
+    okay_empty()
 }
 
 pub async fn cancel_goal(mut req: tide::Request<Database>) -> tide::Result {
@@ -281,5 +324,22 @@ pub async fn cancel_goal(mut req: tide::Request<Database>) -> tide::Result {
         .await?
         .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
 
-    todo!()
+    let goal_id = req.param("id")?.parse()?;
+
+    let mut goal = person
+        .goal_by_id(req.state(), goal_id)
+        .await
+        .with_status(|| StatusCode::NotFound)?
+        .into_fixed_offset();
+
+    goal.status = GoalStatus::Canceled;
+
+    person.save_goal(req.state(), goal).await?;
+
+    common::log(
+        "ui-cancel-goal",
+        &json!({"person": person.exterior.uid, "goal": goal_id}),
+    );
+
+    okay_empty()
 }
