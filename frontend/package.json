@@ -24,6 +24,7 @@
         "core-js": "^3.9.1",
         "geojson-extent": "^0.3.2",
         "haversine": "^1.1.1",
+        "humanize-duration": "^3.27.0",
         "lodash": "^4.17.21",
         "mapbox-gl": "^2.4.1",
         "nuxt": "^2.15.3",

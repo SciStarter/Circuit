@@ -1,9 +1,10 @@
+pub mod for_slug;
+
 use super::Error;
-use crate::model::involvement::{self, Involvement};
+use crate::model::involvement;
 use crate::{Database, ToFixedOffset};
 
 use chrono::{DateTime, FixedOffset, Utc};
-use futures::StreamExt;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -25,6 +26,23 @@ use super::{Pagination, PARTNER_NAMESPACE};
 // that text using non-Latin characters will be retained when slugified.
 pub static SLUGIFY_REPLACE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"[^\pL\pN-]+").expect("Unable to compile SLUGIFY_REPLACE regex"));
+
+#[derive(Debug, Serialize)]
+pub struct Review {
+    pub id: i32,
+    pub person: Uuid,
+    pub username: Option<String>,
+    pub image_url: Option<String>,
+    pub rating: i16,
+    pub comment: String,
+    pub when: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct Reviews {
+    pub average: f32,
+    pub reviews: Vec<Review>,
+}
 
 #[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -697,8 +715,7 @@ enum ParamValue {
     RawString(String),
     RawFloat(f32),
     RawInt(i32),
-    RawUuid(Uuid),
-
+    //RawUuid(Uuid),
     Bool(bool),
     Uuid(Uuid),
     VecString(Vec<String>),
@@ -723,7 +740,7 @@ impl ParamValue {
             ParamValue::RawString(val) => query.bind(val),
             ParamValue::RawFloat(val) => query.bind(val),
             ParamValue::RawInt(val) => query.bind(val),
-            ParamValue::RawUuid(val) => query.bind(val),
+            //ParamValue::RawUuid(val) => query.bind(val),
             ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
@@ -1105,170 +1122,6 @@ impl OpportunityImportRecord {
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct Review {
-    pub id: i32,
-    pub person: Uuid,
-    pub username: Option<String>,
-    pub image_url: Option<String>,
-    pub rating: i16,
-    pub comment: String,
-    pub when: DateTime<Utc>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct Reviews {
-    pub average: f32,
-    pub reviews: Vec<Review>,
-}
-
-pub async fn reviews_for_slug(db: &Database, slug: &str) -> Result<Reviews, Error> {
-    let mut ret = Reviews {
-        average: 0.0,
-        reviews: vec![],
-    };
-
-    let mut stream = sqlx::query_file_as!(Review, "db/opportunity/all_reviews.sql", slug).fetch(db);
-
-    while let Some(result) = stream.next().await {
-        let review = result?;
-        ret.average += review.rating as f32;
-        ret.reviews.push(review);
-    }
-
-    // Divide by zero produces a NaN value, which is serialized into
-    // JSON as null
-    ret.average /= ret.reviews.len() as f32;
-
-    Ok(ret)
-}
-
-pub async fn add_review_for_slug(
-    db: &Database,
-    slug: &str,
-    person: &Uuid,
-    rating: i16,
-    comment: &str,
-) -> Result<i32, Error> {
-    let opp_id = Opportunity::id_by_slug(db, slug)
-        .await?
-        .ok_or_else(|| Error::NoSuch("opportunity"))?;
-
-    let result = sqlx::query(
-        r"
-            insert into c_opportunity_review (opportunity_id, person, rating, comment)
-            values ($1, $2, $3, $4)
-            on conflict (opportunity_id, person) do update set rating = $3, comment = $4
-            returning id
-        ",
-    )
-    .bind(opp_id)
-    .bind(person)
-    .bind(rating)
-    .bind(comment)
-    .map(|row| row.get::<i32, _>(0))
-    .fetch_one(db)
-    .await?;
-
-    Ok(result)
-}
-
-pub async fn report_review(db: &Database, id: i32) -> Result<(), Error> {
-    sqlx::query("update c_opportunity_review set flags = flags + 1 where id = $1")
-        .bind(id)
-        .execute(db)
-        .await?;
-    Ok(())
-}
-
-pub async fn add_like_for_slug(
-    db: &Database,
-    slug: &str,
-    person: &Option<Uuid>,
-) -> Result<(), Error> {
-    let opp_id = Opportunity::id_by_slug(db, slug)
-        .await?
-        .ok_or_else(|| Error::NoSuch("opportunity"))?;
-
-    sqlx::query_file!("db/opportunity/add_like.sql", opp_id, person.clone())
-        .execute(db)
-        .await?;
-
-    Ok(())
-}
-
-pub async fn likes_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
-    Ok(sqlx::query_file!("db/opportunity/count_likes.sql", slug)
-        .map(|row| row.likes)
-        .fetch_one(db)
-        .await?
-        .unwrap_or(0) as u32)
-}
-
-pub async fn likes_for_slug_and_person(
-    db: &Database,
-    slug: &str,
-    person: &Uuid,
-) -> Result<u32, Error> {
-    Ok(
-        sqlx::query_file!("db/opportunity/count_person_likes.sql", slug, person)
-            .map(|row| row.likes)
-            .fetch_one(db)
-            .await?
-            .unwrap_or(0) as u32,
-    )
-}
-
-pub async fn saves_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
-    Ok(
-        sqlx::query_file!("db/opportunity/count_saves_by_slug.sql", slug)
-            .map(|row| row.saves)
-            .fetch_one(db)
-            .await?
-            .unwrap_or(0) as u32,
-    )
-}
-
-pub async fn add_save_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
-    let uid = Opportunity::uid_by_slug(db, slug)
-        .await?
-        .ok_or_else(|| Error::NoSuch("opportunity"))?;
-
-    Involvement::upgrade(db, person, &uid, involvement::Mode::Saved, &None).await?;
-
-    Ok(())
-}
-
-pub async fn add_interest_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
-    let uid = Opportunity::uid_by_slug(db, slug)
-        .await?
-        .ok_or_else(|| Error::NoSuch("opportunity"))?;
-
-    Involvement::upgrade(db, person, &uid, involvement::Mode::Interest, &None).await?;
-
-    Ok(())
-}
-
-pub async fn didits_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
-    Ok(
-        sqlx::query_file!("db/opportunity/count_didit_by_slug.sql", slug)
-            .map(|row| row.didit)
-            .fetch_one(db)
-            .await?
-            .unwrap_or(0) as u32,
-    )
-}
-
-pub async fn add_didit_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
-    let uid = Opportunity::uid_by_slug(db, slug)
-        .await?
-        .ok_or_else(|| Error::NoSuch("opportunity"))?;
-
-    Involvement::upgrade(db, person, &uid, involvement::Mode::Logged, &None).await?;
-
-    Ok(())
-}
-
 impl Opportunity {
     pub fn current_as_of(&self, now: &DateTime<FixedOffset>) -> bool {
         let num_starts = self.exterior.start_datetimes.len();
@@ -1399,11 +1252,11 @@ impl Opportunity {
     }
 
     pub async fn reviews(&mut self, db: &Database) -> Result<Reviews, Error> {
-        reviews_for_slug(db, &self.exterior.slug).await
+        for_slug::reviews_for_slug(db, &self.exterior.slug).await
     }
 
     pub async fn likes(&mut self, db: &Database) -> Result<u32, Error> {
-        likes_for_slug(db, &self.exterior.slug).await
+        for_slug::likes_for_slug(db, &self.exterior.slug).await
     }
 
     pub fn validate(&mut self) -> Result<(), Error> {

@@ -9,7 +9,7 @@
         <p>
           Take part in 5 science opportunities in one year
         </p>
-        <action-button principal arrow @click="set_goal(5, 365, 'dabbler')">
+        <action-button principal arrow @click="set_goal(5, 366, 'dabbler')">
           Set Goal
         </action-button>
       </div>
@@ -21,7 +21,7 @@
         <p>
           Take part in 20 science opportunities in one year
         </p>
-        <action-button principal arrow @click="set_goal(20, 365, 'enthusiast')">
+        <action-button principal arrow @click="set_goal(20, 366, 'enthusiast')">
           Set Goal
         </action-button>
       </div>
@@ -33,18 +33,22 @@
         <p>
           Take part in 50 science opportunities in one year
         </p>
-        <action-button principal arrow @click="set_goal(50, 365, 'hero')">
+        <action-button principal arrow @click="set_goal(50, 366, 'hero')">
           Set Goal
         </action-button>
       </div>
     </div>
   </section>
   <section v-else class="goals current-goal" data-context="current-goal">
-
+    <div v-for="goal in goals" :key="goal.id">
+      {{ duration(goal.begin, goal.end) }}
+      {{ goal }}
+    </div>
   </section>
 </template>
 
 <script>
+import humanizeDuration from 'humanize-duration'
 import ActionButton from '~/components/ActionButton'
 
 import AtomIcon from '~/assets/img/atom.svg?inline'
@@ -60,16 +64,48 @@ export default {
         TrophyHero,
     },
 
-    async asyncData() {
+    async asyncData(context) {
+        const goals = await context.$axios.$get("/api/ui/profile/goals", context.store.state.auth);
+
         return {
-            mode: 'set',
+            goals,
+            mode: goals.length ? 'current' : 'set',
         };
     },
 
     methods: {
+        duration(begin, end) {
+            return humanizeDuration(new Date(end) - new Date(begin), { largest: 2, round: true });
+        },
+
+        async fetch_goals() {
+            this.goals = await this.$axios.$get("/api/ui/profile/goals", this.$store.state.auth);
+            this.mode = this.goals.length ? 'current' : 'set';
+        },
+
         async set_goal(times, days, label) {
-            console.log('set goal', times, days, label);
-        }
+            let dt = new Date();
+            const begin = dt.toISOString();
+            dt.setDate(dt.getDate() + days);
+            const end = dt.toISOString();
+
+            const goal = {
+                category: label,
+                progress: 0,
+                target: times,
+                begin,
+                end,
+                status: "working",
+            };
+
+            await this.$axios.$post("/api/ui/profile/goals", goal, this.$store.state.auth);
+            await this.fetch_goals();
+        },
+
+        async cancel_goal(id) {
+            await this.$axios.$delete("/api/ui/profile/goals/" + id, this.$store.state.auth);
+            await this.fetch_goals();
+        },
     },
 }
 </script>

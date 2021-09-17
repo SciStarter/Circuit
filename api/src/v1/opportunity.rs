@@ -143,7 +143,7 @@ async fn opportunity_recommend(req: tide::Request<Database>) -> tide::Result {
         Err(res) => return Ok(res),
     };
 
-    let mut query: RecommendQuery = req.query()?;
+    let mut _query: RecommendQuery = req.query()?;
 
     // !!! TODO
 
