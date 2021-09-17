@@ -6,6 +6,8 @@
 
 <script>
 export default {
+    name: "ActionButton",
+
     props: {
         principal: {
             type: Boolean,

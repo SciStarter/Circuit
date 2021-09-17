@@ -1,23 +1,15 @@
 <template>
-<div>
-  <!-- Selects a top level component to display based on the data pulled from the server -->
-  <!-- If we add more top level components, they need to be added between just-content and opportunity, with a v-else-if="LOGIC" attribute, and should use the same @login and @signup handlers -->
-  <just-content v-if="layout == 'just_content'" :entity="entity" :user="user" @login="$parent.$emit('login')" @signup="$parent.$emit('signup')" />
-  <opportunity v-else :entity="entity" :user="user" @login="$parent.$emit('login')" @signup="$parent.$emit('signup')" />
-</div>
+<component :is="selected_component" :entity="entity" :user="user" @login="$parent.$emit('login')" @signup="$parent.$emit('signup')" />
 </template>
 
 <script>
-import JustContent from '~/components/JustContent'
-import Opportunity from '~/components/Opportunity'
+// After creating a new layout component, update the
+// selected_component() computed property to map a layout name to the
+// component, and update the PageLayout or EntityType enumeration (as
+// appropriate for the component) in common/src/model/opportunity/mod.rs
 
 export default {
     name: 'Dynamic',
-
-    components: {
-        JustContent,
-        Opportunity
-    },
 
     async asyncData ({ params, $axios }) {
         const entity = await $axios.$get('/api/ui/entity/' + params.slug);
@@ -41,6 +33,13 @@ export default {
     },
 
     computed: {
+        selected_component() {
+            return {
+                'opportunity': () => import('~/components/Opportunity'),
+                'just_content': () => import('~/components/JustContent'),
+            }[this.layout] || Opportunity;
+        },
+
         user() {
             return this.$store.state.user;
         },

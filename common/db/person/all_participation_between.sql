@@ -1,10 +1,10 @@
-select count(*) as "total!"
+select *
 from
   (
     ( -- Count each "I did this" in the timeframe as one
       select
-        (I.exterior -> 'opportunity') as "opportunity",
-        (I.exterior -> 'latest') as "when"
+        (I.exterior ->> 'opportunity')::uuid as "opportunity!",
+        (I.exterior ->> 'latest')::timestamptz as "when!"
       from c_involvement I
       where
         (I.interior ->> 'participant') = $1::text
@@ -18,8 +18,8 @@ from
   union
     ( -- Count each partner-reported contribution in the timeframe as one
       select
-        (P.exterior -> 'opportunity') as "opportunity",
-        (P.exterior -> 'when') as "when"
+        (P.exterior ->> 'opportunity')::uuid as "opportunity!",
+        (P.exterior ->> 'when')::timestamptz as "when!"
       from c_participation P
       where
         (P.interior ->> 'participant') = $1::text
@@ -29,4 +29,5 @@ from
         (P.exterior ->> 'when') <= $3::text
     )
   ) as "merged"
+order by "when!" asc
 ;

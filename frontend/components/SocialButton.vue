@@ -13,6 +13,8 @@ import FacebookIcon from '~/assets/img/facebook-app.svg?inline'
 import LinkedinIcon from '~/assets/img/linkedin-app.svg?inline'
 
 export default {
+    name: "SocialButton",
+
     components: {
         TwitterIcon,
         FacebookIcon,
@@ -28,23 +30,41 @@ export default {
 
         opportunity: {
             type: Object,
-            required: true,
+            required: false,
             default: null,
+        },
+
+        url: {
+            type: String,
+            required: false,
+            default: '',
+        },
+
+        title: {
+            type: String,
+            required: false,
+            default: '',
+        },
+
+        hashtags: {
+            type: Array,
+            required: false,
+            default: [],
         },
     },
 
     computed: {
         href() {
-            if(this.opportunity === null) {
+            if(this.opportunity === null && !this.url) {
                 return 'missing';
             }
 
             const encode = encodeURIComponent;
 
-            const url = encode('https://sciencenearme.org/' + this.opportunity.slug);
-            const title = encode(this.opportunity.title);
+            const url = encode(this.url || ('https://sciencenearme.org/' + this.opportunity.slug));
+            const title = encode(this.title || this.opportunity.title);
             const via = encode('sciencenearme_');
-            const hashtags = encode(this.opportunity.opp_hashtags.join(',').replace(/#/g, ''));
+            const hashtags = encode((this.hashtags.length ? this.hashtags : this.opportunity.opp_hashtags).join(',').replace(/#/g, ''));
 
             switch(this.mode) {
             case 'twitter':
