@@ -3,12 +3,12 @@ use chrono::{FixedOffset, Utc};
 use common::{
     model::{
         involvement::{Involvement, Mode},
-        person::{Goal, GoalStatus},
-        Opportunity, Pagination,
+        person::{Gender, Goal, GoalStatus},
+        Opportunity, Pagination, Person,
     },
     Database, ToFixedOffset,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tide::{Status, StatusCode};
 use tide_fluent_routes::{
@@ -40,24 +40,128 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         })
 }
 
-pub async fn get_profile(_req: tide::Request<Database>) -> tide::Result {
-    todo!()
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(default)]
+struct ProfilePerson {
+    username: Option<String>,
+    image_url: Option<String>,
+    email: String,
+    password: Option<String>,
+    first_name: Option<String>,
+    last_name: Option<String>,
+    genders: Vec<Gender>,
+    gender_other: Option<String>,
+    phone: Option<String>,
+    whatsapp: Option<String>,
+    zip_code: Option<String>,
+    birth_year: Option<u32>,
+    ethnicities: Vec<common::model::person::Ethnicity>,
+    ethnicity_other: Option<String>,
+    family_income: Option<common::model::person::IncomeLevel>,
+    education_level: Option<common::model::person::EducationLevel>,
+    opt_in_research: Option<bool>,
+    opt_in_volunteer: Option<bool>,
+    private: bool,
 }
 
-pub async fn save_profile(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-save-profile", "");
-    todo!()
+impl ProfilePerson {
+    fn update_person(self, person: &mut Person) {
+        person.exterior.username = self.username;
+        person.exterior.image_url = self.image_url;
+        person.interior.email = self.email;
+        person.interior.first_name = self.first_name;
+        person.interior.last_name = self.last_name;
+        person.interior.genders = self.genders;
+        person.interior.gender_other = self.gender_other;
+        person.interior.phone = self.phone;
+        person.interior.whatsapp = self.whatsapp;
+        person.interior.zip_code = self.zip_code;
+        person.interior.birth_year = self.birth_year;
+        person.interior.ethnicities = self.ethnicities;
+        person.interior.ethnicity_other = self.ethnicity_other;
+        person.interior.family_income = self.family_income;
+        person.interior.education_level = self.education_level;
+        person.interior.opt_in_research = self.opt_in_research;
+        person.interior.opt_in_volunteer = self.opt_in_volunteer;
+        person.interior.private = self.private;
+
+        if let Some(password) = self.password {
+            person.set_password(&password);
+        }
+    }
 }
 
-pub async fn delete_profile(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-delete-profile", "");
-    todo!()
+impl From<Person> for ProfilePerson {
+    fn from(person: Person) -> Self {
+        ProfilePerson {
+            username: person.exterior.username,
+            image_url: person.exterior.image_url,
+            email: person.interior.email,
+            password: None,
+            first_name: person.interior.first_name,
+            last_name: person.interior.last_name,
+            genders: person.interior.genders,
+            gender_other: person.interior.gender_other,
+            phone: person.interior.phone,
+            whatsapp: person.interior.whatsapp,
+            zip_code: person.interior.zip_code,
+            birth_year: person.interior.birth_year,
+            ethnicities: person.interior.ethnicities,
+            ethnicity_other: person.interior.ethnicity_other,
+            family_income: person.interior.family_income,
+            education_level: person.interior.education_level,
+            opt_in_research: person.interior.opt_in_research,
+            opt_in_volunteer: person.interior.opt_in_volunteer,
+            private: person.interior.private,
+        }
+    }
+}
+
+pub async fn get_profile(mut req: tide::Request<Database>) -> tide::Result {
+    let person: ProfilePerson = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?
+        .into();
+
+    okay(&person)
+}
+
+pub async fn save_profile(mut req: tide::Request<Database>) -> tide::Result {
+    let mut person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
+
+    let prof: ProfilePerson = req.body_json().await?;
+
+    prof.update_person(&mut person);
+
+    person.store(req.state()).await?;
+
+    common::log("ui-save-profile", &json!({"person": person.exterior.uid}));
+
+    okay_empty()
+}
+
+pub async fn delete_profile(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
+
+    if let Some(id) = person.id {
+        sqlx::query("delete from c_person where id = $1")
+            .bind(id)
+            .execute(req.state())
+            .await?;
+        common::log("ui-delete-profile", &json!({"person": person.exterior.uid}));
+    }
+
+    okay_empty()
 }
 
 pub async fn delete_old_saved(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req)
         .await?
-        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
     // Consider moving the meat of this function into a SQL query
 
@@ -91,7 +195,7 @@ pub async fn delete_old_saved(mut req: tide::Request<Database>) -> tide::Result 
 pub async fn delete_saved(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req)
         .await?
-        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
     let target: Uuid = req.param("uid")?.parse()?;
 
@@ -101,7 +205,7 @@ pub async fn delete_saved(mut req: tide::Request<Database>) -> tide::Result {
         &target,
     )
     .await?
-    .ok_or_else(|| tide::Error::from_str(404, "No such saved opportunity"))?;
+    .ok_or_else(|| tide::Error::from_str(StatusCode::NotFound, "No such saved opportunity"))?;
 
     inv.exterior.mode = Mode::Deleted;
 
@@ -118,7 +222,7 @@ pub async fn delete_saved(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn add_saved(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req)
         .await?
-        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
     let target: Uuid = req.param("uid")?.parse()?;
 
@@ -151,7 +255,7 @@ struct InvolvedQuery {
 pub async fn get_involved(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req)
         .await?
-        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
     let query: InvolvedQuery = req.query()?;
 
@@ -213,7 +317,7 @@ struct InvolvementTarget {
 pub async fn set_involvement(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req)
         .await?
-        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
     let target: InvolvementTarget = req.body_json().await?;
 
@@ -245,7 +349,7 @@ pub async fn set_involvement(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn get_partners(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req)
         .await?
-        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
     let partners: Vec<common::model::partner::PartnerExterior> = person
         .load_partners(req.state())
@@ -261,7 +365,7 @@ pub async fn get_partners(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn get_goals(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req)
         .await?
-        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
     let mut stream = person
         .goals_by_status(req.state(), GoalStatus::Working)
@@ -297,7 +401,7 @@ pub async fn get_goals(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn add_goal(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req)
         .await?
-        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
     let goal: Goal<FixedOffset> = req.body_json().await?;
 
@@ -314,7 +418,7 @@ pub async fn add_goal(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn save_goal(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req)
         .await?
-        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
     let mut goal: Goal<FixedOffset> = req.body_json().await?;
     let goal_id = req.param("id")?.parse()?;
@@ -336,7 +440,7 @@ pub async fn save_goal(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn cancel_goal(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req)
         .await?
-        .ok_or_else(|| tide::Error::from_str(401, "Authorization required"))?;
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
     let goal_id = req.param("id")?.parse()?;
 
