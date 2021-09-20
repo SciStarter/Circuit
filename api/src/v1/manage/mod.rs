@@ -52,7 +52,7 @@ async fn manage(req: tide::Request<Database>) -> tide::Result {
     Ok(page.into())
 }
 
-#[derive(Template, Default, Serialize, Deserialize)]
+#[derive(Template, Default, Serialize, Deserialize, Debug)]
 #[template(path = "manage/authorize.html")]
 struct AuthorizeForm {
     next: Option<String>,
@@ -84,7 +84,11 @@ async fn authorize(mut req: tide::Request<Database>) -> tide::Result {
             if let (Some(email), Some(password)) = (&form.email, &form.password) {
                 let db = req.state();
 
-                let person = Person::load_by_email(db, email).await?;
+                let person = match Person::load_by_email(db, email).await {
+                    Ok(p) => p,
+                    Err(_) => return Ok("invalid username or password".into()),
+                };
+
                 if person.check_password(password) {
                     if !person.check_permission(&Permission::ManageSomething) {
                         return Ok(redirect("/"));

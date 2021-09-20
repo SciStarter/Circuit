@@ -99,6 +99,11 @@ pub enum Gender {
     Male,
     Female,
     NonBinary,
+    Transgender,
+    Intersex,
+
+    Other,
+
     #[serde(other)]
     Unspecified,
 }
@@ -111,6 +116,29 @@ impl Default for Gender {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
+pub enum Ethnicity {
+    Asian,
+    BlackOrAfrican,
+    LatinxOrHispanic,
+    MiddleEasternOrNorthAfrican,
+    NativeAmericanOrNativeAlaskan,
+    NativeHawaiianOrPacificIslander,
+    WhiteOrCaucasian,
+
+    Other,
+
+    #[serde(other)]
+    Unspecified,
+}
+
+impl Default for Ethnicity {
+    fn default() -> Self {
+        Ethnicity::Unspecified
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum EducationLevel {
     GradeSchool,
     HighSchool,
@@ -118,6 +146,7 @@ pub enum EducationLevel {
     University,
     Graduate,
     Doctorate,
+
     #[serde(other)]
     Unspecified,
 }
@@ -136,6 +165,12 @@ pub enum IncomeLevel {
     MiddleClass,
     UpperMiddleClass,
     Wealthy,
+
+    ZeroToTwentyFive,
+    TwentyFiveToFifty,
+    FiftyToHundred,
+    HundredPlus,
+
     #[serde(other)]
     Unspecified,
 }
@@ -186,6 +221,7 @@ impl Permission {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct PersonExterior {
     pub uid: Uuid,
     pub username: Option<String>,
@@ -193,13 +229,15 @@ pub struct PersonExterior {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct PersonInterior {
     pub email: String,
     pub email_hashes: Vec<String>,
     pub password: Option<String>,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
-    pub gender: Gender,
+    pub genders: Vec<Gender>,
+    pub gender_other: Option<String>,
     pub home_location: Option<serde_json::Value>,
     pub last_location: Option<serde_json::Value>,
     pub joined_at: DateTime<FixedOffset>,
@@ -208,13 +246,14 @@ pub struct PersonInterior {
     pub whatsapp: Option<String>,
     pub zip_code: Option<String>,
     pub birth_year: Option<u32>,
-    pub race: Option<String>,
-    pub ethnicity: Option<String>,
+    pub ethnicities: Vec<Ethnicity>,
+    pub ethnicity_other: Option<String>,
     pub family_income: Option<IncomeLevel>,
     pub education_level: Option<EducationLevel>,
     pub opt_in_research: Option<bool>,
     pub opt_in_volunteer: Option<bool>,
     pub permissions: Vec<Permission>,
+    pub private: bool,
 }
 
 impl Default for PersonInterior {
@@ -225,7 +264,8 @@ impl Default for PersonInterior {
             first_name: Default::default(),
             last_name: Default::default(),
             password: Default::default(),
-            gender: Default::default(),
+            genders: Default::default(),
+            gender_other: Default::default(),
             home_location: Default::default(),
             last_location: Default::default(),
             joined_at: Utc::now().to_fixed_offset(),
@@ -234,13 +274,14 @@ impl Default for PersonInterior {
             whatsapp: Default::default(),
             zip_code: Default::default(),
             birth_year: Default::default(),
-            race: Default::default(),
-            ethnicity: Default::default(),
+            ethnicities: Default::default(),
+            ethnicity_other: Default::default(),
             family_income: Default::default(),
             education_level: Default::default(),
             opt_in_research: Default::default(),
             opt_in_volunteer: Default::default(),
             permissions: Default::default(),
+            private: false,
         }
     }
 }

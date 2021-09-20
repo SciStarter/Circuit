@@ -1,10 +1,12 @@
+use async_std::prelude::*;
 use shellfish::{async_fn, Command, Shell};
 use sqlx::postgres::PgPoolOptions;
+use sqlx::Row;
 
 use common::{
     model::{
         opportunity::{OpportunityQuery, OpportunityQueryOrdering},
-        Opportunity, Pagination,
+        Opportunity, Pagination, Person,
     },
     Database,
 };
@@ -109,12 +111,46 @@ fn operations(
 enum Table {
     Ambiguous,
     Opportunity,
+    Person,
+}
+
+#[derive(Debug)]
+enum PersonQuery {
+    Any,
+    _Email(String),
+}
+
+impl PersonQuery {
+    pub fn load_matching<'db>(
+        &self,
+        db: &'db Database,
+    ) -> Result<impl Stream<Item = Result<Person, sqlx::Error>> + 'db, DynError> {
+        match self {
+            PersonQuery::Any => Ok(sqlx::query("select * from c_person;")
+                .map(|row: sqlx::postgres::PgRow| Person {
+                    id: row.get("id"),
+                    exterior: serde_json::from_value(row.get("exterior"))
+                        .expect("Error decoding exterior"),
+                    interior: serde_json::from_value(row.get("interior"))
+                        .expect("Error decoding interior"),
+                })
+                .fetch(db)),
+            PersonQuery::_Email(_) => todo!(),
+        }
+    }
+}
+
+impl Default for PersonQuery {
+    fn default() -> Self {
+        PersonQuery::Any
+    }
 }
 
 #[derive(Debug)]
 struct State {
     db: Database,
     opportunity_query: OpportunityQuery,
+    person_query: PersonQuery,
     table: Table,
 }
 
@@ -127,14 +163,58 @@ impl State {
 
         common::migrate(&db).await?;
 
-        let opportunity_query = OpportunityQuery::default();
-
         Ok(State {
             db,
-            opportunity_query,
-            table: Table::Opportunity,
+            opportunity_query: Default::default(),
+            person_query: Default::default(),
+            table: Table::Ambiguous,
         })
     }
+}
+
+fn reset_person(state: &mut State) -> Result<(), DynError> {
+    state.person_query = PersonQuery::default();
+    Ok(())
+}
+
+fn narrow_person(_state: &mut State, args: impl Iterator<Item = String>) -> Result<(), DynError> {
+    for op in operations(args, "=")? {
+        match op {
+            Operator::Equal {
+                attribute: _,
+                value: _,
+            } => {
+                //println!("{} = {}", &attribute, &value);
+                todo!();
+            }
+        }
+    }
+
+    Ok(())
+}
+
+async fn first_person(state: &mut State) -> Result<(), DynError> {
+    let mut persons = state.person_query.load_matching(&state.db)?;
+
+    if let Some(result) = persons.next().await {
+        let person = result?;
+        println!("{}", serde_json::to_string_pretty(&person)?);
+    } else {
+        println!("No results");
+    }
+
+    Ok(())
+}
+
+async fn update_persons<F: Fn(&mut Person) -> Result<(), DynError>>(
+    state: &mut State,
+    update: F,
+) -> Result<(), DynError> {
+    todo!()
+}
+
+async fn revalidate_persons(state: &mut State) -> Result<(), DynError> {
+    update_persons(state, |_| Ok(())).await
 }
 
 fn reset_opportunity(state: &mut State) -> Result<(), DynError> {
@@ -257,10 +337,9 @@ fn table(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     match identifier.as_ref() {
         "opportunity" => state.table = Table::Opportunity,
         "opp" => state.table = Table::Opportunity,
-        "ambiguous" => state.table = Table::Ambiguous,
-        "amb" => state.table = Table::Ambiguous,
+        "person" => state.table = Table::Person,
         _ => {
-            return Err("valid identifiers: opp|opportunity|amb|ambiguous".into());
+            return Err("valid identifiers: opp|opportunity|person".into());
         }
     };
 
@@ -270,6 +349,7 @@ fn table(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
 fn reset(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => reset_opportunity(state)?,
+        Table::Person => reset_person(state)?,
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -281,6 +361,7 @@ fn reset(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
 fn narrow(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => narrow_opportunity(state, args.into_iter().skip(1))?,
+        Table::Person => narrow_person(state, args.into_iter().skip(1))?,
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -292,6 +373,7 @@ fn narrow(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
 async fn first(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => first_opportunity(state).await?,
+        Table::Person => first_person(state).await?,
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -303,6 +385,7 @@ async fn first(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
 async fn revalidate(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => revalidate_opportunities(state).await?,
+        Table::Person => revalidate_persons(state).await?,
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -318,6 +401,9 @@ async fn accept(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
 
     match state.table {
         Table::Opportunity => accept_opportunities(state, accepted).await?,
+        Table::Person => {
+            return Err("not a meaningful operation on persons".into());
+        }
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -333,6 +419,9 @@ async fn withdraw(state: &mut State, args: Vec<String>) -> Result<(), DynError> 
 
     match state.table {
         Table::Opportunity => withdraw_opportunities(state, withdrawn).await?,
+        Table::Person => {
+            return Err("not a meaningful operation on persons".into());
+        }
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -359,6 +448,35 @@ async fn db_meta(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
             println!("Unrecognized database command: {}", &command);
         }
     }
+
+    Ok(())
+}
+
+async fn hashpassword(_state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+    if args.len() < 2 {
+        println!("Expected password argument");
+    }
+
+    println!("{}", djangohashers::make_password(&args[1]));
+
+    Ok(())
+}
+
+async fn checkpassword(_state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+    if args.len() < 3 {
+        println!("Expected password and hashed arguments");
+    }
+
+    match djangohashers::check_password(&args[1], &args[2]) {
+        Ok(matching) => {
+            if matching {
+                println!("matching");
+            } else {
+                println!("NOT matching");
+            }
+        }
+        Err(err) => println!("{:?}", err),
+    };
 
     Ok(())
 }
@@ -422,6 +540,24 @@ async fn main() -> Result<(), DynError> {
         Command::new_async(
             "Database maintenance operations".into(),
             async_fn!(State, db_meta),
+        )
+        .await,
+    );
+
+    shell.commands.insert(
+        "hashpassword".into(),
+        Command::new_async(
+            "Generate a password hash".into(),
+            async_fn!(State, hashpassword),
+        )
+        .await,
+    );
+
+    shell.commands.insert(
+        "checkpassword".into(),
+        Command::new_async(
+            "Check whether a password matches a hash".into(),
+            async_fn!(State, checkpassword),
         )
         .await,
     );
