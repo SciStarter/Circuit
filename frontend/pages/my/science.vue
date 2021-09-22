@@ -29,14 +29,7 @@
         </div>
       </section>
       <section class="pagination">
-        <div>
-          <action-button primary :disabled="report.pagination.page_index <= 0" @click="reload_report({page: report_search.page - 1})">
-            &laquo; Prev
-          </action-button>
-          <action-button primary :disabled="report.pagination.page_index >= report.pagination.last_page" @click="reload_report({page: report_search.page + 1})">
-            Next &raquo;
-          </action-button>
-        </div>
+        <pagination :page-index="report.pagination.page_index" :last-page="report.pagination.last_page" @switch="reload_report({page: $event})" />
       </section>
     </b-tab-item>
     <b-tab-item label="Your Activity Log" class="log">
@@ -58,14 +51,7 @@
         <opportunity-card v-for="inv in log.matches" :key="inv.id" :opportunity="inv.opportunity" />
       </section>
       <section class="pagination">
-        <div>
-          <action-button primary :disabled="log.pagination.page_index <= 0" @click="reload_log({page: log_search.page - 1})">
-            &laquo; Prev
-          </action-button>
-          <action-button primary :disabled="log.pagination.page_index >= log.pagination.last_page" @click="reload_log({page: log_search.page + 1})">
-            Next &raquo;
-          </action-button>
-        </div>
+        <pagination :page-index="log.pagination.page_index" :last-page="log.pagination.last_page" @switch="reload_log({page: $event})" />
       </section>
     </b-tab-item>
   </b-tabs>
@@ -78,6 +64,8 @@ import OpportunityCard from '~/components/OpportunityCard'
 import ActionButton from '~/components/ActionButton'
 
 export default {
+    name: "MyScience",
+
     components: {
         OpportunityCard,
         ActionButton,
@@ -284,6 +272,11 @@ export default {
             color: $snm-color-element-dark;
         }
     }
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
 }
 
 @media (min-width: $fullsize-screen) {
