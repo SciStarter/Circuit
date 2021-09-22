@@ -63,7 +63,7 @@ export default {
 
             const url = encode(this.url || ('https://sciencenearme.org/' + this.opportunity.slug));
             const title = encode(this.title || this.opportunity.title);
-            const via = encode('sciencenearme_');
+            const via = encode('SciNearMe_US');
             const hashtags = encode((this.hashtags.length ? this.hashtags : this.opportunity.opp_hashtags).join(',').replace(/#/g, ''));
 
             switch(this.mode) {
