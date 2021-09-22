@@ -47,30 +47,6 @@ async fn main() -> tide::Result<()> {
 
     let mut app = tide::with_state(pool);
 
-    // We probably don't need or want CORS. That's kind of the point
-    // of using a JWT for authorization.
-
-    // #[cfg(not(debug_assertions))]
-    // {
-    //     use http_types::headers::HeaderValue;
-    //     use tide::security::{CorsMiddleware, Origin};
-
-    //     let cors = CorsMiddleware::new()
-    //         .allow_methods(
-    //             "GET, POST, PUT, DELETE, OPTIONS"
-    //                 .parse::<HeaderValue>()
-    //                 .unwrap(),
-    //         )
-    //         .allow_origin(Origin::List(vec![
-    //             std::env::var("DOMAIN")?,
-    //             format!("www.{}", std::env::var("DOMAIN")?),
-    //             format!("beta.{}", std::env::var("DOMAIN")?),
-    //         ]))
-    //         .allow_credentials(true);
-
-    //     app.with(cors);
-    // }
-
     // https://crates.io/crates/tide-fluent-routes
     app.register(
         root()
