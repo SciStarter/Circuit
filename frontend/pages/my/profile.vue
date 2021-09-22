@@ -311,7 +311,7 @@ export default {
         margin-bottom: 3rem;
     }
 
-    section.research-questions {
+    div.research-questions {
         h2 {
             font-family: $snm-font-heading;
             font-weight: bold;
@@ -325,6 +325,13 @@ export default {
             font-size: $snm-font-small;
             color: $snm-color-tldr;
             font-style: normal;
+        }
+
+        label {
+            font-family: $snm-font-content;
+            font-weight: normal;
+            font-size: $snm-font-small;
+            color: $snm-color-element-dark;
         }
     }
 

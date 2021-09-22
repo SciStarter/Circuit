@@ -27,14 +27,7 @@
     <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" :hidden="opp.trashed" trash @trash="trash(opp)" />
   </section>
   <section id="pagination">
-    <div>
-      <action-button primary :disabled="pagination.page_index <= 0" @click="reload({page: search.page - 1})">
-        &laquo; Prev
-      </action-button>
-      <action-button primary :disabled="pagination.page_index >= pagination.last_page" @click="reload({page: search.page + 1})">
-        Next &raquo;
-      </action-button>
-    </div>
+    <pagination :page-index="pagination.page_index" :last-page="pagination.last_page" @switch="reload({page: $event})" />
   </section>
 </div>
 </template>
@@ -47,6 +40,8 @@ import MiniSelect from '~/components/MiniSelect'
 import TrashIcon from '~/assets/img/trash.svg?inline'
 
 export default {
+    name: "MySaved",
+
     components: {
         OpportunityCard,
         MiniSelect,

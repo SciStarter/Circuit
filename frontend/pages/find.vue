@@ -1,8 +1,8 @@
 <template>
-<div id="content" :class="{filtering: filtering}">
+<div id="find" :class="{filtering: filtering}">
   <div id="filters-general">
     <div class="basic-filter-backdrop">
-      <b-field data-context="find-keywords">
+      <b-field label="Search" label-position="inside" data-context="find-keywords">
         <b-input ref="search_keywords" v-model="query.text" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
       </b-field>
       <lookup-place v-model="place" label-position="inside" data-context="find-lookup-place" />
@@ -41,124 +41,135 @@
     </action-button>
   </div>
   <div id="filters-refine">
-    <fieldset>
-      <label>Age</label>
-      <b-field label="Minimum Age" data-context="find-minimum-age">
-        <b-checkbox v-model="min_age_active" />
-        <b-slider v-model="min_age" :disabled="!min_age_active" :min="0" :max="120" :step="1" size="is-medium" rounded>
-          <b-slider-tick :value="12">
-            12
-          </b-slider-tick>
-          <b-slider-tick :value="21">
-            21
-          </b-slider-tick>
-          <b-slider-tick :value="40">
-            40
-          </b-slider-tick>
-          <b-slider-tick :value="60">
-            60
-          </b-slider-tick>
-          <b-slider-tick :value="80">
-            80
-          </b-slider-tick>
-          <b-slider-tick :value="100">
-            100
-          </b-slider-tick>
-        </b-slider>
-        <input v-model="min_age" type="text" :disabled="!min_age_active" class="slider-direct">
-      </b-field>
-      <b-field label="Maximum Age" data-context="find-maximum-age">
-        <b-checkbox v-model="max_age_active" />
-        <b-slider v-model="max_age" :disabled="!max_age_active" :min="0" :max="120" :step="1" size="is-medium" rounded>
-          <b-slider-tick :value="12">
-            12
-          </b-slider-tick>
-          <b-slider-tick :value="21">
-            21
-          </b-slider-tick>
-          <b-slider-tick :value="40">
-            40
-          </b-slider-tick>
-          <b-slider-tick :value="60">
-            60
-          </b-slider-tick>
-          <b-slider-tick :value="80">
-            80
-          </b-slider-tick>
-          <b-slider-tick :value="100">
-            100
-          </b-slider-tick>
-        </b-slider>
-        <input v-model="max_age" type="text" class="slider-direct" :disabled="!max_age_active">
-      </b-field>
-    </fieldset>
-    <fieldset>
-      <label>Activity Type</label>
-      <b-taginput v-model="selected_descriptors" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="descriptor_text = $event.toLowerCase()" />
-    </fieldset>
-    <fieldset>
-      <label>Topic</label>
-      <b-taginput v-model="selected_topics" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="topic_text = $event.toLowerCase()" />
-    </fieldset>
-    <fieldset data-context="find-cost">
-      <label>Cost</label>
-      <p>
-        <b-radio v-model="cost" native-value="any">
-          Any Cost
-        </b-radio>
-        <b-radio v-model="cost" native-value="free">
-          Free Only
-        </b-radio>
-      </p>
-    </fieldset>
-    <fieldset>
-      <label>Venue Type</label>
-      <!-- The wireframes have this as a pair of checkboxes, but that
-      implies four possible states: both checked, one box checked, the
-      other box checked, or neither checked. We actually only have
-      three meaningful states, so use a select instead. -->
-      <b-select v-model="venue_type" data-context="find-venue-type">
-        <option value="either">
-          Any
-        </option>
-        <option value="indoors">
-          Indoors
-        </option>
-        <option value="outdoors">
-          Outdoors
-        </option>
-      </b-select>
-    </fieldset>
-    <fieldset data-context="find-organization">
-      <label>Host Organization</label>
-      <b-input :value="get_query('host', '')" type="text" @input="set_query('host', $event, '')" />
-    </fieldset>
-    <fieldset data-context="find-partner">
-      <label>Partner Organization</label>
-      <b-autocomplete
-        v-model="partner_text"
-        :data="suggested_partners"
-        field="name"
-        clearable
-        keep-first
-        select-on-click-outside
-        @select="selected_partner = $event"
-        />
-    </fieldset>
+    <div>
+      <div class="buttons no-mobile">
+        <action-button tertiary @click="clear">
+          Clear Filters
+        </action-button>
+        <action-button primary @click="search">
+          Apply
+        </action-button>
+      </div>
+      <h2 class="no-mobile">
+        Refine Results
+      </h2>
+      <fieldset>
+        <label>Age</label>
+        <b-field label="Minimum Age" data-context="find-minimum-age">
+          <b-checkbox v-model="min_age_active" />
+          <b-slider v-model="min_age" :disabled="!min_age_active" :min="0" :max="120" :step="1" size="is-medium" rounded>
+            <b-slider-tick :value="12">
+              12
+            </b-slider-tick>
+            <b-slider-tick :value="21">
+              21
+            </b-slider-tick>
+            <b-slider-tick :value="40">
+              40
+            </b-slider-tick>
+            <b-slider-tick :value="60">
+              60
+            </b-slider-tick>
+            <b-slider-tick :value="80">
+              80
+            </b-slider-tick>
+            <b-slider-tick :value="100">
+              100
+            </b-slider-tick>
+          </b-slider>
+          <input v-model="min_age" type="text" :disabled="!min_age_active" class="slider-direct">
+        </b-field>
+        <b-field label="Maximum Age" data-context="find-maximum-age">
+          <b-checkbox v-model="max_age_active" />
+          <b-slider v-model="max_age" :disabled="!max_age_active" :min="0" :max="120" :step="1" size="is-medium" rounded>
+            <b-slider-tick :value="12">
+              12
+            </b-slider-tick>
+            <b-slider-tick :value="21">
+              21
+            </b-slider-tick>
+            <b-slider-tick :value="40">
+              40
+            </b-slider-tick>
+            <b-slider-tick :value="60">
+              60
+            </b-slider-tick>
+            <b-slider-tick :value="80">
+              80
+            </b-slider-tick>
+            <b-slider-tick :value="100">
+              100
+            </b-slider-tick>
+          </b-slider>
+          <input v-model="max_age" type="text" class="slider-direct" :disabled="!max_age_active">
+        </b-field>
+      </fieldset>
+      <fieldset>
+        <label>Activity Type</label>
+        <b-taginput v-model="selected_descriptors" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="descriptor_text = $event.toLowerCase()" />
+      </fieldset>
+      <fieldset>
+        <label>Topic</label>
+        <b-taginput v-model="selected_topics" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="topic_text = $event.toLowerCase()" />
+      </fieldset>
+      <fieldset data-context="find-cost">
+        <label>Cost</label>
+        <p>
+          <b-radio v-model="cost" native-value="any">
+            Any Cost
+          </b-radio>
+          <b-radio v-model="cost" native-value="free">
+            Free Only
+          </b-radio>
+        </p>
+      </fieldset>
+      <fieldset>
+        <label>Venue Type</label>
+        <!-- The wireframes have this as a pair of checkboxes, but that
+             implies four possible states: both checked, one box checked, the
+             other box checked, or neither checked. We actually only have
+             three meaningful states, so use a select instead. -->
+        <b-select v-model="venue_type" data-context="find-venue-type">
+          <option value="either">
+            Any
+          </option>
+          <option value="indoors">
+            Indoors
+          </option>
+          <option value="outdoors">
+            Outdoors
+          </option>
+        </b-select>
+      </fieldset>
+      <fieldset data-context="find-organization">
+        <label>Host Organization</label>
+        <b-input :value="get_query('host', '')" type="text" @input="set_query('host', $event, '')" />
+      </fieldset>
+      <fieldset data-context="find-partner">
+        <label>Partner Organization</label>
+        <b-autocomplete
+          v-model="partner_text"
+          :data="suggested_partners"
+          field="name"
+          clearable
+          keep-first
+          select-on-click-outside
+          @select="selected_partner = $event"
+          />
+      </fieldset>
+      <div class="no-mobile">
+        <h1>Share Your Results</h1>
+        <p>Share the list by copying the link below</p>
+        <a :href="query_link" @click.prevent="copy_query"><link-icon />Copy Link</a>
+      </div>
+    </div>
   </div>
   <section id="results">
     <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" />
   </section>
   <section id="pagination">
-    <div>
-      <action-button primary :disabled="pagination.page_index <= 0" @click="set_query('page', pagination.page_index - 1) || search()">
-        &laquo; Prev
-      </action-button>
-      <action-button primary :disabled="pagination.page_index >= pagination.last_page" @click="set_query('page', pagination.page_index + 1) || search()">
-        Next &raquo;
-      </action-button>
-    </div>
-    <div>
+    <pagination :page-index="pagination.page_index" :last-page="pagination.last_page" @switch="set_query('page', $event) || search()" />
+    <div class="mobile-only">
       <h1>Share Your Results</h1>
       <p>Share the list by copying the link below</p>
       <a :href="query_link" @click.prevent="copy_query"><link-icon />Copy Link</a>
@@ -184,6 +195,7 @@ import copy from 'copy-to-clipboard'
 
 import MiniSelect from '~/components/MiniSelect'
 import OpportunityCard from '~/components/OpportunityCard'
+import Pagination from '~/components/Pagination'
 
 import LinkIcon from '~/assets/img/link.svg?inline'
 
@@ -216,6 +228,7 @@ export default {
     components: {
         MiniSelect,
         OpportunityCard,
+        Pagination,
 
         LinkIcon
     },
@@ -589,6 +602,7 @@ export default {
 
 #filters-refine {
     display: none;
+    background-color: $snm-color-background;
 
     fieldset {
         margin: 2rem 32px;
@@ -650,14 +664,6 @@ export default {
 #pagination {
     display: block;
 
-    div:first-child {
-        display: flex;
-
-        > * {
-            flex-grow: 0;
-        }
-    }
-
     div:last-child {
         margin: 32px;
 
@@ -712,14 +718,62 @@ export default {
     border: 1px solid #ddd;
 }
 
-@media only screen and (min-width: $fullsize-screen) {
+@media (min-width: $fullsize-screen) {
+    #find {
+        display: grid;
+        grid-template-columns: 1fr minmax(calc(#{$fullsize-screen} - 50rem), 60rem) 25rem 1fr;
+        grid-template-rows: 10rem 4rem 1fr minmax(2rem, auto);
+    }
+
+    #filters-general {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: $snm-color-background-medlight;
+        grid-row: 1;
+        grid-column: 1 / -1;
+
+        .basic-filter-backdrop {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: $snm-color-element-med;
+            border-radius: 10px;
+            padding: 1rem;
+
+            >* {
+                position: relative;
+                top: -0.1rem;
+                margin: 0px 0.5rem;
+                height: 3rem;
+            }
+
+            .centered-row {
+                display: flex;
+                margin: 0px;
+
+                >* {
+                    margin: 0px 0.5rem;
+                }
+            }
+        }
+    }
+
     #filters-ordering {
+        grid-row: 2;
+        grid-column: 2;
+
         span.radio-label {
             /* Since I couldn't find a good way to make the label text reflow automatically */
             br {
                 display: none;
             }
         }
+    }
+
+    #filter-physical {
+        display: block;
+        margin: 0px;
     }
 
     #filter-sort {
@@ -735,6 +789,72 @@ export default {
             font-weight: normal;
             font-size: $snm-font-small;
         }
+    }
+
+    #filter-trigger {
+        display: none;
+    }
+
+    #filters-refine {
+        grid-column: 3;
+        grid-row: 2 / -1;
+        display: block;
+
+        fieldset {
+            margin: 1rem 32px;
+        }
+
+        >div {
+            position: sticky;
+            top: 0px;
+            display: flex;
+            flex-direction: column;
+
+            >h2 {
+                font-family: $snm-font-heading;
+                font-weight: bold;
+                font-size: $snm-font-large;
+                color: $snm-color-element-dark;
+                margin: 1.5rem 32px 0px;
+            }
+
+            >div.buttons {
+                margin: 0px 32px;
+            }
+
+            >div:last-child {
+                margin: 32px;
+
+                h1 {
+                    font-size: $snm-font-large;
+                    font-family: $snm-font-heading;
+                    line-height: 28px;
+                    letter-spacing: 0px;
+                    color: $snm-color-element-dark;
+                    font-weight: bold;
+                }
+
+                a {
+                    text-decoration: underline;
+                }
+
+                svg,img {
+                    display: inline-block;
+                    vertical-align: middle;
+                    margin-right: 0.75rem;
+                }
+            }
+        }
+    }
+
+    #results {
+        grid-row: 3;
+        grid-column: 2;
+    }
+
+    #pagination {
+        grid-row: 4;
+        grid-column: 2;
     }
 }
 </style>

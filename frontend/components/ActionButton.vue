@@ -115,6 +115,12 @@ button.action-button {
         --foreground: #{$snm-color-element-med};
         --border: #{$snm-color-element-med};
         --background: #{$snm-color-element-light};
+
+        &:hover,&:active {
+            --foreground: #{$snm-color-element-light};
+            --border: #{$snm-color-background-dark};
+            --background: #{$snm-color-background-medlight};
+        }
     }
 
     &.principal {
@@ -139,8 +145,7 @@ button.action-button {
         --foreground: #{$snm-color-element-light};
 
         &:hover,&:active {
-            --foreground: #{$snm-color-element-med};
-            --background: #{$snm-color-element-light};
+            --background: #{$snm-color-background-medium};
         }
 
         &.contrast-bg {

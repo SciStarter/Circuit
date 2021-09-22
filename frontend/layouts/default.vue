@@ -758,10 +758,6 @@ footer {
         }
     }
 
-    #content {
-        margin: 34px 170px 10px 190px;
-    }
-
     .authenticated #main {
         display: flex;
         flex-direction: row-reverse;
