@@ -48,6 +48,13 @@ export default {
             required: true,
         },
 
+        // implies removeParagraphs
+        inline: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+
         removeParagraphs: {
             type: Boolean,
             required: false,
@@ -92,7 +99,7 @@ export default {
 
             let working = this.block.content;
 
-            if(this.removeParagraphs) {
+            if(this.inline || this.removeParagraphs) {
                 working = working.replaceAll(/<\s*\/?\s*p\b.*?>/igs, '').trim()
             }
 
@@ -132,6 +139,9 @@ export default {
             let wrap = tags.tagged(this.block.tags, 'wrap');
             if(wrap !== false && wrap.length > 0) {
                 return '<' + wrap[0] + ' class="dynamic-block">' + working + '</' + wrap[0] + '>';
+            }
+            else if(this.inline) {
+                return '<span class="dynamic-block">' + working + '</span>';
             }
             else {
                 return '<div class="dynamic-block">' + working + '</div>';

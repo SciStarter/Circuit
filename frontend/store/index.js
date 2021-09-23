@@ -20,6 +20,8 @@ export const state = () => ({
   topics: [],
 
   descriptors: {},
+
+  here: {},
 });
 
 export const mutations = {
@@ -67,6 +69,10 @@ export const mutations = {
 
   save_descriptors(state, descriptors) {
     state.descriptors = descriptors;
+  },
+
+  here(state, place) {
+    state.here = place;
   },
 };
 

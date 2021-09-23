@@ -18,7 +18,7 @@
       <b-field>
         <b-input ref="search_keywords" v-model="query.keywords" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
       </b-field>
-      <lookup-place v-model="query.place" />
+      <lookup-place v-model="query.place" @input="store_here" />
       <div class="centered-row">
         <b-field>
           <b-checkbox v-model="query.include_online">
@@ -399,7 +399,11 @@ export default {
 
         logout() {
             this.$store.dispatch('logout');
-        }
+        },
+
+        store_here(place) {
+            this.$store.commit('here', place);
+        },
     }
 }
 </script>
