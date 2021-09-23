@@ -25,6 +25,7 @@
 */
 
 import Vue from 'vue'
+import tags from '~/assets/lib/tags'
 import External from '~/components/External'
 
 export default {
@@ -61,7 +62,7 @@ export default {
     },
 
     data: () => ({
-        raw_content: null,
+        block: null,
         default_language: ''
     }),
 
@@ -76,7 +77,7 @@ export default {
 
         this.default_language = await this.$store.dispatch('get_language')
 
-        this.raw_content = await this.$store.dispatch('get_dynamic_block', {
+        this.block = await this.$store.dispatch('get_dynamic_block', {
             language: this.language || this.default_language,
             group: this.group,
             item: this.item
@@ -85,11 +86,11 @@ export default {
 
     computed: {
         content () {
-            if(this.raw_content === null) {
+            if(this.block === null || this.block.content === null) {
                 return null;
             }
 
-            let working = this.raw_content;
+            let working = this.block.content;
 
             if(this.removeParagraphs) {
                 working = working.replaceAll(/<\s*\/?\s*p\b.*?>/igs, '').trim()
@@ -102,7 +103,7 @@ export default {
                         const extra = before + ' ' + after;
 
                         const new_tab = extra.indexOf('target="_blank"') >= 0;
-                        const title = extra.match(/title="(.*?)"/is)[1];
+                        const title = extra.match(/\btitle="(.*?)"/is)[1];
 
                         if(href.slice(0, 25) == 'https://sciencenearme.org') {
                             href = href.slice(25);
@@ -113,12 +114,12 @@ export default {
                                 return '<a href="' + href + '" target="_blank"' + (title ? ' title="' + title + '"' : ' ') + 'rel="noopener">' + content + '</a>';
                             }
                             else {
-                                return '<nuxt-link to="' + href + '"' + (title ? ' title="' + title + '"' : '') + '>' + content + '</next-link>';
+                                return '<nuxt-link to="' + href + '"' + (title ? ' title="' + title + '"' : '') + '>' + content + '</nuxt-link>';
                             }
                         }
                         else {
                             if(new_tab) {
-                                return '<external href="' + href + '"' + (title ? ' title="' + title + '"' : ' ') + 'new-tab>' + content + '</external>';
+                                return '<external href="' + href + '"' + (title ? ' title="' + title + '"' : '') + ' new-tab>' + content + '</external>';
                             }
                             else {
                                 return '<external href="' + href + '"' + (title ? ' title="' + title + '"' : '') + '>' + content + '</external>';
@@ -128,7 +129,13 @@ export default {
                 );
             }
 
-            return '<div class="dynamic-block">' + working + '</div>';
+            let wrap = tags.tagged(this.block.tags, 'wrap');
+            if(wrap !== false && wrap.length > 0) {
+                return '<' + wrap[0] + ' class="dynamic-block">' + working + '</' + wrap[0] + '>';
+            }
+            else {
+                return '<div class="dynamic-block">' + working + '</div>';
+            }
         },
 
         generated_component() {
@@ -139,6 +146,6 @@ export default {
                 template: this.content,
             });
         }
-    }
+    },
 }
 </script>
