@@ -121,7 +121,7 @@ pub async fn content(req: tide::Request<Database>) -> tide::Result {
     {
         if !block.content.is_empty() {
             Ok(Response::builder(StatusCode::Ok)
-                .body(block.content)
+                .body(serde_json::to_value(block)?)
                 .build())
         } else {
             Ok(Response::builder(StatusCode::NotFound)
