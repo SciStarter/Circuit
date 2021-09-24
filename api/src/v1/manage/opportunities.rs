@@ -8,7 +8,7 @@ use common::{
         person::Permission,
         Opportunity, Pagination, Partner, SelectOption,
     },
-    Database,
+    Database, INTERNAL_UID,
 };
 use http_types::{mime, Method};
 use serde::Deserialize;
@@ -195,6 +195,7 @@ async fn add_opportunity(mut req: tide::Request<Database>) -> tide::Result {
     }
 
     let mut opportunity = Opportunity::default();
+    opportunity.exterior.partner = INTERNAL_UID.clone();
 
     form.apply(&mut opportunity)?;
 
