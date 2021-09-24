@@ -22,6 +22,8 @@ spec:
         env:
         - name: DOMAIN
           value: "sciencenearme.org"
+        - name: INTERNAL_UID
+          value: "258c5ec3-d656-43d4-a621-e67b55702ce4"
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
