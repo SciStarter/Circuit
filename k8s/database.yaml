@@ -19,19 +19,29 @@ spec:
       - name: postgres-beta
         image: postgis/postgis:13-3.1
         env:
+          # The PGDATA variable is important, because it would default
+          # to /var/lib/postgresql/data and that directory is a
+          # mount-point for non-persistent storage, for reasons not yet known.
+        - name: PGDATA
+          value: "/var/lib/postgresql/pgdata"
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
               name: db-secret-beta
               key: POSTGRES_PASSWORD
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret-beta
+              key: DATABASE_URL
         ports:
         - containerPort: 5432
           name: postgresdb
         volumeMounts:
-        - name: data
-          mountPath: /var/lib/postgresql
+        - name: persistent-data
+          mountPath: "/var/lib/postgresql"
       volumes:
-      - name: data
+      - name: persistent-data
         persistentVolumeClaim:
           claimName: db-storage-beta
 ---
