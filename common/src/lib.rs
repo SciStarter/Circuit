@@ -3,6 +3,7 @@ use serde::Serialize;
 use sqlx::{Pool, Postgres};
 use std::collections::BTreeMap;
 use thiserror::Error;
+use uuid::Uuid;
 
 pub mod jwt;
 pub mod model;
@@ -24,6 +25,13 @@ static LOG_ENDPOINT: Lazy<String> = Lazy::new(|| {
         )
         .unwrap_or_else(|_| "9000".to_string())),
     )
+});
+
+pub static INTERNAL_UID: Lazy<Uuid> = Lazy::new(|| {
+    Uuid::parse_str(
+        &std::env::var("INTERNAL_UID").expect("INTERNAL_UID is not set in the environmnet"),
+    )
+    .expect("INTERNAL_UID environment variable did not contain a UUID")
 });
 
 pub static LANGUAGES: Lazy<BTreeMap<String, String>> = Lazy::new(|| {

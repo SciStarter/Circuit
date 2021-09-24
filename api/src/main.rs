@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-use common::{model, Database};
+use common::{model, Database, INTERNAL_UID};
 use sqlx::postgres::PgPoolOptions;
 use tide::log;
 use tide_fluent_routes::{fs::ServeFs, prelude::*};
@@ -13,17 +13,53 @@ async fn initialize(db: &Database) -> tide::Result {
     let superuser_password = std::env::var("SUPERUSER_PASSWORD")?;
 
     // Ensure that the superuser exists
-    if !model::person::Person::exists_by_email(db, &superuser_email).await? {
-        log::info!("Creating superuser...");
-        let mut superuser = model::person::Person::default();
-        superuser.exterior.username = Some("System".to_string());
-        superuser.interior.email = superuser_email;
-        superuser.set_password(&superuser_password);
-        superuser
-            .interior
-            .permissions
-            .push(model::person::Permission::All);
-        superuser.store(db).await?;
+    let superuser = match model::person::Person::load_by_email(db, &superuser_email).await {
+        Ok(person) => person,
+        Err(_) => {
+            log::info!("Creating superuser...");
+            let mut superuser = model::person::Person::default();
+            superuser.exterior.username = Some("System".to_string());
+            superuser.interior.email = superuser_email;
+            superuser.set_password(&superuser_password);
+            superuser
+                .interior
+                .permissions
+                .push(model::person::Permission::All);
+            superuser.store(db).await?;
+            superuser
+        }
+    };
+
+    if !model::partner::Partner::exists_by_uid(db, &INTERNAL_UID).await? {
+        log::info!("Creating internal partner entry...");
+        let mut internal = model::partner::Partner {
+            id: None,
+            exterior: model::partner::PartnerExterior {
+                uid: INTERNAL_UID.clone(),
+                name: "Internal".to_string(),
+                image_url: None,
+                description: "Partner entry representing internal operations".to_string(),
+                under: None,
+            },
+            interior: model::partner::PartnerInterior {
+                manager: model::partner::Contact {
+                    name: superuser
+                        .exterior
+                        .username
+                        .unwrap_or_else(|| "System".to_string()),
+                    email: superuser.interior.email,
+                    phone: None,
+                    mailing: None,
+                },
+                contact: None,
+                prime: superuser.exterior.uid,
+                authorized: vec![],
+                pending: vec![],
+                secret: None,
+            },
+        };
+
+        internal.store(db).await?;
     }
 
     Ok("initialized".into())

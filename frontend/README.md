@@ -54,6 +54,7 @@ DATABASE_URL       | Set this to the database URL which will allow the API serve
 JWT_SIGNING_KEY    | Set this to some random value. For example: ```JWT_SIGNING_KEY=example-key```
 SUPERUSER_EMAIL    | Set this to the email address you want to use for accessing the [management area](http://127.0.0.1:8000/api/v1/manage/) of your local install.
 SUPERUSER_PASSWORD | Set this to the password you want to use for accessing the management area.
+INTERNAL_UID       | Set this to any valid UUID, e.g. f13ca90f-5e71-40c3-9a90-f53486698721
 
 Now we can run the server opening a command line window in the api folder and doing:
 
