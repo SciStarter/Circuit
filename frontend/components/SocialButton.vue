@@ -49,7 +49,7 @@ export default {
         hashtags: {
             type: Array,
             required: false,
-            default: [],
+            default: () => [],
         },
     },
 

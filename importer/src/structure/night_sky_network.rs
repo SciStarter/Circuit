@@ -189,6 +189,10 @@ impl Structure for NightSkyNetwork {
                     };
 
                     input.exterior.partner = UID.clone();
+                    input
+                        .exterior
+                        .opp_descriptor
+                        .push(common::model::opportunity::Descriptor::StarParty);
                     input.validate()?;
 
                     opps.push(input);

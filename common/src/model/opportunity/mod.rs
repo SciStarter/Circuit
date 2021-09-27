@@ -302,6 +302,18 @@ pub enum Descriptor {
     Workshop,
 }
 
+impl std::fmt::Display for Descriptor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let json = serde_json::to_string(self).map_err(|_| std::fmt::Error)?;
+        let len = json.len();
+        write!(
+            f,
+            "{}",
+            json.chars().skip(1).take(len - 2).collect::<String>()
+        )
+    }
+}
+
 impl super::SelectOption for Descriptor {
     fn all_options() -> Vec<(String, String, Descriptor)> {
         Descriptor::iter().map(|x| x.to_option()).collect()
@@ -364,9 +376,24 @@ pub enum Topic {
     Transportation,
 }
 
+impl std::fmt::Display for Topic {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let json = serde_json::to_string(self).map_err(|_| std::fmt::Error)?;
+        let len = json.len();
+        write!(
+            f,
+            "{}",
+            json.chars().skip(1).take(len - 2).collect::<String>()
+        )
+    }
+}
+
 impl super::SelectOption for Topic {
     fn all_options() -> Vec<(String, String, Topic)> {
-        Topic::iter().map(|x| x.to_option()).collect()
+        Topic::iter()
+            .filter(|x| x != &Topic::Alcohol)
+            .map(|x| x.to_option())
+            .collect()
     }
 
     fn to_option(&self) -> (String, String, Topic) {
@@ -716,6 +743,7 @@ enum ParamValue {
     RawFloat(f32),
     RawInt(i32),
     //RawUuid(Uuid),
+    RawVecString(Vec<String>),
     Bool(bool),
     Uuid(Uuid),
     VecString(Vec<String>),
@@ -741,6 +769,7 @@ impl ParamValue {
             ParamValue::RawFloat(val) => query.bind(val),
             ParamValue::RawInt(val) => query.bind(val),
             //ParamValue::RawUuid(val) => query.bind(val),
+            ParamValue::RawVecString(val) => query.bind(val),
             ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
@@ -848,9 +877,18 @@ fn build_matching_query(
 
     if let Some(val) = &query.topics {
         clauses.push(format!(
-            "(exterior -> 'topics') @> ${}",
-            ParamValue::VecTopic(val.clone()).append(&mut params)
+            "(exterior -> 'opp_topics') ?| ${}",
+            ParamValue::RawVecString(val.clone().into_iter().map(|x| x.to_string()).collect())
+                .append(&mut params)
         ));
+    }
+
+    if let Some(val) = &query.descriptors {
+        clauses.push(format!(
+            "(exterior -> 'opp_descriptor') ?| ${}",
+            ParamValue::RawVecString(val.clone().into_iter().map(|x| x.to_string()).collect())
+                .append(&mut params)
+        ))
     }
 
     if let Some(val) = &query.partner {
@@ -897,24 +935,22 @@ fn build_matching_query(
         time_param, time_param));
     }
 
+    // Minimum and maximum age in queries each define a contraint on
+    // the opposite project field. A queried min age checks that the
+    // opportunity max age is greater than the query min age, and a
+    // queried max age checks that the opporuntity minimum is less
+    // than the queried minimum
     if let Some(min_age) = &query.min_age {
         clauses.push(format!(
-            "(exterior -> 'min_age')::integer > ${}",
+            "(exterior -> 'max_age')::integer >= ${}",
             ParamValue::RawInt(*min_age as i32).append(&mut params)
         ))
     }
 
     if let Some(max_age) = &query.max_age {
         clauses.push(format!(
-            "(exterior -> 'max_age')::integer < ${}",
+            "(exterior -> 'min_age')::integer <= ${}",
             ParamValue::RawInt(*max_age as i32).append(&mut params)
-        ))
-    }
-
-    if let Some(descriptors) = &query.descriptors {
-        clauses.push(format!(
-            "(exterior -> 'descriptors') @> ${}",
-            ParamValue::VecDescriptor(descriptors.clone()).append(&mut params)
         ))
     }
 
