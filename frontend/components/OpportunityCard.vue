@@ -193,6 +193,13 @@ export default {
 }
 
 @media (min-width: $fullsize-screen) {
+    .opportunity-card {
+        width: 20vw;
+        border: 1px solid $snm-color-border;
+        border-radius: 6px;
+        margin: 0.5rem;
+    }
+
     .primary {
         div {
             small {

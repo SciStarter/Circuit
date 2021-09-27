@@ -20,6 +20,7 @@ module.exports = {
     "keyword-spacing": "off",
     "space-before-function-paren": "off",
     "no-console": "off",
+    "import/no-duplicates": "off",
     "vue/no-v-html": "off",
     "vue/html-indent": "off",
     "vue/one-component-per-file": "off",

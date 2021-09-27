@@ -5,16 +5,18 @@
       <slot />
     </div>
   </div>
-  <button class="slide left no-mobile" @click="scroll(-items_width())">
+  <button class="slide left no-mobile" @click="scroll(-items_scroll())">
     <span>&lsaquo;</span>
   </button>
-  <button class="slide right no-mobile" @click="scroll(items_width())">
+  <button class="slide right no-mobile" @click="scroll(items_scroll())">
     <span>&rsaquo;</span>
   </button>
 </div>
 </template>
 
 <script>
+import { calc } from 'csscalc';
+
 export default {
     name: "SidewaysSlider",
 
@@ -25,6 +27,10 @@ export default {
 
         scroll_width() {
             return this.$refs.scroll.scrollWidth;
+        },
+
+        items_scroll() {
+            return calc(this.items_width() + 'px + 1rem', this.$refs.items);
         },
 
         max_scroll() {
@@ -42,8 +48,8 @@ export default {
                     this.$refs.scroll.scrollLeft = to;
                 }
                 else {
-                    this.$refs.scroll.scrollLeft += amount;
-                    window.setTimeout(do_scroll, 33);
+                    this.$refs.scroll.scrollLeft += amount
+                    window.requestAnimationFrame(do_scroll);
                 }
             }
 

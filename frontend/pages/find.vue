@@ -1,21 +1,16 @@
 <template>
 <div id="find" :class="{filtering: filtering}">
-  <div id="filters-general">
-    <div class="basic-filter-backdrop">
-      <b-field label="Search" label-position="inside" data-context="find-keywords">
-        <b-input ref="search_keywords" v-model="query.text" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
-      </b-field>
-      <lookup-place v-model="place" label-position="inside" data-context="find-lookup-place" />
-      <div class="centered-row">
-        <b-field label="From" label-position="inside" data-context="find-beginning">
-          <input v-model="beginning" class="control" type="date">
-        </b-field>
-        <b-field label="Until" label-position="inside" data-context="find-ending">
-          <input v-model="ending" class="control" type="date">
-        </b-field>
-      </div>
-    </div>
-  </div>
+  <general-filters
+    id="filters-general"
+    :text="query.text"
+    :place="place"
+    :beginning="beginning"
+    :ending="ending"
+    @text="query.text=$event"
+    @place="place=$event"
+    @beginning="beginning=$event"
+    @ending="ending=$event"
+    />
   <div id="filters-ordering">
     <b-field id="filter-physical">
       <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online">
@@ -196,6 +191,7 @@ import copy from 'copy-to-clipboard'
 import MiniSelect from '~/components/MiniSelect'
 import OpportunityCard from '~/components/OpportunityCard'
 import Pagination from '~/components/Pagination'
+import GeneralFilters from '~/components/GeneralFilters'
 
 import LinkIcon from '~/assets/img/link.svg?inline'
 
@@ -546,20 +542,6 @@ export default {
 <style lang="scss" scoped>
 #filters-general {
     display: none;
-    background-color: $snm-color-background-medium;
-    padding: 0.75rem 0.75rem 0px;
-
-    .centered-row {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-    }
-
-    input[type="date"] {
-        padding: 1rem;
-        border-radius: 10px;
-        border: 1px solid #B4B4B4;
-    }
 }
 
 .filtering #filters-general {
@@ -726,37 +708,7 @@ export default {
     }
 
     #filters-general {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: $snm-color-background-medlight;
-        grid-row: 1;
-        grid-column: 1 / -1;
-
-        .basic-filter-backdrop {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: $snm-color-element-med;
-            border-radius: 10px;
-            padding: 1rem;
-
-            >* {
-                position: relative;
-                top: -0.1rem;
-                margin: 0px 0.5rem;
-                height: 3rem;
-            }
-
-            .centered-row {
-                display: flex;
-                margin: 0px;
-
-                >* {
-                    margin: 0px 0.5rem;
-                }
-            }
-        }
+        display: block;
     }
 
     #filters-ordering {
@@ -848,8 +800,11 @@ export default {
     }
 
     #results {
+        display: flex;
+        flex-wrap: wrap;
         grid-row: 3;
         grid-column: 2;
+        justify-content: space-evenly;
     }
 
     #pagination {

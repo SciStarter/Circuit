@@ -6,8 +6,8 @@
       <img v-else src="~assets/img/hamburger.svg?data">
     </button>
 
-    <nuxt-link to="/" class="logo" title="Science Near Me logo">
-      <img src="~assets/img/logo.svg?data">
+    <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
+      <img src="~assets/img/logo.svg?data" title="return to home page">
     </nuxt-link>
 
     <button class="toggle-search" title="Toggle search box" :aria-pressed="String(search)" data-context="header-search" @click="toggle_search">
@@ -131,8 +131,8 @@
       </nuxt-link>
     </nav>
 
-    <nuxt-link to="/" class="logo" title="Science Near Me logo">
-      <img src="~assets/img/logo.svg?data">
+    <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
+      <img src="~assets/img/logo.svg?data" title="return to home page">
     </nuxt-link>
   </section>
 
@@ -563,6 +563,8 @@ header {
 
     .toggled {
         display: block;
+        max-width: 25rem;
+        margin: 0px auto;
     }
 }
 
