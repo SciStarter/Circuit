@@ -54,14 +54,14 @@
       </template>
       <b-dropdown-item v-for="topic in topics" :key="topic[0] + '-mobile'" custom aria-role="listitem">
         <nuxt-link :to="here_and_now_link + '&topics[]=' + topic[0]">
-          {{ topic[1].replaceAll(' And ', ' & ') }}
+          {{ ampersand(topic[1]) }}
         </nuxt-link>
       </b-dropdown-item>
     </b-dropdown>
     <div class="topics no-mobile">
       <nuxt-link v-for="topic in topics" :key="topic[0]" :to="here_and_now_link + '&topics[]=' + topic[0]">
-        <component :is="topic[0].replaceAll('_', '-') + '-icon'" />
-        <span>{{ topic[1].replaceAll(' And ', ' & ') }}</span>
+        <component :is="component_name(topic[0]) + '-icon'" />
+        <span>{{ ampersand(topic[1]) }}</span>
       </nuxt-link>
     </div>
   </div>
@@ -351,6 +351,25 @@ export default {
     mounted() {
         this.load_here_and_now = true;
     },
+
+    methods: {
+        ampersand(text) {
+            if(!text) {
+                return '';
+            }
+
+            return text.replace(/ And /g, ' & ')
+        },
+
+        component_name(text) {
+            if(!text) {
+                return '';
+            }
+
+            return text.replace(/_/g, '-')
+        }
+    },
+
 }
 </script>
 
