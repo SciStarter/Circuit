@@ -488,7 +488,7 @@ export default {
         &::before {
             top: -2rem;
             left: 50%;
-            background: linear-gradient(to right top, $snm-color-background-medlight 50%, transparent 50%);
+            background: linear-gradient(to right top, $snm-color-background-medlight calc(50% - 1px), transparent 50%);
             display: block;
             content: "";
             position: absolute;
@@ -499,7 +499,7 @@ export default {
         &::after {
             top: -2rem;
             left: 0px;
-            background: linear-gradient(to right bottom, transparent 50%, $snm-color-background-medlight 50%);
+            background: linear-gradient(to right bottom, transparent calc(50% - 1px), $snm-color-background-medlight 50%);
             display: block;
             content: "";
             position: absolute;
