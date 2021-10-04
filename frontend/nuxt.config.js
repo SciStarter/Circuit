@@ -64,6 +64,7 @@ export default {
         scss: [
             './assets/vars/*.scss',
             './assets/abstracts/_mixins.scss',
+            './assets/utilities/*.scss',
         ]
     },
 

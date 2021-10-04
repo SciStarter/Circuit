@@ -1,7 +1,7 @@
 <template>
 <section id="homepage">
   <general-filters
-    class="no-mobile"
+    class="no-mobile no-tablet"
     :text="search_text"
     :place="search_place"
     :beginning="search_beginning"
@@ -15,14 +15,16 @@
     @ending="search_ending=$event"
     @include-online="search_online=$event"
     />
+
+  <div id="intent-filters" class="snm-wrapper">
+  <div class="snm-container">
   <h1>What would you like to do <near-icon class="inline-sign" /> {{ city }}?</h1>
-  <div id="atom-placement">
     <sideways-slider>
       <div v-for="intent in intents" :key="intent.title" class="intent-card">
         <nuxt-link :to="intent.link">
           <img :title="intent.title" :src="intent.image" :srcset="intent.image + ' 1x,' + intent.image2x + ' 2x'">
         </nuxt-link>
-        <nuxt-link :to="intent.link">
+        <nuxt-link :to="intent.link" class="intent-title">
           {{ intent.title }}
         </nuxt-link>
         <p>
@@ -32,17 +34,23 @@
     </sideways-slider>
     <atom-icon id="hydrogen" />
     <atom-icon id="helium" />
-  </div>
-  <div id="here-now">
-    <h2>Here &amp; Now near {{ city }}</h2>
-    <div id="opportunity-cards">
-      <opportunity-card v-for="opp in here_and_now" :key="opp.uid" :opportunity="opp" />
+</div>
+</div>
+
+  <div id="here-now" class="snm-wrapper">
+    <div class="snm-container">
+      <h2>Here &amp; Now near {{ city }}</h2>
+      <div id="opportunity-cards">
+        <opportunity-card v-for="opp in here_and_now" :key="opp.uid" :opportunity="opp" />
+      </div>
+      <nuxt-link :to="here_and_now_link" class="see-more">
+        See More Here &amp; Now Opportunities
+      </nuxt-link>
     </div>
-    <nuxt-link :to="here_and_now_link">
-      See More Here &amp; Now Opportunities
-    </nuxt-link>
   </div>
-  <div id="by-topic">
+
+  <div id="by-topic" class="snm-wrapper">
+    <div class="snm-container">
     <h2>Find &amp; Do Science By Topic</h2>
     <b-dropdown aria-role="list" class="mobile-only">
       <template #trigger="{ active }">
@@ -65,7 +73,10 @@
       </nuxt-link>
     </div>
   </div>
-  <div v-if="!username" id="benefits">
+</div>
+
+  <div v-if="!username" id="benefits" class="snm-wrapper">
+    <div class="snm-container">
     <h2>Benefits of Creating an Account</h2>
 
     <div>
@@ -108,6 +119,7 @@
       Create an Account Now
     </action-button>
   </div>
+</div>
 </section>
 </template>
 
@@ -375,12 +387,30 @@ export default {
 
 <style lang="scss" scoped>
 #homepage {
-    padding: 0.5rem 1rem;
+
+  h2 {
+    font-family: $snm-font-heading;
+    font-weight: bold;
+    font-size: $snm-font-medium-small;
+    color: $snm-color-element-dark;
+    margin-left: 1rem;
+  }
+    #intent-filters {
+      background-color: $snm-color-background-light;
+      padding-right: 0;
+      padding-left: 0;
+      margin-bottom: 2rem;
+      position: relative;
+
+      h1 {
+        margin-left:1rem;
+      }
+    }
 
     h1 {
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: $snm-font-small;
+        font-size: $snm-font-medium-small;
         color: $snm-color-element-dark;
     }
 
@@ -394,16 +424,26 @@ export default {
         margin: 1rem auto;
     }
 
-    .intent-card {
+    .intent-card  {
         display: flex;
         flex-direction: column;
         border-radius: 6px;
         overflow: hidden;
         width: 15rem;
+        width: 75vw;
         border: 1px solid $snm-color-card;
+        background-color: #fff;
+        margin-right: 1rem;
+        padding-bottom: 1rem;
 
-        &:not(:last-child) {
-            margin-right: 1rem;
+        >.intent-title {
+          line-height:1.1;
+          margin-bottom:0;
+        }
+
+        > p {
+          line-height:1.2;
+          margin-top:0;
         }
 
         >a:first-child>img {
@@ -415,9 +455,9 @@ export default {
             font-family: $snm-font-heading;
             font-weight: bold;
             text-decoration: underline;
-            font-size: $snm-font-large;
+            font-size: 1rem;
             color: $snm-color-element-med;
-            margin: 0.5rem 1rem;
+            margin: 0.5rem 1rem 0;
         }
 
         >p {
@@ -425,9 +465,6 @@ export default {
         }
     }
 
-    #atom-placement {
-        position: relative;
-        margin-bottom: 5rem;
 
         #hydrogen {
             display: none;
@@ -435,19 +472,20 @@ export default {
 
         #helium {
             position: absolute;
-            bottom: -4rem;
-            right: 16rem;
+            bottom: -1.3rem;
+            left: 50%;
+            margin-left: -1rem;
             width: 2rem;
         }
-    }
 
-    #here-now {
-        >h2 {
-            font-family: $snm-font-heading;
-            font-weight: bold;
-            font-size: $snm-font-small;
-            color: $snm-color-element-dark;
-        }
+
+    #here-now > div {
+      position:relative;
+
+      h2 {
+        margin-bottom: 1rem;
+      }
+
 
         >a {
             font-family: $snm-font-content;
@@ -455,16 +493,16 @@ export default {
             text-decoration: underline;
             color: $snm-color-element-med;
         }
+        .see-more {
+          display: block;
+          padding: 1rem;
+        }
+
     }
 
-    #by-topic {
-        >h2 {
-            font-family: $snm-font-heading;
-            font-weight: bold;
-            font-size: $snm-font-small;
-            color: $snm-color-element-dark;
-            margin-top: 2rem;
-        }
+    #by-topic > div {
+        border-top: 3px solid $snm-color-background-meddark;
+
 
         >div.dropdown::v-deep .dropdown-trigger button {
             width: 90vw;
@@ -477,13 +515,19 @@ export default {
         }
     }
 
-    #benefits {
+    #benefits.snm-wrapper {
+      padding: 0;
+    }
+
+    #benefits > .snm-container {
         display: flex;
         flex-direction: column;
         position: relative;
         background-color: $snm-color-background-medlight;
         margin-top: 4rem;
         padding: 1rem;
+        align-items: center;
+        padding-bottom: 3rem;
 
         &::before {
             top: -2rem;
@@ -545,6 +589,90 @@ export default {
     }
 }
 
+@media (max-width: $mobile-screen) {
+  #here-now.snm-wrapper, #by-topic.snm-wrapper, #benefits.snm-wrapper  {
+    padding: 1rem 0;
+  }
+
+  #by-topic .snm-container {
+    padding: 1rem;
+
+    h2 {
+      margin-left: 0;
+    }
+  }
+
+}
+
+@media (min-width: 600px) {
+  #homepage {
+    .intent-card {
+      width: 36vw;
+    }
+  }
+}
+
+@media (min-width: $tablet-screen) {
+  #homepage {
+    h2 {
+      margin-left: 0;
+    }
+
+  #intent-filters {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+    .intent-card {
+      width: calc(33% - 0.5rem);
+    }
+  }
+
+  #opportunity-cards {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  #homepage #here-now > div .see-more {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding:0;
+  }
+
+  #homepage #by-topic > div {
+    border-top:0;
+    .dropdown {
+      display:none;
+    }
+  }
+
+  #by-topic {
+      margin: 0px auto;
+
+      h2 {
+        margin-bottom: 1rem;
+      }
+
+      .topics {
+          display: grid;
+          grid-auto-rows: 1fr;
+          grid-template-columns: 1fr 1fr 1fr;
+
+          > a {
+            margin-bottom: 1.4rem;
+            display: flex;
+
+            > svg {
+              width: rem(24px);
+              height: rem(24px);
+              margin-right: 0.75rem;
+            }
+          }
+      }
+  }
+}
+
 @media (min-width: $fullsize-screen) {
     #homepage {
         padding: 0px;
@@ -555,13 +683,19 @@ export default {
             margin: 2rem;
         }
 
-        .sideways-slider {
-            max-width: calc(100vw - 25rem);
-            width: 77rem;
+
+        #intent-filters {
+          padding-right: 2rem;
         }
 
+
+
         .intent-card {
-            width: 25rem;
+            width: calc(33% - 0.5rem);
+        }
+
+        .intent-card > a.intent-title {
+            font-size: 1.4rem;
         }
 
         #atom-placement {
@@ -575,9 +709,7 @@ export default {
 
         #here-now {
             position: relative;
-            margin: 0px auto;
-            max-width: calc(100vw - 25rem);
-            width: 77rem;
+
 
             >h2 {
                 font-size: $snm-font-large;
@@ -594,44 +726,21 @@ export default {
                 display: flex;
                 flex-wrap: wrap;
             }
-        }
 
-
-        #by-topic {
-            margin: 0px auto;
-            max-width: calc(100vw - 25rem);
-            width: 77rem;
-
-            >.topics {
-                display: flex;
-                flex-wrap: wrap;
-
-                >* {
-                    display: flex;
-                    align-items: center;
-                    width: 12vw;
-                    padding: 0.5rem;
-
-                    svg {
-                        width: 2rem;
-                        margin-right: 1em;
-                    }
-
-                    span {
-                        font-family: $snm-font-content;
-                        font-size: $snm-font-small;
-                        color: $snm-color-background-meddark;
-                    }
-                }
+            .opportunity-card {
+                width: calc(33.33% - 0.5rem);
             }
         }
 
-        #benefits {
+        #by-topic .topics {
+          grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+        }
+
+
+        #benefits > .snm-container {
             flex-direction: row;
             flex-wrap: wrap;
             justify-content: center;
-            max-width: calc(100vw - 25rem);
-            width: 77rem;
             margin-left: auto;
             margin-right: auto;
             border-bottom-left-radius: 1rem;

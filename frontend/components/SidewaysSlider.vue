@@ -67,6 +67,7 @@ export default {
         max-width: 100%;
         overflow-x: scroll;
         scrollbar-width: none;
+        padding-left: 1rem;
 
         &::-webkit-scrollbar {
             height: 0px;
@@ -111,5 +112,12 @@ export default {
             right: 0px;
         }
     }
+}
+
+@media (min-width:$tablet-screen) {
+
+  .sideways-slider .slider-scroll{
+    padding-right: 1rem;
+  }
 }
 </style>

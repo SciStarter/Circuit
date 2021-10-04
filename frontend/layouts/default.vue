@@ -1,6 +1,6 @@
 <template>
 <div id="page" :class="{'authenticated': authenticated, 'not-authenticated': !authenticated}">
-  <header>
+  <header class="flex flex-align-center flex-justify-sb">
     <button class="toggle-menu mobile-only" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu" @click="menu = !menu">
       <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
       <img v-else src="~assets/img/hamburger.svg?data">
@@ -10,212 +10,226 @@
       <img src="~assets/img/logo.svg?data" title="return to home page">
     </nuxt-link>
 
-    <button class="toggle-search" title="Toggle search box" :aria-pressed="String(search)" data-context="header-search" @click="toggle_search">
-      <img src="~assets/img/search.svg?data">
-    </button>
+    <div class="flex">
+        <button class="toggle-search" title="Toggle search box" :aria-pressed="String(search)" data-context="header-search" @click="toggle_search">
+          <img src="~assets/img/search.svg?data">
+        </button>
 
-    <aside :class="{toggled: search}" class="search-box">
-      <b-field>
-        <b-input ref="search_keywords" v-model="query.keywords" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
-      </b-field>
-      <lookup-place v-model="query.place" @input="store_here" />
-      <div class="centered-row">
-        <b-field>
-          <b-checkbox v-model="query.include_online">
-            Include Online Opportunities
-          </b-checkbox>
-        </b-field>
+        <aside :class="{toggled: search}" class="search-box">
+          <div class="search-box-container">
+            <div class="full-only sbc-header flex flex-justify-sb">
+              <h2>Search</h2>
+              <button type="button" @click="toggle_search">&#10005;</button>
+            </div>
+          <b-field>
+            <b-input ref="search_keywords" v-model="query.keywords" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+          </b-field>
+          <lookup-place v-model="query.place" @input="store_here" />
+          <div class="centered-row">
+            <b-field>
+              <b-checkbox v-model="query.include_online">
+                Include Online Opportunities
+              </b-checkbox>
+            </b-field>
+          </div>
+          <div class="centered-row flex-justify-sb">
+            <b-field label="From" label-position="on-border">
+              <input v-model="query.date_from" class="control" type="date">
+            </b-field>
+            <b-field label="Until" label-position="on-border">
+              <input v-model="query.date_until" class="control" type="date">
+            </b-field>
+          </div>
+          <div class="centered-row">
+            <action-button primary arrow @click="find">
+              <search-icon class="button-icon" /> Search
+            </action-button>
+          </div>
+        </div>
+        </aside>
+
+        <aside :class="{toggled: menu}" class="menu-box" @click="menu = !menu">
+          <div v-if="authenticated" class="authenticated">
+            <span class="no-mobile" data-context="header-username">{{ username }}</span>
+            <ul>
+              <li class="mobile-only">
+                <nuxt-link to="/find">
+                  <find-icon class="menu-icon" /> Find Science Opportunities
+                </nuxt-link>
+              </li>
+              <li class="mobile-only">
+                <nuxt-link to="/my/saved">
+                  <saved-icon class="menu-icon" /> Saved Science Opportunities
+                </nuxt-link>
+              </li>
+              <li class="mobile-only">
+                <nuxt-link to="/my/science">
+                  <science-icon class="menu-icon" /> My Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
+                </nuxt-link>
+              </li>
+              <li class="mobile-only">
+                <nuxt-link to="/my/goals">
+                  <goals-icon class="menu-icon" /> My Goals
+                </nuxt-link>
+              </li>
+              <li class="mobile-only">
+                <nuxt-link to="/my/profile">
+                  <profile-icon class="menu-icon" /> My Profile
+                </nuxt-link>
+              </li>
+              <li><span class="no-icon" /><a @click="logout">Log Out</a></li>
+            </ul>
+          </div>
+          <div v-else class="not-authenticated">
+            <action-button primary @click="show_login = true">
+              Login
+            </action-button>
+            <action-button primary @click="show_signup = true">
+              Create Account
+            </action-button>
+          </div>
+        </aside>
       </div>
-      <div class="centered-row">
-        <b-field label="From" label-position="on-border">
-          <input v-model="query.date_from" class="control" type="date">
-        </b-field>
-        <b-field label="Until" label-position="on-border">
-          <input v-model="query.date_until" class="control" type="date">
-        </b-field>
-      </div>
-      <div class="centered-row">
-        <action-button primary arrow @click="find">
-          <search-icon class="button-icon" /> Search
-        </action-button>
-      </div>
-    </aside>
+      </header>
 
-    <aside :class="{toggled: menu}" class="menu-box" @click="menu = !menu">
-      <div v-if="authenticated" class="authenticated">
-        <span class="no-mobile" data-context="header-username">{{ username }}</span>
-        <ul>
-          <li class="mobile-only">
-            <nuxt-link to="/find">
-              <find-icon class="menu-icon" /> Find Science Opportunities
-            </nuxt-link>
-          </li>
-          <li class="mobile-only">
-            <nuxt-link to="/my/saved">
-              <saved-icon class="menu-icon" /> Saved Science Opportunities
-            </nuxt-link>
-          </li>
-          <li class="mobile-only">
-            <nuxt-link to="/my/science">
-              <science-icon class="menu-icon" /> My Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
-            </nuxt-link>
-          </li>
-          <li class="mobile-only">
-            <nuxt-link to="/my/goals">
-              <goals-icon class="menu-icon" /> My Goals
-            </nuxt-link>
-          </li>
-          <li class="mobile-only">
-            <nuxt-link to="/my/profile">
-              <profile-icon class="menu-icon" /> My Profile
-            </nuxt-link>
-          </li>
-          <li><span class="no-icon" /><a @click="logout">Log Out</a></li>
-        </ul>
-      </div>
-      <div v-else class="not-authenticated">
-        <action-button primary contrast-bg @click="show_login = true">
-          Login
-        </action-button>
-        <action-button primary contrast-bg @click="show_signup = true">
-          Create Account
-        </action-button>
-      </div>
-    </aside>
-  </header>
+      <section id="main">
+        <div id="content">
+          <nuxt @login="show_login = true" @signup="show_signup = true" />
+        </div>
 
-  <section id="main">
-    <div id="content">
-      <nuxt @login="show_login = true" @signup="show_signup = true" />
-    </div>
+<div id="authenticated-nav">
+  <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
+    <img src="~assets/img/logo.svg?data" title="return to home page">
+  </nuxt-link>
+        <nav>
+          <strong v-if="owner">My Participation</strong>
 
-    <nav>
-      <strong v-if="owner">My Participation</strong>
+          <nuxt-link to="/find">
+            <find-icon /> Find Science Opportunities
+          </nuxt-link>
 
-      <nuxt-link to="/find">
-        <find-icon /> Find Science Opportunities
-      </nuxt-link>
+          <nuxt-link to="/my/saved">
+            <saved-icon /> Saved Science Opportunities
+          </nuxt-link>
 
-      <nuxt-link to="/my/saved">
-        <saved-icon /> Saved Science Opportunities
-      </nuxt-link>
+          <nuxt-link to="/my/science">
+            <science-icon /> My Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
+          </nuxt-link>
 
-      <nuxt-link to="/my/science">
-        <science-icon /> My Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
-      </nuxt-link>
+          <nuxt-link to="/my/goals">
+            <goals-icon /> My Goals
+          </nuxt-link>
 
-      <nuxt-link to="/my/goals">
-        <goals-icon /> My Goals
-      </nuxt-link>
+          <nuxt-link to="/my/profile">
+            <profile-icon /> My Profile &amp; Settings
+          </nuxt-link>
 
-      <nuxt-link to="/my/profile">
-        <profile-icon /> My Profile &amp; Settings
-      </nuxt-link>
+          <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
 
-      <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
+          <nuxt-link v-if="owner" to="/my/opportunities">
+            <my-opportunities-icon /> Current Opportunities
+          </nuxt-link>
 
-      <nuxt-link v-if="owner" to="/my/opportunities">
-        <my-opportunities-icon /> Current Opportunities
-      </nuxt-link>
+          <nuxt-link v-if="owner" to="/my/draft-or-closed">
+            <my-past-opportunities-icon /> Draft &amp; Closed Opportunities
+          </nuxt-link>
 
-      <nuxt-link v-if="owner" to="/my/draft-or-closed">
-        <my-past-opportunities-icon /> Draft &amp; Closed Opportunities
-      </nuxt-link>
+          <nuxt-link v-if="owner" to="/my/organization">
+            <my-organization-icon /> Your Organization
+          </nuxt-link>
 
-      <nuxt-link v-if="owner" to="/my/organization">
-        <my-organization-icon /> Your Organization
-      </nuxt-link>
+          <nuxt-link v-if="owner" to="/my/submit-opportunity">
+            <submit-opportunity-icon /> Submit an Opportunity
+          </nuxt-link>
+        </nav>
 
-      <nuxt-link v-if="owner" to="/my/submit-opportunity">
-        <submit-opportunity-icon /> Submit an Opportunity
-      </nuxt-link>
-    </nav>
 
-    <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
-      <img src="~assets/img/logo.svg?data" title="return to home page">
-    </nuxt-link>
-  </section>
-
-  <footer>
-    <ul>
-      <li><h1>For Everyone</h1></li>
-      <li>
-        <nuxt-link to="/about">
-          About Us
-        </nuxt-link>
-      </li>
-      <li>
-        <nuxt-link to="/terms">
-          Terms of Service
-        </nuxt-link>
-      </li>
-      <li>
-        <nuxt-link to="/privacy">
-          Privacy Policy
-        </nuxt-link>
-      </li>
-      <li>
-        <nuxt-link to="/cookies">
-          Cookies Policy
-        </nuxt-link>
-      </li>
-      <li>
-        <nuxt-link to="/contact">
-          Contact Us
-        </nuxt-link>
-      </li>
-    </ul>
-
-    <ul>
-      <li><h1>For Science Professionals</h1></li>
-      <li>
-        <nuxt-link to="/affiliate">
-          Be Part of Science Near Me
-        </nuxt-link>
-      </li>
-      <li>
-        <external href="/api/docs/v1.html" content="footer-link">
-          API documentation
-        </external>
-      </li>
-      <li>
-        <nuxt-link to="/contact">
-          Display Science Opportunities
-        </nuxt-link>
-      </li>
-    </ul>
-
-    <div class="partner">
-      <div class="logo">
-        <img src="~assets/img/NSF-small.png">
-      </div>
-      <div class="description">
-        This project is based upon work supported, in part, by the
-        National Science Foundation under Grant DRL-1906998. Any
-        opinions, findings, and conclusions or recommendations
-        expressed in this material are those of the authors and do not
-        necessarily reflect the view of the National Science
-        Foundation.
-      </div>
-    </div>
-  </footer>
-
-  <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
-    <div class="card">
-      <login-form @close="show_login=false">
-        <dynamic-block group="login-modal" item="standard" class="content" />
-      </login-form>
-    </div>
-  </b-modal>
-
-  <b-modal v-model="show_signup" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
-    <div class="card">
-      <signup-form @close="show_signup=false">
-        <dynamic-block group="signup-modal" item="standard" class="content" />
-      </signup-form>
-    </div>
-  </b-modal>
 </div>
+
+      </section>
+
+      <footer class="snm-wrapper">
+        <div class="snm-container">
+        <ul>
+          <li><h1>For Everyone</h1></li>
+          <li>
+            <nuxt-link to="/about">
+              About Us
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/terms">
+              Terms of Service
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/privacy">
+              Privacy Policy
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/cookies">
+              Cookies Policy
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/contact">
+              Contact Us
+            </nuxt-link>
+          </li>
+        </ul>
+
+        <ul>
+          <li><h1>For Science Professionals</h1></li>
+          <li>
+            <nuxt-link to="/affiliate">
+              Be Part of Science Near Me
+            </nuxt-link>
+          </li>
+          <li>
+            <external href="/api/docs/v1.html" content="footer-link">
+              API documentation
+            </external>
+          </li>
+          <li>
+            <nuxt-link to="/contact">
+              Display Science Opportunities
+            </nuxt-link>
+          </li>
+        </ul>
+
+        <div class="partner">
+          <div class="logo">
+            <img src="~assets/img/NSF-small.png">
+          </div>
+          <div class="description">
+            This project is based upon work supported, in part, by the
+            National Science Foundation under Grant DRL-1906998. Any
+            opinions, findings, and conclusions or recommendations
+            expressed in this material are those of the authors and do not
+            necessarily reflect the view of the National Science
+            Foundation.
+          </div>
+        </div>
+        </div>
+      </footer>
+
+      <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
+        <div class="card">
+          <login-form @close="show_login=false">
+            <dynamic-block group="login-modal" item="standard" class="content" />
+          </login-form>
+        </div>
+      </b-modal>
+
+      <b-modal v-model="show_signup" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
+        <div class="card">
+          <signup-form @close="show_signup=false">
+            <dynamic-block group="signup-modal" item="standard" class="content" />
+          </signup-form>
+        </div>
+      </b-modal>
+    </div>
 </template>
 
 <script>
@@ -416,14 +430,28 @@ $user-menu-width: 10rem;
 /* Increase if more menu items are added */
 $user-menu-height: 2rem;
 
+* {
+  box-sizing: border-box;
+}
+
 #page {
     width: 100vw;
 }
 
+.full-only {
+  display: none;
+}
+
 header {
-    height: 45px;
+    height: 52px;
     background-color: $snm-color-background-medlight;
     border-top: 2px solid $snm-color-background-dark;
+    padding: 0 1rem;
+    position: fixed;
+    top:0;
+    left:0;
+    right:0;
+    z-index: 100;
 
     .centered-row {
         display: flex;
@@ -434,7 +462,6 @@ header {
 
     .button-icon {
         @include svg-fill;
-
         width: auto;
         height: 1.2em;
         vertical-align: middle;
@@ -455,12 +482,9 @@ header {
     }
 
     .logo {
-        position: absolute;
-        top: 3px;
-        left: 75px;
-        left: calc(50% - 36px);
         height: 39px;
         width: auto;
+        margin: 6px 0;
 
         img {
             width: 100%;
@@ -471,22 +495,21 @@ header {
     .toggle-menu {
         background-color: transparent;
         border: 0px;
-        position: absolute;
-        top: 10px;
-        left: 10px;
+        width: rem(24px);
+        height: rem(24px);
+        padding:0;
     }
 
     .toggle-search {
         background-color: $snm-color-action;
         border: 1px solid $snm-color-action-border;
         border-radius: 5px;
-        position: absolute;
-        top: 10px;
-        right: 10px;
         padding: 5px;
         width: 24px;
         height: 24px;
         box-shadow: 0px 3px 6px $snm-color-shadow;
+        position: relative;
+        top: -1px;
 
         img {
             display: block;
@@ -498,25 +521,30 @@ header {
     .menu-box {
         display: none;
         position: absolute;
-        top: 45px;
+        top:52px;
         left: 0px;
         right: 0px;
         z-index: 20;
         background-color: $snm-color-element-dark;
         text-align: left;
         box-shadow: 0px 3px 6px $snm-color-shadow;
+        width: 100%;
 
         .not-authenticated {
             display: flex;
             justify-content: space-evenly;
             background-color: $snm-color-element-med;
+            padding: .75rem 0;
 
             button {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 9rem;
+                width: calc(50% - 3rem);
                 box-shadow: 0px 3px 6px $snm-color-shadow;
+                margin:0;
+                background-color: $snm-color-background-meddark;
+                border: 1px solid #fff;
 
                 &:hover,&:active {
                     color: $snm-color-element-med;
@@ -544,29 +572,57 @@ header {
     .search-box {
         display: none;
         position: absolute;
-        top: 45px;
+        top: 52px;
         left: 0px;
         right: 0px;
         box-shadow: 0px 3px 6px $snm-color-shadow;
         background-color: $snm-color-background;
         min-height: 4rem;
-        z-index: 10;
+        z-index: 99;
         box-sizing: border-box;
         padding: 1rem;
+
+        input[type="text"] {
+          height: auto;
+          padding-top: 0.5rem;
+          padding-bottom: 0.5rem;
+        }
 
         input[type="date"] {
             padding: 0.75rem;
             border-radius: 10px;
-            border: 1px solid #B4B4B4;
+            border: 1px solid $snm-color-border;
+
         }
+
+        .centered-row.flex-justify-sb {
+          justify-content: space-between;
+
+          .field {
+            width: calc(50% - 0.5rem);
+            input {
+              width: 100%;
+            }
+          }
+        }
+
+
+
+
+
     }
 
     .toggled {
         display: block;
-        max-width: 25rem;
+        // max-width: 25rem;
         margin: 0px auto;
     }
 }
+
+#main {
+  padding-top: 52px;
+}
+
 
 footer {
     background-color: $snm-color-background-dark;
@@ -625,23 +681,49 @@ footer {
 }
 
 @media only screen and (min-width: $fullsize-screen) {
+    .full-only {
+      display: block;
+    }
+
+    #main {
+      padding-top: 0;
+    }
+
     header {
-        height: 100px;
+        height: 140px;
         border-top: 10px solid $snm-color-prehead;
+        position: relative;
+
+        header a {
+          display: block;
+        }
+
+        .toggle-menu {
+          display: none;
+        }
 
         .logo {
-            top: 25px;
-            left: 30px;
+            // top: 25px;
+            // left: 30px;
             width: 180px;
             height: auto;
+            margin: 1rem;
+            margin-top: 2rem;
         }
 
         .toggle-search {
-            top: 30px;
-            right: 10px;
+            position: relative;
+            // top: 30px;
+            // right: 10px;
+            order: 3;
             padding: 10px;
-            width: 40px;
+            min-width: 40px;
             height: 40px;
+            margin-right: 1rem;
+
+            &:hover,&:active {
+              background-color: #F2C04B;
+            }
 
             img {
                 width: 20px;
@@ -653,17 +735,23 @@ footer {
             display: inline-block;
             background-color: transparent;
             box-shadow: none;
+            position:relative;
             left: unset;
-            right: 60px;
-            top: 18px;
+            right: unset;
+            top: unset;
+            padding:0;
 
             .not-authenticated {
                 display: inline-block;
                 background-color: transparent;
+                padding: 0;
 
                 button {
                     width: auto;
                     box-shadow: 0px 3px 6px $snm-color-shadow;
+                    background-color: $snm-color-background-meddark;
+                    border: $snm-color-background-dark;
+                    margin-right: 1rem;
 
                     &:hover,&:active {
                         color: $snm-color-element-med;
@@ -677,7 +765,7 @@ footer {
                 flex-wrap: wrap;
                 align-items: center;
                 justify-content: right;
-                margin-top: 12px;
+                margin-right: 1rem;
                 height: 40px;
                 border-radius: 6px;
                 background-color: $snm-color-background-meddark;
@@ -687,6 +775,7 @@ footer {
                 transition: border-bottom-right-radius 0.5s, botder-bottom-left-radius 0.5s;
                 padding: 0px 1rem;
                 min-width: $user-menu-width;
+                position: relative;
 
                 > span {
                     font-family: $snm-font-content;
@@ -695,7 +784,7 @@ footer {
                     cursor: pointer;
 
                     &::after {
-                        content: ">";
+                        content: url(~assets/img/down-arrow.svg);
                         display: inline-flex;
                         align-items: center;
                         justify-content: center;
@@ -705,15 +794,15 @@ footer {
                         border-radius: 1em;
                         color: $snm-color-element-dark;
                         background-color: $snm-color-element-light;
-                        transform: rotate(0.25turn);
+                        transform: rotate(0);
                         transition: transform;
                     }
                 }
 
                 > ul {
                     position: absolute;
-                    top: 50px;
-                    right: 5px;
+                    top: 40px;
+                    right: 0;
                     width: $user-menu-width;
                     overflow: hidden;
                     max-height: 0px;
@@ -725,6 +814,7 @@ footer {
                     border-radius: 6px;
                     border-top-left-radius: 0px;
                     border-top-right-radius: 0px;
+                    opacity: 0;
 
                     li {
                         border: 0px;
@@ -748,7 +838,7 @@ footer {
 
                 > span {
                     &::after {
-                        transform: rotate(-0.25turn);
+                        transform: rotate(-0.5turn);
                         transition: transform;
                     }
                 }
@@ -756,9 +846,10 @@ footer {
                 ul {
                     max-width: $user-menu-width;
                     max-height: $user-menu-height;
-
-                    right: 0px;
-                    transition: max-height 0.5s, max-width 0.5s, right 0.5s;
+                    top: 40px;
+                    right: -1px;
+                    opacity: 1;
+                    transition: max-height 0.5s, max-width 0.5s, right 0.5s, opacity 0.5s;
                 }
             }
         }
@@ -797,10 +888,10 @@ footer {
             display: flex;
             flex-direction: column;
             width: 280px;
-            background-color: $snm-color-background-medium;
+
             flex-grow: 0;
             flex-shrink: 0;
-            box-shadow: 0px 0px 6px $snm-color-shadow;
+
             clip-path: inset(0px -2rem 0px 0px);
 
             strong {
@@ -860,10 +951,9 @@ footer {
         }
     }
 
-    footer {
+    footer > div {
         display: flex;
         justify-content: space-evenly;
-        padding: 60px 0px;
 
         > ul {
             li {
@@ -880,10 +970,38 @@ footer {
         }
     }
 
-    .authenticated footer {
-        border-left: 280px solid $snm-color-background-medium;
-    }
+
 }
+
+@media (min-width: $fullsize-screen) {
+  .authenticated {
+    header {
+      justify-content: flex-end!important;
+    }
+
+    header .logo {
+      display: none!important;
+    }
+  }
+
+  #authenticated-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    background-color: $snm-color-background-medium;
+    box-shadow: 0px 0px 6px $snm-color-shadow;
+    z-index:101;
+  }
+
+  #content, footer {
+    margin-left: 280px;
+  }
+
+}
+
+
 </style>
 
 <style lang="scss">
@@ -898,9 +1016,18 @@ footer {
     }
 }
 
+@media (min-width: $tablet-screen) {
+  .no-tablet {
+    display: none;
+  }
+}
+
 @media (min-width: $fullsize-screen) {
     .mobile-only {
         display: none !important;
+    }
+    .no-tablet {
+      display: block;
     }
 }
 
@@ -918,4 +1045,45 @@ footer {
     height: 1.5em;
     margin-left: 0.5em;
 }
+
+@media (min-width:$fullsize-screen) {
+  header .search-box.toggled {
+    background-color: rgba(0,0,0,0.8);
+    position: fixed;
+    top:0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .search-box-container {
+      background-color: #fff;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+
+    .sbc-header {
+      display: flex;
+      color: $snm-color-background-meddark;
+
+      h2 {
+        font-size: 1.4rem;
+        font-weight: bold;
+      }
+      button {
+        border:0;
+        background-color: transparent;
+        font-size: 1.8rem;
+        font-weight: bold;
+      }
+    }
+
+  }
+
+}
+
 </style>
