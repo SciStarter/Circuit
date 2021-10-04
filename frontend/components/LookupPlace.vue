@@ -1,6 +1,6 @@
 <template>
 <b-field class="lookup-place">
-  <b-field label="Near" :label-position="labelPosition">
+  <b-field label="Near" :label-position="labelPosition" class="location-input">
     <b-autocomplete
       :loading="loading"
       :data="matches"
@@ -159,4 +159,17 @@ export default {
 .lookup-place .autocomplete .dropdown-menu {
     width: 350px;
 }
+.lookup-place {
+  margin-top: 1.2rem;
+}
+.location-input {
+  width: 100%!important;
+  input {
+    border-radius: 6px 0 0 6px!important;
+  }
+}
+.field input.input {
+  border-radius: 6px;
+}
+
 </style>

@@ -1,5 +1,6 @@
 <template>
 <div class="general-filters">
+  <div class="snm-container">
   <div class="basic-filter-backdrop">
     <div>
       <b-field label="Search" label-position="inside" data-context="find-keywords">
@@ -14,7 +15,7 @@
           <input v-model="ending_proxy" class="control" type="date">
         </b-field>
       </div>
-      <action-button v-if="searchButton" principal arrow @click="search">
+      <action-button v-if="searchButton" principal large arrow @click="search" id="quick-search-btn">
         <search-icon />
       </action-button>
     </div>
@@ -24,7 +25,8 @@
       </b-checkbox>
     </b-field>
   </div>
-  <div v-if="quickLinks" class="quick-links">
+</div>
+  <div v-if="quickLinks" class="quick-links snm-container">
     <nuxt-link to="/find?physical=online&descriptors[]=citizen_science">
       Online, Anytime Science
     </nuxt-link>
@@ -209,10 +211,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+
+
 .general-filters {
     display: block;
     background-color: $snm-color-background-medium;
-    padding: 0.75rem 0.75rem 0px;
+    overflow: visible;
+    // padding: 0.75rem 0.75rem 0px;
 
     .centered-row {
         display: flex;
@@ -221,11 +227,28 @@ export default {
     }
 
     input[type="date"] {
-        padding: 1rem;
+        padding: 1.2rem 1rem 0.5rem 1rem;
         border-radius: 5px;
         border: 1px solid #B4B4B4;
     }
 }
+
+#quick-search-btn {
+  width: 40px;
+  padding: .2rem;
+  height: 48px;
+  svg {
+    left:0;
+  }
+}
+
+@media (min-width:$tablet-screen){
+    #homepage {
+      .general-filters {
+        display: none;
+      }
+    }
+  }
 
 @media (min-width: $fullsize-screen) {
     .general-filters {
@@ -237,6 +260,7 @@ export default {
         grid-row: 1;
         grid-column: 1 / -1;
         text-align: center;
+        padding-top: 3rem;
 
         .basic-filter-backdrop {
             display: inline-flex;
@@ -283,7 +307,7 @@ export default {
         .quick-links {
             display: flex;
             justify-content: space-evenly;
-            margin: 1rem;
+            margin: 2rem 1rem 3rem 1rem;
             width: 100%;
 
             a {
@@ -295,4 +319,6 @@ export default {
         }
     }
 }
+
+
 </style>

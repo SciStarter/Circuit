@@ -98,11 +98,18 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+
 .opportunity-card {
-    padding: 16px;
+  display: flex;
+  flex-direction: column;
+
 
     &.rule {
         border-bottom: 2px solid $snm-color-border;
+    }
+    &.rule:first-child {
+      border-top: 2px solid $snm-color-border;
     }
 }
 
@@ -126,6 +133,8 @@ export default {
 
 .primary {
     display: flex;
+    padding: 1rem;
+    flex: 0 1 130px;
 
     img {
         width: 80px;
@@ -169,6 +178,13 @@ export default {
 
 .secondary {
     margin-top: 15px;
+    font-size: rem(14px);
+    padding: 1rem;
+    flex: 1;
+
+    > div {
+      margin-bottom: 0.5rem;
+    }
 
     .info {
         display: flex;
@@ -191,14 +207,26 @@ export default {
         }
     }
 }
+#homepage .secondary {
+  display: none;
+}
+@media (min-width: $tablet-screen) {
+  #homepage .secondary {
+    display: block;
+    background-color: $snm-color-background-light;
+  }
+
+  .opportunity-card {
+    width: calc(50% - 0.5rem);
+    border: 1px solid $snm-color-border!important;
+    margin-bottom: 1rem;
+    border-radius: rem(6px);
+  }
+
+}
 
 @media (min-width: $fullsize-screen) {
-    .opportunity-card {
-        width: 20vw;
-        border: 1px solid $snm-color-border;
-        border-radius: 6px;
-        margin: 0.5rem;
-    }
+    
 
     .primary {
         div {
@@ -234,4 +262,10 @@ export default {
         }
     }
 }
+
+
+
+
+
+
 </style>

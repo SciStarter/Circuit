@@ -1,5 +1,5 @@
 <template>
-  <button class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow}" :disabled="disabled" @click="$emit('click')">
+  <button class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large}" :disabled="disabled" @click="$emit('click')">
     <slot />
   </button>
 </template>
@@ -56,6 +56,11 @@ export default {
             required: false,
             default: false,
         },
+        large: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
     }
 }
 </script>
@@ -85,7 +90,8 @@ button.action-button {
     justify-content: center;
     padding: 0.75rem 1.5rem;
     box-sizing: border-box;
-    height: 3rem;
+    height: rem(40px);
+    line-height: 1;
 
     svg {
         &:first-child {
@@ -186,10 +192,10 @@ button.action-button {
         content: "";
         display: block;
         position: absolute;
-        top: 0.355rem;
-        right: -1rem;
-        width: 2.25rem;
-        height: 2.25rem;
+        top: 0.255rem;
+        right: -0.8rem;
+        width: 30px;
+        height: 30px;
         border-top: 1px solid var(--border);
         border-right: 1px solid var(--border);
         background-color: var(--background);
@@ -198,6 +204,27 @@ button.action-button {
         border-top-right-radius: 6px;
         clip-path: polygon(0 0, 100% 100%, 100% 0);
         box-sizing: border-box;
+    }
+
+    &.large {
+      height: 48px;
+      &.arrow::after {
+        top: 0.355rem;
+        right: -1rem;
+        width: 34px;
+        height: 34px;
+        content: "";
+        display: block;
+        position: absolute;
+        border-top: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+        background-color: var(--background);
+        transform: rotate(50grad);
+        border-radius: 4px;
+        border-top-right-radius: 6px;
+        clip-path: polygon(0 0, 100% 100%, 100% 0);
+        box-sizing: border-box;
+      }
     }
 
 }
