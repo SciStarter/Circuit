@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use thiserror::Error;
 use uuid::Uuid;
 
+pub mod geo;
 pub mod jwt;
 pub mod model;
 pub mod time;
