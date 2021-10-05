@@ -13,7 +13,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // this can be moved to a module-level const
     let RETRY_DELAY: Duration = Duration::new(300, 0);
 
-    let importers = config::configure();
+    let importers = config::setup();
     let mut schedule: BinaryHeap<Reverse<(Instant, usize)>> = BinaryHeap::new();
 
     for idx in 0..importers.len() {

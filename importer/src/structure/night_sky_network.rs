@@ -193,7 +193,7 @@ impl Structure for NightSkyNetwork {
                         .exterior
                         .opp_descriptor
                         .push(common::model::opportunity::Descriptor::StarParty);
-                    input.validate()?;
+                    async_std::task::block_on(input.validate())?;
 
                     opps.push(input);
                 }

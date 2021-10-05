@@ -676,6 +676,7 @@ dependencies = [
  "hmac 0.11.0",
  "jwt",
  "once_cell",
+ "readonly",
  "regex",
  "serde",
  "serde_json",
@@ -1983,6 +1984,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16abd0c1b639e9eb4d7c50c0b8100b0d0f849be2349829c740fe8e6eb4816429"
 dependencies = [
  "rand_core 0.5.1",
+]
+
+[[package]]
+name = "readonly"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45abc1c3a18669574c914b075cdc510c34bb3f1fb18f17b1ebf65ca5b3753796"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

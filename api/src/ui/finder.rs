@@ -1,5 +1,6 @@
 use chrono::{DateTime, FixedOffset};
 use common::{
+    geo,
     model::{
         opportunity::{
             Cost, Descriptor, EntityType, OpportunityQuery, OpportunityQueryOrdering,
@@ -82,59 +83,19 @@ struct GeoResult {
     places: Vec<GeoPlace>,
 }
 
-#[derive(Serialize)]
-struct OpenCageQuery {
-    key: String,
-    q: String,
-    no_annotations: u8,
-}
-
-#[derive(Deserialize)]
-struct OpenCageStatus {
-    message: String,
-    code: u16,
-}
-
-#[derive(Deserialize)]
-struct OpenCagePoint {
-    #[serde(rename = "lat")]
-    latitude: f32,
-    #[serde(rename = "lng")]
-    longitude: f32,
-}
-
-#[derive(Deserialize)]
-struct OpenCageMatch {
-    confidence: u16,
-    formatted: String,
-    geometry: OpenCagePoint,
-}
-
-// Partial, we're not interested in everything that comes back from the API
-#[derive(Deserialize)]
-struct OpenCageResult {
-    status: OpenCageStatus,
-    results: Vec<OpenCageMatch>,
-}
-
 pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
     let search: GeoQuery = req.body_json().await?;
     let proximity = search.place.proximity;
 
-    let query = OpenCageQuery {
-        key: std::env::var("OPENCAGE_API_KEY")?,
-        q: match search.lookup {
+    let query = geo::Query::new(
+        match search.lookup {
             GeoLookup::Coords => search.place.near,
             GeoLookup::Near => format!("{} {}", search.place.latitude, search.place.longitude),
         },
-        no_annotations: 1,
-    };
+        false,
+    );
 
-    // Alternative: we may be able to use https://www.geonames.org/export/web-services.html
-    let mut result: OpenCageResult = surf::get("https://api.opencagedata.com/geocode/v1/json")
-        .query(&query)?
-        .recv_json()
-        .await?;
+    let mut result = query.lookup();
 
     if result.status.code != 200 {
         return Err(tide::Error::from_str(
