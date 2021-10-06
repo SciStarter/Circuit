@@ -160,6 +160,15 @@ h1 {
     border-bottom: 1px solid $snm-color-border;
     border-top: 1px solid $snm-color-border;
     padding: 1rem;
+    background-color: $snm-color-background-light;
+
+    .field {
+      width: 100%;
+
+      .field.has-addons, .field.has-addons .control {
+        width: 100%;
+      }
+    }
 
     ::v-deep label {
         font-family: $snm-font-content;
@@ -175,6 +184,7 @@ h1 {
         align-items: center;
         color: $snm-color-element-med;
         border: 1px solid $snm-color-element-med;
+        background-color: #fff;
         border-radius: 10px;
         box-shadow: 0px 3px 6px $snm-color-shadow;
         height: 40px;
@@ -192,7 +202,6 @@ h1 {
 
 #sort {
     padding: 1.5rem 0.75rem;
-    border-bottom: 1px solid $snm-color-border;
 }
 
 @media (min-width: $fullsize-screen) {
@@ -207,13 +216,25 @@ h1 {
         align-items: center;
         justify-content: space-between;
         margin-top: 1rem;
-        border-top: none;
-        padding: 1.5rem 0.75rem;
+        border: 1px solid $snm-color-border;
+        padding: 2rem;
         border-radius: 10px;
+
+        .field {
+          width: auto;
+
+          .field.has-addons, .field.has-addons .control {
+            width: auto;
+          }
+        }
 
         > button {
             margin-top: 0.75rem;
         }
+    }
+    .opportunity-card {
+      border:1px solid $snm-color-border!important;
+      margin-bottom: 1rem;
     }
 }
 </style>

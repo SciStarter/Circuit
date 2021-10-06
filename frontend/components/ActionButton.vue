@@ -179,7 +179,7 @@ button.action-button {
     &:disabled {
         --background: #{$snm-color-background-light};
         --foreground: #{$snm-color-disabled};
-        --border: #{$snm-color-disabled};
+        --border: #{$snm-color-background-light};
     }
 
     &.arrow {

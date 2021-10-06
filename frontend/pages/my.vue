@@ -1,6 +1,8 @@
 <template>
   <div class="my">
-    <nuxt-child />
+    <div class="snm-container">
+      <nuxt-child />
+    </div>
   </div>
 </template>
 
@@ -13,7 +15,8 @@ export default {
 <style lang="scss" scoped>
 @media (min-width: $fullsize-screen) {
     div.my {
-        margin: 10px 5rem;
+        padding-top: 1rem;
+        padding: 2rem 2rem 0;
     }
 }
 </style>

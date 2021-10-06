@@ -184,7 +184,7 @@ export default {
     border: 1px solid $snm-color-action;
     position: relative;
     border-radius: 10px;
-    margin: 2rem 0px;
+    margin: 2rem 1rem;
 
     .close {
         position: absolute;
@@ -193,6 +193,7 @@ export default {
         font-family: $snm-font-content;
         font-size: $snm-font-larger;
         color: $snm-color-action-border;
+        font-weight:bold;
     }
 
     h2 {
@@ -224,6 +225,7 @@ export default {
             padding-right: 0.5rem;
         }
     }
+
 }
 
 .manage {
@@ -274,13 +276,36 @@ export default {
     }
 }
 
+.log {
+  .status{
+    margin:1rem 1rem 0;
+  }
+  .manage .search {
+    background-color: $snm-color-background-light;
+    border: 1px solid $snm-color-border;
+
+    .field.has-addons, .field.has-addons .control {
+      width: 100%;
+    }
+  }
+}
+
 .pagination {
     display: flex;
     justify-content: center;
 }
 
+@media (min-width: $tablet-screen){
+  .reportable .opportunity-card {
+    width: 100%;
+  }
+}
+
 @media (min-width: $fullsize-screen) {
-    .reportable {
+  .explanation{
+    margin: 2rem 0;
+  }
+  .reportable {
         display: flex;
         border: 1px solid $snm-color-border;
         border-radius: 10px;
@@ -289,15 +314,24 @@ export default {
 
         .opportunity-card {
             flex-grow: 1;
+            margin:0;
+            border:0;
+        }
+
+        .secondary {
+          display:flex!important;
+          background-color: #fff;
         }
 
         .actions {
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            justify-content: center;
             align-items: stretch;
             border-left: 1px solid $snm-color-border;
             padding: 1rem;
+            background-color: $snm-color-background-light;
+            min-width: 230px;
 
             .action-button {
                 flex-grow: 0;
@@ -311,6 +345,18 @@ export default {
             border-bottom: 1px solid $snm-color-border;
             border-radius: 10px;
         }
+    }
+    .log {
+      .status{
+        margin:1rem 0 0;
+      }
+      .opportunity-card{
+        width: 100%;
+        border: 1px solid $snm-color-border!important;
+      }
+      .manage .search .field.has-addons, .manage .search .field.has-addons .control {
+        width: auto;
+      }
     }
 }
 </style>

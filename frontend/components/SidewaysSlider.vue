@@ -5,10 +5,10 @@
       <slot />
     </div>
   </div>
-  <button class="slide left no-mobile" @click="scroll(-items_scroll())">
+  <button class="slide left no-mobile show-tablet" @click="scroll(-items_scroll())">
     <span>&lsaquo;</span>
   </button>
-  <button class="slide right no-mobile" @click="scroll(items_scroll())">
+  <button class="slide right no-mobile show-tablet" @click="scroll(items_scroll())">
     <span>&rsaquo;</span>
   </button>
 </div>
@@ -105,19 +105,26 @@ export default {
         }
 
         &.left {
-            left: 0px;
+            left: -1rem;
         }
 
         &.right {
-            right: 0px;
+            right: -1rem;
         }
     }
 }
 
 @media (min-width:$tablet-screen) {
 
+  .sideways-slider {
+    margin: 1rem auto;
+    width: calc(100% - 4rem);
+  }
   .sideways-slider .slider-scroll{
-    padding-right: 1rem;
+    padding:0;
+  }
+  .show-tablet {
+    display: block!important;
   }
 }
 </style>

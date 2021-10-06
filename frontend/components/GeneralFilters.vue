@@ -251,6 +251,9 @@ export default {
   }
 
 @media (min-width: $fullsize-screen) {
+  #homepage .general-filters{
+    display: flex;
+  }
     .general-filters {
         display: flex;
         flex-direction: column;

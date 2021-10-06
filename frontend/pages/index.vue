@@ -436,6 +436,17 @@ export default {
         margin-right: 1rem;
         padding-bottom: 1rem;
 
+        &:last-child {
+          overflow: visible;
+        }
+
+        &:last-child::after {
+          content: ' ';
+          display: block;
+          width: calc(100% + 1rem);
+          height: 1px;
+        }
+
         >.intent-title {
           line-height:1.1;
           margin-bottom:0;
@@ -580,10 +591,9 @@ export default {
             }
 
             >svg {
-                width: 5rem;
+                flex: 0 0 120px;
                 margin-right: 1rem;
-                flex-grow: 0;
-                flex-shrink: 0;
+
             }
         }
     }
@@ -692,19 +702,33 @@ export default {
 
         .intent-card {
             width: calc(33% - 0.5rem);
+
+            &:last-child::after {
+              display:none;
+            }
         }
 
         .intent-card > a.intent-title {
             font-size: 1.4rem;
         }
 
-        #atom-placement {
-            #hydrogen {
-                display: block;
-                position: absolute;
-                bottom: -3rem;
-                left: 18rem;
-            }
+        #hydrogen {
+            display: block;
+            position: absolute;
+            bottom: -1.3rem;
+            left: 15%;
+            margin-left: -1rem;
+            width: 2rem;
+        }
+
+        #helium {
+            position: absolute;
+            bottom: -1.3rem;
+            right: 15%;
+            left: unset;
+            margin-left: -1rem;
+            width: 2rem;
+            transform: scaleX(-1);
         }
 
         #here-now {
@@ -746,6 +770,7 @@ export default {
             border-bottom-left-radius: 1rem;
             border-bottom-right-radius: 1rem;
             top: 2rem;
+            align-items: flex-start;
 
             >div {
                 width: 33%;
@@ -755,9 +780,35 @@ export default {
 
                 >svg {
                     width: 7rem;
+                    margin-bottom: 1rem;
+                    margin-right:0;
+                }
+                > div {
+                  text-align: center;
                 }
             }
         }
+    }
+}
+
+@media (max-width: $mobile-screen) {
+    .no-mobile {
+        display: none !important;
+    }
+}
+
+@media (min-width: $tablet-screen) {
+  .no-tablet {
+    display: none;
+  }
+}
+
+@media (min-width: $fullsize-screen) {
+    .mobile-only {
+        display: none !important;
+    }
+    .no-tablet {
+      display: block;
     }
 }
 </style>
