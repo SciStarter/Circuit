@@ -308,7 +308,9 @@ export default {
         font-weight: bold;
         font-size: $snm-font-largest;
         color: $snm-color-caption;
-        margin-bottom: 3rem;
+        margin: 0;
+        padding: 2rem 0 1rem;
+        display: none;
     }
 
     div.research-questions {
@@ -317,6 +319,7 @@ export default {
             font-weight: bold;
             font-size: $snm-font-medium-small;
             color: $snm-color-element-dark;
+            margin-top:2rem;
         }
 
         em {
@@ -325,6 +328,13 @@ export default {
             font-size: $snm-font-small;
             color: $snm-color-tldr;
             font-style: normal;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid $snm-color-border;
+        }
+        h2, em {
+          padding-left: 1rem;
+          padding-right: 1rem;
+          display: block;
         }
 
         label {
@@ -338,7 +348,8 @@ export default {
     .research-item {
         display: flex;
         flex-direction: column;
-        margin: 3rem 0px;
+        border-bottom: 1px solid $snm-color-border;
+        padding: 1rem;
 
         >div:first-child {
             display: flex;
@@ -382,6 +393,9 @@ export default {
 
 @media (min-width: $fullsize-screen) {
     .my-profile {
+      h1 {
+        display: block;
+      }
         section.research-questions {
             border-top: 3px solid $snm-color-element-med;
             padding-top: 3rem;

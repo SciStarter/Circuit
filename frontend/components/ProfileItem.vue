@@ -132,7 +132,8 @@ export default {
 div.profile-item {
     display: flex;
     flex-direction: column;
-    margin-bottom: 3rem;
+    border-bottom: 1px solid $snm-color-border;
+    padding: 1rem;
 
     > div:first-child {
         display: flex;

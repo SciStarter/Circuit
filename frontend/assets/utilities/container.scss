@@ -16,3 +16,15 @@
     padding-left: 2rem;
   }
 }
+
+@media (min-width:$fullsize-screen) {
+  .mobile-only {
+    display: none!important;
+  }
+}
+
+@media (max-width: $fullsize-screen - 1px) {
+  .no-mobile {
+    display: none!important;
+  }
+}

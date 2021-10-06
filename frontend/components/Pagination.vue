@@ -14,7 +14,7 @@
       <span class="center-lowercase">&raquo;</span>
     </action-button>
   </div>
-  <div>
+  <div class="pagination-numbers">
     <span v-if="more_begin">&hellip;</span>
     <a v-for="idx in range_begin" :title="'go to page ' + (idx + indexOffset)" @click="$emit('switch', idx)">{{ idx + indexOffset }}</a>
     <span>{{ pageIndex + indexOffset }}</span>
@@ -125,12 +125,27 @@ div.pagination-selector {
         position: relative;
         top: -0.1ex;
     }
+    .pagination-numbers {
+      span, a {
+        font-size: rem(21px);
+        color: $snm-color-background-meddark;
+      }
+      span {
+        font-weight: bold;
+      }
+    }
 }
 
-@media (max-width: $mobile-screen) {
+@media (max-width: $tablet-screen) {
     div.pagination-selector {
         flex-direction: column;
     }
+}
+
+@media (min-width:$fullsize-screen) {
+  .mobile-only {
+    display: none!important;
+  }
 }
 
 </style>

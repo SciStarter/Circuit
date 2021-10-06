@@ -101,6 +101,7 @@
   <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
     <img src="~assets/img/logo.svg?data" title="return to home page">
   </nuxt-link>
+    <div class="an-overflow">
         <nav>
           <strong v-if="owner">My Participation</strong>
 
@@ -142,7 +143,7 @@
             <submit-opportunity-icon /> Submit an Opportunity
           </nuxt-link>
         </nav>
-
+      </div>
 
 </div>
 
@@ -199,7 +200,7 @@
         </ul>
 
         <div class="partner">
-          <div class="logo">
+          <div class="nsf-logo">
             <img src="~assets/img/NSF-small.png">
           </div>
           <div class="description">
@@ -521,7 +522,7 @@ header {
     .menu-box {
         display: none;
         position: absolute;
-        top:52px;
+        top:50px;
         left: 0px;
         right: 0px;
         z-index: 20;
@@ -652,8 +653,9 @@ footer {
         display: flex;
         flex-direction: row;
 
-        .logo {
-            margin: 16px;
+
+        .nsf-logo {
+            margin-right: 1rem;
             flex-shrink: 0;
 
             img {
@@ -689,6 +691,13 @@ footer {
       padding-top: 0;
     }
 
+  header .logo {
+        width: 180px;
+        height: auto;
+        margin: 1rem;
+        margin-top: 2rem;
+    }
+
     header {
         height: 140px;
         border-top: 10px solid $snm-color-prehead;
@@ -702,14 +711,7 @@ footer {
           display: none;
         }
 
-        .logo {
-            // top: 25px;
-            // left: 30px;
-            width: 180px;
-            height: auto;
-            margin: 1rem;
-            margin-top: 2rem;
-        }
+
 
         .toggle-search {
             position: relative;
@@ -856,43 +858,14 @@ footer {
     }
 
     .authenticated #main {
-        display: flex;
-        flex-direction: row-reverse;
 
-        a.logo {
-            display: block;
-            position: absolute;
-            top: 0px;
-            left: 0px;
-            width: 280px;
-            height: 120px;
-            padding: 1rem;
-            background-color: $snm-color-background-medium;
-            box-shadow: 0px 0px 6px $snm-color-shadow;
-            clip-path: inset(0px -15px 0px 0px);
-
-            img {
-                width: 100%;
-                height: 100%;
-                object-position: center center;
-                object-fit: contain;
-            }
-        }
-
-        >:not(nav) {
-            flex-grow: 1;
-        }
 
         nav {
-            margin-top: 20px;
+            // margin-top: 20px;
             display: flex;
             flex-direction: column;
-            width: 280px;
 
-            flex-grow: 0;
-            flex-shrink: 0;
-
-            clip-path: inset(0px -2rem 0px 0px);
+            // clip-path: inset(0px -2rem 0px 0px);
 
             strong {
                 font-family: $snm-font-content;
@@ -909,7 +882,7 @@ footer {
                 }
             }
 
-            a,a:hover,a:active {
+            a {
                 display: flex;
                 color: $snm-color-element-dark;
                 background-color: transparent;
@@ -921,12 +894,13 @@ footer {
                 padding-left: 1rem;
                 position: relative;
                 box-sizing: border-box;
-                height: 52px;
-                margin-top: 0.75rem;
+                height: 48px;
+                margin-top: 0;
+                padding-right: 1rem;
 
-                &.nuxt-link-active {
+                &.nuxt-link-active, &.nuxt-link-active:active {
                     background-color: $snm-color-background-meddark;
-                    color: $snm-color-element-light;
+                    color: $snm-color-element-light!important;
 
                     &::after {
                         position: absolute;
@@ -948,14 +922,20 @@ footer {
                     }
                 }
             }
+            a:hover,a:active {
+              color: $snm-color-background-meddark;
+            }
         }
     }
 
-    footer > div {
+    footer > .snm-container {
         display: flex;
-        justify-content: space-evenly;
+        justify-content: space-between;
+        margin: 0 auto;
 
         > ul {
+          width: calc(25% - 0.5rem);
+
             li {
                 border: 0px;
 
@@ -965,43 +945,106 @@ footer {
             }
         }
 
-        > div {
-            max-width: 30vw;
+        .partner {
+          width: calc(50% - 0.5rem);
         }
+
+
     }
 
 
+}
+
+.not-authenticated #authenticated-nav, .authenticated #authenticated-nav {
+  display: none;
 }
 
 @media (min-width: $fullsize-screen) {
   .authenticated {
     header {
       justify-content: flex-end!important;
+      height: 80px;
+      position: fixed;
+    }
+
+    #content {
+      padding-top:80px;
     }
 
     header .logo {
       display: none!important;
     }
+
+    .logo {
+      width: 180px;
+      margin: 0 auto;
+      display: block;
+      margin-top: 1rem;
+      img {
+        width: 180px;
+      }
+    }
+
   }
 
-  #authenticated-nav {
+  .authenticated #authenticated-nav {
+    display: block;
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
-    width: 280px;
+    width: 200px;
     background-color: $snm-color-background-medium;
     box-shadow: 0px 0px 6px $snm-color-shadow;
     z-index:101;
+
+    .an-overflow {
+      overflow-x: visible;
+      height: calc(100vh - 105px);
+      scrollbar-width: none;
+      overflow-y: auto;
+      &::-webkit-scrollbar {
+        display: none; /* for Chrome, Safari, and Opera */
+      }
+    }
+
+    nav {
+      margin-bottom: 2rem;
+    }
+
   }
 
-  #content, footer {
-    margin-left: 280px;
+
+
+  .authenticated #content {
+    margin-left: 200px;
+  }
+
+  .authenticated footer {
+    padding-left: 200px;
+    .snm-container {
+      padding: 1rem;
+    }
+  }
+
+  .not-authenticated footer {
+    padding-top:5rem;
   }
 
 }
 
+@media (min-width: 1200px) {
+  .authenticated #authenticated-nav {
+    width: 280px;
+  }
+  .authenticated #content {
+    margin-left: 280px;
+  }
 
+  .authenticated footer {
+    padding-left: 280px;
+  }
+}
 </style>
 
 <style lang="scss">
@@ -1041,8 +1084,9 @@ footer {
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    min-width: 1.5em;
-    height: 1.5em;
+    min-width: 1rem;
+    height: 1rem;
+    line-height: 1rem;
     margin-left: 0.5em;
 }
 
@@ -1086,4 +1130,10 @@ footer {
 
 }
 
+</style>
+
+<style type="scss">
+  .b-tabs .tab-content {
+    padding:0;
+  }
 </style>

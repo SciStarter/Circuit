@@ -1,5 +1,5 @@
 <template>
-<article v-if="!hidden" class="opportunity-card" :class="{'rule': rule}">
+<article v-if="!hidden" class="opportunity-card" :class="{'rule': rule,'has-trash':trash}">
   <button v-if="trash" class="trash" @click="$emit('trash', opportunity)">
     <trash-icon />
   </button>
@@ -113,28 +113,38 @@ export default {
     }
 }
 
-.trash {
-    float: right;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    color: $snm-color-element-med;
-    border: 1px solid $snm-color-element-med;
-    border-radius: 10px;
-    box-shadow: 0px 3px 6px $snm-color-shadow;
-    cursor: pointer;
+.has-trash {
+  position: relative;
 
-    svg * {
-        fill: currentColor;
-    }
+  .trash {
+      position: absolute;
+      top:0.5rem;
+      right:1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      color: $snm-color-element-med;
+      border: 1px solid $snm-color-element-med;
+      border-radius: 10px;
+      box-shadow: 0px 3px 6px $snm-color-shadow;
+      cursor: pointer;
+
+      svg * {
+          fill: currentColor;
+      }
+  }
+  .primary {
+    padding-right: 2rem;
+  }
+
 }
 
 .primary {
     display: flex;
     padding: 1rem;
-    flex: 0 1 130px;
+    flex: 0 1 100px;
 
     img {
         width: 80px;
@@ -177,10 +187,10 @@ export default {
 }
 
 .secondary {
-    margin-top: 15px;
     font-size: rem(14px);
-    padding: 1rem;
+    padding: 0.5rem 1rem;
     flex: 1;
+    background-color: $snm-color-background-light;
 
     > div {
       margin-bottom: 0.5rem;
@@ -207,13 +217,23 @@ export default {
         }
     }
 }
+#homepage .primary {
+  padding: 1rem;
+  flex: 0 1 130px;
+}
 #homepage .secondary {
   display: none;
+}
+.reportable {
+  .secondary {
+    display: none;
+  }
 }
 @media (min-width: $tablet-screen) {
   #homepage .secondary {
     display: block;
     background-color: $snm-color-background-light;
+    padding: 1rem;
   }
 
   .opportunity-card {
@@ -223,10 +243,16 @@ export default {
     border-radius: rem(6px);
   }
 
+  #results {
+    .opportunity-card {
+      width: 100%;
+    }
+  }
+
 }
 
 @media (min-width: $fullsize-screen) {
-    
+
 
     .primary {
         div {
@@ -259,7 +285,18 @@ export default {
 
         > :last-child {
             width: 100%;
+            margin-bottom:0;
         }
+    }
+    .reportable {
+      .opportunity-card {
+        border: 0!important;
+      }
+      .secondary {
+        display: flex;
+        background-color: #fff;
+      }
+      
     }
 }
 

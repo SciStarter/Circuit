@@ -11,6 +11,7 @@
     @beginning="beginning=$event"
     @ending="ending=$event"
     />
+  <div class="snm-container">
   <div id="filters-ordering">
     <b-field id="filter-physical">
       <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online">
@@ -181,6 +182,7 @@
       Apply
     </action-button>
   </div>
+</div>
 </div>
 </template>
 
@@ -700,20 +702,62 @@ export default {
     border: 1px solid #ddd;
 }
 
+@media (min-width:$tablet-screen) {
+  #results {
+    padding: 0 1rem;
+  }
+  #filters-ordering {
+      grid-row: 1;
+      grid-column: 1;
+  }
+}
+
+@media (min-width: 960px) {
+  #find > .snm-container {
+      display: grid;
+      grid-template-columns: 60% 40%;
+      grid-template-rows: 4rem 1fr minmax(2rem, auto);
+      row-gap: 0.5rem;
+      margin-top: 1rem;
+  }
+  #filters-ordering {
+    grid-row: 1;
+    grid-column: 1/3;
+    justify-content: flex-start;
+    #filter-physical {
+      margin-right: 1rem;
+    }
+  }
+  #filters-refine {
+      grid-column: 2;
+      grid-row: 2/-1;
+      display: block;
+  }
+  #results {
+      grid-row: 2;
+      grid-column: 1;
+  }
+  #pagination {
+      grid-row: 3;
+      grid-column: 1;
+  }
+}
+
 @media (min-width: $fullsize-screen) {
-    #find {
-        display: grid;
-        grid-template-columns: 1fr minmax(calc(#{$fullsize-screen} - 50rem), 60rem) 25rem 1fr;
-        grid-template-rows: 10rem 4rem 1fr minmax(2rem, auto);
+
+    #find .general-filters {
+      padding-bottom: 2rem;
+    }
+    #find .general-filters .basic-filter-backdrop {
+      margin-bottom: 2rem;
     }
 
     #filters-general {
         display: block;
+        padding:0;
     }
 
     #filters-ordering {
-        grid-row: 2;
-        grid-column: 2;
 
         span.radio-label {
             /* Since I couldn't find a good way to make the label text reflow automatically */
@@ -748,9 +792,6 @@ export default {
     }
 
     #filters-refine {
-        grid-column: 3;
-        grid-row: 2 / -1;
-        display: block;
 
         fieldset {
             margin: 1rem 32px;
@@ -802,14 +843,32 @@ export default {
     #results {
         display: flex;
         flex-wrap: wrap;
-        grid-row: 3;
-        grid-column: 2;
         justify-content: space-evenly;
+        padding: 0 1rem;
     }
 
-    #pagination {
-        grid-row: 4;
-        grid-column: 2;
-    }
+}
+
+@media (min-width: 1200px) {
+  #find > .snm-container {
+      display: grid;
+      grid-template-columns: 1fr rem(340px);
+      // grid-template-columns: 1fr minmax(calc(#{$fullsize-screen} - 50rem), 60rem) 25rem 1fr;
+      grid-template-rows: 4rem 1fr minmax(2rem, auto);
+      padding: 0 1rem;
+  }
+  #filters-refine {
+      grid-column: 2;
+      grid-row: 1/-1;
+      display: block;
+  }
+  #results {
+      grid-row: 3;
+      grid-column: 1;
+  }
+  #pagination {
+      grid-row: 4;
+      grid-column: 1;
+  }
 }
 </style>
