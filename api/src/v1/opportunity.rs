@@ -48,7 +48,7 @@ async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
     opp.exterior.partner = auth;
     opp.interior.accepted = Some(false);
 
-    if let Err(err) = opp.validate() {
+    if let Err(err) = opp.validate().await {
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
 
