@@ -33,3 +33,8 @@ spec:
             secretKeyRef:
               name: scienceworks-beta
               key: SCIENCEWORKS_API_KEY
+        - name: OPENCAGE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: opencage
+              key: OPENCAGE_API_KEY

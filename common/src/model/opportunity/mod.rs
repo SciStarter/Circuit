@@ -2,7 +2,7 @@ pub mod for_slug;
 
 use super::Error;
 use crate::model::involvement;
-use crate::{Database, ToFixedOffset};
+use crate::{geo, Database, ToFixedOffset};
 
 use chrono::{DateTime, FixedOffset, Utc};
 use once_cell::sync::Lazy;
@@ -1295,7 +1295,7 @@ impl Opportunity {
         for_slug::likes_for_slug(db, &self.exterior.slug).await
     }
 
-    pub fn validate(&mut self) -> Result<(), Error> {
+    pub async fn validate(&mut self) -> Result<(), Error> {
         self.exterior.partner_name = self
             .exterior
             .partner_name
@@ -1311,6 +1311,30 @@ impl Opportunity {
         self.exterior.title = self.exterior.title.trim_matches(char::is_whitespace).into();
 
         self.exterior.description = ammonia::clean(&self.exterior.description);
+
+        if let None = &self.exterior.location_point {
+            if !self.exterior.address_street.is_empty() {
+                if let Some(found) = geo::Query::new(
+                    format!(
+                        "{} {} {} {} {}",
+                        self.exterior.address_street,
+                        self.exterior.address_city,
+                        self.exterior.address_state,
+                        self.exterior.address_zip,
+                        self.exterior.address_country
+                    ),
+                    false,
+                )
+                .lookup_one()
+                .await
+                {
+                    self.exterior.location_point = Some(serde_json::json!({
+                        "type": "Point",
+                        "coordinates": [found.geometry.longitude, found.geometry.latitude]
+                    }));
+                }
+            }
+        }
 
         if let Some(point) = &self.exterior.location_point {
             let geom = &point["geometry"];
@@ -1460,7 +1484,7 @@ impl Opportunity {
     }
 
     pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
-        self.validate()?;
+        self.validate().await?;
 
         self.set_slug_if_necessary(db).await?;
 
