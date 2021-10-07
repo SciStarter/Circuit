@@ -20,6 +20,7 @@ use bytes::{BufMut, Bytes, BytesMut};
 ///             "currencySymbol": "$",
 ///             "endDate": "2021-11-03 17:00:00",
 ///             "link": "https://calendar.kevinripka.com/event/another-event/2021-11-03/",
+///             "dateGmt": "2021-06-29T15:17:35",
 ///             "modifiedGmt": "2021-06-29T15:17:35",
 ///             "origin": "events-calendar",
 ///             "phone": null,
@@ -36,75 +37,80 @@ use bytes::{BufMut, Bytes, BytesMut};
 ///             ],
 ///             "status": "publish",
 ///             "timezone": "America/Chicago",
-///             "title": null,
+///             "title": "2020 Wisconsin Science Festival Events – Available Year Round",
 ///             "linkedData": {
 ///               "location ": {
-///               "url": "https://calendar.kevinripka.com/venue/some-bar/",
-///               "type": "Place",
-///               "telephone": "123.123.1234",
-///               "name": "Some Bar",
-///               "description": null,
-///               "address": {
-///                 "addressCountry": "United States",
-///                 "addressLocality": "Iowa City",
-///                 "addressRegion": "IA",
-///                 "postalCode": "52245",
-///                 "streetAddress": "123 Bar St.",
-///                 "type": "PostalAddress"
-///               }
-///             },
-///             "organizer": {
-///               "email": "&#102;ak&#101;&#064;f&#097;&#107;&#101;&#110;&#101;w&#115;.&#099;om",
-///               "telephone": "123.345.5678",
-///               "name": "Kevin Ripka Inc.",
-///               "type": "Person",
-///               "description": null,
-///               "url": "https://calendar.kevinripka.com/organizer/kevin-ripka-inc/"
-///             },
-///             "description": "asdfasdf\n"
-///           },
-///           "eventsCategories": {
-///             "edges":[]
-///           },
-///           "featuredImage": null,
-///           "tags": {
-///             "edges": [
-///               {
-///                 "node": {
-///                   "name": "kid friendly"
+///                 "url": "https://calendar.kevinripka.com/venue/some-bar/",
+///                 "type": "Place",
+///                 "telephone": "123.123.1234",
+///                 "name": "Some Bar",
+///                 "description": null,
+///                 "address": {
+///                   "addressCountry": "United States",
+///                   "addressLocality": "Iowa City",
+///                   "addressRegion": "IA",
+///                   "postalCode": "52245",
+///                   "streetAddress": "123 Bar St.",
+///                   "type": "PostalAddress"
 ///                 }
 ///               },
-///               {
-///                 "node": {
-///                   "name": "krunked"
-///                 }
+///               "organizer": {
+///                 "email": "&#102;ak&#101;&#064;f&#097;&#107;&#101;&#110;&#101;w&#115;.&#099;om",
+///                 "telephone": "123.345.5678",
+///                 "name": "Kevin Ripka Inc.",
+///                 "type": "Person",
+///                 "description": null,
+///                 "url": "https://calendar.kevinripka.com/organizer/kevin-ripka-inc/"
+///               },
+///               "description": "asdfasdf\n"
+///             },
+///             "eventsCategories": {
+///               "edges":[]
+///             },
+///             "featuredImage": {
+///               "node": {
+///                 "sourceUrl": "https://www.wisconsinsciencefest.org/wp-content/uploads/2021/07/Events_2021_-BuildingDreams3CuttingDownHierarchies_Thumbnail-300x300.jpg"
 ///               }
-///             ]
-///           },
-///           "scienceNearMeData": {
-///             "activityType": [
-///               "concert",
-///               "live_science"
-///             ],
-///             "facebook": null,
-///             "indoorsOutdoors": ["indoors"],
-///             "instagram": null,
-///             "maxAge": 78,
-///             "minAge":45,
-///             "online":true,
-///             "organizationType": "planetarium",
-///             "shortDescription": "This is a naksd jfa;lksjd fl;aksjd f;lkasj f;lkasdj fl;asjd f;lkasj dfl;kajs d;flkj as;dlkf ja;slkdj f;laksj df;laksj df",
-///             "socialMediaHashtags": "#stuff",
-///             "ticketRequired": "no",
-///             "topic": [
-///               "art",
-///               "general_science",
-///               "policy"
-///             ],
-///             "twitter": "@stuff",
-///             "language": [
-///               "en:English,"
-///             ]
+///             },
+///             "tags": {
+///               "edges": [
+///                 {
+///                   "node": {
+///                     "name": "kid friendly"
+///                   }
+///                 },
+///                 {
+///                   "node": {
+///                     "name": "krunked"
+///                   }
+///                 }
+///               ]
+///             },
+///             "scienceNearMeData": {
+///               "descriptor": [
+///                 "concert",
+///                 "live_science"
+///               ],
+///               "facebook": null,
+///               "indoorsOutdoors": ["indoors"],
+///               "instagram": null,
+///               "maxAge": 78,
+///               "minAge":45,
+///               "online":true,
+///               "organizationType": "planetarium",
+///               "shortDescription": "This is a naksd jfa;lksjd fl;aksjd f;lkasj f;lkasdj fl;asjd f;lkasj dfl;kajs d;flkj as;dlkf ja;slkdj f;laksj df;laksj df",
+///               "socialMediaHashtags": "#stuff",
+///               "ticketRequired": "no",
+///               "topic": [
+///                 "art",
+///                 "general_science",
+///                 "policy"
+///               ],
+///               "twitter": "@stuff",
+///               "language": [
+///                 "en:English,"
+///               ]
+///             }
 ///           }
 ///         }
 ///       ],
@@ -125,6 +131,7 @@ const QUERY: &'static str = r#"{
           currencySymbol
           endDate
           link
+          dateGmt
           modifiedGmt
           origin
           phone
@@ -244,6 +251,16 @@ mod tests {
                     .load()
                     .unwrap()
             )[..10],
+            b"{\"errors\":"[..]
+        );
+    }
+
+    #[test]
+    fn fetch_wisconsin_science_fest() {
+        assert_ne!(
+            EventsQLWithCustom::new("https://www.wisconsinsciencefest.org/graphql")
+                .load()
+                .unwrap()[..10],
             b"{\"errors\":"[..]
         );
     }

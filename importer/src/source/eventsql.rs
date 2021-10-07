@@ -193,16 +193,6 @@ mod tests {
     use crate::source::Source;
 
     #[test]
-    fn fetch_wisconsin_science_fest() {
-        assert_ne!(
-            EventsQL::new("https://www.wisconsinsciencefest.org/graphql")
-                .load()
-                .unwrap()[..10],
-            b"{\"errors\":"[..]
-        );
-    }
-
-    #[test]
     fn fetch_museum_of_discovery_and_science() {
         assert_ne!(
             EventsQL::new("https://mods.org/graphql").load().unwrap()[..10],
