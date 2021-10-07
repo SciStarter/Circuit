@@ -15,7 +15,6 @@ export default {
 <style lang="scss" scoped>
 @media (min-width: $fullsize-screen) {
     div.my {
-        padding-top: 1rem;
         padding: 2rem 2rem 0;
     }
 }

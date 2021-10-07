@@ -509,7 +509,7 @@ export default {
     }
 }
 
-@media (min-width: $fullsize-screen) {
+@media (min-width: $tablet-screen) {
     .goals {
         > h1 {
             font-size: $snm-font-largest;

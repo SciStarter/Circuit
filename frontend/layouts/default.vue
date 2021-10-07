@@ -1136,4 +1136,7 @@ footer {
   .b-tabs .tab-content {
     padding:0;
   }
+  .modal {
+    z-index:999!important;
+  }
 </style>
