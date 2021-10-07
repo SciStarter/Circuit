@@ -95,7 +95,7 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
         false,
     );
 
-    let mut result = query.lookup();
+    let result = query.lookup().await?;
 
     if result.status.code != 200 {
         return Err(tide::Error::from_str(
@@ -104,13 +104,11 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
         ));
     }
 
-    result
-        .results
-        .sort_unstable_by_key(|m| -(m.confidence as i32));
+    let mut results = result.results.clone();
+    results.sort_unstable_by_key(|m| -(m.confidence as i32));
 
     let places = GeoResult {
-        places: result
-            .results
+        places: results
             .iter()
             .map(|m| GeoPlace {
                 near: m.formatted.to_string(),

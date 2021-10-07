@@ -49,14 +49,14 @@ impl Query {
 }
 
 #[readonly::make]
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Status {
     pub message: String,
     pub code: u16,
 }
 
 #[readonly::make]
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Point {
     #[serde(rename = "lat")]
     pub latitude: f32,
@@ -65,7 +65,7 @@ pub struct Point {
 }
 
 #[readonly::make]
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Match {
     pub confidence: u16,
     pub formatted: String,
@@ -74,7 +74,7 @@ pub struct Match {
 
 // Partial, we're not interested in everything that comes back from the API
 #[readonly::make]
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Response {
     pub status: Status,
     pub results: Vec<Match>,
