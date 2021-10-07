@@ -9,13 +9,13 @@
       <lookup-place v-model="place_proxy" label-position="inside" data-context="find-lookup-place" />
       <div class="centered-row">
         <b-field label="From" label-position="inside" data-context="find-beginning">
-          <input v-model="beginning_proxy" class="control" type="date">
+          <b-datepicker v-model="beginning_proxy" editable />
         </b-field>
         <b-field label="Until" label-position="inside" data-context="find-ending">
-          <input v-model="ending_proxy" class="control" type="date">
+          <b-datepicker v-model="ending_proxy" editable />
         </b-field>
       </div>
-      <action-button v-if="searchButton" principal large arrow @click="search" id="quick-search-btn">
+      <action-button v-if="searchButton" id="quick-search-btn" principal large arrow @click="search">
         <search-icon />
       </action-button>
     </div>
@@ -183,21 +183,21 @@ export default {
 
         beginning_proxy: {
             get() {
-                return this.beginning;
+                return this.beginning ? new Date(this.beginning) : null;
             },
 
             set(val) {
-                this.$emit('beginning', val);
+                this.$emit('beginning', val ? val.toISOString() : null);
             }
         },
 
         ending_proxy: {
             get() {
-                return this.ending;
+                return this.ending ? new Date(this.ending) : null;
             },
 
             set(val) {
-                this.$emit('ending', val);
+                this.$emit('ending', val ? val.toISOString() : null);
             }
         },
     },
