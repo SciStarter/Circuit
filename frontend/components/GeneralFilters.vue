@@ -2,17 +2,22 @@
 <div class="general-filters">
   <div class="snm-container">
   <div class="basic-filter-backdrop">
-    <div>
+    <div class="gf-fields">
       <b-field label="Search" label-position="inside" data-context="find-keywords">
         <b-input ref="search_keywords" v-model="text_proxy" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
       </b-field>
       <lookup-place v-model="place_proxy" label-position="inside" data-context="find-lookup-place" />
       <div class="centered-row">
         <b-field label="From" label-position="inside" data-context="find-beginning">
-          <b-datepicker v-model="beginning_proxy" editable />
+          <b-datepicker v-model="beginning_proxy"
+            editable
+            icon="calendar-today" />
         </b-field>
         <b-field label="Until" label-position="inside" data-context="find-ending">
-          <b-datepicker v-model="ending_proxy" editable />
+          <b-datepicker v-model="ending_proxy"
+            editable
+            position="is-bottom-left"
+            icon="calendar-today" />
         </b-field>
       </div>
       <action-button v-if="searchButton" id="quick-search-btn" principal large arrow @click="search">
@@ -253,6 +258,7 @@ export default {
 @media (min-width: $fullsize-screen) {
   #homepage .general-filters{
     display: flex;
+    padding-top: 3rem!important;
   }
     .general-filters {
         display: flex;
@@ -265,6 +271,11 @@ export default {
         text-align: center;
         padding-top: 3rem;
 
+        .datepicker {
+          max-width: 140px;
+          min-width: 140px;
+        }
+
         .basic-filter-backdrop {
             display: inline-flex;
             flex-direction: column;
@@ -273,16 +284,26 @@ export default {
             background-color: $snm-color-element-med;
             border-radius: 10px;
             padding: 1rem 2rem 1rem 1rem;
+            width: 100%;
+
+
 
             >div {
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                width: 100%;
+
+                div:first-child, div:nth-child(2) {
+                  flex-grow: 1;
+                }
 
                 >* {
                     margin-top: 1rem;
                     color: $snm-color-element-light;
                 }
+
+
 
                 &:first-child>* {
                     position: relative;
@@ -323,5 +344,18 @@ export default {
     }
 }
 
+@media (max-width: 1099px) {
+  .authenticated {
+    #homepage {
+      .gf-fields {
+        flex-wrap: wrap;
+      }
+      .gf-fields > * {
+        max-width: 50%;
+        margin-bottom:1rem;
+      }
+    }
+  }
+}
 
 </style>
