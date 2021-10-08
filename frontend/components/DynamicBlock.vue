@@ -100,17 +100,18 @@ export default {
             let working = this.block.content;
 
             if(this.inline || this.removeParagraphs) {
-                working = working.replaceAll(/<\s*\/?\s*p\b.*?>/igs, '').trim()
+                working = working.replace(/<\s*\/?\s*p\b.*?>/igs, '').trim()
             }
 
             if(this.fixLinks) {
-                working = working.replaceAll(
+                working = working.replace(
                     /<\s*a\s+(.*?)\bhref="(.*?)"(.*?)>(.*?)<\s*\/\s*a\s*>/igs,
                     (match, before, href, after, content) => {
                         const extra = before + ' ' + after;
 
                         const new_tab = extra.indexOf('target="_blank"') >= 0;
-                        const title = extra.match(/\btitle="(.*?)"/is)[1];
+                        const title_match = extra.match(/\btitle="(.*?)"/is);
+                        const title = title_match ? title_match[1] : '';
 
                         if(href.slice(0, 25) == 'https://sciencenearme.org') {
                             href = href.slice(25);
