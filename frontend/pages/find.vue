@@ -38,14 +38,6 @@
   </div>
   <div id="filters-refine">
     <div>
-      <div class="buttons no-mobile">
-        <action-button tertiary @click="clear">
-          Clear Filters
-        </action-button>
-        <action-button primary @click="search">
-          Apply
-        </action-button>
-      </div>
       <h2 class="no-mobile">
         Refine Results
       </h2>
@@ -153,6 +145,14 @@
           @select="selected_partner = $event"
           />
       </fieldset>
+      <div class="buttons no-mobile">
+        <action-button tertiary @click="clear">
+          Clear Filters
+        </action-button>
+        <action-button primary @click="search">
+          Apply
+        </action-button>
+      </div>
       <div class="no-mobile">
         <h1>Share Your Results</h1>
         <p>Share the list by copying the link below</p>
@@ -747,6 +747,8 @@ export default {
 
     #find .general-filters {
       padding-bottom: 2rem;
+      padding-left:1rem;
+      padding-right: 1rem;
     }
     #find .general-filters .basic-filter-backdrop {
       margin-bottom: 2rem;
@@ -839,6 +841,11 @@ export default {
             }
         }
     }
+    .authenticated {
+      #filters-refine > div {
+        top: 70px;
+      }
+    }
 
     #results {
         display: flex;
@@ -869,6 +876,10 @@ export default {
   #pagination {
       grid-row: 4;
       grid-column: 1;
+  }
+  #find .general-filters {
+    padding-left:2rem;
+    padding-right: 2rem;
   }
 }
 </style>

@@ -12,7 +12,7 @@
       @input="change({near: $event})"
       />
   </b-field>
-  <b-field label="Distance" :label-position="labelPosition">
+  <b-field label="Distance" :label-position="labelPosition" class="distance">
     <b-select :value="sanitized_value.proximity" @input="change({proximity: $event})">
       <option :value="80467">
         50 miles
@@ -170,6 +170,9 @@ export default {
 }
 .field input.input {
   border-radius: 6px;
+}
+.lookup-place .distance {
+  width: 115px;
 }
 
 </style>

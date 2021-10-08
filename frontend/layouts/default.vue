@@ -902,16 +902,16 @@ footer {
                     background-color: $snm-color-background-meddark;
                     color: $snm-color-element-light!important;
 
-                    &::after {
-                        position: absolute;
-                        right: -26px;
-                        content: "";
-                        width: 0px;
-                        height: 52px;
-                        border-left: 26px solid $snm-color-background-meddark;
-                        border-top: 26px solid transparent;
-                        border-bottom: 26px solid transparent;
-                    }
+                    // &::after {
+                    //     position: absolute;
+                    //     right: -26px;
+                    //     content: "";
+                    //     width: 0px;
+                    //     height: 52px;
+                    //     border-left: 26px solid $snm-color-background-meddark;
+                    //     border-top: 26px solid transparent;
+                    //     border-bottom: 26px solid transparent;
+                    // }
                 }
 
                 svg {

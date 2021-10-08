@@ -1,7 +1,7 @@
 <template>
 <section id="homepage">
   <general-filters
-    class="no-mobile no-tablet"
+    class="no-mobile no-tablet snm-wrapper"
     :text="search_text"
     :place="search_place"
     :beginning="search_beginning"
