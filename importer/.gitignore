@@ -1,3 +1,6 @@
 local
 target
 Cargo.lock
+perf.data
+perf.data.old
+flamegraph.svg
