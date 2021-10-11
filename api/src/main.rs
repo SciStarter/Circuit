@@ -67,6 +67,16 @@ async fn initialize(db: &Database) -> tide::Result {
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
+    match sodiumoxide::init() {
+        Ok(_) => {}
+        Err(_) => {
+            return Err(tide::Error::from_str(
+                500,
+                "failed to initialize sodiumoxide",
+            ))
+        }
+    }
+
     let pool = PgPoolOptions::new()
         .min_connections(1)
         .connect(&std::env::var("DATABASE_URL")?)
