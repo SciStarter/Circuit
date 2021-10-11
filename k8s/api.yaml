@@ -49,6 +49,16 @@ spec:
             secretKeyRef:
               name: opencage
               key: OPENCAGE_API_KEY
+        - name: SNM_PAIR
+          valueFrom:
+            secretKeyRef:
+              name: scistarter
+              key: SNM_PAIR
+        - name: SCI_PUB
+          valueFrom:
+            secretKeyRef:
+              name: scistarter
+              key: SCI_PUB
 ---
 apiVersion: v1
 kind: Service
