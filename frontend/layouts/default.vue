@@ -183,7 +183,7 @@
         <ul>
           <li><h1>For Science Professionals</h1></li>
           <li>
-            <nuxt-link to="/affiliate">
+            <nuxt-link to="/become-a-partner">
               Be Part of Science Near Me
             </nuxt-link>
           </li>
