@@ -1,3 +1,4 @@
+// deno-lint-ignore-file camelcase
 import Vue from "vue";
 
 function block_key(language, group, item) {
@@ -112,7 +113,10 @@ export const actions = {
     return state.dynamic_blocks[key] || null;
   },
 
-  async login({ commit, dispatch, state }, { email, password }) {
+  async login(
+    { commit, dispatch, state },
+    { email, password, next, next_query },
+  ) {
     let user = { authenticated: false };
 
     try {
@@ -135,7 +139,11 @@ export const actions = {
 
     commit("save_user", user);
 
-    this.$router.go(0);
+    if (next) {
+      this.$router.push({ name: next, query: next_query || {} });
+    } else {
+      this.$router.go(0);
+    }
 
     dispatch("sync_local_to_server");
 
@@ -144,7 +152,7 @@ export const actions = {
 
   async signup(
     { commit, dispatch, state },
-    { email, username, password, zip_code, phone },
+    { email, username, password, zip_code, phone, next, next_query },
   ) {
     const params = {
       email,
@@ -182,14 +190,18 @@ export const actions = {
 
     commit("save_user", user);
 
-    this.$router.go(0);
+    if (next) {
+      this.$router.push({ name: next, query: next_query || {} });
+    } else {
+      this.$router.go(0);
+    }
 
     dispatch("sync_local_to_server");
 
     return user;
   },
 
-  async logout({ commit, state }) {
+  async logout({ commit, state }, goto) {
     let user = state.user;
 
     try {
@@ -209,7 +221,16 @@ export const actions = {
 
     commit("save_user", user);
 
-    this.$router.go(0);
+    if (goto) {
+      const { next, next_query } = goto;
+      if (next) {
+        this.$router.push({ name: next, query: next_query || {} });
+      } else {
+        this.$router.go(0);
+      }
+    } else {
+      this.$router.go(0);
+    }
 
     return user;
   },

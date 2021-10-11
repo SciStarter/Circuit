@@ -128,7 +128,15 @@ export default {
     },
 
     async asyncData(context) {
-        const goals = await context.$axios.$get("/api/ui/profile/goals", context.store.state.auth);
+        let goals;
+
+        try {
+            goals = await context.$axios.$get("/api/ui/profile/goals", context.store.state.auth);
+        }
+        catch(_) {
+            context.redirect({name: 'login', query: {next: 'my-goals'}});
+            return;
+        }
 
         return {
             goals,

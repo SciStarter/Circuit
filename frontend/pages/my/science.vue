@@ -75,10 +75,7 @@ export default {
         const user = await context.store.dispatch('get_user');
 
         if(!user.authenticated) {
-            context.error({
-                statusCode: 401,
-                message: "Authentication required"
-            });
+            context.redirect({name: 'login', query: {next: 'my-science'}});
         }
 
         const auth = context.store.state.auth;

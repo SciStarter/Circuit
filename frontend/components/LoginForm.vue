@@ -27,75 +27,91 @@
 
   */
 export default {
-  props: {},
+    name: "LoginForm",
 
-  data () {
-    return {
-      working: false,
+    props: {
+        next: {
+            type: String,
+            required: false,
+            default: '',
+        },
 
-      login: {
-        email: '',
-        password: ''
-      }
-    }
-  },
-
-  computed: {
-    validate_email () {
-      if (this.login.email.length === 0) {
-        return { type: '', message: '', valid: false }
-      }
-
-      const at = this.login.email.indexOf('@')
-
-      if (at < 1 || at === this.login.email.length - 1) {
-        return { type: 'is-danger', message: 'Invalid email address', valid: false }
-      }
-
-      return { type: 'is-success', message: '', valid: true }
+        query: {
+            type: Object,
+            required: false,
+            default: () => ({}),
+        },
     },
 
-    validate_password () {
-      if (this.login.password.length === 0) {
-        return { type: '', message: '', valid: false }
-      }
+    data() {
+        return {
+            working: false,
 
-      if (this.login.password.length < 7) {
-        return { type: 'is-danger', message: 'Password is too short', valid: false }
-      }
-
-      return { type: 'is-success', message: '', valid: true }
+            login: {
+                email: '',
+                password: '',
+                next: this.next,
+                next_query: this.query,
+            }
+        }
     },
 
-    valid () {
-      return this.validate_email.valid && this.validate_password.valid
-    }
-  },
+    computed: {
+        validate_email () {
+            if (this.login.email.length === 0) {
+                return { type: '', message: '', valid: false }
+            }
 
-  methods: {
-    cancel () {
-      this.$emit('close')
-      this.login.email = ''
-      this.login.password = ''
+            const at = this.login.email.indexOf('@')
+
+            if (at < 1 || at === this.login.email.length - 1) {
+                return { type: 'is-danger', message: 'Invalid email address', valid: false }
+            }
+
+            return { type: 'is-success', message: '', valid: true }
+        },
+
+        validate_password () {
+            if (this.login.password.length === 0) {
+                return { type: '', message: '', valid: false }
+            }
+
+            if (this.login.password.length < 7) {
+                return { type: 'is-danger', message: 'Password is too short', valid: false }
+            }
+
+            return { type: 'is-success', message: '', valid: true }
+        },
+
+        valid () {
+            return this.validate_email.valid && this.validate_password.valid
+        }
     },
 
-    async log_in () {
-      if (!this.valid) {
-        return
-      }
+    methods: {
+        cancel () {
+            this.$emit('close')
+            this.login.email = ''
+            this.login.password = ''
+        },
 
-      this.working = true
+        async log_in () {
+            if (!this.valid) {
+                return
+            }
 
-      const user = await this.$store.dispatch('login', this.login)
+            this.working = true
 
-      this.working = false
+            const user = await this.$store.dispatch('login', this.login)
 
-      if (user.authenticated) {
-        this.$emit('close')
-      } else {
-        this.$buefy.dialog.alert('Invalid email or password.')
-      }
+            this.working = false
+
+            if (user.authenticated) {
+                this.$emit('close')
+            } else {
+                this.$buefy.dialog.alert('Invalid email or password.')
+            }
+        }
     }
-  }
 }
 </script>
