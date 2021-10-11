@@ -179,8 +179,18 @@ export default {
     },
 
     async asyncData(context) {
+        let profile;
+
+        try {
+            profile = await context.$axios.$get('/api/ui/profile/', context.store.state.auth);
+        }
+        catch(_) {
+            context.redirect({name: 'login', query: {next: 'my-profile'}});
+            return;
+        }
+
         return {
-            profile: await context.$axios.$get('/api/ui/profile/', context.store.state.auth),
+            profile
         };
     },
 
