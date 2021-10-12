@@ -1,6 +1,12 @@
 <template>
   <div class="signup-form">
     <slot />
+    <div class="form-header">
+      <p>Already have an account? <a href="/login">Login here</a>.</p>
+      <p>Do you have a <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter" /> account? <a href="/login-scistarter">Log in with your SciStarter account</a>.<b-tooltip label="SciStarter is a citizen science database.">
+          <b-button label="?" />
+      </b-tooltip></p>
+    </div>
     <b-field label="Email" :type="validate_email.type" :message="validate_email.message" label-position="on-border">
       <b-input v-model="signup.email" type="email" required />
     </b-field>
@@ -19,12 +25,12 @@
     <b-field label="Phone" label-position="on-border">
       <b-input v-model="signup.phone" type="tel" />
     </b-field>
-    <div>
-      <b-button type="is-primary is-light" @click="cancel">
-        Cancel
-      </b-button>
+    <div class="flex flex-justify-sb">
       <b-button :loading="working" type="is-primary" @click="sign_up">
         Sign up
+      </b-button>
+      <b-button type="is-primary is-light" @click="cancel">
+        Cancel
       </b-button>
     </div>
   </div>
@@ -147,3 +153,50 @@ export default {
     }
 }
 </script>
+
+<style lang="scss" scoped>
+.help {
+  font-size:1rem;
+}
+.form-header {
+  text-align:center;
+  p {
+    margin: 0.6rem 0;
+    padding: 0.6rem 0;
+    border-top:1px solid $snm-color-border;
+    &:first-child {
+      margin-bottom:0;
+    }
+    &:last-child {
+      border-bottom:1px solid $snm-color-border;
+      margin-bottom: 2rem;
+      margin-top:0;
+    }
+    img {
+      width: 72px;
+      vertical-align: middle;
+      position: relative;
+      top: 2px;
+    }
+  }
+  .tooltip-trigger button {
+    height: 1rem;
+    width: 1rem;
+    border-radius: 100%;
+    padding: 0.5rem;
+    font-size: 14px;
+    margin-left: 6px;
+    background-color: $snm-color-action;
+  }
+}
+.standalone-form {
+  .field.is-floating-label {
+    margin-bottom: 2rem;
+  }
+  .flex {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+</style>
