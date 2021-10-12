@@ -254,6 +254,7 @@ pub struct PersonInterior {
     pub opt_in_volunteer: Option<bool>,
     pub permissions: Vec<Permission>,
     pub private: bool,
+    pub newsletter: bool,
 }
 
 impl Default for PersonInterior {
@@ -282,6 +283,7 @@ impl Default for PersonInterior {
             opt_in_volunteer: Default::default(),
             permissions: Default::default(),
             private: false,
+            newsletter: false,
         }
     }
 }

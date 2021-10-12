@@ -109,7 +109,7 @@ struct SignupForm {
     password: String,
     zip_code: Option<String>,
     phone: Option<String>,
-    _newsletter: Option<bool>,
+    newsletter: Option<bool>,
 }
 
 /// Create an account, if the validations pass.
@@ -141,7 +141,7 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
     person.interior.email = form.email;
     person.interior.zip_code = form.zip_code;
     person.interior.phone = form.phone;
-
+    person.interior.newsletter = form.newsletter.unwrap_or(false);
     person.store(db).await?;
 
     let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
