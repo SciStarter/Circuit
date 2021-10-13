@@ -5,6 +5,7 @@ use sqlx::postgres::PgPoolOptions;
 use tide::log;
 use tide_fluent_routes::{fs::ServeFs, prelude::*};
 
+pub mod crypto;
 pub mod ui;
 pub mod v1;
 
