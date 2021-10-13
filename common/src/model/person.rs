@@ -228,12 +228,25 @@ pub struct PersonExterior {
     pub image_url: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum JoinChannel {
+    Local,
+    SciStarter,
+}
+
+impl Default for JoinChannel {
+    fn default() -> Self {
+        JoinChannel::Local
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PersonInterior {
     pub email: String,
     pub email_hashes: Vec<String>,
     pub password: Option<String>,
+    pub join_channel: JoinChannel,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub genders: Vec<Gender>,
@@ -265,6 +278,7 @@ impl Default for PersonInterior {
             first_name: Default::default(),
             last_name: Default::default(),
             password: Default::default(),
+            join_channel: Default::default(),
             genders: Default::default(),
             gender_other: Default::default(),
             home_location: Default::default(),
@@ -503,6 +517,25 @@ impl Person {
         .await?)
     }
 
+    pub fn add_hash(&mut self, email: &str) -> Result<(), Error> {
+        let mut hasher = Sha256::new();
+        // Note, email is in UTF-8, has had whitespace trimmed, and
+        // ascii characters have been reduced to lowercase.
+        hasher.update(email);
+        // Salt the hash with a common suffix, to move the hashes into
+        // a distinct 'namespace' and prevent hashes computed for
+        // other purposes from being used.
+        hasher.update(b":science-link");
+        // Lowercase hexidecimal representation
+        let hashed = hex::encode(hasher.finalize());
+
+        if !self.interior.email_hashes.iter().any(|x| x == &hashed) {
+            self.interior.email_hashes.push(hashed);
+        }
+
+        Ok(())
+    }
+
     pub fn validate(&mut self) -> Result<(), Error> {
         self.interior.email = normalize_email(&self.interior.email);
 
@@ -514,20 +547,9 @@ impl Person {
             self.exterior.uid = Uuid::new_v4();
         }
 
-        let mut hasher = Sha256::new();
-        // Note, email is in UTF-8, has had whitespace trimmed, and
-        // ascii characters have been reduced to lowercase.
-        hasher.update(&self.interior.email);
-        // Salt the hash with a common suffix, to move the hashes into
-        // a distinct 'namespace' and prevent hashes computed for
-        // other purposes from being used.
-        hasher.update(b":science-link");
-        // Lowercase hexidecimal representation
-        let hashed = hex::encode(hasher.finalize());
-
-        if !self.interior.email_hashes.iter().any(|x| x == &hashed) {
-            self.interior.email_hashes.push(hashed);
-        }
+        // clone because otherwise we'd be trying to borrow self twice
+        // for this call, once mut and once not
+        self.add_hash(&self.interior.email.clone())?;
 
         Ok(())
     }
