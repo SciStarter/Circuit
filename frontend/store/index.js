@@ -269,7 +269,7 @@ export const actions = {
     // The cookie and localStorage value are saved on the client
     // by the refresh_user plugin.
     if (process.server) {
-      token = this.$cookies.get("token");
+      token = this.$cookies.get("__Host-token");
     } else if (process.client) {
       token = window.localStorage.getItem("token");
     }

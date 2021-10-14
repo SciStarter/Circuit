@@ -37,6 +37,11 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("logout", |r| r.post(logout))
 }
 
+#[cfg(not(debug_assertions))]
+const TOKEN_COOKIE: &'static str = "__Host-token";
+#[cfg(debug_assertions)]
+const TOKEN_COOKIE: &'static str = "token";
+
 #[derive(Default, Deserialize, Serialize)]
 struct LoginForm {
     email: String,
@@ -76,10 +81,10 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
 
         okay_with_cookie(
             &p_json,
-            Cookie::build("token", jwt)
+            Cookie::build(TOKEN_COOKIE, jwt)
                 .path("/")
                 .max_age(Duration::hours(SESSION_HOURS))
-                .domain(&*COOKIE_DOMAIN)
+                //.domain(&*COOKIE_DOMAIN)
                 .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
                 .http_only(true)
                 .same_site(tide::http::cookies::SameSite::Lax)
@@ -174,10 +179,10 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
 
             okay_with_cookie(
                 &p_json,
-                Cookie::build("token", jwt)
+                Cookie::build(TOKEN_COOKIE, jwt)
                     .path("/")
                     .max_age(Duration::hours(SESSION_HOURS))
-                    .domain(&*COOKIE_DOMAIN)
+                    //.domain(&*COOKIE_DOMAIN)
                     .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
                     .http_only(true)
                     .same_site(tide::http::cookies::SameSite::Lax)
@@ -244,10 +249,10 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
 
     okay_with_cookie(
         &p_json,
-        Cookie::build("token", jwt)
+        Cookie::build(TOKEN_COOKIE, jwt)
             .path("/")
             .max_age(Duration::hours(SESSION_HOURS))
-            .domain(&*COOKIE_DOMAIN)
+            //.domain(&*COOKIE_DOMAIN)
             .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
             .http_only(true)
             .same_site(tide::http::cookies::SameSite::Lax)
@@ -274,10 +279,10 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
 
         okay_with_cookie(
             &p_json,
-            Cookie::build("token", jwt)
+            Cookie::build(TOKEN_COOKIE, jwt)
                 .path("/")
                 .max_age(Duration::hours(SESSION_HOURS))
-                .domain(&*COOKIE_DOMAIN)
+                //.domain(&*COOKIE_DOMAIN)
                 .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
                 .http_only(true)
                 .same_site(tide::http::cookies::SameSite::Lax)
@@ -293,10 +298,10 @@ pub async fn logout(_req: tide::Request<Database>) -> tide::Result {
 
     okay_with_cookie(
         &json!({"authenticated": false}),
-        Cookie::build("token", "")
+        Cookie::build(TOKEN_COOKIE, "")
             .path("/")
             .max_age(Duration::hours(SESSION_HOURS))
-            .domain(&*COOKIE_DOMAIN)
+            //.domain(&*COOKIE_DOMAIN)
             .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
             .http_only(true)
             .same_site(tide::http::cookies::SameSite::Lax)
