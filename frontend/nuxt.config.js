@@ -1,6 +1,8 @@
 const DOMAIN = "beta.sciencenearme.org";
 
 export default {
+  //__fake__: console.log(process.env),
+
   // Global page headers: https://go.nuxtjs.dev/config-head
   prettify: false,
 
@@ -54,15 +56,26 @@ export default {
 
   render: {
     csp: {
-      addMeta: true,
+      //addMeta: true,
       hashAlgorithm: "sha256",
       policies: {
         "default-src": ["'none'"],
-        "script-src": ["'self'", "'strict-dynamic'", "'unsafe-eval'"],
-        "style-src": ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
+        "script-src": [
+          "'self'",
+          "'unsafe-eval'", // Needed to compile dynamic content into Vue components. TODO Investigate alternatives.
+          "'unsafe-inline'", // Needed for bootstrapping the root Vue component. 'strict-dynamic' with addMeta=true would also work, but not alongside 'unsafe-eval'
+          "www.googletagmanager.com",
+          "www.google-analytics.com",
+        ],
+        "style-src": [
+          "'self'",
+          "'unsafe-inline'",
+          "fonts.googleapis.com",
+          "cdn.jsdelivr.net",
+        ],
         "img-src": ["'self'", "https:", "data:"],
         "connect-src": ["'self'"],
-        "font-src": ["'self'", "fonts.gstatic.com"],
+        "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net"],
         "object-src": ["'self'"],
         "media-src": ["'self'"],
         "frame-src": ["'self'"], // Overridden by child-src if the browser supports CSP 3 (Safari doesn't yet)
@@ -92,8 +105,11 @@ export default {
     ["@nuxtjs/eslint-module", { emitWarning: true, emitError: false }],
     "@nuxtjs/style-resources",
     "@nuxtjs/svg",
-    "nuxt-build-optimisations",
-  ],
+  ].concat(
+    (process.env.NODE_ENV === "development")
+      ? ["nuxt-build-optimisations"]
+      : [],
+  ),
 
   buildOptimisations: {
     profile: "risky",
@@ -110,6 +126,7 @@ export default {
     "@nuxtjs/gtm",
     "@nuxtjs/proxy",
     "vue-geolocation-api/nuxt",
+    "nuxt-custom-headers",
   ],
 
   css: ["@/assets/vars/buefy.scss"],
@@ -142,7 +159,6 @@ export default {
       // Include the Vue compiler, so dynamic content can be
       // compiled into Vue components.
       config.resolve.alias["vue"] = "vue/dist/vue.common";
-      config.cache = { type: "filesystem" };
     },
 
     loaders: {

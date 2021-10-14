@@ -9,6 +9,15 @@
 <script>
 export default {
     name: "My",
+
+    httpHeaders() {
+        return {
+            'X-XSS-Protection': '1; mode=block',
+            'X-Frame-Options': 'DENY',
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'same-origin',
+        };
+    },
 }
 </script>
 

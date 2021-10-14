@@ -14,6 +14,11 @@ pub mod opportunities;
 
 const BASE: &'static str = "/api/v1/manage/";
 
+#[cfg(not(debug_assertions))]
+const MANAGE_COOKIE: &'static str = "__Host-manage";
+#[cfg(debug_assertions)]
+const MANAGE_COOKIE: &'static str = "manage";
+
 static MANAGE_AUDIENCE: Lazy<uuid::Uuid> =
     Lazy::new(|| uuid::Uuid::parse_str("51456ff1-ff31-4d99-a550-7325e5e728a5").unwrap());
 
@@ -96,10 +101,10 @@ async fn authorize(mut req: tide::Request<Database>) -> tide::Result {
                     let mut resp = redirect(&form.next.unwrap_or_else(|| BASE.to_string()));
                     resp.insert_cookie(
                         Cookie::build(
-                            "manage",
+                            MANAGE_COOKIE,
                             issue_jwt(&person.exterior.uid, &MANAGE_AUDIENCE, 6)?,
                         )
-                        .domain(std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string()))
+                        //.domain(std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string()))
                         .path(BASE)
                         .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
                         .http_only(true)
@@ -223,7 +228,7 @@ async fn authorized_admin(
     req: &tide::Request<Database>,
     needed: &Permission,
 ) -> Result<Person, tide::Response> {
-    let token = match req.cookie("manage") {
+    let token = match req.cookie(MANAGE_COOKIE) {
         Some(token) => token.value().to_string(),
         None => return Err(redirect(&format!("{}authorize", BASE))),
     };

@@ -127,6 +127,15 @@ export default {
         TrophyHero,
     },
 
+    httpHeaders() {
+        return {
+            'X-XSS-Protection': '1; mode=block',
+            'X-Frame-Options': 'DENY',
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'same-origin',
+        };
+    },
+
     async asyncData(context) {
         let goals;
 

@@ -9803,6 +9803,11 @@ nuxt-build-optimisations@^1.0.7:
     speed-measure-webpack-plugin "^1.5.0"
     upath "^2.0.1"
 
+nuxt-custom-headers@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/nuxt-custom-headers/-/nuxt-custom-headers-2.1.0.tgz#c97df54e170e13aed939d079184f591dde877eea"
+  integrity sha512-/vgNqoI3mfdsjHqPUVy9jzGvrSZVKJMYRc+5/1ABdyOzLRNWoz+/Hwh3a0wz8937KJiJyinf8Qm0gIiJQ8KCPA==
+
 nuxt@^2.15.3:
   version "2.15.8"
   resolved "https://registry.yarnpkg.com/nuxt/-/nuxt-2.15.8.tgz#946cba46bdaaf0e3918aa27fd9ea0fed8ed303b0"

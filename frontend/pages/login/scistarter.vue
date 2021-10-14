@@ -6,6 +6,17 @@
 import cloneDeep from 'lodash/cloneDeep'
 
 export default {
+    name: "LoginSciStarter",
+
+    httpHeaders() {
+        return {
+            'X-XSS-Protection': '1; mode=block',
+            'X-Frame-Options': 'DENY',
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'same-origin',
+        };
+    },
+
     computed: {
         next_query() {
             let q = cloneDeep(this.$route.query);
