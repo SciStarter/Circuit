@@ -115,12 +115,18 @@ export const actions = {
 
   async login(
     { commit, dispatch, state },
-    { email, password, next, next_query },
+    { email, password, next, next_query, via },
   ) {
     let user = { authenticated: false };
 
+    let endpoint = "/api/ui/auth/login";
+
+    if (via === "scistarter") {
+      endpoint = "/api/ui/auth/login-scistarter";
+    }
+
     try {
-      user = await this.$axios.$post("/api/ui/auth/login", {
+      user = await this.$axios.$post(endpoint, {
         email,
         password,
       });
