@@ -105,7 +105,7 @@ async fn authorize(mut req: tide::Request<Database>) -> tide::Result {
                             issue_jwt(&person.exterior.uid, &MANAGE_AUDIENCE, 6)?,
                         )
                         //.domain(std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string()))
-                        .path(BASE)
+                        .path("/")
                         .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
                         .http_only(true)
                         .same_site(tide::http::cookies::SameSite::Strict)
