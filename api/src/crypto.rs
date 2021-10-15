@@ -23,7 +23,7 @@ pub struct KeyPair {
     pub secret: Option<SecretKey>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Sealed {
     source: PublicKey,
     nonce: box_::Nonce,

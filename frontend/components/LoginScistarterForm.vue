@@ -70,10 +70,6 @@ export default {
                 return { type: '', message: '', valid: false }
             }
 
-            if (this.login.password.length < 7) {
-                return { type: 'is-danger', message: 'Password is too short', valid: false }
-            }
-
             return { type: 'is-success', message: '', valid: true }
         },
 
@@ -103,7 +99,7 @@ export default {
             if (user.authenticated) {
                 this.$emit('close')
             } else {
-                this.$buefy.dialog.alert('Invalid email or password.')
+                this.$buefy.dialog.alert(user.message)
             }
         }
     }

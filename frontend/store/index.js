@@ -131,8 +131,12 @@ export const actions = {
         password,
       });
     } catch (error) {
-      console.error(error);
-      return { authenticated: false };
+      return {
+        authenticated: false,
+        message: error.response
+          ? error.response.data
+          : "invalid email or password",
+      };
     }
 
     if (process.client) {
@@ -269,7 +273,11 @@ export const actions = {
     // The cookie and localStorage value are saved on the client
     // by the refresh_user plugin.
     if (process.server) {
-      token = this.$cookies.get("__Host-token");
+      if (process.env.NODE_ENV == "development") {
+        token = this.$cookies.get("token");
+      } else {
+        token = this.$cookies.get("__Host-token");
+      }
     } else if (process.client) {
       token = window.localStorage.getItem("token");
     }
