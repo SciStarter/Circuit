@@ -119,10 +119,11 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
 
     if let Some(person) = &existing {
         if person.interior.join_channel != JoinChannel::SciStarter {
-            return Err(tide::Error::from_str(
-                StatusCode::Forbidden,
-                "Can not log in to that account through SciStarter, because it was not created via SciStarter",
-            ));
+            return Ok(
+                tide::Response::builder(StatusCode::Forbidden)
+                    .body("Can not log in to that account through SciStarter, because it was not created via SciStarter")
+                    .build()
+            );
         }
     }
 
@@ -137,7 +138,9 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
         .recv_json()
         .await?;
 
-    match snm_key.open::<SciStarterPerson>(sealed, Some(&scistarter_key)) {
+    dbg!(&sealed);
+
+    match dbg!(snm_key.open::<SciStarterPerson>(sealed, Some(&scistarter_key))) {
         Ok(ssp) => {
             let person = if let Some(person) = existing {
                 person
@@ -190,10 +193,9 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
             )
         }
         Err(_) => {
-            return Err(tide::Error::from_str(
-                StatusCode::Forbidden,
-                "Incorrect SciStarter email or password",
-            ));
+            return Ok(tide::Response::builder(StatusCode::Forbidden)
+                .body("Incorrect SciStarter email or password")
+                .build());
         }
     }
 }
