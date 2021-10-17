@@ -19,6 +19,11 @@ pub mod partner;
 pub static API_AUDIENCE: Lazy<uuid::Uuid> =
     Lazy::new(|| uuid::Uuid::parse_str("023fda90-f6be-43ff-9b92-fa6ac89b2023").unwrap());
 
+#[cfg(not(debug_assertions))]
+const CSRF_COOKIE: &'static str = "__Host-csrftoken";
+#[cfg(debug_assertions)]
+const CSRF_COOKIE: &'static str = "csrftoken";
+
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .at("partner/", partner::routes)
@@ -57,7 +62,7 @@ pub fn redirect(dest: &str) -> Response {
 
 pub fn set_csrf_cookie(mut resp: Response, csrf: &str) -> Response {
     resp.insert_cookie(
-        tide::http::Cookie::build("csrftoken", csrf.to_string())
+        tide::http::Cookie::build(CSRF_COOKIE, csrf.to_string())
             .path("/")
             .secure(cfg!(not(debug_assertions)))
             .http_only(true)
@@ -69,7 +74,7 @@ pub fn set_csrf_cookie(mut resp: Response, csrf: &str) -> Response {
 }
 
 pub fn check_csrf(req: &tide::Request<Database>, csrf: &str) -> bool {
-    if let Some(cookie) = req.cookie("csrftoken") {
+    if let Some(cookie) = req.cookie(CSRF_COOKIE) {
         csrf == cookie.value()
     } else {
         false

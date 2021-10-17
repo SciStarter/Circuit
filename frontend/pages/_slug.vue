@@ -11,6 +11,15 @@
 export default {
     name: 'Dynamic',
 
+    httpHeaders() {
+        return {
+            'X-XSS-Protection': '1; mode=block',
+            'X-Frame-Options': 'DENY',
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'same-origin',
+        };
+    },
+
     async asyncData ({ params, $axios }) {
         const entity = await $axios.$get('/api/ui/entity/' + params.slug);
         const layout = entity.entity_type.page ? entity.entity_type.page.layout : entity.entity_type;

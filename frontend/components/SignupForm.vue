@@ -26,6 +26,22 @@
       <b-input v-model="signup.phone" type="tel" />
     </b-field>
     <div class="flex flex-justify-sb">
+    <b-field>
+      <b-checkbox v-model="signup.agree">
+        I agree to the <a href="/terms" target="_blank">Terms of
+        Service</a> and <a href="/privacy" target="_blank">Privacy
+        Policy</a>.
+      </b-checkbox>
+    </b-field>
+    <b-field>
+      <b-checkbox v-model="signup.newsletter">
+        Sign up for the Science Near Me Newsletter
+      </b-checkbox>
+    </b-field>
+    <div>
+      <b-button type="is-primary is-light" @click="cancel">
+        Cancel
+      </b-button>
       <b-button :loading="working" type="is-primary" @click="sign_up">
         Sign up
       </b-button>
@@ -73,6 +89,8 @@ export default {
                 password: '',
                 zip_code: '',
                 phone: '',
+                agree: true,
+                newsletter: true,
                 next: this.next,
                 next_query: this.query,
             }
@@ -147,7 +165,7 @@ export default {
             if (user.authenticated) {
                 this.$emit('close')
             } else {
-                this.$buefy.dialog.alert('An account with that email already exists.')
+                this.$buefy.dialog.alert('An account with that email already exists, or you did not agree to the terms.')
             }
         }
     }
