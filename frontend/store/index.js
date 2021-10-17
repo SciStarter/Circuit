@@ -115,18 +115,28 @@ export const actions = {
 
   async login(
     { commit, dispatch, state },
-    { email, password, next, next_query },
+    { email, password, next, next_query, via },
   ) {
     let user = { authenticated: false };
 
+    let endpoint = "/api/ui/auth/login";
+
+    if (via === "scistarter") {
+      endpoint = "/api/ui/auth/login-scistarter";
+    }
+
     try {
-      user = await this.$axios.$post("/api/ui/auth/login", {
+      user = await this.$axios.$post(endpoint, {
         email,
         password,
       });
     } catch (error) {
-      console.error(error);
-      return { authenticated: false };
+      return {
+        authenticated: false,
+        message: error.response
+          ? error.response.data
+          : "invalid email or password",
+      };
     }
 
     if (process.client) {
@@ -152,8 +162,22 @@ export const actions = {
 
   async signup(
     { commit, dispatch, state },
-    { email, username, password, zip_code, phone, next, next_query },
+    {
+      email,
+      username,
+      password,
+      zip_code,
+      phone,
+      agree,
+      newsletter,
+      next,
+      next_query,
+    },
   ) {
+    if (!agree) {
+      return { authenticated: false };
+    }
+
     const params = {
       email,
       password,
@@ -169,6 +193,10 @@ export const actions = {
 
     if (phone) {
       params.phone = phone;
+    }
+
+    if (newsletter) {
+      params.newsletter = newsletter;
     }
 
     let user = { authenticated: false };
@@ -245,7 +273,11 @@ export const actions = {
     // The cookie and localStorage value are saved on the client
     // by the refresh_user plugin.
     if (process.server) {
-      token = this.$cookies.get("token");
+      if (process.env.NODE_ENV == "development") {
+        token = this.$cookies.get("token");
+      } else {
+        token = this.$cookies.get("__Host-token");
+      }
     } else if (process.client) {
       token = window.localStorage.getItem("token");
     }

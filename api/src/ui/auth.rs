@@ -2,6 +2,7 @@ use common::{
     jwt::issue_jwt,
     model::{
         involvement::{self, Involvement},
+        person::JoinChannel,
         Person,
     },
     Database,
@@ -17,6 +18,7 @@ pub use tide_fluent_routes::{
 };
 use time::Duration;
 
+use crate::crypto::{KeyPair, Sealed};
 use crate::ui::{okay, okay_with_cookie};
 
 use super::{person_json, request_person, UI_AUDIENCE};
@@ -35,7 +37,12 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("logout", |r| r.post(logout))
 }
 
-#[derive(Default, Deserialize)]
+#[cfg(not(debug_assertions))]
+const TOKEN_COOKIE: &'static str = "__Host-token";
+#[cfg(debug_assertions)]
+const TOKEN_COOKIE: &'static str = "token";
+
+#[derive(Default, Deserialize, Serialize)]
 struct LoginForm {
     email: String,
     password: String,
@@ -74,10 +81,10 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
 
         okay_with_cookie(
             &p_json,
-            Cookie::build("token", jwt)
+            Cookie::build(TOKEN_COOKIE, jwt)
                 .path("/")
                 .max_age(Duration::hours(SESSION_HOURS))
-                .domain(&*COOKIE_DOMAIN)
+                //.domain(&*COOKIE_DOMAIN)
                 .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
                 .http_only(true)
                 .same_site(tide::http::cookies::SameSite::Lax)
@@ -91,15 +98,106 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
     }
 }
 
+#[derive(Deserialize, Debug)]
+struct SciStarterPerson {
+    username: Option<String>,
+    first_name: String,
+    last_name: String,
+    emails: Vec<String>,
+    zip_code: Option<String>,
+    phone: Option<String>,
+    newsletter: bool,
+}
+
 pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result {
-    let _form: LoginForm = req.body_json().await.map_err(|mut e| {
-        e.set_status(400);
+    let form: LoginForm = req.body_json().await.map_err(|mut e| {
+        e.set_status(StatusCode::BadRequest);
         e
     })?;
 
-    common::log("ui-login-via-scistarter", "");
+    let existing = Person::load_by_email(req.state(), &form.email).await.ok();
 
-    todo!()
+    if let Some(person) = &existing {
+        if person.interior.join_channel != JoinChannel::SciStarter {
+            return Ok(
+                tide::Response::builder(StatusCode::Forbidden)
+                    .body("Can not log in to that account through SciStarter, because it was not created via SciStarter")
+                    .build()
+            );
+        }
+    }
+
+    let snm_key = KeyPair::from_env("SNM_PAIR")?;
+    let scistarter_key = KeyPair::from_env("SCI_PUB")?;
+
+    let sealed: Sealed = surf::post("https://scistarter.org/api/login-for-snm")
+        .content_type("application/json")
+        .body(serde_json::to_string(
+            &snm_key.seal(&form, &scistarter_key)?,
+        )?)
+        .recv_json()
+        .await?;
+
+    dbg!(&sealed);
+
+    match dbg!(snm_key.open::<SciStarterPerson>(sealed, Some(&scistarter_key))) {
+        Ok(ssp) => {
+            let person = if let Some(person) = existing {
+                person
+            } else {
+                let mut person = Person::default();
+                person.set_password(&form.password);
+                person.exterior.username = ssp.username;
+                person.interior.email = ssp
+                    .emails
+                    .first()
+                    .ok_or_else(|| {
+                        tide::Error::from_str(
+                            StatusCode::BadRequest,
+                            "The SciStarter validation process failed",
+                        )
+                    })?
+                    .to_owned();
+                person.interior.zip_code = ssp.zip_code;
+                person.interior.phone = ssp.phone;
+                person.interior.newsletter = ssp.newsletter;
+
+                // Do we actually want to do this? It could be a way
+                // to spoof the system.
+                for email in ssp.emails {
+                    person.add_hash(&email)?;
+                }
+
+                person.store(req.state()).await?;
+
+                person
+            };
+
+            let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
+
+            let mut p_json = person_json(&person, &jwt);
+            p_json["num_partners"] = person.count_partners(req.state()).await?.into();
+
+            common::log("ui-login-via-scistarter", &jwt);
+
+            okay_with_cookie(
+                &p_json,
+                Cookie::build(TOKEN_COOKIE, jwt)
+                    .path("/")
+                    .max_age(Duration::hours(SESSION_HOURS))
+                    //.domain(&*COOKIE_DOMAIN)
+                    .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
+                    .http_only(true)
+                    .same_site(tide::http::cookies::SameSite::Lax)
+                    .finish(),
+            )
+        }
+        Err(_) => {
+            return Ok(tide::Response::builder(StatusCode::Forbidden)
+                .body("Incorrect SciStarter email or password")
+                .build());
+        }
+    }
 }
 
 #[derive(Default, Deserialize)]
@@ -109,7 +207,7 @@ struct SignupForm {
     password: String,
     zip_code: Option<String>,
     phone: Option<String>,
-    _newsletter: Option<bool>,
+    newsletter: Option<bool>,
 }
 
 /// Create an account, if the validations pass.
@@ -141,7 +239,7 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
     person.interior.email = form.email;
     person.interior.zip_code = form.zip_code;
     person.interior.phone = form.phone;
-
+    person.interior.newsletter = form.newsletter.unwrap_or(false);
     person.store(db).await?;
 
     let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
@@ -153,10 +251,10 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
 
     okay_with_cookie(
         &p_json,
-        Cookie::build("token", jwt)
+        Cookie::build(TOKEN_COOKIE, jwt)
             .path("/")
             .max_age(Duration::hours(SESSION_HOURS))
-            .domain(&*COOKIE_DOMAIN)
+            //.domain(&*COOKIE_DOMAIN)
             .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
             .http_only(true)
             .same_site(tide::http::cookies::SameSite::Lax)
@@ -183,10 +281,10 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
 
         okay_with_cookie(
             &p_json,
-            Cookie::build("token", jwt)
+            Cookie::build(TOKEN_COOKIE, jwt)
                 .path("/")
                 .max_age(Duration::hours(SESSION_HOURS))
-                .domain(&*COOKIE_DOMAIN)
+                //.domain(&*COOKIE_DOMAIN)
                 .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
                 .http_only(true)
                 .same_site(tide::http::cookies::SameSite::Lax)
@@ -202,10 +300,10 @@ pub async fn logout(_req: tide::Request<Database>) -> tide::Result {
 
     okay_with_cookie(
         &json!({"authenticated": false}),
-        Cookie::build("token", "")
+        Cookie::build(TOKEN_COOKIE, "")
             .path("/")
             .max_age(Duration::hours(SESSION_HOURS))
-            .domain(&*COOKIE_DOMAIN)
+            //.domain(&*COOKIE_DOMAIN)
             .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
             .http_only(true)
             .same_site(tide::http::cookies::SameSite::Lax)

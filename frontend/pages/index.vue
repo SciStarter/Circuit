@@ -240,6 +240,15 @@ export default {
         BenefitsResearch,
     },
 
+    httpHeaders() {
+        return {
+            'X-XSS-Protection': '1; mode=block',
+            'X-Frame-Options': 'DENY',
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'same-origin',
+        };
+    },
+
     async asyncData(context) {
         let now = new Date();
         let beginning = encodeURIComponent(now.toISOString());

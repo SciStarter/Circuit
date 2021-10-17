@@ -33,6 +33,8 @@
         "mapbox-gl": "^2.4.1",
         "nuxt": "^2.15.3",
         "nuxt-buefy": "^0.4.4",
+        "nuxt-build-optimisations": "^1.0.7",
+        "nuxt-custom-headers": "^2.1.0",
         "sortablejs": "^1.14.0",
         "vue-add-to-calendar": "^1.0.7",
         "vue-geolocation-api": "^0.1.21",
