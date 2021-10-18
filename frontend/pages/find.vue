@@ -428,7 +428,6 @@ export default {
             },
 
             set(value) {
-                console.log('P:', value);
                 this.partner_text = value ? value.name : "";
                 this.set_query('partner', value ? value.uid : undefined);
             }

@@ -349,7 +349,6 @@ export const actions = {
     let didit = local.didit || [];
     try {
       for (let slug of didit) {
-        console.log(slug);
         await this.$axios.$post("/api/ui/entity/" + slug + "/didit", {}, {
           withCredentials: true,
         });

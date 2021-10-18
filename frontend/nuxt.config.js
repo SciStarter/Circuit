@@ -71,13 +71,20 @@ export default {
           "fonts.googleapis.com",
           "cdn.jsdelivr.net",
         ],
-        "img-src": ["'self'", "https:", "data:"],
-        "connect-src": ["'self'"],
+        "img-src": ["'self'", "https:", "data:", "blob:"],
+        "connect-src": [
+          "'self'",
+          "data:",
+          "https://*.tiles.mapbox.com",
+          "https://api.mapbox.com",
+          "https://events.mapbox.com",
+          "www.google-analytics.com",
+        ],
         "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net"],
         "object-src": ["'self'"],
         "media-src": ["'self'"],
         "frame-src": ["'self'"], // Overridden by child-src if the browser supports CSP 3 (Safari doesn't yet)
-        "child-src": ["'self'"],
+        "child-src": ["'self'", "blob:"],
         "form-action": ["'self'"],
         "frame-ancestors": ["'none'"],
         "plugin-types": ["'none'"],
@@ -170,10 +177,6 @@ export default {
     },
   },
 
-  env: {
-    MAPBOX_TOKEN: process.env.MAPBOX_TOKEN,
-  },
-
   // In production, these requests won't normally make it to the
   // Nuxt server, so this is mostly for local development.
   proxy: {
@@ -187,6 +190,7 @@ export default {
 
   // These two sections override config values at runtime
   publicRuntimeConfig: {
+    mapboxToken: process.env.MAPBOX_TOKEN,
     axios: {
       browserBaseURL: process.env.LOCAL_API_URL ? "/" : "https://" + DOMAIN,
     },
