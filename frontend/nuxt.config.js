@@ -3,18 +3,27 @@ const DOMAIN = "beta.sciencenearme.org";
 export default {
   //__fake__: console.log(process.env),
 
-  // Global page headers: https://go.nuxtjs.dev/config-head
   prettify: false,
 
+  // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: "Science Near Me",
 
     link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true },
-        { rel: 'stylesheet', type: 'text/css', href: 'https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap' }
-        ],
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossorigin: true,
+      },
+      {
+        rel: "stylesheet",
+        type: "text/css",
+        href:
+          "https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap",
+      },
+    ],
     htmlAttrs: {
       lang: "en",
     },
@@ -38,22 +47,6 @@ export default {
         content: "https://sciencenearme.org/",
       },
       { hid: "og:type", property: "og:type", content: "website" },
-    ],
-
-    link: [
-      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossorigin: true,
-      },
-      {
-        rel: "stylesheet",
-        type: "text/css",
-        href:
-          "https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,700;1,400&family=Fira+Sans:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap",
-      },
     ],
   },
 
@@ -89,7 +82,7 @@ export default {
         "frame-ancestors": ["'none'"],
         "plugin-types": ["'none'"],
         "base-uri": ["'self'"],
-        "worker-src": ["'self'"],
+        "worker-src": ["'self'", "blob:"],
         "manifest-src": ["'self'"],
         "prefetch-src": ["'self'"],
       },
