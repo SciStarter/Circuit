@@ -44,7 +44,7 @@ import OpportunityNotice from "~/components/OpportunityNotice"
 import NoImage from "~/assets/img/no-image-thumb.jpg"
 import LocationIcon from '~/assets/img/location-marker.svg?inline'
 import TimeIcon from '~/assets/img/calendar.svg?inline'
-import KeywordsIcon from '~/assets/img/speech-bubble.svg?inline'
+import KeywordsIcon from '~/assets/img/tag.svg?inline'
 import TrashIcon from '~/assets/img/trash.svg?inline'
 
 export default {
@@ -296,7 +296,7 @@ export default {
         display: flex;
         background-color: #fff;
       }
-      
+
     }
 }
 

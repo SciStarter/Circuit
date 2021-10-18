@@ -46,11 +46,11 @@
         <b-field label="Minimum Age" data-context="find-minimum-age">
           <b-checkbox v-model="min_age_active" />
           <b-slider v-model="min_age" :disabled="!min_age_active" :min="0" :max="120" :step="1" size="is-medium" rounded>
-            <b-slider-tick :value="12">
+            <!-- <b-slider-tick :value="12">
               12
-            </b-slider-tick>
-            <b-slider-tick :value="21">
-              21
+            </b-slider-tick> -->
+            <b-slider-tick :value="20">
+              20
             </b-slider-tick>
             <b-slider-tick :value="40">
               40
@@ -70,11 +70,11 @@
         <b-field label="Maximum Age" data-context="find-maximum-age">
           <b-checkbox v-model="max_age_active" />
           <b-slider v-model="max_age" :disabled="!max_age_active" :min="0" :max="120" :step="1" size="is-medium" rounded>
-            <b-slider-tick :value="12">
+            <!-- <b-slider-tick :value="12">
               12
-            </b-slider-tick>
-            <b-slider-tick :value="21">
-              21
+            </b-slider-tick> -->
+            <b-slider-tick :value="20">
+              20
             </b-slider-tick>
             <b-slider-tick :value="40">
               40
@@ -652,6 +652,9 @@ export default {
 
 .filtering #results {
     display: none;
+}
+#filters-refine .b-radio {
+  margin-right: 1.5rem!important;
 }
 
 #pagination {
