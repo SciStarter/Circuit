@@ -7,45 +7,61 @@
           <b-button label="?" />
       </b-tooltip></p>
     </div>
-    <b-field label="Email" :type="validate_email.type" :message="validate_email.message" label-position="on-border">
+    <b-field :type="validate_email.type" :message="validate_email.message" label-position="on-border">
+        <template #label>
+                Email <span class="has-required">*</span>
+            </template>
       <b-input v-model="signup.email" type="email" required />
     </b-field>
-    <b-field label="Username" label-position="on-border">
+    <b-field label-position="on-border">
+      <template #label>
+              Username <span class="has-required">*</span>
+          </template>
       <b-input v-model="signup.username" type="text" required />
     </b-field>
-    <b-field label="Password" :type="validate_password.type" :message="validate_password.message" label-position="on-border">
+    <b-field :type="validate_password.type" :message="validate_password.message" label-position="on-border">
+      <template #label>
+              Password <span class="has-required">*</span>
+          </template>
       <b-input v-model="signup.password" type="password" required />
     </b-field>
-    <b-field label="Repeat password" :type="validate_password_repeat.type" :message="validate_password_repeat.message" label-position="on-border">
+    <b-field :type="validate_password_repeat.type" :message="validate_password_repeat.message" label-position="on-border">
+      <template #label>
+              Repeat Password <span class="has-required">*</span>
+          </template>
       <b-input v-model="password_repeat" type="password" required />
     </b-field>
-    <b-field label="Zip / Postal Code" label-position="on-border">
+    <b-field label-position="on-border">
+      <template #label>
+              Zip/Postal Code <span class="has-required">*</span>
+          </template>
       <b-input v-model="signup.zip_code" type="text" />
     </b-field>
-    <b-field label="Phone" label-position="on-border">
+    <b-field label-position="on-border">
+      <template #label>
+              Phone <span class="has-optional">optional</span>
+          </template>
       <b-input v-model="signup.phone" type="tel" />
     </b-field>
+    <div class="form-push">
+      <b-field>
+        <b-checkbox v-model="signup.agree">
+          I agree to the <a href="/terms" target="_blank">Terms of
+          Service</a> and <a href="/privacy" target="_blank">Privacy
+          Policy</a>.
+        </b-checkbox>
+      </b-field>
+      <b-field>
+        <b-checkbox v-model="signup.newsletter">
+          Sign up for the Science Near Me Newsletter
+        </b-checkbox>
+      </b-field>
+    </div>
     <div class="flex flex-justify-sb">
-    <b-field>
-      <b-checkbox v-model="signup.agree">
-        I agree to the <a href="/terms" target="_blank">Terms of
-        Service</a> and <a href="/privacy" target="_blank">Privacy
-        Policy</a>.
-      </b-checkbox>
-    </b-field>
-    <b-field>
-      <b-checkbox v-model="signup.newsletter">
-        Sign up for the Science Near Me Newsletter
-      </b-checkbox>
-    </b-field>
-    <div>
-      <b-button type="is-primary is-light" @click="cancel">
-        Cancel
-      </b-button>
       <b-button :loading="working" type="is-primary" @click="sign_up">
         Sign up
       </b-button>
-      <b-button type="is-primary is-light" @click="cancel">
+      <b-button type="is-text" @click="cancel">
         Cancel
       </b-button>
     </div>
@@ -207,14 +223,26 @@ export default {
     background-color: $snm-color-action;
   }
 }
+.form-push {
+  margin-bottom: 1rem;
+}
 .standalone-form {
-  .field.is-floating-label {
+  .field.is-floating-label, .form-push {
     margin-bottom: 2rem;
   }
   .flex {
     display: flex;
     justify-content: space-between;
   }
+}
+.has-required {
+  color: $snm-color-info;
+  font-size: 12px;
+}
+.has-optional {
+  font-weight: 400;
+  color: $snm-color-border;
+  font-size: 12px;
 }
 
 </style>
