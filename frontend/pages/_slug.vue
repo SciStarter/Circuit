@@ -16,7 +16,7 @@ export default {
             'X-XSS-Protection': '1; mode=block',
             'X-Frame-Options': 'DENY',
             'X-Content-Type-Options': 'nosniff',
-            'Referrer-Policy': 'same-origin',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
         };
     },
 
