@@ -87,7 +87,10 @@ export default {
         this.block = await this.$store.dispatch('get_dynamic_block', {
             language: this.language || this.default_language,
             group: this.group,
-            item: this.item
+            item: this.item,
+            inline: this.inline,
+            removeParagraphs: this.removeParagraphs,
+            fixLinks: this.fixLinks,
         })
     },
 
