@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-logger-beta
-        image: scistarter/circuit-logger:0.1.5
+        image: scistarter/circuit-logger:0.1.6
         ports:
         - containerPort: 9000
         env:
@@ -35,6 +35,21 @@ spec:
             secretKeyRef:
               name: logger-beta
               key: LOGGER_SECRET
+        - name: CLICK_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: CLICK_ENDPOINT
+        - name: CLICK_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: CLICK_ACCESS_KEY
+        - name: CLICK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: CLICK_SECRET
 ---
 apiVersion: v1
 kind: Service
