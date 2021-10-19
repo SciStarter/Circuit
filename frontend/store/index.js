@@ -1,8 +1,9 @@
 // deno-lint-ignore-file camelcase
 import Vue from "vue";
 
-function block_key(language, group, item) {
-  return "dyn:" + language + ":" + group + ":" + item;
+function block_key(language, group, item, inline, removeParagraphs, fixLinks) {
+  return "dyn:" + language + ":" + group + ":" + item + ":" + inline + ":" +
+    removeParagraphs + ":" + fixLinks;
 }
 
 export const state = () => ({
@@ -29,7 +30,14 @@ export const mutations = {
   save_dynamic_block(state, block) {
     Vue.set(
       state.dynamic_blocks,
-      block_key(block.language, block.group, block.item),
+      block_key(
+        block.language,
+        block.group,
+        block.item,
+        block.inline,
+        block.remove_paragraphs,
+        block.fix_links,
+      ),
       block,
     );
   },
@@ -84,10 +92,24 @@ export const actions = {
     return state.language || "en";
   },
 
-  async get_dynamic_block({ commit, state }, { language, group, item }) {
-    const key = block_key(language, group, item);
+  async get_dynamic_block(
+    { commit, state },
+    { language, group, item, inline, removeParagraphs, fixLinks },
+  ) {
+    const key = block_key(
+      language,
+      group,
+      item,
+      inline,
+      removeParagraphs,
+      fixLinks,
+    );
 
     if (state.dynamic_blocks[key] === undefined) {
+      // // Hopefully this approach will let us remove the Vue compiler and disable unsafe-* CSP directives
+      // block = await import(/* webpackIgnore: true */"/api/ui/content-compiled?language=" + language + "&group=" + group + "&item=" + item + "&inline=" + inline + "&remove_paragraphs=" + removeParagraph + "&fix_links=" + fixLinks);
+      // commit("save_dynamic_block", block);
+
       try {
         const block = await this.$axios.$get("/api/ui/content", {
           params: {
@@ -96,6 +118,10 @@ export const actions = {
             item,
           },
         });
+
+        block.inline = inline;
+        block.remove_paragraphs = removeParagraphs;
+        block.fix_links = fixLinks;
 
         commit("save_dynamic_block", block);
       } catch (_) {
@@ -106,6 +132,9 @@ export const actions = {
           tags: "",
           label: "",
           content: "",
+          inline: inline,
+          remove_paragraphs: removeParagraphs,
+          fix_links: fixLinks,
         });
       }
     }
