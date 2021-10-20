@@ -19,7 +19,9 @@
           <div class="search-box-container">
             <div class="full-only sbc-header flex flex-justify-sb">
               <h2>Search</h2>
-              <button type="button" @click="toggle_search">&#10005;</button>
+              <button type="button" @click="toggle_search">
+                &#10005;
+              </button>
             </div>
           <b-field>
             <b-input ref="search_keywords" v-model="query.keywords" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
@@ -95,58 +97,93 @@
       <section id="main">
         <div id="content">
           <nuxt @login="show_login = true" @signup="show_signup = true" />
+          <aside v-if="show_cookie" id="cookie-notice">
+            <div>
+              <h1>We Care About Your Privacy</h1>
+              <p>
+                We and
+
+                <nuxt-link to="/about">
+                  our partners
+                </nuxt-link>
+
+                store and/or access information on a device, such as
+                unique IDs in cookies to process personal data. You may
+                accept or manage your choices by clicking below or at any
+                time in the
+
+                <nuxt-link to="/privacy">
+                  privacy policy
+                </nuxt-link>
+
+                page.
+              </p>
+              <b-button type="is-primary" @click="cookie_consent">
+                Accept All
+              </b-button>
+            </div>
+            <div>
+              <h2>We and our partners process data to provide:</h2>
+              <p>
+                Geolocation data, personalized content, audience
+                insights, product development and
+
+                <nuxt-link to="/informed-consent">
+                  research studies.
+                </nuxt-link>
+              </p>
+            </div>
+          </aside>
         </div>
 
-<div id="authenticated-nav">
-  <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
-    <img src="~assets/img/logo.svg?data" title="return to home page">
-  </nuxt-link>
-    <div class="an-overflow">
-        <nav>
-          <strong v-if="owner">My Participation</strong>
-
-          <nuxt-link to="/find">
-            <find-icon /> Find Science Opportunities
+        <div id="authenticated-nav">
+          <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
+            <img src="~assets/img/logo.svg?data" title="return to home page">
           </nuxt-link>
+          <div class="an-overflow">
+            <nav>
+              <strong v-if="owner">My Participation</strong>
 
-          <nuxt-link to="/my/saved">
-            <saved-icon /> Saved Science Opportunities
-          </nuxt-link>
+              <nuxt-link to="/find">
+                <find-icon /> Find Science Opportunities
+              </nuxt-link>
 
-          <nuxt-link to="/my/science">
-            <science-icon /> My Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
-          </nuxt-link>
+              <nuxt-link to="/my/saved">
+                <saved-icon /> Saved Science Opportunities
+              </nuxt-link>
 
-          <nuxt-link to="/my/goals">
-            <goals-icon /> My Goals
-          </nuxt-link>
+              <nuxt-link to="/my/science">
+                <science-icon /> My Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
+              </nuxt-link>
 
-          <nuxt-link to="/my/profile">
-            <profile-icon /> My Profile &amp; Settings
-          </nuxt-link>
+              <nuxt-link to="/my/goals">
+                <goals-icon /> My Goals
+              </nuxt-link>
 
-          <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
+              <nuxt-link to="/my/profile">
+                <profile-icon /> My Profile &amp; Settings
+              </nuxt-link>
 
-          <nuxt-link v-if="owner" to="/my/opportunities">
-            <my-opportunities-icon /> Current Opportunities
-          </nuxt-link>
+              <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
 
-          <nuxt-link v-if="owner" to="/my/draft-or-closed">
-            <my-past-opportunities-icon /> Draft &amp; Closed Opportunities
-          </nuxt-link>
+              <nuxt-link v-if="owner" to="/my/opportunities">
+                <my-opportunities-icon /> Current Opportunities
+              </nuxt-link>
 
-          <nuxt-link v-if="owner" to="/my/organization">
-            <my-organization-icon /> Your Organization
-          </nuxt-link>
+              <nuxt-link v-if="owner" to="/my/draft-or-closed">
+                <my-past-opportunities-icon /> Draft &amp; Closed Opportunities
+              </nuxt-link>
 
-          <nuxt-link v-if="owner" to="/my/submit-opportunity">
-            <submit-opportunity-icon /> Submit an Opportunity
-          </nuxt-link>
-        </nav>
-      </div>
+              <nuxt-link v-if="owner" to="/my/organization">
+                <my-organization-icon /> Your Organization
+              </nuxt-link>
 
-</div>
-
+              <nuxt-link v-if="owner" to="/my/submit-opportunity">
+                <submit-opportunity-icon /> Submit an Opportunity
+              </nuxt-link>
+            </nav>
+          </div>
+        </div>
       </section>
 
       <footer class="snm-wrapper">
@@ -283,6 +320,7 @@ export default {
             show_login: false,
             show_signup: false,
             show_person_dropdown: false,
+            show_cookie: false,
 
             query: {
                 keywords: '',
@@ -396,9 +434,17 @@ export default {
 
     async mounted() {
         await this.$store.dispatch('sync_local_to_server');
+        if(!window.localStorage.getItem("cookie-consent")) {
+            this.show_cookie = true;
+        }
     },
 
     methods: {
+        cookie_consent() {
+            this.show_cookie = false;
+            window.localStorage.setItem("cookie-consent", "true");
+        },
+
         toggle_search() {
             this.search = !this.search;
 
@@ -620,6 +666,47 @@ header {
     }
 }
 
+#cookie-notice {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 500;
+    width: 75vw;
+    min-width: 300px;
+    max-height: 50vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: $snm-color-background;
+    border-radius: 1rem;
+    border: 1px solid $snm-color-background-medium;
+    padding: 2rem;
+    box-shadow: 0px 0px 6px $snm-color-shadow;
+    display: flex;
+    flex-direction: column;
+
+    h1 {
+        font-family: $snm-font-heading;
+        font-weight: bold;
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-family: $snm-font-heading;
+        font-weight: bold;
+        font-size: 1.25rem;
+    }
+
+    >div {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+
+        >* {
+            margin: 1rem;
+        }
+    }
+}
+
 #main {
   padding-top: 52px;
 }
@@ -689,6 +776,10 @@ footer {
 
     #main {
       padding-top: 0;
+    }
+
+    #cookie-notice {
+        flex-direction: row;
     }
 
   header .logo {
