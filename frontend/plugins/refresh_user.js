@@ -14,6 +14,13 @@ window.onNuxtReady(async () => {
     },
   });
 
+  function issue_tag() {
+    const now = new Date();
+    return "tag:sciencenearme.org," + now.getFullYear() + "-" + now.getMonth() +
+      "-" + now.getDate() + ":" + now.getHours() + "" + now.getMinutes() +
+      Math.random().toString().slice(2);
+  }
+
   // Needed for either version
   if (user.authenticated) {
     window.localStorage.setItem("token", user.token);
@@ -31,10 +38,10 @@ window.onNuxtReady(async () => {
       );
       window.localStorage.setItem("session", hashed);
     } else {
-      window.localStorage.setItem("session", "insecure");
+      window.localStorage.setItem("session", issue_tag());
     }
   } else {
     window.localStorage.removeItem("token");
-    window.localStorage.removeItem("session");
+    window.localStorage.setItem("session", issue_tag());
   }
 });
