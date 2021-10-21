@@ -882,7 +882,7 @@ export default {
       display: block;
   }
   #results {
-      grid-row: 3;
+      grid-row: 2;
       grid-column: 1;
   }
   #pagination {

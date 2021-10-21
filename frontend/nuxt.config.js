@@ -56,7 +56,6 @@ export default {
       },
     ],
   },
-
   modern: "client",
 
   render: {

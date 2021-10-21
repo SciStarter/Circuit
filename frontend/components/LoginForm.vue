@@ -17,7 +17,7 @@
       <b-button :loading="working" type="is-primary" @click="log_in">
         Log in
       </b-button>
-      <b-button type="is-primary is-light" @click="cancel">
+      <b-button type="is-text" @click="cancel">
         Cancel
       </b-button>
     </div>
