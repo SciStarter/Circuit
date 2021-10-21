@@ -246,6 +246,7 @@ export default {
   #results {
     .opportunity-card {
       width: 100%;
+      align-self: start;
     }
   }
 
