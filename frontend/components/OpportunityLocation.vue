@@ -21,10 +21,10 @@
   </ul>
   <div v-else-if="opportunity.location_type == 'near'">
     <p v-if="opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
-      !!! TODO
+    <!--   !!! TODO -->
     </p>
     <p v-else-if="opportunity.location_point && opportunity.location_point.type === 'Point'">
-      !!! TODO
+    <!--   !!! TODO -->
     </p>
     <p v-else>
       Unknown location
