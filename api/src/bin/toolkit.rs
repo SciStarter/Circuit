@@ -207,8 +207,8 @@ async fn first_person(state: &mut State) -> Result<(), DynError> {
 }
 
 async fn update_persons<F: Fn(&mut Person) -> Result<(), DynError>>(
-    state: &mut State,
-    update: F,
+    _state: &mut State,
+    _update: F,
 ) -> Result<(), DynError> {
     todo!()
 }

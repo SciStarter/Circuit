@@ -1,12 +1,72 @@
 use super::{partner::Partner, Error, Opportunity, OpportunityExterior, Pagination};
 use crate::{Database, ToFixedOffset};
 
+use async_std::task::{self, JoinHandle};
 use chrono::{DateTime, FixedOffset, TimeZone, Utc};
 use futures::Stream;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sqlx::prelude::*;
 use uuid::Uuid;
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LogIdentifier {
+    Id(i32),
+    Uid(Uuid),
+    Slug(String),
+}
+
+impl LogIdentifier {
+    pub async fn get_opportunity(&self, db: &Database) -> Result<Opportunity, Error> {
+        match self {
+            LogIdentifier::Id(id) => Ok(Opportunity::load_by_id(db, *id).await?),
+            LogIdentifier::Uid(uid) => Ok(Opportunity::load_by_uid(db, uid).await?),
+            LogIdentifier::Slug(slug) => Ok(Opportunity::load_by_slug(db, slug).await?),
+        }
+    }
+
+    pub async fn get_partner(&self, db: &Database) -> Result<Partner, Error> {
+        match self {
+            LogIdentifier::Id(id) => Ok(Partner::load_by_id(db, *id).await?),
+            LogIdentifier::Uid(uid) => Ok(Partner::load_by_uid(db, uid).await?),
+            LogIdentifier::Slug(_) => Err(Error::Missing(
+                "Partners can not be referenced by slug".to_string(),
+            )),
+        }
+    }
+
+    pub async fn get_person(&self, db: &Database) -> Result<Person, Error> {
+        match self {
+            LogIdentifier::Id(id) => Ok(Person::load_by_id(db, *id).await?),
+            LogIdentifier::Uid(uid) => Ok(Person::load_by_uid(db, uid).await?),
+            LogIdentifier::Slug(_) => Err(Error::Missing(
+                "Persons can not be referenced by slug".to_string(),
+            )),
+        }
+    }
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LogEvent {
+    Signup,
+    Login,
+    Session,
+    View(LogIdentifier),
+    AddDidit(LogIdentifier),
+    AddSave(LogIdentifier),
+    AddLike(LogIdentifier),
+    AddReview(LogIdentifier),
+    AddInterest(LogIdentifier),
+    ReportReview(LogIdentifier),
+    DeleteDidit(LogIdentifier),
+    DeleteSave(LogIdentifier),
+    DeleteLike(LogIdentifier),
+    AddToPartner(LogIdentifier),      // TODO
+    RemoveFromPartner(LogIdentifier), // TODO
+    EditOpportunity(LogIdentifier),   // TODO
+}
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -326,6 +386,31 @@ pub struct Person {
 }
 
 impl Person {
+    async fn save_log(db: Database, id: i32, event: LogEvent) -> Result<i32, Error> {
+        Ok(sqlx::query_file!(
+            "db/person/add_log_entry.sql",
+            id,
+            serde_json::to_value(&event)?
+        )
+        .fetch_one(&db)
+        .await?
+        .id as i32)
+    }
+
+    pub async fn log(
+        &self,
+        db: &Database,
+        event: LogEvent,
+    ) -> Result<JoinHandle<Result<i32, Error>>, Error> {
+        if let Some(id) = self.id {
+            Ok(task::spawn(Person::save_log(db.clone(), id, event)))
+        } else {
+            Err(Error::NoSuch(
+                "Person has no id, so log entries can't be saved",
+            ))
+        }
+    }
+
     pub async fn count_participation_between(
         &self,
         db: &Database,

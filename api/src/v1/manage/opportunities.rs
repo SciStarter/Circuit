@@ -10,9 +10,8 @@ use common::{
     },
     Database, INTERNAL_UID,
 };
-use http_types::{mime, Method};
+use http_types::Method;
 use serde::Deserialize;
-use tide::{Response, StatusCode};
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
@@ -20,8 +19,6 @@ use tide_fluent_routes::{
 use uuid::Uuid;
 
 use crate::v1::redirect;
-
-use super::BASE;
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
@@ -33,8 +30,8 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 #[derive(Template)]
 #[template(path = "manage/opportunities.html")]
 struct OpportunitiesPage {
-    pub accepted: bool,
-    pub withdrawn: bool,
+    pub accepted: Option<bool>,
+    pub withdrawn: Option<bool>,
     pub title: String,
     pub partner: Uuid,
     pub partners: Vec<PartnerReference>,
@@ -59,8 +56,8 @@ async fn search(req: tide::Request<Database>) -> tide::Result {
     let db = req.state();
 
     Ok(OpportunitiesPage {
-        accepted: form.accepted.unwrap_or(false),
-        withdrawn: form.withdrawn.unwrap_or(false),
+        accepted: form.accepted,
+        withdrawn: form.withdrawn,
         title: form.title.clone().unwrap_or_else(String::new),
         partner: form.partner.clone().unwrap_or_default(),
         partners: Partner::catalog(db).await?,
