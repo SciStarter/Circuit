@@ -552,7 +552,6 @@ export default {
 
             if(this.has_value(this.opportunity.location_polygon)) {
                 geom = this.opportunity.location_polygon;
-                console.log('X', geom);
                 props.mode = 'polys';
             }
             else if(this.has_value(this.opportunity.location_point)) {
@@ -573,7 +572,6 @@ export default {
 
     watch: {
         "user.authenticated": async function(new_val, old_val) {
-            console.log(this, new_val, old_val);
             if(new_val) {
                 this.did = await this.$axios.$get('/api/ui/entity/' + this.opportunity.slug + '/me', this.$store.state.auth);
             }
@@ -583,7 +581,7 @@ export default {
     async mounted() {
         if(this.location_geojson) {
             this.map_widget = new mapboxgl.Map({
-                accessToken: process.env.MAPBOX_TOKEN,
+                accessToken: this.$config.mapboxToken,
                 container: this.$refs.map_display,
                 style: 'mapbox://styles/mapbox/streets-v11',
                 center: [-98, 39],
@@ -966,6 +964,7 @@ img.opportunity-image {
     box-sizing: border-box;
     border: 2px solid $snm-color-border;
     padding: 5px 1rem 1rem 1rem;
+    z-index: 50;
 
     &.open {
         right: 1vw;
@@ -973,7 +972,11 @@ img.opportunity-image {
         opacity: 1;
     }
 
-    div {
+    > a {
+        float: right;
+    }
+
+    > div {
         display: block;
         width: calc(98vw - 2rem);
         height: calc(98vw - 2rem);

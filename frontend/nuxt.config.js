@@ -3,18 +3,27 @@ const DOMAIN = "beta.sciencenearme.org";
 export default {
   //__fake__: console.log(process.env),
 
-  // Global page headers: https://go.nuxtjs.dev/config-head
   prettify: false,
 
+  // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: "Science Near Me",
 
     link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true },
-        { rel: 'stylesheet', type: 'text/css', href: 'https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap' }
-        ],
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossorigin: true,
+      },
+      {
+        rel: "stylesheet",
+        type: "text/css",
+        href:
+          "https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap",
+      },
+    ],
     htmlAttrs: {
       lang: "en",
     },
@@ -39,22 +48,6 @@ export default {
       },
       { hid: "og:type", property: "og:type", content: "website" },
     ],
-
-    link: [
-      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossorigin: true,
-      },
-      {
-        rel: "stylesheet",
-        type: "text/css",
-        href:
-          "https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,700;1,400&family=Fira+Sans:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap",
-      },
-    ],
   },
   modern: "client",
 
@@ -77,18 +70,25 @@ export default {
           "fonts.googleapis.com",
           "cdn.jsdelivr.net",
         ],
-        "img-src": ["'self'", "https:", "data:"],
-        "connect-src": ["'self'"],
+        "img-src": ["'self'", "https:", "data:", "blob:"],
+        "connect-src": [
+          "'self'",
+          "data:",
+          "https://*.tiles.mapbox.com",
+          "https://api.mapbox.com",
+          "https://events.mapbox.com",
+          "www.google-analytics.com",
+        ],
         "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net"],
         "object-src": ["'self'"],
         "media-src": ["'self'"],
         "frame-src": ["'self'"], // Overridden by child-src if the browser supports CSP 3 (Safari doesn't yet)
-        "child-src": ["'self'"],
+        "child-src": ["'self'", "blob:"],
         "form-action": ["'self'"],
         "frame-ancestors": ["'none'"],
         "plugin-types": ["'none'"],
         "base-uri": ["'self'"],
-        "worker-src": ["'self'"],
+        "worker-src": ["'self'", "blob:"],
         "manifest-src": ["'self'"],
         "prefetch-src": ["'self'"],
       },
@@ -176,10 +176,6 @@ export default {
     },
   },
 
-  env: {
-    MAPBOX_TOKEN: process.env.MAPBOX_TOKEN,
-  },
-
   // In production, these requests won't normally make it to the
   // Nuxt server, so this is mostly for local development.
   proxy: {
@@ -193,6 +189,7 @@ export default {
 
   // These two sections override config values at runtime
   publicRuntimeConfig: {
+    mapboxToken: process.env.MAPBOX_TOKEN,
     axios: {
       browserBaseURL: process.env.LOCAL_API_URL ? "/" : "https://" + DOMAIN,
     },
