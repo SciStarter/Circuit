@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
 static OPENCAGE_API_KEY: Lazy<String> =
-    Lazy::new(|| std::env::var("OPENCAGE_API_KEY").unwrap_or_else(|err| String::new()));
+    Lazy::new(|| std::env::var("OPENCAGE_API_KEY").unwrap_or_else(|_| String::new()));
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

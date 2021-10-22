@@ -82,6 +82,22 @@ pub async fn add_like_for_slug(
     Ok(())
 }
 
+pub async fn remove_like_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
+    let opp_id = Opportunity::id_by_slug(db, slug)
+        .await?
+        .ok_or_else(|| Error::NoSuch("opportunity"))?;
+
+    sqlx::query!(
+        r#"delete from c_opportunity_like where opportunity_id = $1 and person = $2"#,
+        opp_id,
+        person
+    )
+    .execute(db)
+    .await?;
+
+    Ok(())
+}
+
 pub async fn likes_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
     Ok(sqlx::query_file!("db/opportunity/count_likes.sql", slug)
         .map(|row| row.likes)
@@ -124,6 +140,23 @@ pub async fn add_save_for_slug(db: &Database, slug: &str, person: &Uuid) -> Resu
     Ok(())
 }
 
+pub async fn remove_save_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
+    let uid = Opportunity::uid_by_slug(db, slug)
+        .await?
+        .ok_or_else(|| Error::NoSuch("opportunity"))?;
+
+    if let Some(mut inv) =
+        Involvement::load_by_participant_and_opportunity(db, person, &uid).await?
+    {
+        if inv.exterior.mode == involvement::Mode::Saved {
+            inv.exterior.mode = involvement::Mode::Interest;
+            inv.store(db).await?;
+        }
+    }
+
+    Ok(())
+}
+
 pub async fn add_interest_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
     let uid = Opportunity::uid_by_slug(db, slug)
         .await?
@@ -150,6 +183,23 @@ pub async fn add_didit_for_slug(db: &Database, slug: &str, person: &Uuid) -> Res
         .ok_or_else(|| Error::NoSuch("opportunity"))?;
 
     Involvement::upgrade(db, person, &uid, involvement::Mode::Logged, &None).await?;
+
+    Ok(())
+}
+
+pub async fn remove_didit_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
+    let uid = Opportunity::uid_by_slug(db, slug)
+        .await?
+        .ok_or_else(|| Error::NoSuch("opportunity"))?;
+
+    if let Some(mut inv) =
+        Involvement::load_by_participant_and_opportunity(db, person, &uid).await?
+    {
+        if inv.exterior.mode == involvement::Mode::Logged {
+            inv.exterior.mode = involvement::Mode::Saved;
+            inv.store(db).await?;
+        }
+    }
 
     Ok(())
 }

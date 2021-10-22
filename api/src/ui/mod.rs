@@ -5,8 +5,6 @@ pub mod finder;
 pub mod organization;
 pub mod profile;
 
-use std::convert::TryFrom;
-
 use common::model::{self, Person};
 use common::Database;
 use http_types::{mime, Cookie};

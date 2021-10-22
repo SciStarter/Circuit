@@ -2,7 +2,7 @@ use common::{
     jwt::issue_jwt,
     model::{
         involvement::{self, Involvement},
-        person::JoinChannel,
+        person::{JoinChannel, LogEvent},
         Person,
     },
     Database,
@@ -78,6 +78,7 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
         p_json["num_partners"] = person.count_partners(db).await?.into();
 
         common::log("ui-login", &jwt);
+        person.log(db, LogEvent::Login).await?;
 
         okay_with_cookie(
             &p_json,
@@ -179,6 +180,7 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
             p_json["num_partners"] = person.count_partners(req.state()).await?.into();
 
             common::log("ui-login-via-scistarter", &jwt);
+            person.log(req.state(), LogEvent::Login).await?;
 
             okay_with_cookie(
                 &p_json,
@@ -248,6 +250,7 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
     p_json["num_partners"] = 0.into();
 
     common::log("ui-signup", &jwt);
+    person.log(db, LogEvent::Signup).await?;
 
     okay_with_cookie(
         &p_json,
@@ -267,6 +270,8 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
     if let Some(person) = request_person(&mut req).await? {
         let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
+
+        person.log(req.state(), LogEvent::Session).await?;
 
         let mut p_json = person_json(&person, &jwt);
         p_json["num_partners"] = person.count_partners(req.state()).await?.into();
