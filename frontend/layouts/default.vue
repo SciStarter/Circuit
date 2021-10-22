@@ -108,9 +108,8 @@
                 </nuxt-link>
 
                 store and/or access information on a device, such as
-                unique IDs in cookies to process personal data. You may
-                accept or manage your choices by clicking below or at any
-                time in the
+                unique IDs in cookies to process personal data. Find
+                the details on our
 
                 <nuxt-link to="/privacy">
                   privacy policy
