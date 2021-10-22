@@ -124,11 +124,11 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
 
 #[derive(Deserialize)]
 struct RandomCategoriesQuery {
-    num: u16,
+    _num: u16,
 }
 
 pub async fn random_categories(req: tide::Request<Database>) -> tide::Result {
-    let query: RandomCategoriesQuery = req.query()?;
+    let _query: RandomCategoriesQuery = req.query()?;
 
     todo!()
 }

@@ -1,4 +1,4 @@
-use common::{model::opportunity::OpportunityImportRecord, Database};
+use common::Database;
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
