@@ -218,7 +218,7 @@
         </ul>
 
         <ul>
-          <li><h1>For Science Professionals</h1></li>
+          <li><h1>For Providers</h1></li>
           <li>
             <nuxt-link to="/become-a-partner">
               Be Part of Science Near Me
@@ -226,12 +226,12 @@
           </li>
           <li>
             <external-link href="/api/docs/v1.html" content="footer-link">
-              API documentation
+              API Documentation
             </external-link>
           </li>
           <li>
             <nuxt-link to="/contact">
-              Display Science Opportunities
+              Customize &amp; Embed the Opportunity Finder
             </nuxt-link>
           </li>
         </ul>
