@@ -747,9 +747,9 @@ enum ParamValue {
     Bool(bool),
     Uuid(Uuid),
     VecString(Vec<String>),
-    VecTopic(Vec<Topic>),
+    //VecTopic(Vec<Topic>),
     VecEntityType(Vec<EntityType>),
-    VecDescriptor(Vec<Descriptor>),
+    //VecDescriptor(Vec<Descriptor>),
     VecVenueType(Vec<VenueType>),
     VecUuid(Vec<Uuid>),
 }
@@ -773,9 +773,9 @@ impl ParamValue {
             ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::VecTopic(val) => query.bind(serde_json::to_value(val)?),
+            //ParamValue::VecTopic(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecEntityType(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::VecDescriptor(val) => query.bind(serde_json::to_value(val)?),
+            //ParamValue::VecDescriptor(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecVenueType(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::VecUuid(val) => query.bind(serde_json::to_value(val)?),
         })

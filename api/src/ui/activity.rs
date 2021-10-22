@@ -42,10 +42,14 @@ pub async fn record_click(mut req: tide::Request<Database>) -> tide::Result {
 
 /// Record an instance of a user clicking on an external link. No-op
 /// when compiled in debug mode.
-pub async fn record_external(mut _req: tide::Request<Database>) -> tide::Result {
+pub async fn record_external(mut req: tide::Request<Database>) -> tide::Result {
     if cfg!(not(debug_assertions)) {
-        todo!()
-    } else {
-        Ok(Response::builder(StatusCode::Ok).build())
+        async_std::task::spawn(
+            surf::post(&*CLICK_ENDPOINT)
+                .body(req.body_json::<serde_json::Value>().await?)
+                .send(),
+        );
     }
+
+    Ok(Response::builder(StatusCode::Ok).build())
 }

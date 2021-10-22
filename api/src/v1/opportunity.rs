@@ -130,15 +130,15 @@ async fn opportunity_search(req: tide::Request<Database>) -> tide::Result {
 
 #[derive(serde::Deserialize)]
 struct RecommendQuery {
-    tags: Option<Vec<String>>,
-    topics: Option<Vec<common::model::opportunity::Topic>>,
-    r#abstract: Option<String>,
-    longitude: Option<f32>,
-    latitude: Option<f32>,
+    _tags: Option<Vec<String>>,
+    _topics: Option<Vec<common::model::opportunity::Topic>>,
+    r#_abstract: Option<String>,
+    _longitude: Option<f32>,
+    _latitude: Option<f32>,
 }
 
 async fn opportunity_recommend(req: tide::Request<Database>) -> tide::Result {
-    let auth = match header_check(&req, &super::API_AUDIENCE) {
+    let _auth = match header_check(&req, &super::API_AUDIENCE) {
         Ok(x) => x,
         Err(res) => return Ok(res),
     };

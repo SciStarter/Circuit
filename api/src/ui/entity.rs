@@ -1,9 +1,9 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use common::{
     model::{
         involvement::{Involvement, Mode},
         opportunity::{Opportunity, OpportunityQuery, OpportunityQueryOrdering},
-        person::Permission,
+        person::{LogEvent, LogIdentifier, Permission},
         Pagination,
     },
     Database, ToFixedOffset,
@@ -25,9 +25,15 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         r.get(entity)
             .at("me", |r| r.get(get_me))
             .at("interest", |r| r.post(register_interest))
-            .at("likes", |r| r.get(get_likes).post(add_like))
-            .at("saves", |r| r.get(get_saves).post(add_save))
-            .at("didit", |r| r.get(get_didit).post(add_didit))
+            .at("likes", |r| {
+                r.get(get_likes).post(add_like).delete(remove_like)
+            })
+            .at("saves", |r| {
+                r.get(get_saves).post(add_save).delete(remove_save)
+            })
+            .at("didit", |r| {
+                r.get(get_didit).post(add_didit).delete(remove_didit)
+            })
             .at("reviews", |r| r.post(add_review).get(reviews))
             .at("report-review", |r| r.post(report_review))
             .at("recommended", |r| r.get(recommended))
@@ -47,9 +53,22 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
 
     if opp.interior.accepted.unwrap_or(false)
         || person
+            .as_ref()
             .map(|p| p.check_permission(&Permission::ManageOpportunities))
             .unwrap_or(false)
     {
+        let opp_uid = opp.exterior.uid.clone();
+        common::log(
+            "viewed",
+            &json!({
+                "who": person.as_ref().map(|p| p.exterior.uid.clone()),
+                "opp": &opp_uid}),
+        );
+        if let Some(person) = person {
+            person
+                .log(db, LogEvent::View(LogIdentifier::Uid(opp_uid)))
+                .await?;
+        }
         okay(&opp.exterior)
     } else {
         Err(tide::Error::from_str(StatusCode::NotFound, "not found"))
@@ -76,6 +95,30 @@ pub async fn add_didit(mut req: tide::Request<Database>) -> tide::Result {
         "ui-didit",
         &json!({"person": person.exterior.uid, "opportunity": slug}),
     );
+    person
+        .log(db, LogEvent::AddDidit(LogIdentifier::Slug(slug)))
+        .await?;
+
+    okay_empty()
+}
+
+pub async fn remove_didit(mut req: tide::Request<Database>) -> tide::Result {
+    let slug = req.param("slug")?.to_string();
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
+    let db = req.state();
+
+    common::model::opportunity::for_slug::remove_didit_for_slug(db, &slug, &person.exterior.uid)
+        .await?;
+
+    common::log(
+        "ui-remove-didit",
+        &json!({"person": person.exterior.uid, "opportunity": slug}),
+    );
+    person
+        .log(db, LogEvent::DeleteDidit(LogIdentifier::Slug(slug)))
+        .await?;
 
     okay_empty()
 }
@@ -101,6 +144,30 @@ pub async fn add_save(mut req: tide::Request<Database>) -> tide::Result {
         "ui-save",
         &json!({"person": person.exterior.uid, "opportunity": slug}),
     );
+    person
+        .log(db, LogEvent::AddSave(LogIdentifier::Slug(slug)))
+        .await?;
+
+    okay_empty()
+}
+
+pub async fn remove_save(mut req: tide::Request<Database>) -> tide::Result {
+    let slug = req.param("slug")?.to_string();
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
+    let db = req.state();
+
+    common::model::opportunity::for_slug::remove_save_for_slug(db, &slug, &person.exterior.uid)
+        .await?;
+
+    common::log(
+        "ui-remove-save",
+        &json!({"person": person.exterior.uid, "opportunity": slug}),
+    );
+    person
+        .log(db, LogEvent::DeleteSave(LogIdentifier::Slug(slug)))
+        .await?;
 
     okay_empty()
 }
@@ -125,8 +192,35 @@ pub async fn add_like(mut req: tide::Request<Database>) -> tide::Result {
 
     common::log(
         "ui-like",
-        &json!({"person": person.map(|p| p.exterior.uid), "opportunity": slug}),
+        &json!({"person": person.as_ref().map(|p| p.exterior.uid), "opportunity": slug}),
     );
+    if let Some(person) = person {
+        person
+            .log(db, LogEvent::AddLike(LogIdentifier::Slug(slug)))
+            .await?;
+    }
+
+    okay_empty()
+}
+
+pub async fn remove_like(mut req: tide::Request<Database>) -> tide::Result {
+    let slug = req.param("slug")?.to_string();
+    let person = match request_person(&mut req).await? {
+        Some(person) => person,
+        None => return okay_empty(),
+    };
+    let db = req.state();
+
+    common::model::opportunity::for_slug::remove_like_for_slug(db, &slug, &person.exterior.uid)
+        .await?;
+
+    common::log(
+        "ui-remove-like",
+        &json!({"person": &person.exterior.uid, "opportunity": slug}),
+    );
+    person
+        .log(db, LogEvent::DeleteLike(LogIdentifier::Slug(slug)))
+        .await?;
 
     okay_empty()
 }
@@ -160,6 +254,9 @@ pub async fn add_review(mut req: tide::Request<Database>) -> tide::Result {
         "ui-review",
         &json!({"person": person.exterior.uid, "opportunity": slug}),
     );
+    person
+        .log(db, LogEvent::AddReview(LogIdentifier::Slug(slug)))
+        .await?;
 
     okay(&json!({ "id": id }))
 }
@@ -178,6 +275,9 @@ pub async fn report_review(mut req: tide::Request<Database>) -> tide::Result {
             "ui-report-review",
             &json!({"person": person.exterior.uid, "review": report.id}),
         );
+        person
+            .log(db, LogEvent::ReportReview(LogIdentifier::Id(report.id)))
+            .await?;
     }
     okay_empty()
 }
@@ -213,6 +313,8 @@ pub async fn recommended(req: tide::Request<Database>) -> tide::Result {
     let pagination = Pagination::Page { index: 0, size: 5 };
     let mut query = OpportunityQuery::default();
 
+    query.accepted = Some(true);
+    query.withdrawn = Some(false);
     query.beginning = Some(Utc::now().to_fixed_offset());
     query.exclude = Some(vec![opp.exterior.uid.clone()]);
 
@@ -306,6 +408,9 @@ pub async fn register_interest(mut req: tide::Request<Database>) -> tide::Result
         "ui-interest",
         &json!({"person": person.exterior.uid, "opportunity": slug}),
     );
+    person
+        .log(db, LogEvent::AddInterest(LogIdentifier::Slug(slug)))
+        .await?;
 
     okay_empty()
 }
