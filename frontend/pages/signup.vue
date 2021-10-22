@@ -2,7 +2,7 @@
   <div class="snm-wrapper">
     <div class="snm-container standalone-form">
       <h1>Create an Account</h1>
-      <signup-form :next="$route.query.next" :query="next_query" />
+      <signup-form :next="$route.query.next" :query="next_query" @cancel="$router.go(1)" />
     </div>
   </div>
 </template>

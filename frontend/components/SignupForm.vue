@@ -69,13 +69,6 @@
 </template>
 
 <script>
-/*
-
-  This component presents a form allowing the user to sign up. Once
-  the user has successfully signed up, or clicked the cancel button,
-  it emits a 'close' event.
-
-*/
 export default {
     name: "SignupForm",
 
@@ -159,7 +152,7 @@ export default {
 
     methods: {
         cancel () {
-            this.$emit('close')
+            this.$emit('cancel')
             this.signup.email = ''
             this.signup.password = ''
             this.password_repeat = ''
