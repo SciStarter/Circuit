@@ -274,7 +274,7 @@
 // import Card from '~/components/Card'
 import LoginForm from '~/components/LoginForm'
 import SignupForm from '~/components/SignupForm'
-import External from '~/components/External'
+import ExternalLink from '~/components/ExternalLink'
 import DynamicBlock from '~/components/DynamicBlock'
 import LookupPlace from '~/components/LookupPlace'
 import ActionButton from '~/components/ActionButton'
@@ -295,7 +295,7 @@ export default {
         // Card,
         LoginForm,
         SignupForm,
-        External,
+        ExternalLink,
         DynamicBlock,
         LookupPlace,
         ActionButton,
