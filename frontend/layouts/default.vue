@@ -225,9 +225,9 @@
             </nuxt-link>
           </li>
           <li>
-            <external href="/api/docs/v1.html" content="footer-link">
+            <external-link href="/api/docs/v1.html" content="footer-link">
               API documentation
-            </external>
+            </external-link>
           </li>
           <li>
             <nuxt-link to="/contact">

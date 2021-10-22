@@ -10,6 +10,8 @@
 
 */
 export default {
+    name: "ExternalLink",
+
     props: {
         href: {
             type: String,
