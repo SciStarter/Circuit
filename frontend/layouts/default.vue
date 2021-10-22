@@ -1229,5 +1229,9 @@ footer {
   }
   .modal {
     z-index:999!important;
+
+  }
+  .modal .animation-content {
+    overflow: visible;
   }
 </style>

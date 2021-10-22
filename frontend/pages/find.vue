@@ -161,7 +161,14 @@
     </div>
   </div>
   <section id="results">
+    <template v-if="matches.length > 0">
     <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" />
+  </template>
+    <template v-else>
+      <div class="alert">
+        <p>No results.</p>
+      </div>
+    </template>
   </section>
   <section id="pagination">
     <pagination :page-index="pagination.page_index" :last-page="pagination.last_page" @switch="set_query('page', $event) || search()" />
@@ -863,6 +870,7 @@ export default {
         flex-wrap: wrap;
         justify-content: space-evenly;
         padding: 0 1rem;
+        align-content: flex-start;
     }
 
 }
