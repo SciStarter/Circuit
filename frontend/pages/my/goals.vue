@@ -5,10 +5,10 @@
     <div class="goal-card" data-context="goal-dabbler">
       <trophy-dabbler />
       <div>
-        <strong>Science Dabbler</strong>
-        <p>
-          Take part in 5 science opportunities in one year
-        </p>
+        <div class="goal-header">
+          <strong>Science Dabbler</strong>
+          <p>Take part in 5 science opportunities in one year</p>
+        </div>
         <action-button principal arrow @click="set_goal(5, 366, 'dabbler')">
           Set Goal
         </action-button>
@@ -17,10 +17,10 @@
     <div class="goal-card" data-context="goal-enthusiast">
       <trophy-enthusiast />
       <div>
-        <strong>Science Enthusiast</strong>
-        <p>
-          Take part in 20 science opportunities in one year
-        </p>
+        <div class="goal-header">
+          <strong>Science Enthusiast</strong>
+          <p>Take part in 20 science opportunities in one year</p>
+        </div>
         <action-button principal arrow @click="set_goal(20, 366, 'enthusiast')">
           Set Goal
         </action-button>
@@ -29,10 +29,10 @@
     <div class="goal-card" data-context="goal-hero">
       <trophy-hero />
       <div>
-        <strong>Science Hero</strong>
-        <p>
-          Take part in 50 science opportunities in one year
-        </p>
+        <div class="goal-header">
+          <strong>Science Hero</strong>
+          <p>Take part in 50 science opportunities in one year</p>
+        </div>
         <action-button principal arrow @click="set_goal(50, 366, 'hero')">
           Set Goal
         </action-button>
@@ -527,6 +527,10 @@ export default {
 }
 
 @media (min-width: $tablet-screen) {
+  .goal-header {
+    min-height:75%;
+  }
+
     .goals {
         > h1 {
             font-size: $snm-font-largest;
@@ -554,6 +558,10 @@ export default {
             min-width: 300px;
             max-width: 600px;
             width: calc(33% - 2rem);
+
+            > div {
+              margin-bottom: 1rem;
+            }
         }
     }
 

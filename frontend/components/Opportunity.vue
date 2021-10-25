@@ -220,7 +220,7 @@
     </p>
     <p v-for="(value, key) in opportunity.opp_social_handles" :key="key">
       <strong>{{ title_case(key) }}:</strong>
-      {{ value }}
+      <a :href="value">{{ value }}</a>
     </p>
   </div>
 
