@@ -16,7 +16,7 @@
     <div class="info location">
       <location-icon />
       <div>
-        <opportunity-location :opportunity="opportunity" />
+        <opportunity-location :opportunity="opportunity" short="true" />
         <opportunity-notice :opportunity="opportunity" mode="place" />
       </div>
     </div>
