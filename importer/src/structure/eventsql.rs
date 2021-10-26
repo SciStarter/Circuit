@@ -180,10 +180,7 @@ fn interpret_one(partner: &PartnerInfo, entry: Value) -> Option<Opportunity> {
 
         opp.exterior.tags = node.tags.edges.into_iter().map(|x| x.node.name).collect();
 
-        // In Rust 2021 edition we can get rid of the local slug
-        // variable and do (|| node.slug.to_title_case())
-        let slug = &node.slug;
-        opp.exterior.title = node.title.unwrap_or_else(|| slug.to_title_case());
+        opp.exterior.title = node.title.unwrap_or_else(|| node.slug.to_title_case());
 
         opp.exterior.description = node.linked_data.description;
 
@@ -304,16 +301,15 @@ fn interpret_one(partner: &PartnerInfo, entry: Value) -> Option<Opportunity> {
                 .map(|s| format!("#{}", s))
                 .collect();
 
-            // Can replace with a normal call to [].into_iter() after
-            // we upgrade to Rust 2021
-            opp.exterior.opp_social_handles = IntoIterator::into_iter([
+            opp.exterior.opp_social_handles = [
                 ("twitter".to_string(), custom.twitter.unwrap_or_default()),
                 ("facebook".to_string(), custom.facebook.unwrap_or_default()),
                 (
                     "instagram".to_string(),
                     custom.instagram.unwrap_or_default(),
                 ),
-            ])
+            ]
+            .into_iter()
             .collect();
         }
     } else {

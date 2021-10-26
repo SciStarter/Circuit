@@ -83,7 +83,7 @@ export default {
 
     methods: {
         cancel () {
-            this.$emit('close')
+            this.$emit('cancel')
             this.login.email = ''
             this.login.password = ''
         },

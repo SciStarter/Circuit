@@ -1,14 +1,14 @@
 <template>
 <article class="opportunity">
   <div class="mobile-menu" :class="{'closed': !mobile_menu_open}" data-context="mobile-menu">
-    <external
+    <external-link
       :href="opportunity.partner_opp_url"
       title="Find out more"
       campaign="opp-page"
       content="find-out-more"
       >
       <link-icon /> Find Out More
-    </external>
+    </external-link>
     <a @click="do_save">
       <saved-icon /> Save for Later
     </a>
@@ -147,7 +147,7 @@
     </div>
   </div>
 
-  <external
+  <external-link
     :href="opportunity.partner_opp_url"
     title="Find out more"
     campaign="opp-page"
@@ -157,19 +157,19 @@
     >
     <strong>Find out more</strong>
     <span>{{ opportunity.partner_opp_url }}</span>
-  </external>
+  </external-link>
 
   <div class="partner-and-org opportunity-section">
     <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
       <figcaption>As Featured On</figcaption>
-      <component :is="opportunity.partner_website ? 'external' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on" new-tab>
+      <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on" new-tab>
         <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name + ' logo'">
         <span v-else>{{ opportunity.partner_name }}</span>
       </component>
     </figure>
     <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
       <figcaption>Hosted By</figcaption>
-      <component :is="opportunity.organization_website ? 'external' : 'span'" :href="opportunity.organization_website" campaign="opp-page" content="hosted-by" new-tab>
+      <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" campaign="opp-page" content="hosted-by" new-tab>
         <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name + ' logo'">
         <span v-else>{{ opportunity.organization_name }}</span>
       </component>
@@ -384,7 +384,7 @@ import OpportunityLocation from "~/components/OpportunityLocation"
 import OpportunityTime from "~/components/OpportunityTime"
 import OpportunityKeywords from "~/components/OpportunityKeywords"
 import OpportunityNotice from "~/components/OpportunityNotice"
-import External from "~/components/External"
+import ExternalLink from "~/components/ExternalLink"
 import Stars from "~/components/Stars"
 import CalendarAdd from "~/components/CalendarAdd"
 import SocialButton from "~/components/SocialButton"
@@ -409,7 +409,7 @@ export default {
         OpportunityTime,
         OpportunityKeywords,
         OpportunityNotice,
-        External,
+        ExternalLink,
         Stars,
         CalendarAdd,
         SocialButton,

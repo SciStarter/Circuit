@@ -25,13 +25,6 @@
 </template>
 
 <script>
-/*
-
-    This component presents a form allowing the user to log in. Once
-    the user has successfully logged in, or clicked the cancel button,
-    it emits a 'close' event.
-
-  */
 export default {
     name: "LoginForm",
 
@@ -96,7 +89,7 @@ export default {
 
     methods: {
         cancel () {
-            this.$emit('close')
+            this.$emit('cancel')
             this.login.email = ''
             this.login.password = ''
         },

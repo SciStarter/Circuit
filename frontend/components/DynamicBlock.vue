@@ -26,7 +26,7 @@
 
 import Vue from 'vue'
 import tags from '~/assets/lib/tags'
-import External from '~/components/External'
+import ExternalLink from '~/components/ExternalLink'
 
 export default {
     name: "DynamicBlock",
@@ -130,10 +130,10 @@ export default {
                         }
                         else {
                             if(new_tab) {
-                                return '<external href="' + href + '"' + (title ? ' title="' + title + '"' : '') + ' new-tab>' + content + '</external>';
+                                return '<external-link href="' + href + '"' + (title ? ' title="' + title + '"' : '') + ' new-tab>' + content + '</external-link>';
                             }
                             else {
-                                return '<external href="' + href + '"' + (title ? ' title="' + title + '"' : '') + '>' + content + '</external>';
+                                return '<external-link href="' + href + '"' + (title ? ' title="' + title + '"' : '') + '>' + content + '</external-link>';
                             }
                         }
                     }
@@ -155,7 +155,7 @@ export default {
         generated_component() {
             return Vue.extend({
                 components: {
-                    External,
+                    ExternalLink,
                 },
                 template: this.content,
             });

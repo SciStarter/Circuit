@@ -108,9 +108,8 @@
                 </nuxt-link>
 
                 store and/or access information on a device, such as
-                unique IDs in cookies to process personal data. You may
-                accept or manage your choices by clicking below or at any
-                time in the
+                unique IDs in cookies to process personal data. Find
+                the details on our
 
                 <nuxt-link to="/privacy">
                   privacy policy
@@ -218,20 +217,20 @@
         </ul>
 
         <ul>
-          <li><h1>For Science Professionals</h1></li>
+          <li><h1>For Providers</h1></li>
           <li>
             <nuxt-link to="/become-a-partner">
               Be Part of Science Near Me
             </nuxt-link>
           </li>
           <li>
-            <external href="/api/docs/v1.html" content="footer-link">
-              API documentation
-            </external>
+            <external-link href="/api/docs/v1.html" content="footer-link">
+              API Documentation
+            </external-link>
           </li>
           <li>
             <nuxt-link to="/contact">
-              Display Science Opportunities
+              Customize &amp; Embed the Opportunity Finder
             </nuxt-link>
           </li>
         </ul>
@@ -254,7 +253,7 @@
 
       <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
         <div class="card">
-          <login-form @close="show_login=false">
+          <login-form next="find" @close="show_login=false">
             <dynamic-block group="login-modal" item="standard" class="content" />
           </login-form>
         </div>
@@ -262,7 +261,7 @@
 
       <b-modal v-model="show_signup" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
         <div class="card">
-          <signup-form @close="show_signup=false">
+          <signup-form next="find" @close="show_signup=false">
             <dynamic-block group="signup-modal" item="standard" class="content" />
           </signup-form>
         </div>
@@ -274,7 +273,7 @@
 // import Card from '~/components/Card'
 import LoginForm from '~/components/LoginForm'
 import SignupForm from '~/components/SignupForm'
-import External from '~/components/External'
+import ExternalLink from '~/components/ExternalLink'
 import DynamicBlock from '~/components/DynamicBlock'
 import LookupPlace from '~/components/LookupPlace'
 import ActionButton from '~/components/ActionButton'
@@ -295,7 +294,7 @@ export default {
         // Card,
         LoginForm,
         SignupForm,
-        External,
+        ExternalLink,
         DynamicBlock,
         LookupPlace,
         ActionButton,

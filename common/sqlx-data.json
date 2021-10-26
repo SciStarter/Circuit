@@ -366,6 +366,27 @@
       ]
     }
   },
+  "3fc9c7529a30a98931f05a3ae3b447d20175be19f608cccd56a5e00bf7dac34c": {
+    "query": "insert\ninto c_person_log (\"person_id\", \"event\")\nvalues ($1, $2::jsonb)\nreturning \"id\";\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
   "42aeff0b3f4e842b6e554b89136413119fabda020c3ecb09e01f4540b30b092d": {
     "query": "insert into c_involvement (exterior, interior)\nvalues (\n  jsonb_build_object('opportunity', $2::jsonb, 'first', to_jsonb(now()), 'latest', to_jsonb(now()), 'mode', $3::jsonb),\n  jsonb_build_object('participant', $1::jsonb, 'location', $4::jsonb)\n)\non conflict ((exterior -> 'opportunity'), (interior -> 'participant')) do\nupdate set\n  exterior = jsonb_set(\n    jsonb_set(c_involvement.exterior, '{latest}', to_jsonb(now())),\n    '{mode}',\n    greatest((c_involvement.exterior -> 'mode'), $3::jsonb)\n  ),\n  interior = case when ($4::jsonb = 'null'::jsonb) then c_involvement.interior else jsonb_set(c_involvement.interior, '{location}', $4::jsonb) end\n;\n",
     "describe": {
@@ -1207,6 +1228,19 @@
       "nullable": [
         null
       ]
+    }
+  },
+  "afa9dbcb55697c235fc59405de57f3d7d83b9e8354e4b2a992c16a306e79872e": {
+    "query": "delete from c_opportunity_like where opportunity_id = $1 and person = $2",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Uuid"
+        ]
+      },
+      "nullable": []
     }
   },
   "b5e0a2e00c94e1d37e6ef7ab175d524ebaca9100d64453e9cc60de99489a4f90": {
