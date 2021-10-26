@@ -14,13 +14,13 @@
   <div class="snm-container">
   <div id="filters-ordering">
     <b-field id="filter-physical">
-      <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online">
+      <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online" @input="search">
         <span class="radio-label">In-Person<br> &amp;&nbsp;Online</span>
       </b-radio-button>
-      <b-radio-button v-model="query.physical" native-value="in-person" data-context="find-sort-in-person">
+      <b-radio-button v-model="query.physical" native-value="in-person" data-context="find-sort-in-person" @input="search">
         <span class="radio-label">In-Person<br> Only</span>
       </b-radio-button>
-      <b-radio-button v-model="query.physical" native-value="online" data-context="find-sort-online">
+      <b-radio-button v-model="query.physical" native-value="online" data-context="find-sort-online" @input="search">
         <span class="radio-label">Online Only</span>
       </b-radio-button>
     </b-field>
@@ -145,14 +145,14 @@
           @select="selected_partner = $event"
           />
       </fieldset>
-      <div class="buttons no-mobile">
-        <action-button tertiary @click="clear">
-          Clear Filters
-        </action-button>
-        <action-button primary @click="search">
-          Apply
-        </action-button>
-      </div>
+      <!-- <div class="buttons no-mobile"> -->
+      <!--   <action-button tertiary @click="clear"> -->
+      <!--     Clear Filters -->
+      <!--   </action-button> -->
+      <!--   <action-button primary @click="search"> -->
+      <!--     Apply -->
+      <!--   </action-button> -->
+      <!-- </div> -->
       <div class="no-mobile">
         <h1>Share Your Results</h1>
         <p>Share the list by copying the link below</p>
@@ -185,7 +185,7 @@
     <action-button @click="clear">
       Clear Filters
     </action-button>
-    <action-button primary @click="search">
+    <action-button primary @click="apply">
       Apply
     </action-button>
   </div>
@@ -378,8 +378,10 @@ export default {
             set(val) {
                 if(val) {
                     Vue.set(this.query, 'beginning', (new Date(val)).toISOString());
+                    this.search();
                 } else {
                     Vue.delete(this.query, 'beginning');
+                    this.search();
                 }
             }
         },
@@ -392,8 +394,10 @@ export default {
             set(val) {
                 if(val) {
                     Vue.set(this.query, 'ending', (new Date(val)).toISOString());
+                    this.search();
                 } else {
                     Vue.delete(this.query, 'ending');
+                    this.search();
                 }
             }
         },
@@ -414,11 +418,13 @@ export default {
                     Vue.set(this.query, 'longitude', val.longitude);
                     Vue.set(this.query, 'near', val.near);
                     Vue.set(this.query, 'proximity', val.proximity);
+                    this.search();
                 } else {
                     Vue.delete(this.query, 'latitude');
                     Vue.delete(this.query, 'longitude');
                     Vue.delete(this.query, 'near');
                     Vue.delete(this.query, 'proximity');
+                    this.search();
                 }
             }
         },
@@ -542,15 +548,22 @@ export default {
             } else {
                 Vue.delete(this.query, name);
             }
+            this.search();
         },
 
         clear() {
             this.query = empty_query();
         },
 
-        search() {
+        apply() {
             this.filtering = false;
-            this.$router.push({ name: 'find', query: this.query });
+            this.search();
+        },
+
+        search() {
+            if(!this.filtering) {
+                this.$router.push({ name: 'find', query: this.query });
+            }
         },
     }
 }

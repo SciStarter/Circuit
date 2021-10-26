@@ -1,11 +1,11 @@
-FROM rust:1 as builder
+FROM rust:1-bullseye as builder
 ADD common/ /usr/src/common/
 ADD logger/ /usr/src/logger/
 WORKDIR /usr/src/logger/
 RUN cargo install --path . --features container
 RUN strip /usr/local/cargo/bin/logger
 
-FROM debian:stable-slim
+FROM debian:bullseye
 EXPOSE 9000
 COPY --from=builder /usr/local/cargo/bin/logger /usr/local/bin/logger
 CMD ["logger"]

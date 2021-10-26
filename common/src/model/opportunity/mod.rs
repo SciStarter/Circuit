@@ -957,7 +957,7 @@ fn build_matching_query(
     if let Some(cost) = &query.cost {
         clauses.push(format!(
             "(exterior ->> 'cost') = ${}",
-            ParamValue::RawString(cost.as_ref().to_owned()).append(&mut params)
+            ParamValue::RawString(cost.as_ref().to_lowercase()).append(&mut params)
         ))
     }
 

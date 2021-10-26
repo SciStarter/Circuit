@@ -5,6 +5,8 @@ export default {
 
   prettify: false,
 
+  loading: "~/components/LoadingSpinner.vue",
+
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: "Science Near Me",

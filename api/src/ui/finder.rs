@@ -261,12 +261,16 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
         }
     };
 
-    let matches: Vec<OpportunityExterior> =
-        Opportunity::load_matching(db, &query, search.sort.unwrap_or_default(), pagination)
-            .await?
-            .into_iter()
-            .map(|m| m.exterior)
-            .collect();
+    let matches: Vec<OpportunityExterior> = Opportunity::load_matching(
+        db,
+        dbg!(&query),
+        search.sort.unwrap_or_default(),
+        pagination,
+    )
+    .await?
+    .into_iter()
+    .map(|m| m.exterior)
+    .collect();
 
     let total = Opportunity::count_matching(db, &query).await?;
 
