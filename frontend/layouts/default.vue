@@ -667,18 +667,18 @@ header {
 
 #cookie-notice {
     position: fixed;
-    bottom: 1rem;
-    left: 1rem;
+    bottom: 0;
+    left: 0;
     z-index: 500;
-    width: 75vw;
+    width: 100vw;
     min-width: 300px;
-    max-height: 50vh;
+    max-height: 55vh;
     overflow-y: auto;
     overflow-x: hidden;
     background-color: $snm-color-background;
-    border-radius: 1rem;
+    border-radius: 0;
     border: 1px solid $snm-color-background-medium;
-    padding: 2rem;
+    padding: 1rem;
     box-shadow: 0px 0px 6px $snm-color-shadow;
     display: flex;
     flex-direction: column;
@@ -686,13 +686,21 @@ header {
     h1 {
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+        margin:0;
+    }
+
+    p {
+      margin:0 0 0.5rem 0;
     }
 
     h2 {
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: 1.25rem;
+        font-size: 1rem;
+    }
+    button {
+      margin-bottom: 1rem;
     }
 
     >div {
@@ -700,9 +708,9 @@ header {
         flex-direction: column;
         align-items: flex-start;
 
-        >* {
-            margin: 1rem;
-        }
+        // >* {
+        //     margin: 1rem;
+        // }
     }
 }
 
@@ -778,6 +786,20 @@ footer {
     }
 
     #cookie-notice {
+      position: fixed;
+      bottom: 1rem;
+      left: 1rem;
+      z-index: 500;
+      width: 75vw;
+      min-width: 300px;
+      max-height: 50vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background-color: $snm-color-background;
+      border-radius: 1rem;
+      border: 1px solid $snm-color-background-medium;
+      padding: 2rem;
+      box-shadow: 0px 0px 6px $snm-color-shadow;
         flex-direction: row;
     }
 
