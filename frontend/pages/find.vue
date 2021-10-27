@@ -508,6 +508,13 @@ export default {
 
     watchQuery: true,
 
+    mounted() {
+        this.$nextTick(() => {
+            this.$nuxt.$loading.start()
+            setTimeout(() => this.$nuxt.$loading.finish(), 500)
+        });
+    },
+
     methods: {
         copy_query() {
             if(navigator.clipboard !== undefined) {

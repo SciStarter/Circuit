@@ -1,4 +1,6 @@
-<template />
+<template>
+  <b-loading v-model="active" />
+</template>
 
 <script>
 export default {
@@ -6,18 +8,17 @@ export default {
 
     data() {
         return {
-            current: null,
+            active: false,
         };
     },
 
     methods: {
         start() {
-            this.current = this.$buefy.loading.open({ container: null });
+            this.active = true;
         },
 
         finish() {
-            this.current.close();
-            this.current = null;
+            this.active = false;
         }
     },
 }
