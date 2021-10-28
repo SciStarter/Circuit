@@ -26,9 +26,9 @@
       <option :value="8046">
         5 miles
       </option>
-      <option v-if="value_miles" :value="sanitized_value.proximity">
-        {{ value_miles }} miles
-      </option>
+      <!-- <option v-if="value_miles" :value="sanitized_value.proximity"> -->
+      <!--   {{ value_miles }} miles -->
+      <!-- </option> -->
     </b-select>
   </b-field>
 </b-field>
