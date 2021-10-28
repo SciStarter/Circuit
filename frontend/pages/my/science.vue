@@ -5,16 +5,16 @@
       <template #header>
         Report Your Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
       </template>
-      <section v-if="show_explanation" class="explanation">
+      <!-- <section v-if="show_explanation" class="explanation">
         <a class="close" @click="show_explanation = false">&times;</a>
-        <h2>What is this section?</h2>
-        <p>
+        <h2>What is this section?</h2> -->
+        <p class="my-intro">
           This section lists opportunities you’ve expressed an
           interest in by clicking to a website, saving, or adding to
           your calendar. Recording and reporting this activity helps
           scientists learn how people engage in science.
         </p>
-      </section>
+      <!-- </section> -->
       <section class="results">
         <div v-for="inv in report.matches" :key="inv.id" class="reportable">
           <opportunity-card :opportunity="inv.opportunity" :rule="false" />
@@ -184,6 +184,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.my-intro {
+  margin:1rem;
+}
 .explanation {
     padding: 24px 30px;
     background-color: $snm-color-note;
