@@ -106,10 +106,10 @@
         <div class="info location">
           <location-icon />
           <div>
-            <opportunity-location :opportunity="opportunity" />
+            <opportunity-location :opportunity="opportunity" is-opportunity />
             <opportunity-notice :opportunity="opportunity" mode="place" />
           </div>
-          <a v-if="has_value(location_geojson)" @click="show_map = true">see&nbsp;on&nbsp;map</a>
+          <a v-if="(opportunity.location_type == 'at' || opportunity.location_type == 'near') && has_value(location_geojson)" @click="show_map = true">see&nbsp;on&nbsp;map</a>
         </div>
         <div class="info time">
           <time-icon />

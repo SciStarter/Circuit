@@ -19,7 +19,7 @@
       {{ opportunity.address_country }}
     </li>
   </ul>
-  <div v-else-if="opportunity.location_type == 'near'">
+  <div v-else-if="!isOpportunity && opportunity.location_type == 'near'">
     <p v-if="opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
       <em>See map on opportunity page</em>
     </p>
@@ -46,7 +46,13 @@ export default {
             type: Boolean,
             required: false,
             default: false
-        }
+        },
+
+        isOpportunity: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
     }
 }
 </script>
