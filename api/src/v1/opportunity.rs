@@ -46,7 +46,7 @@ async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
     }
 
     opp.exterior.partner = auth;
-    opp.interior.accepted = Some(false);
+    opp.interior.accepted = Some(true); // Policy now to trust partners by default
 
     if let Err(err) = opp.validate().await {
         return Ok(error(StatusCode::BadRequest, err.to_string()));

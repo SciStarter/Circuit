@@ -2,10 +2,23 @@
   <div class="login-form">
     <slot />
     <div class="form-header">
-      <p>Don't have an account? <a href="/signup">Create one now</a>.</p>
-      <p>Do you have a <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter" /> account? <a href="/login-scistarter">Log in with your SciStarter account</a>.<b-tooltip label="SciStarter is a citizen science database.">
+      <p>
+        <nuxt-link to="/signup">
+          Create a Science Near Me account
+        </nuxt-link>
+      </p>
+      <p>
+        Do you have a
+        <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter">
+        account?
+        <nuxt-link to="/login-scistarter">
+          Log in with your SciStarter account
+        </nuxt-link>
+        .
+        <b-tooltip label="SciStarter is a citizen science database.">
           <b-button label="?" />
-      </b-tooltip></p>
+        </b-tooltip>
+      </p>
     </div>
     <b-field label="Email" :type="validate_email.type" :message="validate_email.message" label-position="on-border">
       <b-input v-model="login.email" type="email" required />
@@ -35,7 +48,7 @@ export default {
         next: {
             type: String,
             required: false,
-            default: '',
+            default: '/',
         },
 
         query: {
@@ -52,7 +65,7 @@ export default {
             login: {
                 email: '',
                 password: '',
-                next: this.next,
+                next: this.next || '/',
                 next_query: this.query,
             }
         }

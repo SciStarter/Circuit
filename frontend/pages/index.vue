@@ -275,6 +275,7 @@ export default {
 
     data() {
         return {
+            search_place_edit: null,
             search_text: "",
             search_place_edit: null,
             search_beginning: new Date().toISOString().slice(0, 10),
@@ -301,11 +302,11 @@ export default {
                     return this.$store.state.here;
                 }
 
-                return this._search_place;
+                return this.search_place_edit;
             },
 
             set(val) {
-                this._search_place = val;
+                this.search_place_edit = val;
             }
         },
 

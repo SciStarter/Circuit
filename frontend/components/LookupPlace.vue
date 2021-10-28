@@ -26,7 +26,7 @@
       <option :value="8046">
         5 miles
       </option>
-      <option :value="sanitized_value.proximity">
+      <option v-if="value_miles" :value="sanitized_value.proximity">
         {{ value_miles }} miles
       </option>
     </b-select>
@@ -73,30 +73,50 @@ export default {
             return this.num_loading > 0
         },
 
-        sanitized_value () {
-            const patch = {}
+        sanitized_value: {
+            get() {
+                const patch = {}
 
-            if (!this.value.proximity || this.value.proximity < 1 || this.value.proximity > 100000) {
-                patch.proximity = 80467
+                if (!this.value.proximity || this.value.proximity < 1 || this.value.proximity > 100000) {
+                    patch.proximity = 80467
+                }
+
+                if (!this.value.longitude) {
+                    patch.longitude = 0
+                }
+
+                if (!this.value.latitude) {
+                    patch.latitude = 0
+                }
+
+                if (!this.value.near) {
+                    patch.near = ''
+                }
+
+                return Object.assign({}, this.value, patch)
+            },
+
+            set(val) {
+                this.$emit('input', val);
             }
-
-            if (!this.value.longitude) {
-                patch.longitude = 0
-            }
-
-            if (!this.value.latitude) {
-                patch.latitude = 0
-            }
-
-            if (!this.value.near) {
-                patch.near = ''
-            }
-
-            return Object.assign({}, this.value, patch)
         },
 
         value_miles () {
-            return (this.value.proximity * MILES).toFixed(2)
+            switch(this.value.proximity) {
+            case 80467:
+            case 40233:
+            case 16093:
+            case 8046:
+                return "";
+            default:
+                const miles = this.value.proximity * MILES;
+
+                if(miles > 5) {
+                    return Math.ceil(miles).toString();
+                }
+
+                return miles.toFixed(2)
+            }
         }
     },
 
@@ -148,8 +168,11 @@ export default {
     },
 
     change (delta) {
-      const result = Object.assign({}, this.value, delta)
-      this.$emit('input', result)
+        if(delta['near'] === "") {
+            delta.latitude = 0;
+            delta.longitude = 0;
+        }
+        this.sanitized_value = Object.assign({}, this.sanitized_value, delta);
     }
   }
 }
