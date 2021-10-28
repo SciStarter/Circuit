@@ -6,6 +6,7 @@
       title="Find out more"
       campaign="opp-page"
       content="find-out-more"
+      new-tab
       >
       <link-icon /> Find Out More
     </external-link>
@@ -154,6 +155,7 @@
     content="find-out-more"
     class="find-out-more"
     @before="register_interest"
+    new-tab
     >
     <strong>Find out more</strong>
     <span>{{ opportunity.partner_opp_url }}</span>
