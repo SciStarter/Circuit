@@ -34,344 +34,344 @@
     <img v-else src="~assets/img/hamburger.svg?data" title="open mobile menu">
   </button>
 
-<div class="snm-container">
+  <div class="snm-container">
 
-  <div class="opportunity-left">
+    <div class="opportunity-left">
 
-  <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
+      <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
 
 
-<div class="opportunity-section">
-  <div class="opportunity-name">
-    <strong>{{ subtitle }}</strong>
-    <h1>{{ opportunity.title }}</h1>
-  </div>
+      <div class="opportunity-section">
+        <div class="opportunity-name">
+          <strong>{{ subtitle }}</strong>
+          <h1>{{ opportunity.title }}</h1>
+        </div>
 
-  <div class="elevator-pitch">
-    <vue-markdown :source="elevator_pitch" class="content" />
-  </div>
-</div>
-
-  <div class="involvement opportunity-section">
-    <div class="reviews-likes">
-      <span v-if="reviews !== null">
-        <stars v-model="reviews.average" />
-        {{ reviews.reviews.length }} reviews
-      </span>
-      <span v-if="likes !== null">
-        <like-icon :class="{'liked': did.like}" />
-        {{ likes }} likes
-      </span>
-    </div>
-    <div class="numbers">
-    <p>
-      {{ saves }} People Interested
-    </p>
-    <p>
-      {{ didit }} People Report Doing This Opportunity
-    </p>
-  </div>
-    <b-modal
-      v-model="show_bookmark_add"
-      has-modal-card
-      trap-focus
-      :destroy-on-hide="false"
-      aria-role="dialog"
-      aria-label="Add a Review"
-      aria-modal
-      >
-      <div class="card">
-        <h2>You must be signed in to save an opportunity</h2>
-        <action-button primary @click="(show_bookmark_add = false) || $emit('login')">
-          Sign In
-        </action-button>
-        <h2>Don't have an account?</h2>
-        <action-button secondary @click="(show_bookmark_add = false) || $emit('signup')">
-          Create an Account
-        </action-button>
+        <div class="elevator-pitch">
+          <vue-markdown :source="elevator_pitch" class="content" />
+        </div>
       </div>
-    </b-modal>
-    <action-button class="no-mobile" principal :disabled="did.save" @click="do_save">
-      <saved-icon /> <span v-if="did.save">Saved</span><span v-else>Save for Later</span>
-    </action-button>
-    <action-button :disabled="did.like" class="no-mobile" secondary @click="do_like">
-      <like-icon /> <span v-if="did.like">You liked this</span><span v-else>Like</span>
-    </action-button>
-    <social-button mode="facebook" :opportunity="opportunity" class="no-mobile" />
-    <social-button mode="twitter" :opportunity="opportunity" class="no-mobile" />
-    <social-button mode="linkedin" :opportunity="opportunity" class="no-mobile" />
-  </div>
 
-  <div class="secondary opportunity-section">
-    <div class="info location">
-      <location-icon />
-      <div>
-        <opportunity-location :opportunity="opportunity" />
-        <opportunity-notice :opportunity="opportunity" mode="place" />
-      </div>
-      <a v-if="has_value(location_geojson)" @click="show_map = true">see&nbsp;on&nbsp;map</a>
-    </div>
-    <div class="info time">
-      <time-icon />
-      <div>
-        <opportunity-time :opportunity="opportunity" @upcoming="upcoming = $event" />
-        <opportunity-notice :opportunity="opportunity" mode="time" />
+      <div class="involvement opportunity-section">
+        <div class="reviews-likes">
+          <span v-if="reviews !== null">
+            <stars v-model="reviews.average" />
+            {{ reviews.reviews.length }} reviews
+          </span>
+          <span v-if="likes !== null">
+            <like-icon :class="{'liked': did.like}" />
+            {{ likes }} likes
+          </span>
+        </div>
+        <div class="numbers">
+          <p>
+            {{ saves }} People Interested
+          </p>
+          <p>
+            {{ didit }} People Report Doing This Opportunity
+          </p>
+        </div>
         <b-modal
-          v-model="show_calendar_add"
+          v-model="show_bookmark_add"
           has-modal-card
           trap-focus
           :destroy-on-hide="false"
           aria-role="dialog"
-          aria-label="Add to calendar"
+          aria-label="Add a Review"
           aria-modal
           >
           <div class="card">
-            <div v-for="pair in upcoming" :key="pair[0].toISOString()" class="calendar-row">
-              <label>
-                {{ pair[0].toLocaleString() }}
-              </label>
-              <calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-              <calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-              <calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-              <calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+            <h2>You must be signed in to save an opportunity</h2>
+            <action-button primary @click="(show_bookmark_add = false) || $emit('login')">
+              Sign In
+            </action-button>
+            <h2>Don't have an account?</h2>
+            <action-button secondary @click="(show_bookmark_add = false) || $emit('signup')">
+              Create an Account
+            </action-button>
+          </div>
+        </b-modal>
+        <action-button class="no-mobile" principal :disabled="did.save" @click="do_save">
+          <saved-icon /> <span v-if="did.save">Saved</span><span v-else>Save for Later</span>
+        </action-button>
+        <action-button :disabled="did.like" class="no-mobile" secondary @click="do_like">
+          <like-icon /> <span v-if="did.like">You liked this</span><span v-else>Like</span>
+        </action-button>
+        <social-button mode="facebook" :opportunity="opportunity" class="no-mobile" />
+        <social-button mode="twitter" :opportunity="opportunity" class="no-mobile" />
+        <social-button mode="linkedin" :opportunity="opportunity" class="no-mobile" />
+      </div>
+
+      <div class="secondary opportunity-section">
+        <div class="info location">
+          <location-icon />
+          <div>
+            <opportunity-location :opportunity="opportunity" />
+            <opportunity-notice :opportunity="opportunity" mode="place" />
+          </div>
+          <a v-if="has_value(location_geojson)" @click="show_map = true">see&nbsp;on&nbsp;map</a>
+        </div>
+        <div class="info time">
+          <time-icon />
+          <div>
+            <opportunity-time :opportunity="opportunity" @upcoming="upcoming = $event" />
+            <opportunity-notice :opportunity="opportunity" mode="time" />
+            <b-modal
+              v-model="show_calendar_add"
+              has-modal-card
+              trap-focus
+              :destroy-on-hide="false"
+              aria-role="dialog"
+              aria-label="Add to calendar"
+              aria-modal
+              >
+              <div class="card">
+                <div v-for="pair in upcoming" :key="pair[0].toISOString()" class="calendar-row">
+                  <label>
+                    {{ pair[0].toLocaleString() }}
+                  </label>
+                  <calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+                  <calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+                  <calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+                  <calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+                </div>
+              </div>
+            </b-modal>
+            <action-button v-if="has_value(opportunity.start_datetimes)" secondary class="no-mobile" @click="show_calendar_add = true">
+              Add to calendar
+            </action-button>
+          </div>
+        </div>
+        <div class="info keywords">
+          <keywords-icon />
+          <opportunity-keywords :opportunity="opportunity" />
+        </div>
+      </div>
+
+      <external-link
+        :href="opportunity.partner_opp_url"
+        title="Find out more"
+        campaign="opp-page"
+        content="find-out-more"
+        class="find-out-more"
+        @before="register_interest"
+        new-tab
+        >
+        <strong>Find out more</strong>
+        <span>{{ opportunity.partner_opp_url }}</span>
+      </external-link>
+
+      <div class="partner-and-org opportunity-section">
+        <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
+          <figcaption>As Featured On</figcaption>
+          <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on" new-tab>
+            <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name + ' logo'">
+            <span v-else>{{ opportunity.partner_name }}</span>
+          </component>
+        </figure>
+        <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
+          <figcaption>Hosted By</figcaption>
+          <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" campaign="opp-page" content="hosted-by" new-tab>
+            <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name + ' logo'">
+            <span v-else>{{ opportunity.organization_name }}</span>
+          </component>
+        </figure>
+      </div>
+
+      <div class="more-info opportunity-section">
+        <h2>More Information</h2>
+        <p v-if="has_value(opportunity.cost)" class="item">
+          Cost: {{ opportunity.cost !== 'free' ? 'Yes' : 'No' }}
+        </p>
+        <p v-if="has_value(opportunity.ticket_required)" class="item">
+          Ticket Required: {{ opportunity.ticket_required ? 'Yes' : 'No' }}
+        </p>
+        <p v-if="has_value(opportunity.opp_venue)" class="item">
+          Venue Type: {{ venue_type }}
+        </p>
+        <p v-if="has_value(opportunity.min_age) && opportunity.min_age > 0" class="item">
+          Minimum Age: {{ opportunity.min_age }}
+        </p>
+        <p v-if="has_value(opportunity.max_age) && opportunity.max_age < 999" class="item">
+          Maximum Age: {{ opportunity.max_age }}
+        </p>
+        <p v-if="has_value(opportunity.languages)" class="item">
+          Languages: {{ opportunity.languages.join(', ') }}
+        </p>
+      </div>
+
+      <div class="description opportunity-section">
+        <h2>About This Science Opportunity</h2>
+        <read-more v-model="description_open">
+          <vue-markdown :source="opportunity.description" class="content" />
+        </read-more>
+      </div>
+
+      <div v-if="has_value(opportunity.tags)" class="tags opportunity-section">
+        <h2>Tags</h2>
+        <nuxt-link v-for="tag in opportunity.tags" :key="tag" :to="'/find?text=' + encodeURIComponent(tag)">
+          {{ tag }}
+        </nuxt-link>
+      </div>
+
+      <div class="social opportunity-section">
+        <h2>Social Media</h2>
+        <p>
+          <strong>Hashtags:</strong>
+          {{ opportunity.opp_hashtags.join(', ') || '#science' }}
+        </p>
+        <p v-for="(value, key) in opportunity.opp_social_handles" :key="key">
+          <strong>{{ title_case(key) }}:</strong>
+          <a :href="value">{{ value }}</a>
+        </p>
+      </div>
+
+      <div class="reviews">
+
+        <b-modal
+          v-model="show_review_add"
+          has-modal-card
+          trap-focus
+          :destroy-on-hide="false"
+          aria-role="dialog"
+          aria-label="Add a Review"
+          aria-modal
+          >
+          <div class="card">
+            <div v-if="user.authenticated">
+              <h2>Rate &amp; Review</h2>
+              <div>
+                <stars v-model="new_review.rating" editable />
+              </div>
+              <b-input v-model="new_review.comment" type="textarea" />
+              <div class="buttons">
+                <action-button tertiary @click="show_review_add = false">
+                  Cancel
+                </action-button>
+                <action-button primary @click="do_review">
+                  Submit
+                </action-button>
+              </div>
+            </div>
+            <div v-else>
+              <h2>You must be signed in to add a review</h2>
+              <action-button primary @click="(show_review_add = false) || $emit('login')">
+                Sign In
+              </action-button>
+              <h2>Don't have an account?</h2>
+              <action-button tertiary @click="(show_review_add = false) || $emit('signup')">
+                Create an Account
+              </action-button>
             </div>
           </div>
         </b-modal>
-        <action-button v-if="has_value(opportunity.start_datetimes)" secondary class="no-mobile" @click="show_calendar_add = true">
-          Add to calendar
+        <div class="reviews-header">
+          <h2>Reviews</h2>
+          <action-button class="no-mobile" secondary @click="show_review_add = true">
+            <star-icon /> Add Review
+          </action-button>
+        </div>
+        <template v-if="!loading_reviews">
+          <div v-for="review in reviews.reviews" :key="review.id" class="review">
+            <div>
+              <stars v-model="review.rating" />
+              <a class="report" @click="report_review(review.id)"><flag-icon /> Report</a>
+            </div>
+            <div>
+              {{ review.username }} &bull; {{ (new Date(review.when)).toLocaleString() }}
+            </div>
+            <read-more v-model="review.expanded">
+              <vue-markdown :source="review.comment" />
+            </read-more>
+          </div>
+        </template>
+        <b-loading v-model="loading_reviews" :is-full-page="false" />
+      </div>
+    </div>
+    <div class="opportunity-right">
+
+      <div class="ididthis no-mobile">
+        <h2>
+          <atom-icon /> <span v-if="did.didit">Thanks for letting us know!</span><span v-else>Help Scientists!</span>
+        </h2>
+        <p v-if="did.didit">
+          You're helping scientists study public engagement in science!
+          You can now find this logged in your
+          <nuxt-link to="/my/science">
+            My Science
+          </nuxt-link>
+          activity list.
+        </p>
+        <p v-else>
+          You can help scientists studying public participation in science
+          by logging your participation in this science opportunity.
+        </p>
+        <b-modal
+          v-model="show_didit_logged_out"
+          has-modal-card
+          trap-focus
+          :destroy-on-hide="false"
+          aria-role="dialog"
+          aria-label="Add a Review"
+          aria-modal
+          >
+          <div class="card">
+            <h2>Thanks for letting us know! But&hellip; <span class="close" @click="show_didit_logged_out = false">&times;</span></h2>
+            <p>
+              We love hearing about people engaged in science, and to
+              better support these opportunities we could use some
+              additional information about you!
+            </p>
+            <p>
+              For now we'll save that you've done this activity in your
+              browser's storage, but making an account will make sure you
+              don't lose credit for your participation.
+            </p>
+            <p>
+              Besides helping science, you'll get better recommendations
+              plus the ability to save opportunities for later and track
+              your progress in science learning.
+            </p>
+            <div>
+              <action-button tertiary @click="(show_didit_logged_out = false) || $emit('signup')">
+                Create an account
+              </action-button>
+              <action-button primary @click="(show_didit_logged_out = false) || $emit('login')">
+                Sign In
+              </action-button>
+            </div>
+          </div>
+        </b-modal>
+        <action-button v-if="!did.didit" principal @click="do_didit">
+          I Did This!
         </action-button>
       </div>
-    </div>
-    <div class="info keywords">
-      <keywords-icon />
-      <opportunity-keywords :opportunity="opportunity" />
-    </div>
-  </div>
 
-  <external-link
-    :href="opportunity.partner_opp_url"
-    title="Find out more"
-    campaign="opp-page"
-    content="find-out-more"
-    class="find-out-more"
-    @before="register_interest"
-    new-tab
-    >
-    <strong>Find out more</strong>
-    <span>{{ opportunity.partner_opp_url }}</span>
-  </external-link>
-
-  <div class="partner-and-org opportunity-section">
-    <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
-      <figcaption>As Featured On</figcaption>
-      <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on" new-tab>
-        <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name + ' logo'">
-        <span v-else>{{ opportunity.partner_name }}</span>
-      </component>
-    </figure>
-    <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
-      <figcaption>Hosted By</figcaption>
-      <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" campaign="opp-page" content="hosted-by" new-tab>
-        <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name + ' logo'">
-        <span v-else>{{ opportunity.organization_name }}</span>
-      </component>
-    </figure>
-  </div>
-
-  <div class="more-info opportunity-section">
-    <h2>More Information</h2>
-    <p v-if="has_value(opportunity.cost)" class="item">
-      Cost: {{ opportunity.cost !== 'free' ? 'Yes' : 'No' }}
-    </p>
-    <p v-if="has_value(opportunity.ticket_required)" class="item">
-      Ticket Required: {{ opportunity.ticket_required ? 'Yes' : 'No' }}
-    </p>
-    <p v-if="has_value(opportunity.opp_venue)" class="item">
-      Venue Type: {{ venue_type }}
-    </p>
-    <p v-if="has_value(opportunity.min_age) && opportunity.min_age > 0" class="item">
-      Minimum Age: {{ opportunity.min_age }}
-    </p>
-    <p v-if="has_value(opportunity.max_age) && opportunity.max_age < 999" class="item">
-      Maximum Age: {{ opportunity.max_age }}
-    </p>
-    <p v-if="has_value(opportunity.languages)" class="item">
-      Languages: {{ opportunity.languages.join(', ') }}
-    </p>
-  </div>
-
-  <div class="description opportunity-section">
-    <h2>About This Science Opportunity</h2>
-    <read-more v-model="description_open">
-      <vue-markdown :source="opportunity.description" class="content" />
-    </read-more>
-  </div>
-
-  <div v-if="has_value(opportunity.tags)" class="tags opportunity-section">
-    <h2>Tags</h2>
-    <nuxt-link v-for="tag in opportunity.tags" :key="tag" :to="'/find?text=' + encodeURIComponent(tag)">
-      {{ tag }}
-    </nuxt-link>
-  </div>
-
-  <div class="social opportunity-section">
-    <h2>Social Media</h2>
-    <p>
-      <strong>Hashtags:</strong>
-      {{ opportunity.opp_hashtags.join(', ') || '#science' }}
-    </p>
-    <p v-for="(value, key) in opportunity.opp_social_handles" :key="key">
-      <strong>{{ title_case(key) }}:</strong>
-      <a :href="value">{{ value }}</a>
-    </p>
-  </div>
-
-  <div class="reviews">
-
-    <b-modal
-      v-model="show_review_add"
-      has-modal-card
-      trap-focus
-      :destroy-on-hide="false"
-      aria-role="dialog"
-      aria-label="Add a Review"
-      aria-modal
-      >
-      <div class="card">
-        <div v-if="user.authenticated">
-          <h2>Rate &amp; Review</h2>
-          <div>
-            <stars v-model="new_review.rating" editable />
-          </div>
-          <b-input v-model="new_review.comment" type="textarea" />
-          <div class="buttons">
-            <action-button tertiary @click="show_review_add = false">
-              Cancel
-            </action-button>
-            <action-button primary @click="do_review">
-              Submit
-            </action-button>
-          </div>
-        </div>
-        <div v-else>
-          <h2>You must be signed in to add a review</h2>
-          <action-button primary @click="(show_review_add = false) || $emit('login')">
-            Sign In
-          </action-button>
-          <h2>Don't have an account?</h2>
-          <action-button tertiary @click="(show_review_add = false) || $emit('signup')">
-            Create an Account
-          </action-button>
-        </div>
+      <div class="map" :class="{'open': show_map}">
+        <a @click="show_map = false">&laquo; back</a>
+        <div ref="map_display" />
       </div>
-    </b-modal>
-    <div class="reviews-header">
-      <h2>Reviews</h2>
-      <action-button class="no-mobile" secondary @click="show_review_add = true">
-        <star-icon /> Add Review
-      </action-button>
+
+      <div class="related">
+        <h2>Nearby &amp; Similar Opportunities</h2>
+        <template v-if="!loading_recommended">
+          <nuxt-link v-for="rec in recommended" :key="rec.uid" :to="'/' + rec.slug">
+            <h3>{{ rec.title }}</h3>
+            <div>
+              <location-icon />
+              <opportunity-location :opportunity="rec" short />
+            </div>
+            <div>
+              <time-icon />
+              <opportunity-time :opportunity="rec" />
+            </div>
+          </nuxt-link>
+        </template>
+        <b-loading v-model="loading_recommended" :is-full-page="false" />
+      </div>
     </div>
-    <template v-if="!loading_reviews">
-      <div v-for="review in reviews.reviews" :key="review.id" class="review">
-        <div>
-          <stars v-model="review.rating" />
-          <a class="report" @click="report_review(review.id)"><flag-icon /> Report</a>
-        </div>
-        <div>
-          {{ review.username }} &bull; {{ (new Date(review.when)).toLocaleString() }}
-        </div>
-        <read-more v-model="review.expanded">
-          <vue-markdown :source="review.comment" />
-        </read-more>
-      </div>
-    </template>
-    <b-loading v-model="loading_reviews" :is-full-page="false" />
-</div>
-</div>
-<div class="opportunity-right">
 
-  <div class="ididthis no-mobile">
-    <h2>
-      <atom-icon /> <span v-if="did.didit">Thanks for letting us know!</span><span v-else>Help Scientists!</span>
-    </h2>
-    <p v-if="did.didit">
-      You're helping scientists study public engagement in science!
-      You can now find this logged in your
-      <nuxt-link to="/my/science">
-        My Science
-      </nuxt-link>
-      activity list.
-    </p>
-    <p v-else>
-      You can help scientists studying public participation in science
-      by logging your participation in this science opportunity.
-    </p>
-    <b-modal
-      v-model="show_didit_logged_out"
-      has-modal-card
-      trap-focus
-      :destroy-on-hide="false"
-      aria-role="dialog"
-      aria-label="Add a Review"
-      aria-modal
-      >
-      <div class="card">
-        <h2>Thanks for letting us know! But&hellip; <span class="close" @click="show_didit_logged_out = false">&times;</span></h2>
-        <p>
-          We love hearing about people engaged in science, and to
-          better support these opportunities we could use some
-          additional information about you!
-        </p>
-        <p>
-          For now we'll save that you've done this activity in your
-          browser's storage, but making an account will make sure you
-          don't lose credit for your participation.
-        </p>
-        <p>
-          Besides helping science, you'll get better recommendations
-          plus the ability to save opportunities for later and track
-          your progress in science learning.
-        </p>
-        <div>
-          <action-button tertiary @click="(show_didit_logged_out = false) || $emit('signup')">
-            Create an account
-          </action-button>
-          <action-button primary @click="(show_didit_logged_out = false) || $emit('login')">
-            Sign In
-          </action-button>
-        </div>
-      </div>
-    </b-modal>
-    <action-button v-if="!did.didit" principal @click="do_didit">
-      I Did This!
-    </action-button>
   </div>
-
-  <div class="map" :class="{'open': show_map}">
-    <a @click="show_map = false">&laquo; back</a>
-    <div ref="map_display" />
-  </div>
-
-  <div class="related">
-    <h2>Nearby &amp; Similar Opportunities</h2>
-    <template v-if="!loading_recommended">
-      <nuxt-link v-for="rec in recommended" :key="rec.uid" :to="'/' + rec.slug">
-        <h3>{{ rec.title }}</h3>
-        <div>
-          <location-icon />
-          <opportunity-location :opportunity="rec" short />
-        </div>
-        <div>
-          <time-icon />
-          <opportunity-time :opportunity="rec" />
-        </div>
-      </nuxt-link>
-    </template>
-    <b-loading v-model="loading_recommended" :is-full-page="false" />
-  </div>
-</div>
-
-</div>
 </article>
 </template>
 
