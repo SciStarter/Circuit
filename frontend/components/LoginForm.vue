@@ -45,7 +45,7 @@ export default {
         next: {
             type: String,
             required: false,
-            default: '',
+            default: '/',
         },
 
         query: {
@@ -62,7 +62,7 @@ export default {
             login: {
                 email: '',
                 password: '',
-                next: this.next,
+                next: this.next || '/',
                 next_query: this.query,
             }
         }
