@@ -88,7 +88,7 @@ export default {
                 return "Ongoing";
             }
             else {
-                return pair[0].toLocaleString();
+                return pair[0].toLocaleString([], { month: 'long', day:'numeric', year:'numeric', hour: 'numeric', minute: '2-digit'});
             }
         }
     }

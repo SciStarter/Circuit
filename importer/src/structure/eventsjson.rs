@@ -1,17 +1,15 @@
-use inflector::Inflector;
-
 use super::{
     Error,
     OneOrMany::{self, Many},
     PartnerInfo, Structure,
 };
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeZone, Utc};
 use common::model::{opportunity::EntityType, Opportunity};
 use common::ToFixedOffset;
 use serde_json::Value;
 
 #[derive(Debug)]
-pub struct EventsJson(pub PartnerInfo);
+pub struct EventsJson<Tz: TimeZone>(pub PartnerInfo<Tz>);
 
 #[derive(serde::Deserialize, Debug, Default)]
 #[serde(default)]
@@ -36,7 +34,7 @@ struct Data {
     title: String,
 }
 
-fn interpret_one(partner: &PartnerInfo, entry: Value) -> Option<Opportunity> {
+fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Option<Opportunity> {
     let dump = serde_json::to_string_pretty(&entry)
         .unwrap_or_else(|_| "[failed to serialize]".to_string());
 
@@ -162,7 +160,10 @@ fn interpret_one(partner: &PartnerInfo, entry: Value) -> Option<Opportunity> {
     Some(opp)
 }
 
-impl Structure for EventsJson {
+impl<Tz> Structure for EventsJson<Tz>
+where
+    Tz: TimeZone + std::fmt::Debug,
+{
     type Data = Opportunity;
 
     fn interpret(&self, mut parsed: Value) -> Result<OneOrMany<Self::Data>, Error> {

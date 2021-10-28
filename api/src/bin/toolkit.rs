@@ -504,8 +504,7 @@ async fn main() -> Result<(), DynError> {
         Command::new_async(
             "display the first result of the query".into(),
             async_fn!(State, first),
-        )
-        .await,
+        ),
     );
 
     shell.commands.insert(
@@ -513,8 +512,7 @@ async fn main() -> Result<(), DynError> {
         Command::new_async(
             "load, validate, and save rows matching the query".into(),
             async_fn!(State, revalidate),
-        )
-        .await,
+        ),
     );
 
     shell.commands.insert(
@@ -522,8 +520,7 @@ async fn main() -> Result<(), DynError> {
         Command::new_async(
             "mark matching rows accepted, or not accepted with `accept false`".into(),
             async_fn!(State, accept),
-        )
-        .await,
+        ),
     );
 
     shell.commands.insert(
@@ -531,8 +528,7 @@ async fn main() -> Result<(), DynError> {
         Command::new_async(
             "mark matching rows withdrawn, or not withdrawn with `withdraw false`".into(),
             async_fn!(State, withdraw),
-        )
-        .await,
+        ),
     );
 
     shell.commands.insert(
@@ -540,8 +536,7 @@ async fn main() -> Result<(), DynError> {
         Command::new_async(
             "Database maintenance operations".into(),
             async_fn!(State, db_meta),
-        )
-        .await,
+        ),
     );
 
     shell.commands.insert(
@@ -549,8 +544,7 @@ async fn main() -> Result<(), DynError> {
         Command::new_async(
             "Generate a password hash".into(),
             async_fn!(State, hashpassword),
-        )
-        .await,
+        ),
     );
 
     shell.commands.insert(
@@ -558,8 +552,7 @@ async fn main() -> Result<(), DynError> {
         Command::new_async(
             "Check whether a password matches a hash".into(),
             async_fn!(State, checkpassword),
-        )
-        .await,
+        ),
     );
 
     shell.run_async().await?;

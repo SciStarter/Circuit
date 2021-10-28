@@ -9,15 +9,19 @@
       <lookup-place v-model="place_proxy" label-position="inside" data-context="find-lookup-place" />
       <div class="centered-row">
         <b-field label="From" label-position="inside" data-context="find-beginning">
-          <b-datepicker v-model="beginning_proxy"
+          <b-datepicker
+            v-model="beginning_proxy"
             editable
-            icon="calendar-today" />
+            icon="calendar-today"
+            />
         </b-field>
         <b-field label="Until" label-position="inside" data-context="find-ending">
-          <b-datepicker v-model="ending_proxy"
+          <b-datepicker
+            v-model="ending_proxy"
             editable
             position="is-bottom-left"
-            icon="calendar-today" />
+            icon="calendar-today"
+            />
         </b-field>
       </div>
       <action-button v-if="searchButton" id="quick-search-btn" principal large arrow @click="search">
@@ -38,10 +42,10 @@
     <nuxt-link :to="search_url + '&topics[]=astronomy_and_space'">
       Astronomy Near Me
     </nuxt-link>
-    <nuxt-link :to="search_url + '&topics[]=live_science'">
+    <nuxt-link :to="search_url + '&descriptors[]=live_science'">
       Museums Near Me
     </nuxt-link>
-    <nuxt-link :to="search_url + '&topics[]=festival'">
+    <nuxt-link :to="search_url + '&descriptors[]=festival'">
       Festivals Near Me
     </nuxt-link>
   </div>
