@@ -115,11 +115,11 @@ struct NeonStandardFields {
 }
 
 #[derive(Debug)]
-struct NeonGeneric<TZ: chrono::TimeZone + std::fmt::Debug>(PartnerInfo, TZ);
+struct NeonGeneric<Tz: chrono::TimeZone + std::fmt::Debug>(PartnerInfo<Tz>, Tz);
 
-fn interpret_one<TZ: chrono::TimeZone + std::fmt::Debug>(
-    partner: &PartnerInfo,
-    tz: &TZ,
+fn interpret_one<Tz: chrono::TimeZone + std::fmt::Debug>(
+    partner: &PartnerInfo<Tz>,
+    _tz: &Tz,
     entry: Value,
 ) -> Option<Opportunity> {
     let data: NeonStandardFields = match from_value(entry) {
@@ -153,9 +153,9 @@ struct NeonPage {
     search_results: Vec<serde_json::Value>,
 }
 
-fn interpret_page<TZ: chrono::TimeZone + std::fmt::Debug>(
-    partner: &PartnerInfo,
-    tz: &TZ,
+fn interpret_page<Tz: chrono::TimeZone + std::fmt::Debug>(
+    partner: &PartnerInfo<Tz>,
+    tz: &Tz,
     entries: Value,
 ) -> Vec<Opportunity> {
     if let Ok(page) = from_value::<NeonPage>(entries) {

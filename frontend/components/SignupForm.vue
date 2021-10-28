@@ -76,7 +76,7 @@ export default {
         next: {
             type: String,
             required: false,
-            default: '',
+            default: '/',
         },
 
         query: {
@@ -100,7 +100,7 @@ export default {
                 phone: '',
                 agree: true,
                 newsletter: true,
-                next: this.next,
+                next: this.next || '/',
                 next_query: this.query,
             }
         }

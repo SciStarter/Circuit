@@ -43,7 +43,8 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
                 state: "NV".to_string(),
                 zip: "89501".to_string(),
                 country: "United States of America".to_string(),
-            })
+            }),
+            timezone: Some(chrono_tz::US::Pacific),
         }),
         period: 24 * hours,
     }));
@@ -62,6 +63,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             descriptor: vec![],
             flags: vec![],
             address: None,
+            timezone: Some(chrono_tz::US::Central),
         }),
         period: 24 * hours,
     }));
@@ -78,6 +80,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             descriptor: vec![],
             flags: vec![],
             address: None,
+            timezone: Some(chrono::Utc),
         }),
         period: 24 * hours,
     }));
@@ -95,7 +98,15 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             domain: Domain::LiveScience,
             descriptor: vec![],
             flags: vec![],
-            address: None,
+            address: Some(PartnerAddress {
+                name: "Museum of Discovery and Science".to_string(),
+                street: "401 SW Second Street".to_string(),
+                city: "Fort Lauderdale".to_string(),
+                state: "FL".to_string(),
+                zip: "33312".to_string(),
+                country: "USA".to_string(),
+            }),
+            timezone: Some(chrono_tz::US::Eastern),
         }),
         period: 24 * hours,
     }));
