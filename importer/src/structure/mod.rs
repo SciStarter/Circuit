@@ -1,5 +1,5 @@
 use crate::Error;
-use common::model::opportunity::Descriptor;
+use chrono::TimeZone;
 use serde_json::Value;
 use uuid::Uuid;
 
@@ -34,7 +34,7 @@ pub enum PartnerFlag {
 }
 
 #[derive(Debug)]
-pub struct PartnerInfo {
+pub struct PartnerInfo<Tz: TimeZone> {
     pub partner: Uuid,
     pub partner_name: String,
     pub partner_website: Option<String>,
@@ -43,6 +43,7 @@ pub struct PartnerInfo {
     pub descriptor: Vec<common::model::opportunity::Descriptor>,
     pub flags: Vec<PartnerFlag>,
     pub address: Option<PartnerAddress>,
+    pub timezone: Option<Tz>,
 }
 
 pub trait Structure: std::fmt::Debug {

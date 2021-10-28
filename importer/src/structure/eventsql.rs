@@ -5,13 +5,13 @@ use super::{
     OneOrMany::{self, Many},
     PartnerInfo, Structure,
 };
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeZone, Utc};
 use common::model::{opportunity::EntityType, Opportunity};
 use common::ToFixedOffset;
 use serde_json::Value;
 
 #[derive(Debug)]
-pub struct EventsQL(pub PartnerInfo);
+pub struct EventsQL<Tz: TimeZone>(pub PartnerInfo<Tz>);
 
 #[derive(serde::Deserialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
@@ -122,7 +122,7 @@ struct Data {
     node: Option<DataNode>,
 }
 
-fn interpret_one(partner: &PartnerInfo, entry: Value) -> Option<Opportunity> {
+fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Option<Opportunity> {
     let dump = serde_json::to_string_pretty(&entry)
         .unwrap_or_else(|_| "[failed to serialize]".to_string());
 
@@ -196,7 +196,12 @@ fn interpret_one(partner: &PartnerInfo, entry: Value) -> Option<Opportunity> {
             opp.exterior.start_datetimes = start_dates
                 .into_iter()
                 .flat_map(|s| {
-                    if let Some(pair) = s.split_once(' ') {
+                    if let Some(tz) = &partner.timezone {
+                        match tz.datetime_from_str(&s, "%F %T") {
+                            Ok(dt) => Some(dt.to_fixed_offset()),
+                            Err(_) => None,
+                        }
+                    } else if let Some(pair) = s.split_once(' ') {
                         if let Ok(dt) = format!("{}T{}Z", pair.0, pair.1).parse::<DateTime<Utc>>() {
                             Some(dt.to_fixed_offset())
                         } else {
@@ -214,17 +219,37 @@ fn interpret_one(partner: &PartnerInfo, entry: Value) -> Option<Opportunity> {
                     Err(_) => vec![],
                 };
 
-            if let Some(end_date) = node.end_date {
-                if let Some(pair) = end_date.split_once(' ') {
-                    opp.exterior.end_datetimes = match format!("{}T{}Z", pair.0, pair.1).parse() {
-                        Ok(dt) => vec![dt],
+            if let Some(end_date) = &node.end_date {
+                if let Some(tz) = &partner.timezone {
+                    opp.exterior.end_datetimes = match tz.datetime_from_str(&end_date, "%F %T") {
+                        Ok(dt) => vec![dt.to_fixed_offset()],
                         Err(_) => vec![],
+                    }
+                } else if let Some(end_date) = &node.end_date {
+                    if let Some(pair) = end_date.split_once(' ') {
+                        opp.exterior.end_datetimes = match format!("{}T{}Z", pair.0, pair.1).parse()
+                        {
+                            Ok(dt) => vec![dt],
+                            Err(_) => vec![],
+                        };
                     }
                 }
             }
         }
 
-        opp.exterior.has_end = false;
+        if opp.exterior.end_datetimes.len() == 1 {
+            if opp.exterior.start_datetimes.is_empty() {
+                // Guess that the event started 8 hours before it ends
+                opp.exterior
+                    .start_datetimes
+                    .push(opp.exterior.end_datetimes[0] - chrono::Duration::hours(8));
+            }
+            opp.exterior.has_end = true;
+        } else if !opp.exterior.end_datetimes.is_empty() {
+            opp.exterior.has_end = true;
+        } else {
+            opp.exterior.has_end = false;
+        }
 
         opp.exterior.attraction_hours = None;
 
@@ -243,6 +268,14 @@ fn interpret_one(partner: &PartnerInfo, entry: Value) -> Option<Opportunity> {
                 opp.exterior.address_state = addr.address_region.unwrap_or_default();
                 opp.exterior.address_zip = addr.postal_code.unwrap_or_default();
                 opp.exterior.address_country = addr.address_country.unwrap_or_default();
+            } else if let Some(addr) = &partner.address {
+                opp.exterior.location_type = common::model::opportunity::LocationType::At;
+                opp.exterior.location_name = addr.name.clone();
+                opp.exterior.address_street = addr.street.clone();
+                opp.exterior.address_city = addr.city.clone();
+                opp.exterior.address_state = addr.state.clone();
+                opp.exterior.address_zip = addr.zip.clone();
+                opp.exterior.address_country = addr.country.clone();
             } else {
                 opp.exterior.location_type = common::model::opportunity::LocationType::Any;
             }
@@ -320,7 +353,10 @@ fn interpret_one(partner: &PartnerInfo, entry: Value) -> Option<Opportunity> {
     Some(opp)
 }
 
-impl Structure for EventsQL {
+impl<Tz> Structure for EventsQL<Tz>
+where
+    Tz: TimeZone + std::fmt::Debug,
+{
     type Data = Opportunity;
 
     fn interpret(&self, mut parsed: Value) -> Result<OneOrMany<Self::Data>, Error> {

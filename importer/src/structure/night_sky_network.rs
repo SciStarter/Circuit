@@ -3,7 +3,7 @@ use super::{
     OneOrMany::{self, Many},
     Structure,
 };
-use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone};
+use chrono::{DateTime, NaiveDateTime, TimeZone};
 use chrono_tz::Tz;
 use common::model::Opportunity;
 use once_cell::sync::Lazy;
