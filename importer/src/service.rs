@@ -2,15 +2,17 @@ use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::time::{Duration, Instant};
 
-use importer::{self, Importer};
 use sqlx::postgres::PgPoolOptions;
 
 mod config;
+
+//const RETRY_DELAY: Duration = Duration::new(300, 0);
 
 #[async_std::main]
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Duration::new is scheduled to become a const fn, after which
     // this can be moved to a module-level const
+    #[allow(non_snake_case)]
     let RETRY_DELAY: Duration = Duration::new(300, 0);
 
     let importers = config::setup();
