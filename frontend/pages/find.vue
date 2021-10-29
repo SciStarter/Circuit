@@ -1,16 +1,23 @@
 <template>
 <div id="find" :class="{filtering: filtering}">
-  <general-filters
-    id="filters-general"
-    :text="query.text"
-    :place="place"
-    :beginning="beginning"
-    :ending="ending"
-    @text="query.text=$event"
-    @place="place=$event"
-    @beginning="beginning=$event"
-    @ending="ending=$event"
-    />
+    <!-- This syntax used in the event handlers is kind of weird, but
+    it does what we want. First the assignment expression is
+    evaluated, then the result of that expression is passed as an
+    argument to search, which ignores its arguments and initiates a
+    search. The extra parentheses are in case JavaScript starts
+    accepting keyword arguments at some point. So, in the end the
+    value is changed and then a search is initiated. -->
+    <general-filters
+      id="filters-general"
+      :text="query.text"
+      :place="place"
+      :beginning="beginning"
+      :ending="ending"
+      @text="search((query.text=$event))"
+      @place="search((place=$event))"
+      @beginning="search((beginning=$event))"
+      @ending="search((ending=$event))"
+      />
   <div class="snm-container">
   <div id="filters-ordering">
     <b-field id="filter-physical">
@@ -196,6 +203,7 @@
 <script>
 import Vue from 'vue'
 import copy from 'copy-to-clipboard'
+import debounce from 'lodash/debounce'
 
 import MiniSelect from '~/components/MiniSelect'
 import OpportunityCard from '~/components/OpportunityCard'
@@ -567,11 +575,11 @@ export default {
             this.search();
         },
 
-        search() {
+        search: debounce(function() {
             if(!this.filtering) {
                 this.$router.push({ name: 'find', query: this.query });
             }
-        },
+        }, 500),
     }
 }
 </script>
