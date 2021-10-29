@@ -128,7 +128,7 @@
                 insights, product development and
 
                 <nuxt-link to="/informed-consent">
-                  research studies.
+                  research participant studies.
                 </nuxt-link>
               </p>
             </div>
