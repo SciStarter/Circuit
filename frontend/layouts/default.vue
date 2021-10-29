@@ -195,21 +195,6 @@
             </nuxt-link>
           </li>
           <li>
-            <nuxt-link to="/terms">
-              Terms of Service
-            </nuxt-link>
-          </li>
-          <li>
-            <nuxt-link to="/privacy">
-              Privacy Policy
-            </nuxt-link>
-          </li>
-          <li>
-            <nuxt-link to="/cookies">
-              Cookies Policy
-            </nuxt-link>
-          </li>
-          <li>
             <nuxt-link to="/contact">
               Contact Us
             </nuxt-link>
@@ -250,6 +235,27 @@
         </div>
         </div>
       </footer>
+      <div class="subfooter snm-wrapper">
+        <div class="snm-container">
+        <ul>
+          <li>
+            <nuxt-link to="/terms">
+              Terms of Service
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/privacy">
+              Privacy Policy
+            </nuxt-link>
+          </li>
+          <li>
+            <nuxt-link to="/cookies">
+              Cookies Policy
+            </nuxt-link>
+          </li>
+        </ul>
+      </div>
+      </div>
 
       <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
         <div class="card">
@@ -770,6 +776,10 @@ footer {
     }
 }
 
+.subfooter {
+  background-color: #1d3a40;
+}
+
 #main {
     >nav,>.logo {
         display: none;
@@ -1138,9 +1148,29 @@ footer {
       padding: 1rem;
     }
   }
+  .authenticated .subfooter {
+    padding-left: 200px;
+  }
 
+/* need to make this only for non-logged in homepage */
   .not-authenticated footer {
     padding-top:5rem;
+  }
+
+  .subfooter ul {
+    display: flex;
+
+    li {
+      margin-right: 1rem;
+    }
+    li:not(:first-child)::before {
+      content: '|';
+      color: #087a91;
+      margin-right: 8px;
+    }
+  }
+  .authenticated .subfooter ul {
+    padding-left: 2rem;
   }
 
 }
@@ -1153,7 +1183,7 @@ footer {
     margin-left: 280px;
   }
 
-  .authenticated footer {
+  .authenticated footer, .authenticated .subfooter {
     padding-left: 280px;
   }
 }

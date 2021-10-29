@@ -876,6 +876,8 @@ img.opportunity-image {
     object-fit: contain;
     object-position: center center;
     overflow: hidden;
+    background-color: $snm-color-border;
+    border: 1px solid $snm-color-border;
 }
 
 .ididthis {
@@ -883,6 +885,7 @@ img.opportunity-image {
     border-radius: 6px;
     margin-bottom: 2rem;
     padding-bottom: 1rem;
+    background-color: #fff;
 
     >h2 {
       padding: 1rem;
@@ -1405,10 +1408,11 @@ img.opportunity-image {
     padding:1rem 0.5rem 1rem 1rem;
   }
   .opportunity-right {
-    padding: 1rem 1rem 1rem 0.5rem;
+    padding: 1rem 1rem 1rem 1rem;
     position: sticky;
     top:0;
     align-self: flex-start;
+    background-color: #fbfbfb;
   }
   .reviews {
       .modal {
@@ -1498,6 +1502,10 @@ img.opportunity-image {
       border:0;
       padding:0;
       margin-bottom:2rem;
+
+      > h3 {
+        font-size: 1rem;
+      }
     }
   }
   .find-out-more {
