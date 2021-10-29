@@ -35,12 +35,8 @@
   </button>
 
   <div class="snm-container">
-
     <div class="opportunity-left">
-
       <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
-
-
       <div class="opportunity-section">
         <div class="opportunity-name">
           <strong>{{ subtitle }}</strong>
@@ -154,8 +150,8 @@
         campaign="opp-page"
         content="find-out-more"
         class="find-out-more"
-        @before="register_interest"
         new-tab
+        @before="register_interest"
         >
         <strong>Find out more</strong>
         <span>{{ opportunity.partner_opp_url }}</span>
@@ -227,7 +223,6 @@
       </div>
 
       <div class="reviews">
-
         <b-modal
           v-model="show_review_add"
           has-modal-card
@@ -289,7 +284,6 @@
       </div>
     </div>
     <div class="opportunity-right">
-
       <div class="ididthis no-mobile">
         <h2>
           <atom-icon /> <span v-if="did.didit">Thanks for letting us know!</span><span v-else>Help Scientists!</span>
@@ -370,7 +364,6 @@
         <b-loading v-model="loading_recommended" :is-full-page="false" />
       </div>
     </div>
-
   </div>
 </article>
 </template>
@@ -647,6 +640,7 @@ export default {
     methods: {
         async register_interest() {
             await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/interest', {}, this.$store.state.auth);
+            this.$store.commit('increment_user_reports_pending');
         },
 
         async do_like() {
@@ -705,7 +699,8 @@ export default {
         async do_save() {
             if(this.user.authenticated) {
                 await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/saves', {}, this.$store.state.auth);
-                this.did.save= true;
+                this.$store.commit('increment_user_reports_pending');
+                this.did.save = true;
 
                 this.$buefy.toast.open({
                     message: 'Opportunity saved',

@@ -139,9 +139,7 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
         .recv_json()
         .await?;
 
-    dbg!(&sealed);
-
-    match dbg!(snm_key.open::<SciStarterPerson>(sealed, Some(&scistarter_key))) {
+    match snm_key.open::<SciStarterPerson>(sealed, Some(&scistarter_key)) {
         Ok(ssp) => {
             let person = if let Some(person) = existing {
                 person

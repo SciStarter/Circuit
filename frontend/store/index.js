@@ -64,6 +64,14 @@ export const mutations = {
     state.user.reports_pending = num;
   },
 
+  increment_user_reports_pending(state) {
+    if (!state.user.authenticated) {
+      return;
+    }
+
+    state.user.reports_pending += 1;
+  },
+
   save_language(state, language) {
     state.language = language;
   },
