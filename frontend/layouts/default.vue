@@ -185,7 +185,7 @@
         </div>
       </section>
 
-      <footer class="snm-wrapper">
+      <footer class="snm-wrapper" :class="{'homepage': $route.path == '/'}">
         <div class="snm-container">
         <ul>
           <li><h1>For Everyone</h1></li>
@@ -729,9 +729,10 @@ footer {
     background-color: $snm-color-background-dark;
 
     li {
-        line-height: 40px;
+        line-height: 1.2;
         padding-left: 1rem;
         border-bottom: 1px solid $snm-color-border-ondark;
+        padding: 0.5rem 0;
 
         h1 {
             color: $snm-color-heading-ondark;
@@ -778,6 +779,10 @@ footer {
 
 .subfooter {
   background-color: #1d3a40;
+
+  li a {
+    color: #F2C04B;
+  }
 }
 
 #main {
@@ -1152,8 +1157,11 @@ footer {
     padding-left: 200px;
   }
 
-/* need to make this only for non-logged in homepage */
   .not-authenticated footer {
+    padding-top:2rem;
+  }
+
+  .not-authenticated footer.homepage {
     padding-top:5rem;
   }
 
