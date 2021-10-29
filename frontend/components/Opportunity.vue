@@ -16,7 +16,7 @@
     <a @click="do_like">
       <like-icon /> Like
     </a>
-    <a @click="show_calendar_add = true">
+    <a v-if="enable_calendar" @click="show_calendar_add = true">
       <time-icon /> Add to Calendar
     </a>
     <a @click="show_review_add = true">
@@ -133,7 +133,7 @@
                 </div>
               </div>
             </b-modal>
-            <action-button v-if="has_value(opportunity.start_datetimes)" secondary class="no-mobile" @click="show_calendar_add = true">
+            <action-button v-if="enable_calendar" secondary class="no-mobile" @click="show_calendar_add = true">
               Add to calendar
             </action-button>
           </div>
@@ -493,6 +493,14 @@ export default {
     },
 
     computed: {
+        enable_calendar() {
+            if(this.has_value(this.opportunity.start_datetimes)) {
+                return this.has_value(this.opportunity.end_datetimes)
+            }
+
+            return false;
+        },
+
         loading_reviews() {
             return this.reviews === null;
         },
