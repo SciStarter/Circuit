@@ -51,7 +51,7 @@
           <label>Birth Year</label>
         </div>
         <div>
-          <b-input v-model="birth_year" type="text" />
+          <b-input :value="birth_year" type="text" @input="birth_year = parseInt($event) || null" />
         </div>
       </div>
 
@@ -307,6 +307,10 @@ export default {
     },
 
     methods: {
+        log() {
+            console.log(arguments)
+        },
+
         debounced_save: debounce(function() { this.save(); }),
 
         async save() {
