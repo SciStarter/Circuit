@@ -36,37 +36,133 @@
 
   <div class="snm-container">
     <div class="opportunity-left">
-      <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
-      <div class="opportunity-section">
-        <div class="opportunity-name">
-          <strong>{{ subtitle }}</strong>
-          <h1>{{ opportunity.title }}</h1>
+
+
+      <div class="opp-head opportunity-section">
+        <div class="opp-head-top">
+        <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
+
+        <div class="opp-head-info">
+          <div class="opportunity-name">
+            <strong>{{ subtitle }}</strong>
+            <h1>{{ opportunity.title }}</h1>
+          </div>
+
+          <div class="involvement">
+            <div class="reviews-likes">
+              <span v-if="reviews !== null">
+                <stars v-model="reviews.average" />
+                {{ reviews.reviews.length }}
+              </span>
+              <span v-if="likes !== null">
+                <like-icon :class="{'liked': did.like}" />
+                {{ likes }}
+              </span>
+            </div>
+            <div class="numbers">
+              <p>
+                {{ saves }} People Interested
+              </p>
+              <p>
+                {{ didit }} People Report Doing This Opportunity
+              </p>
+            </div>
+          </div>
+
         </div>
 
-        <div class="elevator-pitch">
-          <vue-markdown :source="elevator_pitch" class="content" />
         </div>
-      </div>
 
-      <div class="involvement opportunity-section">
-        <div class="reviews-likes">
-          <span v-if="reviews !== null">
-            <stars v-model="reviews.average" />
-            {{ reviews.reviews.length }} reviews
-          </span>
-          <span v-if="likes !== null">
-            <like-icon :class="{'liked': did.like}" />
-            {{ likes }} likes
-          </span>
+          <div class="elevator-pitch">
+            <vue-markdown :source="elevator_pitch" class="content" />
+          </div>
+
+        <div class="secondary">
+          <div class="info location">
+            <location-icon />
+            <div>
+              <opportunity-location :opportunity="opportunity" is-opportunity />
+              <opportunity-notice :opportunity="opportunity" mode="place" />
+            </div>
+            <a v-if="(opportunity.location_type == 'at' || opportunity.location_type == 'near') && has_value(location_geojson)" @click="show_map = true">see&nbsp;on&nbsp;map</a>
+          </div>
+          <div class="info time">
+            <time-icon />
+            <div>
+              <opportunity-time :opportunity="opportunity" @upcoming="upcoming = $event" />
+              <opportunity-notice :opportunity="opportunity" mode="time" />
+              <b-modal
+                v-model="show_calendar_add"
+                has-modal-card
+                trap-focus
+                :destroy-on-hide="false"
+                aria-role="dialog"
+                aria-label="Add to calendar"
+                aria-modal
+                >
+                <div class="card">
+                  <div v-for="pair in upcoming" :key="pair[0].toISOString()" class="calendar-row">
+                    <label>
+                      {{ pair[0].toLocaleString() }}
+                    </label>
+                    <calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+                    <calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+                    <calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+                    <calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
+                  </div>
+                </div>
+              </b-modal>
+
+
+            </div>
+          </div>
+          <div class="info keywords">
+            <keywords-icon />
+            <opportunity-keywords :opportunity="opportunity" />
+          </div>
         </div>
-        <div class="numbers">
-          <p>
-            {{ saves }} People Interested
-          </p>
-          <p>
-            {{ didit }} People Report Doing This Opportunity
-          </p>
+
+      </div><!-- end .opp-head -->
+
+      <div class="opp-actions">
+        <div class="opp-action-wrap">
+
+          <action-button class="round-btn" principal :disabled="did.save" @click="do_save">
+            <div class="icon"><saved-icon /></div>
+            <span v-if="did.save">Saved</span><span v-else>Save<br />for Later</span>
+          </action-button>
+
+          <action-button class="round-btn" secondary @click="do_like">
+            <div class="icon like"><like-icon /></div>
+            <span v-if="did.like">You<br />liked this</span><span v-else>Like</span>
+          </action-button>
+
+          <action-button v-if="enable_calendar" class="round-btn" @click="show_calendar_add = true">
+            <div class="icon calendar"><time-icon /></div>
+            <span>Add to<br />calendar</span>
+          </action-button>
+
+          <action-button class="round-btn" @click="show_share = true">
+            <div class="icon share"><share-icon /></div>
+            <span>Share</span>
+          </action-button>
+
+          <external-link
+            :href="opportunity.partner_opp_url"
+            title="Find out more"
+            campaign="opp-page"
+            content="find-out-more"
+            class="find-out-more round-btn"
+            new-tab
+            @before="register_interest"
+            >
+            <div class="icon"><link-icon /></div>
+            <span>Visit<br />Website</span>
+          </external-link>
+
         </div>
+      </div><!-- end .opp-actions -->
+
         <b-modal
           v-model="show_bookmark_add"
           has-modal-card
@@ -87,77 +183,27 @@
             </action-button>
           </div>
         </b-modal>
-        <action-button class="no-mobile" principal :disabled="did.save" @click="do_save">
-          <saved-icon /> <span v-if="did.save">Saved</span><span v-else>Save for Later</span>
-        </action-button>
-        <action-button class="no-mobile" secondary @click="do_like">
-          <like-icon /> <span v-if="did.like">You liked this</span><span v-else>Like</span>
-        </action-button>
-        <social-button mode="facebook" :opportunity="opportunity" class="no-mobile" />
-        <social-button mode="twitter" :opportunity="opportunity" class="no-mobile" />
-        <social-button mode="linkedin" :opportunity="opportunity" class="no-mobile" />
-      </div>
-
-      <div class="secondary opportunity-section">
-        <div class="info location">
-          <location-icon />
-          <div>
-            <opportunity-location :opportunity="opportunity" is-opportunity />
-            <opportunity-notice :opportunity="opportunity" mode="place" />
+        <b-modal
+          v-model="show_share"
+          has-modal-card
+          trap-focus
+          :destroy-on-hide="false"
+          aria-role="dialog"
+          aria-label="Show share buttons"
+          aria-modal
+          >
+          <div class="card">
+            <social-button mode="facebook" :opportunity="opportunity" class="no-mobile" />
+            <social-button mode="twitter" :opportunity="opportunity" class="no-mobile" />
+            <social-button mode="linkedin" :opportunity="opportunity" class="no-mobile" />
           </div>
-          <a v-if="(opportunity.location_type == 'at' || opportunity.location_type == 'near') && has_value(location_geojson)" @click="show_map = true">see&nbsp;on&nbsp;map</a>
-        </div>
-        <div class="info time">
-          <time-icon />
-          <div>
-            <opportunity-time :opportunity="opportunity" @upcoming="upcoming = $event" />
-            <opportunity-notice :opportunity="opportunity" mode="time" />
-            <b-modal
-              v-model="show_calendar_add"
-              has-modal-card
-              trap-focus
-              :destroy-on-hide="false"
-              aria-role="dialog"
-              aria-label="Add to calendar"
-              aria-modal
-              >
-              <div class="card">
-                <div v-for="pair in upcoming" :key="pair[0].toISOString()" class="calendar-row">
-                  <label>
-                    {{ pair[0].toLocaleString() }}
-                  </label>
-                  <calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-                  <calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-                  <calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-                  <calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-                </div>
-              </div>
-            </b-modal>
-            <action-button v-if="enable_calendar" secondary class="no-mobile" @click="show_calendar_add = true">
-              Add to calendar
-            </action-button>
-          </div>
-        </div>
-        <div class="info keywords">
-          <keywords-icon />
-          <opportunity-keywords :opportunity="opportunity" />
-        </div>
-      </div>
+        </b-modal>
 
-      <external-link
-        :href="opportunity.partner_opp_url"
-        title="Find out more"
-        campaign="opp-page"
-        content="find-out-more"
-        class="find-out-more"
-        new-tab
-        @before="register_interest"
-        >
-        <strong>Find out more</strong>
-        <span>{{ opportunity.partner_opp_url }}</span>
-      </external-link>
 
-      <div class="partner-and-org opportunity-section">
+
+
+
+      <div class="partner-and-org">
         <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
           <figcaption>As Featured On</figcaption>
           <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on" new-tab>
@@ -395,6 +441,7 @@ import StarIcon from '~/assets/img/star-on.svg?inline'
 import FlagIcon from '~/assets/img/flag.svg?inline'
 import LinkIcon from '~/assets/img/link.svg?inline'
 import AtomIcon from '~/assets/img/atom.svg?inline'
+import ShareIcon from '~/assets/img/share.svg?inline'
 
 export default {
     components: {
@@ -419,6 +466,7 @@ export default {
         FlagIcon,
         LinkIcon,
         AtomIcon,
+        ShareIcon
     },
 
     props: {
@@ -448,6 +496,7 @@ export default {
             show_bookmark_add: false,
             show_review_add: false,
             show_calendar_add: false,
+            show_share: false,
             upcoming: [],
             map_widget: null,
             reviews: null,
@@ -908,11 +957,11 @@ img.opportunity-image {
     background-color: #fff;
 
     >h2 {
-      padding: 1rem;
+      padding: 0.5rem 1rem 0;
       border-radius: 6px 6px 0 0;
       font-family: $snm-font-heading;
       font-weight: bold;
-      background-color: $snm-color-background-medium;
+      // background-color: $snm-color-background-medium;
       vertical-align: middle;
       font-size: rem(21px);
       > svg {
@@ -929,6 +978,7 @@ img.opportunity-image {
     > button {
       width: calc(100% - 2rem);
       margin: 1rem;
+      margin-bottom: 0.5rem;
     }
 
     .modal {
@@ -1035,11 +1085,10 @@ img.opportunity-image {
     line-height: 22px;
     letter-spacing: 0.16px;
     color: $snm-color-glance;
+    margin-bottom: 2rem;
 }
 
 .involvement {
-    border-top: 1px solid $snm-color-border;
-    border-bottom: 1px solid $snm-color-border;
 
     .reviews-likes {
         span {
@@ -1073,6 +1122,7 @@ img.opportunity-image {
         margin-top: 0.5rem;
         margin-bottom: 0.2rem;
         display:flex;
+        font-size: rem(12px);
 
         >p {
           margin-right:1rem;
@@ -1088,12 +1138,12 @@ img.opportunity-image {
 
 
 .info {
-    margin-bottom: 1rem;
+    margin-bottom: 1.6rem;
     display: flex;
     align-items: top;
 
-    &.location {
-      margin-bottom: 1.6rem
+    &.keywords {
+      margin-bottom: 0;
     }
 
     > svg {
@@ -1133,63 +1183,65 @@ img.opportunity-image {
     margin-bottom: 1rem;
 }
 
-.find-out-more {
-    display: block;
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    background-color: $snm-color-element-med;
-    box-shadow: 0px 1px 7px $snm-color-shadow;
-    color: $snm-color-element-ondark;
-    padding: 1rem;
-    position:relative;
-    margin:0 1rem;
-    border-radius: 6px;
-    width: calc(100% - 2rem);
-
-    &::after {
-      content: '>';
-      display: block;
-      width: 40px;
-      height: 40px;
-      background-color: #fff;
-      color: $snm-color-element-med;
-      position: absolute;
-      top: 50%;
-      margin-top: -20px;
-      right:2rem;
-      text-align: center;
-      border-radius:100%;
-      line-height:40px;
-    }
-
-    strong {
-        font-family: $snm-font-heading;
-        font-weight: bold;
-        font-size: $snm-font-medium;
-        line-height: 26px;
-        letter-spacing: 0px;
-        display: block;
-    }
-
-    span {
-        font-family: $snm-font-content;
-        font-weight: normal;
-        font-size: $snm-font-smaller;
-        line-height: 16px;
-        letter-spacing: 0px;
-    }
-}
-
-.find-out-more:hover {
-    color: $snm-color-element-ondark;
-    background-color: $snm-color-background-meddark;
-}
+// .find-out-more {
+//     display: block;
+//     width: 100%;
+//     overflow: hidden;
+//     text-overflow: ellipsis;
+//     white-space: nowrap;
+//     background-color: $snm-color-element-med;
+//     box-shadow: 0px 1px 7px $snm-color-shadow;
+//     color: $snm-color-element-ondark;
+//     padding: 1rem;
+//     position:relative;
+//     margin:0 1rem;
+//     border-radius: 6px;
+//     width: calc(100% - 2rem);
+//
+//     &::after {
+//       content: '>';
+//       display: block;
+//       width: 40px;
+//       height: 40px;
+//       background-color: #fff;
+//       color: $snm-color-element-med;
+//       position: absolute;
+//       top: 50%;
+//       margin-top: -20px;
+//       right:2rem;
+//       text-align: center;
+//       border-radius:100%;
+//       line-height:40px;
+//     }
+//
+//     strong {
+//         font-family: $snm-font-heading;
+//         font-weight: bold;
+//         font-size: $snm-font-medium;
+//         line-height: 26px;
+//         letter-spacing: 0px;
+//         display: block;
+//     }
+//
+//     span {
+//         font-family: $snm-font-content;
+//         font-weight: normal;
+//         font-size: $snm-font-smaller;
+//         line-height: 16px;
+//         letter-spacing: 0px;
+//     }
+// }
+//
+// .find-out-more:hover {
+//     color: $snm-color-element-ondark;
+//     background-color: $snm-color-background-meddark;
+// }
 
 .partner-and-org {
     display: flex;
     justify-content: space-around;
+    margin-top:1.2rem;
+    margin-bottom:0;
     figure {
 
         text-align: center;
@@ -1428,11 +1480,12 @@ img.opportunity-image {
     padding:1rem 0.5rem 1rem 1rem;
   }
   .opportunity-right {
-    padding: 1rem 1rem 1rem 1rem;
+    padding: 1rem 2rem;
     position: sticky;
     top:0;
     align-self: flex-start;
     background-color: #fbfbfb;
+    border-left: 1px solid #efefef;
   }
   .reviews {
       .modal {
@@ -1448,6 +1501,13 @@ img.opportunity-image {
       font-size: rem(24px);
     }
   }
+
+  .opp-head-top {
+    display: flex;
+    margin-bottom: 0.5rem;
+  }
+
+
   .opportunity-name h1 {
     font-size: 2rem;
     margin-bottom: 1rem;
@@ -1507,15 +1567,20 @@ img.opportunity-image {
     border-radius: 6px;
   }
   img.opportunity-image {
-    height:250px;
+    height:auto;
+    margin: 0 1rem 1rem 0;
+    border: 1px solid $snm-color-border;
+    max-width: 200px;
+    border-radius: 6px;
+    object-fit:contain;
   }
   .related {
     > h2 {
       color: $snm-color-element-dark;
-      font-size: rem(24px);
+      font-size: 1.3rem;
       background-color: transparent;
       padding:0;
-      margin-bottom:2rem;
+      margin-bottom:1rem;
       margin-top: 3rem;
     }
     >a {
@@ -1532,6 +1597,10 @@ img.opportunity-image {
     width: 100%;
     margin:0;
   }
+
+
+
+
 }
 
 @media (min-width: 1200px) {
@@ -1540,5 +1609,139 @@ img.opportunity-image {
   }
 }
 
+.opp-actions {
+  padding:0;
+  background-color: #fff;
+  position:sticky;
+  top:45px;
+  z-index:99;
+  .opp-action-wrap {
+    background-color: $snm-color-background-medlight;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0.5rem;
+  }
+}
+
+button.action-button.round-btn, .find-out-more {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  background: transparent;
+  border:0;
+  box-shadow:none;
+  padding:0.25rem;
+  margin:0.5rem;
+  text-align: center;
+  > .icon {
+    display: flex;
+    width: 48px;
+    height: 48px;
+    background-color: #F5F5F5;
+    border-radius: 100%;
+    align-content:center;
+    justify-content: center;
+    transition: all 0.3s;
+      svg {
+        left:0;
+        fill: $snm-color-element-med;
+        transition: all 0.3s;
+        path {
+          fill: $snm-color-element-med;
+          transition: all 0.3s;
+        }
+      }
+  }
+  > span {
+    font-weight: 400;
+    font-size: rem(10px);
+    text-transform: uppercase;
+    margin-top: rem(6px);
+    color: #000;
+  }
+  &:hover {
+    > .icon {
+      background-color: $snm-color-element-med;
+        svg {
+          left:0;
+          fill: #fff;
+          path {
+            fill: #fff;
+          }
+        }
+    }
+  }
+}
+
+.find-out-more {
+  width: 48px;
+  > .icon {
+    background-color:$snm-color-element-med;
+    svg,path {
+      stroke:transparent;
+      fill: #fff!important;
+    }
+  }
+  >span {
+    line-height: 1;
+    color: #000;
+  }
+  &:hover {
+    > .icon {
+      background-color: #fff;
+      svg,path {
+        fill: $snm-color-element-med!important;
+      }
+    }
+  }
+}
+
+.calendar {
+  svg {
+    width: 20px;
+    rect{
+      fill: transparent;
+    }
+  }
+}
+
+.like svg {
+  position:relative;
+  top:-2px;
+  width:22px;
+}
+
+.share svg {
+  width:20px;
+  left: -1px!important;
+  position:relative;
+}
+
+@media (min-width: 420px){
+  button.action-button.round-btn, .find-out-more {
+    margin: 0 1rem;
+  }
+}
+
+@media (min-width:$fullsize-screen) {
+  .opp-actions {
+    border-top: 1px solid $snm-color-border;
+    border-bottom: 1px solid $snm-color-border;
+    padding: 0.5rem 0;
+    background-color: #fff;
+    position:sticky;
+    top:0;
+    z-index:99;
+    .opp-action-wrap {
+      background-color: $snm-color-background-medlight;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0.5rem;
+      border-radius:6px;
+    }
+  }
+}
 
 </style>
