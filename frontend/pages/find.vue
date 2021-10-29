@@ -1,16 +1,23 @@
 <template>
 <div id="find" :class="{filtering: filtering}">
-  <general-filters
-    id="filters-general"
-    :text="query.text"
-    :place="place"
-    :beginning="beginning"
-    :ending="ending"
-    @text="query.text=$event"
-    @place="place=$event"
-    @beginning="beginning=$event"
-    @ending="ending=$event"
-    />
+    <!-- This syntax used in the event handlers is kind of weird, but
+    it does what we want. First the assignment expression is
+    evaluated, then the result of that expression is passed as an
+    argument to search, which ignores its arguments and initiates a
+    search. The extra parentheses are in case JavaScript starts
+    accepting keyword arguments at some point. So, in the end the
+    value is changed and then a search is initiated. -->
+    <general-filters
+      id="filters-general"
+      :text="query.text"
+      :place="place"
+      :beginning="beginning"
+      :ending="ending"
+      @text="search((query.text=$event))"
+      @place="search((place=$event))"
+      @beginning="search((beginning=$event))"
+      @ending="search((ending=$event))"
+      />
   <div class="snm-container">
   <div id="filters-ordering">
     <b-field id="filter-physical">
@@ -94,11 +101,11 @@
       </fieldset>
       <fieldset>
         <label>Activity Type</label>
-        <b-taginput v-model="selected_descriptors" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="descriptor_text = $event.toLowerCase()" />
+        <b-taginput v-model="selected_descriptors" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="query.descriptor_text = $event.toLowerCase()" />
       </fieldset>
       <fieldset>
         <label>Topic</label>
-        <b-taginput v-model="selected_topics" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="topic_text = $event.toLowerCase()" />
+        <b-taginput v-model="selected_topics" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="query.topic_text = $event.toLowerCase()" />
       </fieldset>
       <fieldset data-context="find-cost">
         <label>Cost</label>
@@ -136,7 +143,7 @@
       <fieldset data-context="find-partner">
         <label>Partner Organization</label>
         <b-autocomplete
-          v-model="partner_text"
+          v-model="query.partner_text"
           :data="suggested_partners"
           field="name"
           clearable
@@ -196,6 +203,7 @@
 <script>
 import Vue from 'vue'
 import copy from 'copy-to-clipboard'
+import debounce from 'lodash/debounce'
 
 import MiniSelect from '~/components/MiniSelect'
 import OpportunityCard from '~/components/OpportunityCard'
@@ -223,7 +231,10 @@ function empty_query() {
     return {
         physical: 'in-person-or-online',
         beginning: (new Date()).toISOString(),
-        sort: 'closest'
+        sort: 'closest',
+        partner_text: "",
+        descriptor_text: "",
+        topic_text: "",
     };
 }
 
@@ -305,9 +316,6 @@ export default {
     data() {
         return {
             query: Object.assign(empty_query(), this.$route.query),
-            partner_text: "",
-            descriptor_text: "",
-            topic_text: ""
         };
     },
 
@@ -441,13 +449,13 @@ export default {
             },
 
             set(value) {
-                this.partner_text = value ? value.name : "";
+                this.query.partner_text = value ? value.name : "";
                 this.set_query('partner', value ? value.uid : undefined);
             }
         },
 
         suggested_partners() {
-            const text = this.partner_text.toLowerCase();
+            const text = this.query.partner_text.toLowerCase();
             return this.partners.filter(p => p.name.toLowerCase().indexOf(text) >= 0);
         },
 
@@ -463,7 +471,7 @@ export default {
         },
 
         suggested_descriptors() {
-            return this.descriptors.filter(opt => opt[1].toLowerCase().indexOf(this.descriptor_text) >= 0);
+            return this.descriptors.filter(opt => opt[1].toLowerCase().indexOf(this.query.descriptor_text) >= 0);
         },
 
         selected_topics: {
@@ -478,7 +486,7 @@ export default {
         },
 
         suggested_topics() {
-            return this.topics.filter(opt => opt[1].toLowerCase().indexOf(this.topic_text) >= 0);
+            return this.topics.filter(opt => opt[1].toLowerCase().indexOf(this.query.topic_text) >= 0);
         },
 
         cost: {
@@ -567,11 +575,11 @@ export default {
             this.search();
         },
 
-        search() {
+        search: debounce(function() {
             if(!this.filtering) {
                 this.$router.push({ name: 'find', query: this.query });
             }
-        },
+        }, 500),
     }
 }
 </script>

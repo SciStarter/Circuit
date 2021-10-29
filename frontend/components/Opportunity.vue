@@ -16,7 +16,7 @@
     <a @click="do_like">
       <like-icon /> Like
     </a>
-    <a @click="show_calendar_add = true">
+    <a v-if="enable_calendar" @click="show_calendar_add = true">
       <time-icon /> Add to Calendar
     </a>
     <a @click="show_review_add = true">
@@ -90,7 +90,7 @@
         <action-button class="no-mobile" principal :disabled="did.save" @click="do_save">
           <saved-icon /> <span v-if="did.save">Saved</span><span v-else>Save for Later</span>
         </action-button>
-        <action-button :disabled="did.like" class="no-mobile" secondary @click="do_like">
+        <action-button class="no-mobile" secondary @click="do_like">
           <like-icon /> <span v-if="did.like">You liked this</span><span v-else>Like</span>
         </action-button>
         <social-button mode="facebook" :opportunity="opportunity" class="no-mobile" />
@@ -133,7 +133,7 @@
                 </div>
               </div>
             </b-modal>
-            <action-button v-if="has_value(opportunity.start_datetimes)" secondary class="no-mobile" @click="show_calendar_add = true">
+            <action-button v-if="enable_calendar" secondary class="no-mobile" @click="show_calendar_add = true">
               Add to calendar
             </action-button>
           </div>
@@ -493,6 +493,14 @@ export default {
     },
 
     computed: {
+        enable_calendar() {
+            if(this.has_value(this.opportunity.start_datetimes)) {
+                return this.has_value(this.opportunity.end_datetimes)
+            }
+
+            return false;
+        },
+
         loading_reviews() {
             return this.reviews === null;
         },
@@ -644,14 +652,26 @@ export default {
         },
 
         async do_like() {
-            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/likes', {}, this.$store.state.auth);
-            this.did.like = true;
-            this.likes += 1;
+            if(this.did.like) {
+                await this.$axios.$delete('/api/ui/entity/' + this.opportunity.slug + '/likes', {}, this.$store.state.auth);
+                this.did.like = false;
+                this.likes -= 1;
 
-            this.$buefy.toast.open({
-                message: 'Liked it',
-                type: 'is-success'
-            });
+                this.$buefy.toast.open({
+                    message: 'Un-liked it',
+                    type: 'is-success'
+                });
+            }
+            else {
+                await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/likes', {}, this.$store.state.auth);
+                this.did.like = true;
+                this.likes += 1;
+
+                this.$buefy.toast.open({
+                    message: 'Liked it',
+                    type: 'is-success'
+                });
+            }
         },
 
         async do_didit() {
