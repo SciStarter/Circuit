@@ -183,19 +183,19 @@
 
       <div class="partner-and-org">
         <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
-          <figcaption>As Featured On</figcaption>
+          <figcaption>Provided by</figcaption>
           <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on" new-tab>
             <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name + ' logo'">
             <span v-else>{{ opportunity.partner_name }}</span>
           </component>
         </figure>
-        <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
+        <!-- <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
           <figcaption>Hosted By</figcaption>
           <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" campaign="opp-page" content="hosted-by" new-tab>
             <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name + ' logo'">
             <span v-else>{{ opportunity.organization_name }}</span>
           </component>
-        </figure>
+        </figure> -->
       </div>
 
       <div class="more-info opportunity-section">
@@ -1319,7 +1319,7 @@ img.opportunity-image {
 .partner-and-org {
     // display: flex;
     // justify-content: space-around;
-    margin-top:0.5rem;
+    margin-top:1.5rem;
     margin-bottom:0.5rem;
     figure {
 
@@ -1965,7 +1965,7 @@ ul.calendar-add li {
 .review-add-modal {
   justify-content:flex-start!important;
 }
-.stars{
+.card .stars{
   margin-top:1rem;
   margin-bottom:0.5rem;
 }
