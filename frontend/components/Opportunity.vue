@@ -1,6 +1,6 @@
 <template>
 <article class="opportunity">
-  <div class="mobile-menu" :class="{'closed': !mobile_menu_open}" data-context="mobile-menu">
+  <!-- <div class="mobile-menu" :class="{'closed': !mobile_menu_open}" data-context="mobile-menu">
     <external-link
       :href="opportunity.partner_opp_url"
       title="Find out more"
@@ -27,12 +27,12 @@
       <social-button mode="twitter" :opportunity="opportunity" />
       <social-button mode="linkedin" :opportunity="opportunity" />
     </div>
-  </div>
+  </div> -->
 
-  <button class="mobile-menu-toggle mobile-only" title="Toggle menu" :aria-pressed="String(mobile_menu_open)" @click="mobile_menu_open = !mobile_menu_open">
+  <!-- <button class="mobile-menu-toggle mobile-only" title="Toggle menu" :aria-pressed="String(mobile_menu_open)" @click="mobile_menu_open = !mobile_menu_open">
     <span v-if="mobile_menu_open" title="close mobile menu">&times;</span>
     <img v-else src="~assets/img/hamburger.svg?data" title="open mobile menu">
-  </button>
+  </button> -->
 
   <div class="snm-container">
     <div class="opportunity-left">
@@ -54,7 +54,7 @@
                 <stars v-model="reviews.average" />
                 {{ reviews.reviews.length }}
               </span>
-              <span v-if="likes !== null">
+              <span v-if="likes !== null" class="like-count">
                 <like-icon :class="{'liked': did.like}" />
                 {{ likes }}
               </span>
@@ -91,27 +91,7 @@
             <div>
               <opportunity-time :opportunity="opportunity" @upcoming="upcoming = $event" />
               <opportunity-notice :opportunity="opportunity" mode="time" />
-              <b-modal
-                v-model="show_calendar_add"
-                has-modal-card
-                trap-focus
-                :destroy-on-hide="false"
-                aria-role="dialog"
-                aria-label="Add to calendar"
-                aria-modal
-                >
-                <div class="card">
-                  <div v-for="pair in upcoming" :key="pair[0].toISOString()" class="calendar-row">
-                    <label>
-                      {{ pair[0].toLocaleString() }}
-                    </label>
-                    <calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-                    <calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-                    <calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-                    <calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" />
-                  </div>
-                </div>
-              </b-modal>
+
 
 
             </div>
@@ -127,77 +107,75 @@
       <div class="opp-actions">
         <div class="opp-action-wrap">
 
-          <action-button class="round-btn" principal :disabled="did.save" @click="do_save">
-            <div class="icon"><saved-icon /></div>
+          <div class="opp-action-btn">
+            <action-button class="round-btn" principal :disabled="did.save" @click="do_save">
+              <div class="icon"><saved-icon /></div>
+            </action-button>
             <span v-if="did.save">Saved</span><span v-else>Save<br />for Later</span>
-          </action-button>
+          </div>
 
-          <action-button class="round-btn" secondary @click="do_like">
-            <div class="icon like"><like-icon /></div>
+          <div class="opp-action-btn">
+            <action-button class="round-btn" secondary @click="do_like">
+              <div class="icon like" :class="{marked:did.like}"><like-icon /></div>
+            </action-button>
             <span v-if="did.like">You<br />liked this</span><span v-else>Like</span>
-          </action-button>
+          </div>
 
-          <action-button v-if="enable_calendar" class="round-btn" @click="show_calendar_add = true">
-            <div class="icon calendar"><time-icon /></div>
+          <div class="opp-action-btn">
+            <action-button v-if="enable_calendar" class="round-btn" @click="show_calendar_add = true">
+              <div class="icon calendar"><time-icon /></div>
+            </action-button>
             <span>Add to<br />calendar</span>
-          </action-button>
+          </div>
 
-          <action-button class="round-btn" @click="show_share = true">
-            <div class="icon share"><share-icon /></div>
+          <div class="opp-action-btn">
+            <action-button class="round-btn" @click="show_share = true">
+              <div class="icon share"><share-icon /></div>
+            </action-button>
             <span>Share</span>
-          </action-button>
+          </div>
 
-          <external-link
-            :href="opportunity.partner_opp_url"
-            title="Find out more"
-            campaign="opp-page"
-            content="find-out-more"
-            class="find-out-more round-btn"
-            new-tab
-            @before="register_interest"
-            >
-            <div class="icon"><link-icon /></div>
+          <div class="opp-action-btn">
+            <external-link
+              :href="opportunity.partner_opp_url"
+              title="Find out more"
+              campaign="opp-page"
+              content="find-out-more"
+              class="find-out-more round-btn"
+              new-tab
+              @before="register_interest"
+              >
+              <div class="icon"><link-icon /></div>
+            </external-link>
             <span>Visit<br />Website</span>
-          </external-link>
+          </div>
+
+          <div class="opp-action-btn">
+            <action-button class="round-btn no-mobile" principal @click="do_didit">
+              <div class="icon did" :class="{marked:did.didit}"><plus-icon /></div>
+            </action-button>
+            <span v-if="!did.didit">I Did<br />This</span><span v-else>You Did<br />This</span>
+            <action-button id="idid-tip" class="round-btn tooltip" @click="show_ididthis_tooltip = true">
+              <div class="icon">?</div>
+            </action-button>
+          </div>
 
         </div>
+
       </div><!-- end .opp-actions -->
 
-        <b-modal
-          v-model="show_bookmark_add"
-          has-modal-card
-          trap-focus
-          :destroy-on-hide="false"
-          aria-role="dialog"
-          aria-label="Add a Review"
-          aria-modal
-          >
-          <div class="card">
-            <h2>You must be signed in to save an opportunity</h2>
-            <action-button primary @click="(show_bookmark_add = false) || $emit('login')">
-              Sign In
-            </action-button>
-            <h2>Don't have an account?</h2>
-            <action-button secondary @click="(show_bookmark_add = false) || $emit('signup')">
-              Create an Account
-            </action-button>
-          </div>
-        </b-modal>
-        <b-modal
-          v-model="show_share"
-          has-modal-card
-          trap-focus
-          :destroy-on-hide="false"
-          aria-role="dialog"
-          aria-label="Show share buttons"
-          aria-modal
-          >
-          <div class="card">
-            <social-button mode="facebook" :opportunity="opportunity" class="no-mobile" />
-            <social-button mode="twitter" :opportunity="opportunity" class="no-mobile" />
-            <social-button mode="linkedin" :opportunity="opportunity" class="no-mobile" />
-          </div>
-        </b-modal>
+      <div class="ididthis-mobile">
+        <action-button class="round-btn" @click="do_didit">
+          <div class="icon" :class="{marked:did.didit}"><plus-icon /></div>
+          <span v-if="did.didit">I Did This</span><span v-else>You Did This</span>
+        </action-button>
+        <action-button class="round-btn tooltip" @click="show_ididthis_tooltip = true">
+          <div class="icon">?</div>
+        </action-button>
+      </div>
+
+
+
 
 
 
@@ -240,14 +218,17 @@
         <p v-if="has_value(opportunity.languages)" class="item">
           Languages: {{ opportunity.languages.join(', ') }}
         </p>
+
+        <div class="description">
+          <h2>About This Science Opportunity</h2>
+          <read-more v-model="description_open">
+            <vue-markdown :source="opportunity.description" class="content" />
+          </read-more>
+        </div>
+
       </div>
 
-      <div class="description opportunity-section">
-        <h2>About This Science Opportunity</h2>
-        <read-more v-model="description_open">
-          <vue-markdown :source="opportunity.description" class="content" />
-        </read-more>
-      </div>
+
 
       <div v-if="has_value(opportunity.tags)" class="tags opportunity-section">
         <h2>Tags</h2>
@@ -269,46 +250,10 @@
       </div>
 
       <div class="reviews">
-        <b-modal
-          v-model="show_review_add"
-          has-modal-card
-          trap-focus
-          :destroy-on-hide="false"
-          aria-role="dialog"
-          aria-label="Add a Review"
-          aria-modal
-          >
-          <div class="card">
-            <div v-if="user.authenticated">
-              <h2>Rate &amp; Review</h2>
-              <div>
-                <stars v-model="new_review.rating" editable />
-              </div>
-              <b-input v-model="new_review.comment" type="textarea" />
-              <div class="buttons">
-                <action-button tertiary @click="show_review_add = false">
-                  Cancel
-                </action-button>
-                <action-button primary @click="do_review">
-                  Submit
-                </action-button>
-              </div>
-            </div>
-            <div v-else>
-              <h2>You must be signed in to add a review</h2>
-              <action-button primary @click="(show_review_add = false) || $emit('login')">
-                Sign In
-              </action-button>
-              <h2>Don't have an account?</h2>
-              <action-button tertiary @click="(show_review_add = false) || $emit('signup')">
-                Create an Account
-              </action-button>
-            </div>
-          </div>
-        </b-modal>
+
         <div class="reviews-header">
           <h2>Reviews</h2>
-          <action-button class="no-mobile" secondary @click="show_review_add = true">
+          <action-button secondary @click="show_review_add = true">
             <star-icon /> Add Review
           </action-button>
         </div>
@@ -329,8 +274,11 @@
         <b-loading v-model="loading_reviews" :is-full-page="false" />
       </div>
     </div>
+
+
+
     <div class="opportunity-right">
-      <div class="ididthis no-mobile">
+      <!-- <div class="ididthis no-mobile">
         <h2>
           <atom-icon /> <span v-if="did.didit">Thanks for letting us know!</span><span v-else>Help Scientists!</span>
         </h2>
@@ -346,46 +294,11 @@
           You can help scientists studying public participation in science
           by logging your participation in this science opportunity.
         </p>
-        <b-modal
-          v-model="show_didit_logged_out"
-          has-modal-card
-          trap-focus
-          :destroy-on-hide="false"
-          aria-role="dialog"
-          aria-label="Add a Review"
-          aria-modal
-          >
-          <div class="card">
-            <h2>Thanks for letting us know! But&hellip; <span class="close" @click="show_didit_logged_out = false">&times;</span></h2>
-            <p>
-              We love hearing about people engaged in science, and to
-              better support these opportunities we could use some
-              additional information about you!
-            </p>
-            <p>
-              For now we'll save that you've done this activity in your
-              browser's storage, but making an account will make sure you
-              don't lose credit for your participation.
-            </p>
-            <p>
-              Besides helping science, you'll get better recommendations
-              plus the ability to save opportunities for later and track
-              your progress in science learning.
-            </p>
-            <div>
-              <action-button tertiary @click="(show_didit_logged_out = false) || $emit('signup')">
-                Create an account
-              </action-button>
-              <action-button primary @click="(show_didit_logged_out = false) || $emit('login')">
-                Sign In
-              </action-button>
-            </div>
-          </div>
-        </b-modal>
+
         <action-button v-if="!did.didit" principal @click="do_didit">
           I Did This!
         </action-button>
-      </div>
+      </div> -->
 
       <div class="map" :class="{'open': show_map}">
         <a @click="show_map = false">&laquo; back</a>
@@ -397,7 +310,7 @@
         <template v-if="!loading_recommended">
           <nuxt-link v-for="rec in recommended" :key="rec.uid" :to="'/' + rec.slug">
             <h3>{{ rec.title }}</h3>
-            <div>
+            <div class="loc">
               <location-icon />
               <opportunity-location :opportunity="rec" short />
             </div>
@@ -411,6 +324,161 @@
       </div>
     </div>
   </div>
+
+<b-modal
+  v-model="show_calendar_add"
+  has-modal-card
+  trap-focus
+  :destroy-on-hide="false"
+  aria-role="dialog"
+  aria-label="Add to calendar"
+  aria-modal
+  >
+  <div class="card">
+    <h2>Add to Calendar <span class="close" @click="show_calendar_add = false">&times;</span></h2>
+    <div v-for="pair in upcoming" :key="pair[0].toISOString()" class="calendar-row">
+      <label>
+        {{ pair[0].toLocaleString() }}
+      </label>
+      <ul class="calendar-add">
+      <li><calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+      <li><calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+      <li><calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+      <li><calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+    </ul>
+    </div>
+  </div>
+</b-modal>
+<b-modal
+  v-model="show_bookmark_add"
+  has-modal-card
+  trap-focus
+  :destroy-on-hide="false"
+  aria-role="dialog"
+  aria-label="Add a Review"
+  aria-modal
+  >
+  <div class="card flex-col">
+
+    <h2>You must be signed in to save an opportunity <span class="close" @click="show_bookmark_add = false">&times;</span></h2>
+    <action-button primary class="self" @click="(show_bookmark_add = false) || $emit('login')">
+      Sign In
+    </action-button>
+    <h2>Don't have an account?</h2>
+    <action-button secondary class="self" @click="(show_bookmark_add = false) || $emit('signup')">
+      Create an Account
+    </action-button>
+  </div>
+</b-modal>
+<b-modal
+  v-model="show_share"
+  has-modal-card
+  trap-focus
+  :destroy-on-hide="false"
+  aria-role="dialog"
+  aria-label="Show share buttons"
+  aria-modal
+  >
+  <div class="card share-modal">
+    <h2>Share <span class="close" @click="show_share = false">&times;</span></h2>
+    <div>
+    <social-button mode="facebook" :opportunity="opportunity" />
+    <social-button mode="twitter" :opportunity="opportunity" />
+    <social-button mode="linkedin" :opportunity="opportunity" />
+  </div>
+  </div>
+</b-modal>
+<b-modal
+  v-model="show_ididthis_tooltip"
+  has-modal-card
+  trap-focus
+  :destroy-on-hide="false"
+  aria-role="dialog"
+  aria-label="Show tooltip"
+  aria-modal
+  >
+  <div class="card">
+    <h2>Help Scientists <span class="close" @click="show_ididthis_tooltip = false">&times;</span></h2>
+    <p>You can help scientists studying public participation in science
+    by logging your participation in this science opportunity.</p>
+    <p>Make an account to save your participation in your Science Near Me dashboard!</p>
+  </div>
+</b-modal>
+<b-modal
+  v-model="show_review_add"
+  has-modal-card
+  trap-focus
+  :destroy-on-hide="false"
+  aria-role="dialog"
+  aria-label="Add a Review"
+  aria-modal
+  >
+  <div class="card">
+    <div v-if="user.authenticated" class="flex-col review-add-modal">
+      <h2>Rate &amp; Review <span class="close" @click="show_review_add = false">&times;</span></h2>
+      <div class="stars">
+        <stars v-model="new_review.rating" editable />
+      </div>
+      <b-input v-model="new_review.comment" type="textarea" />
+      <div class="buttons">
+        <action-button primary @click="do_review">
+          Submit
+        </action-button>
+        <action-button class="text-btn" @click="show_review_add = false">
+          Cancel
+        </action-button>
+
+      </div>
+    </div>
+    <div v-else class="flex-col">
+      <h2>You must be signed in to add a review <span class="close" @click="show_review_add = false">&times;</span></h2>
+      <action-button primary class="self" @click="(show_review_add = false) || $emit('login')">
+        Sign In
+      </action-button>
+      <h2>Don't have an account?</h2>
+      <action-button tertiary class="self" @click="(show_review_add = false) || $emit('signup')">
+        Create an Account
+      </action-button>
+    </div>
+  </div>
+</b-modal>
+<b-modal
+  v-model="show_didit_logged_out"
+  has-modal-card
+  trap-focus
+  :destroy-on-hide="false"
+  aria-role="dialog"
+  aria-label="Add a Review"
+  aria-modal
+  >
+  <div class="card flex-col">
+    <h2>Thanks for letting us know! But&hellip; <span class="close" @click="show_didit_logged_out = false">&times;</span></h2>
+    <p>
+      We love hearing about people engaged in science, and to
+      better support these opportunities we could use some
+      additional information about you!
+    </p>
+    <p>
+      For now we'll save that you've done this activity in your
+      browser's storage, but making an account will make sure you
+      don't lose credit for your participation.
+    </p>
+    <p>
+      Besides helping science, you'll get better recommendations
+      plus the ability to save opportunities for later and track
+      your progress in science learning.
+    </p>
+    <div>
+      <action-button tertiary @click="(show_didit_logged_out = false) || $emit('signup')">
+        Create an account
+      </action-button>
+      <action-button primary @click="(show_didit_logged_out = false) || $emit('login')">
+        Sign In
+      </action-button>
+    </div>
+  </div>
+</b-modal>
+
 </article>
 </template>
 
@@ -442,6 +510,7 @@ import FlagIcon from '~/assets/img/flag.svg?inline'
 import LinkIcon from '~/assets/img/link.svg?inline'
 import AtomIcon from '~/assets/img/atom.svg?inline'
 import ShareIcon from '~/assets/img/share.svg?inline'
+import PlusIcon from '~/assets/img/plus.svg?inline'
 
 export default {
     components: {
@@ -466,7 +535,8 @@ export default {
         FlagIcon,
         LinkIcon,
         AtomIcon,
-        ShareIcon
+        ShareIcon,
+        PlusIcon
     },
 
     props: {
@@ -493,6 +563,7 @@ export default {
                 didit: false,
             },
             show_didit_logged_out: false,
+            show_ididthis_tooltip: false,
             show_bookmark_add: false,
             show_review_add: false,
             show_calendar_add: false,
@@ -981,42 +1052,45 @@ img.opportunity-image {
       margin-bottom: 0.5rem;
     }
 
-    .modal {
-        .card {
-            h2 {
-                font-family: $snm-font-heading;
-                font-weight: bold;
-                font-size: $snm-font-medium;
-                line-height: 26px;
-                letter-spacing: 0px;
-                color: $snm-color-background-dark;
 
-                .close {
-                    float: right;
-                    font-size: $snm-font-larger;
-                    position: relative;
-                    top: -10px;
-                    cursor: pointer;
-                }
+}
+
+.modal {
+    .card {
+
+        h2 {
+            font-family: $snm-font-heading;
+            font-weight: bold;
+            font-size: $snm-font-medium;
+            line-height: 26px;
+            letter-spacing: 0px;
+            color: $snm-color-background-dark;
+
+            .close {
+                float: right;
+                font-size: $snm-font-larger;
+                position: relative;
+                top: -10px;
+                cursor: pointer;
             }
+        }
 
-            p {
-                font-family: $snm-font-content;
-                font-weight: normal;
-                font-size: $snm-font-small;
-                line-height: 22px;
-                letter-spacing: 0px;
-                color: $snm-color-tldr;
-                margin: 1rem 0px;
-            }
+        p {
+            font-family: $snm-font-content;
+            font-weight: normal;
+            font-size: $snm-font-small;
+            line-height: 22px;
+            letter-spacing: 0px;
+            color: $snm-color-tldr;
+            margin: 1rem 0px;
+        }
 
-            div:last-child {
-                display: flex;
-                justify-content: right;
+        div:last-child {
+            display: flex;
+            // justify-content: right;
 
-                > * {
-                    flex-grow: 0;
-                }
+            > * {
+                flex-grow: 0;
             }
         }
     }
@@ -1073,7 +1147,7 @@ img.opportunity-image {
         font-weight: bold;
         font-size: $snm-font-large;
         color: $snm-color-info;
-        line-height: 28px;
+        line-height: 1.2;
         letter-spacing: 0px
     }
 }
@@ -1102,9 +1176,10 @@ img.opportunity-image {
                 margin-right: 0.75rem;
             }
 
-            svg.liked * {
-                fill: $snm-color-info;
-            }
+            // svg.liked * {
+            //     fill: $snm-color-info;
+            // }
+
         }
 
         span:not(:first-of-type) {
@@ -1135,7 +1210,10 @@ img.opportunity-image {
 }
 
 
-
+.like-count svg {
+  position:relative;
+  top: 3px;
+}
 
 .info {
     margin-bottom: 1.6rem;
@@ -1164,14 +1242,15 @@ img.opportunity-image {
 .calendar-row {
     display: flex;
     flex-wrap: wrap;
-    width: 200px;
+    width: 100%;
 
     label {
         display: block;
         font-family: $snm-font-content;
-        font-weight: bold;
+        font-weight: normal;
         color: $snm-color-element-dark;
         width: 100%;
+        margin-bottom:1rem;
     }
 
     .calendar-add {
@@ -1238,22 +1317,29 @@ img.opportunity-image {
 // }
 
 .partner-and-org {
-    display: flex;
-    justify-content: space-around;
-    margin-top:1.2rem;
-    margin-bottom:0;
+    // display: flex;
+    // justify-content: space-around;
+    margin-top:0.5rem;
+    margin-bottom:0.5rem;
     figure {
 
         text-align: center;
-
+        display: flex;
+        align-items: baseline;
+        padding:0 1rem;
         figcaption {
             font-family: $snm-font-heading;
             font-weight: bold;
             font-size: $snm-font-smaller;
-            line-height: 17px;
+            line-height: 1.2;
             letter-spacing: 0px;
             color: $snm-color-caption;
-            margin-bottom: 1rem;
+            margin-right:6px;
+        }
+
+        span {
+          font-size: $snm-font-smaller;
+          line-height: 1.2
         }
 
         img {
@@ -1285,7 +1371,7 @@ img.opportunity-image {
 
 .description {
     border-top: 1px solid $snm-color-border;
-    border-bottom: 1px solid $snm-color-border;
+    // border-bottom: 1px solid $snm-color-border;
 
     > h2 {
         font-family: $snm-font-heading;
@@ -1447,7 +1533,7 @@ img.opportunity-image {
             font-family: $snm-font-heading;
             font-size: $snm-font-medium;
             font-weight: bold;
-            line-height: 26px;
+            line-height: 1.2;
             color: $snm-color-element-med;
             text-decoration: underline;
         }
@@ -1460,7 +1546,14 @@ img.opportunity-image {
                 margin-right: 0.75rem;
                 align-self: center;
             }
+            &.loc svg {
+              margin-right: 0.75rem;
+              align-self: baseline;
+              position: relative;
+              top: 5px;
+            }
         }
+
     }
 
 }
@@ -1477,7 +1570,10 @@ img.opportunity-image {
   }
   .opportunity-left {
     flex: 0 0 66.66%;
-    padding:1rem 0.5rem 1rem 1rem;
+    padding:2rem 0.5rem 1rem 2rem;
+  }
+  .authenticated .opportunity-left {
+    padding-top:1rem;
   }
   .opportunity-right {
     padding: 1rem 2rem;
@@ -1486,6 +1582,7 @@ img.opportunity-image {
     align-self: flex-start;
     background-color: #fbfbfb;
     border-left: 1px solid #efefef;
+    min-height: 100vh;
   }
   .reviews {
       .modal {
@@ -1504,7 +1601,7 @@ img.opportunity-image {
 
   .opp-head-top {
     display: flex;
-    margin-bottom: 0.5rem;
+    margin-bottom: 2rem;
   }
 
 
@@ -1581,7 +1678,7 @@ img.opportunity-image {
       background-color: transparent;
       padding:0;
       margin-bottom:1rem;
-      margin-top: 3rem;
+      margin-top: 2rem;
     }
     >a {
       border:0;
@@ -1599,13 +1696,23 @@ img.opportunity-image {
   }
 
 
-
+  #idid-tip {
+    position: absolute;
+    bottom: 0;
+    right: -20px;
+    width: 20px;
+    height: 20px;
+    line-height:20px;
+    font-size:12px;
+    overflow:hidden;
+    border-radius: 100%;
+  }
 
 }
 
 @media (min-width: 1200px) {
   .opportunity-left {
-    padding:1rem 2rem 1rem 1rem;
+    padding:2rem 2rem 1rem 2rem;
   }
 }
 
@@ -1639,6 +1746,7 @@ button.action-button.round-btn, .find-out-more {
     width: 48px;
     height: 48px;
     background-color: #F5F5F5;
+    background-color: rgba(255,255,255,0.5);
     border-radius: 100%;
     align-content:center;
     justify-content: center;
@@ -1653,13 +1761,10 @@ button.action-button.round-btn, .find-out-more {
         }
       }
   }
-  > span {
-    font-weight: 400;
-    font-size: rem(10px);
-    text-transform: uppercase;
-    margin-top: rem(6px);
-    color: #000;
+  > .icon.marked svg * {
+    fill: #b5b5b5;
   }
+
   &:hover {
     > .icon {
       background-color: $snm-color-element-med;
@@ -1671,6 +1776,20 @@ button.action-button.round-btn, .find-out-more {
           }
         }
     }
+  }
+}
+
+.opp-action-btn {
+  text-align: center;
+  position: relative;
+  > span {
+    font-weight: 400;
+    font-size: rem(10px);
+    text-transform: uppercase;
+    margin-top: rem(6px);
+    color: #000;
+    line-height:1;
+    display:block;
   }
 }
 
@@ -1717,6 +1836,70 @@ button.action-button.round-btn, .find-out-more {
   left: -1px!important;
   position:relative;
 }
+button.action-button.round-btn > .icon.did {
+  background-color: #52504b;
+  &.marked {
+    background-color: #b5b5b5;
+  }
+  svg {
+  width:22px;
+  * {
+    fill:#fff;
+  }
+  }
+}
+button.action-button.round-btn:hover {
+  > .icon.did {
+    background-color: #fff;
+    svg * {
+      fill: #52504b;
+    }
+  }
+}
+
+.ididthis-mobile {
+  background-color: lighten($snm-color-action,20%);
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding:0.5rem;
+  button.round-btn {
+    flex-direction: row;
+    align-items:center;
+
+    > .icon {
+      background-color: $snm-color-action;
+      margin-right:0.5rem;
+      width: 24px;
+      height:24px;
+    }
+    > .icon svg {
+      width:12px;
+      fill: #fff;
+      * {
+        fill:#fff!important;
+      }
+    }
+    > span {
+      font-size:1rem;
+      text-transform: none;
+      margin-top:0;
+    }
+  }
+  button.round-btn.tooltip {
+    position: absolute;
+    top: 50%;
+    margin-top:-15px;
+    right:5px;
+    >.icon {
+    width: 20px;
+    height:20px;
+    background: $snm-color-action;
+    color: white;
+  }
+  }
+}
+
 
 @media (min-width: 420px){
   button.action-button.round-btn, .find-out-more {
@@ -1742,6 +1925,49 @@ button.action-button.round-btn, .find-out-more {
       border-radius:6px;
     }
   }
+  .authenticated .opp-actions {
+    top: 78px;
+  }
+  .ididthis-mobile {
+    display:none;
+  }
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.self {
+  align-self: flex-start;
+}
+
+.calendar-row ul {
+  width:100%;
+}
+ul.calendar-add li {
+  border-top:1px solid $snm-color-border;
+  padding:.5rem 0;
+  > a {
+    display: flex;
+    flex-direction:row;
+    align-items: center;
+
+  }
+
+}
+.share-modal > div {
+  display:flex;
+  justify-content:space-around!important;
+  margin-top:2rem;
+  margin-bottom:2rem;
+}
+.review-add-modal {
+  justify-content:flex-start!important;
+}
+.stars{
+  margin-top:1rem;
+  margin-bottom:0.5rem;
 }
 
 </style>

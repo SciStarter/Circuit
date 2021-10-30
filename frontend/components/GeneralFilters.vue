@@ -346,6 +346,9 @@ export default {
             }
         }
     }
+    #find .general-filters .basic-filter-backdrop {
+      margin-top: 3rem;
+    }
 }
 
 @media (max-width: 1099px) {
