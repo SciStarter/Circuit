@@ -1,6 +1,6 @@
 <template>
 <a :href="url" target="_blank" class="calendar-add" @click="$emit('before', calendar)">
-  <img :src="icon.url" :alt="icon.alt" :title="icon.title">
+  <img :src="icon.url" :alt="icon.alt" :title="icon.title"> <span>{{icon.title}}</span>
 </a>
 </template>
 
@@ -124,5 +124,6 @@ img {
     display: block;
     width: 32px;
     height: 32px;
+    margin-right:1rem;
 }
 </style>

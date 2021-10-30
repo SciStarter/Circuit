@@ -49,6 +49,15 @@
         Refine Results
       </h2>
       <fieldset>
+        <label>Topic</label>
+        <b-taginput v-model="selected_topics" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="query.topic_text = $event.toLowerCase()" />
+      </fieldset>
+      <fieldset>
+        <label>Activity Type</label>
+        <b-taginput v-model="selected_descriptors" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="query.descriptor_text = $event.toLowerCase()" />
+      </fieldset>
+
+      <fieldset>
         <label>Age</label>
         <b-field label="Minimum Age" data-context="find-minimum-age">
           <b-checkbox v-model="min_age_active" />
@@ -98,14 +107,6 @@
           </b-slider>
           <input v-model="max_age" type="text" class="slider-direct" :disabled="!max_age_active">
         </b-field>
-      </fieldset>
-      <fieldset>
-        <label>Activity Type</label>
-        <b-taginput v-model="selected_descriptors" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="query.descriptor_text = $event.toLowerCase()" />
-      </fieldset>
-      <fieldset>
-        <label>Topic</label>
-        <b-taginput v-model="selected_topics" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="query.topic_text = $event.toLowerCase()" />
       </fieldset>
       <fieldset data-context="find-cost">
         <label>Cost</label>
@@ -796,9 +797,7 @@ export default {
       padding-left:1rem;
       padding-right: 1rem;
     }
-    #find .general-filters .basic-filter-backdrop {
-      margin-bottom: 2rem;
-    }
+
 
     #filters-general {
         display: block;

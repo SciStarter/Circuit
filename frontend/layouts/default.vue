@@ -7,7 +7,7 @@
     </button>
 
     <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
-      <img src="~assets/img/logo.svg?data" title="return to home page">
+      <img src="~assets/img/logo-beta.svg?data" title="return to home page">
     </nuxt-link>
 
     <div class="flex">
@@ -137,7 +137,7 @@
 
         <div id="authenticated-nav">
           <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
-            <img src="~assets/img/logo.svg?data" title="return to home page">
+            <img src="~assets/img/logo-beta.svg?data" title="return to home page">
           </nuxt-link>
           <div class="an-overflow">
             <nav>
@@ -823,12 +823,14 @@ footer {
         height: auto;
         margin: 1rem;
         margin-top: 2rem;
+        margin-bottom: -1.2rem;
     }
 
     header {
-        height: 140px;
+        height: 90px;
         border-top: 10px solid $snm-color-prehead;
         position: relative;
+        overflow:visible;
 
         header a {
           display: block;
@@ -1292,5 +1294,10 @@ footer {
   }
   .modal .animation-content {
     overflow: visible;
+  }
+  @media (min-width:768px){
+    .modal .animation-content {
+      min-width: 600px;
+    }
   }
 </style>
