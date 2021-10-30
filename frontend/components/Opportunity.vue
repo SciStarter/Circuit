@@ -150,8 +150,8 @@
             <span>Visit<br />Website</span>
           </div>
 
-          <div class="opp-action-btn">
-            <action-button class="round-btn no-mobile" principal @click="do_didit">
+          <div class="opp-action-btn no-mobile">
+            <action-button class="round-btn" principal @click="do_didit">
               <div class="icon did" :class="{marked:did.didit}"><plus-icon /></div>
             </action-button>
             <span v-if="!did.didit">I Did<br />This</span><span v-else>You Did<br />This</span>
