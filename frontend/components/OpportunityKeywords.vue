@@ -1,8 +1,6 @@
 <template>
 <div v-if="keywords.length > 0" class="opportunity-keywords">
-  <span v-for="kw in keywords" :key="kw">
-    {{ kw }}
-  </span>
+  <span v-for="kw in keywords" :key="kw">{{ kw }}</span>
 </div>
 <div v-else class="opportunity-keywords">
   <em>no keywords assigned</em>
