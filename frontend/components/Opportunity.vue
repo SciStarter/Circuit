@@ -36,46 +36,42 @@
 
   <div class="snm-container">
     <div class="opportunity-left">
-
-
       <div class="opp-head opportunity-section">
         <div class="opp-head-top">
-        <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
+          <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
 
-        <div class="opp-head-info">
-          <div class="opportunity-name">
-            <strong>{{ subtitle }}</strong>
-            <h1>{{ opportunity.title }}</h1>
-          </div>
-
-          <div class="involvement">
-            <div class="reviews-likes">
-              <span v-if="reviews !== null">
-                <stars v-model="reviews.average" />
-                {{ reviews.reviews.length }}
-              </span>
-              <span v-if="likes !== null" class="like-count">
-                <like-icon :class="{'liked': did.like}" />
-                {{ likes }}
-              </span>
+          <div class="opp-head-info">
+            <div class="opportunity-name">
+              <strong>{{ subtitle }}</strong>
+              <h1>{{ opportunity.title }}</h1>
             </div>
-            <div class="numbers">
-              <p>
-                {{ saves }} People Interested
-              </p>
-              <p>
-                {{ didit }} People Report Doing This Opportunity
-              </p>
+
+            <div class="involvement">
+              <div class="reviews-likes">
+                <span v-if="reviews !== null">
+                  <stars v-model="reviews.average" />
+                  {{ reviews.reviews.length }}
+                </span>
+                <span v-if="likes !== null" class="like-count">
+                  <like-icon :class="{'liked': did.like}" />
+                  {{ likes }}
+                </span>
+              </div>
+              <div class="numbers">
+                <p>
+                  {{ saves }} People Interested
+                </p>
+                <p>
+                  {{ didit }} People Report Doing This Opportunity
+                </p>
+              </div>
             </div>
           </div>
-
         </div>
 
+        <div class="elevator-pitch">
+          <vue-markdown :source="elevator_pitch" class="content" />
         </div>
-
-          <div class="elevator-pitch">
-            <vue-markdown :source="elevator_pitch" class="content" />
-          </div>
 
         <div class="secondary">
           <div class="info location">
@@ -91,9 +87,6 @@
             <div>
               <opportunity-time :opportunity="opportunity" @upcoming="upcoming = $event" />
               <opportunity-notice :opportunity="opportunity" mode="time" />
-
-
-
             </div>
           </div>
           <div class="info keywords">
@@ -101,36 +94,42 @@
             <opportunity-keywords :opportunity="opportunity" />
           </div>
         </div>
-
       </div><!-- end .opp-head -->
 
       <div class="opp-actions">
         <div class="opp-action-wrap">
-
           <div class="opp-action-btn">
             <action-button class="round-btn" principal :disabled="did.save" @click="do_save">
-              <div class="icon"><saved-icon /></div>
+              <div class="icon">
+                <saved-icon />
+              </div>
             </action-button>
-            <span v-if="did.save">Saved</span><span v-else>Save<br />for Later</span>
+            <span v-if="did.save">Saved</span><span v-else>Save<br>for Later</span>
           </div>
 
           <div class="opp-action-btn">
             <action-button class="round-btn" secondary @click="do_like">
-              <div class="icon like" :class="{marked:did.like}"><like-icon /></div>
+              <div class="icon like" :class="{marked:did.like}">
+                <like-icon />
+              </div>
             </action-button>
-            <span v-if="did.like">You<br />liked this</span><span v-else>Like</span>
+            <span v-if="did.like">You<br>liked this</span><span v-else>Like</span>
           </div>
 
           <div class="opp-action-btn">
             <action-button v-if="enable_calendar" class="round-btn" @click="show_calendar_add = true">
-              <div class="icon calendar"><time-icon /></div>
+              <div class="icon calendar">
+                <time-icon />
+              </div>
             </action-button>
-            <span>Add to<br />calendar</span>
+            <span>Add to<br>calendar</span>
           </div>
 
           <div class="opp-action-btn">
             <action-button class="round-btn" @click="show_share = true">
-              <div class="icon share"><share-icon /></div>
+              <div class="icon share">
+                <share-icon />
+              </div>
             </action-button>
             <span>Share</span>
           </div>
@@ -145,41 +144,42 @@
               new-tab
               @before="register_interest"
               >
-              <div class="icon"><link-icon /></div>
+              <div class="icon">
+                <link-icon />
+              </div>
             </external-link>
-            <span>Visit<br />Website</span>
+            <span>Visit<br>Website</span>
           </div>
 
           <div class="opp-action-btn no-mobile">
             <action-button class="round-btn" principal @click="do_didit">
-              <div class="icon did" :class="{marked:did.didit}"><plus-icon /></div>
+              <div class="icon did" :class="{marked:did.didit}">
+                <plus-icon />
+              </div>
             </action-button>
-            <span v-if="!did.didit">I Did<br />This</span><span v-else>You Did<br />This</span>
+            <span v-if="!did.didit">I Did<br>This</span><span v-else>You Did<br>This</span>
             <action-button id="idid-tip" class="round-btn tooltip" @click="show_ididthis_tooltip = true">
-              <div class="icon">?</div>
+              <div class="icon">
+                ?
+              </div>
             </action-button>
           </div>
-
         </div>
-
       </div><!-- end .opp-actions -->
 
       <div class="ididthis-mobile">
         <action-button class="round-btn" @click="do_didit">
-          <div class="icon" :class="{marked:did.didit}"><plus-icon /></div>
+          <div class="icon" :class="{marked:did.didit}">
+            <plus-icon />
+          </div>
           <span v-if="did.didit">I Did This</span><span v-else>You Did This</span>
         </action-button>
         <action-button class="round-btn tooltip" @click="show_ididthis_tooltip = true">
-          <div class="icon">?</div>
+          <div class="icon">
+            ?
+          </div>
         </action-button>
       </div>
-
-
-
-
-
-
-
 
       <div class="partner-and-org">
         <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
@@ -225,10 +225,7 @@
             <vue-markdown :source="opportunity.description" class="content" />
           </read-more>
         </div>
-
       </div>
-
-
 
       <div v-if="has_value(opportunity.tags)" class="tags opportunity-section">
         <h2>Tags</h2>
@@ -250,7 +247,6 @@
       </div>
 
       <div class="reviews">
-
         <div class="reviews-header">
           <h2>Reviews</h2>
           <action-button secondary @click="show_review_add = true">
@@ -274,9 +270,6 @@
         <b-loading v-model="loading_reviews" :is-full-page="false" />
       </div>
     </div>
-
-
-
     <div class="opportunity-right">
       <!-- <div class="ididthis no-mobile">
         <h2>
@@ -325,160 +318,161 @@
     </div>
   </div>
 
-<b-modal
-  v-model="show_calendar_add"
-  has-modal-card
-  trap-focus
-  :destroy-on-hide="false"
-  aria-role="dialog"
-  aria-label="Add to calendar"
-  aria-modal
-  >
-  <div class="card">
-    <h2>Add to Calendar <span class="close" @click="show_calendar_add = false">&times;</span></h2>
-    <div v-for="pair in upcoming" :key="pair[0].toISOString()" class="calendar-row">
-      <label>
-        {{ pair[0].toLocaleString() }}
-      </label>
-      <ul class="calendar-add">
-      <li><calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
-      <li><calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
-      <li><calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
-      <li><calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
-    </ul>
-    </div>
-  </div>
-</b-modal>
-<b-modal
-  v-model="show_bookmark_add"
-  has-modal-card
-  trap-focus
-  :destroy-on-hide="false"
-  aria-role="dialog"
-  aria-label="Add a Review"
-  aria-modal
-  >
-  <div class="card flex-col">
-
-    <h2>You must be signed in to save an opportunity <span class="close" @click="show_bookmark_add = false">&times;</span></h2>
-    <action-button primary class="self" @click="(show_bookmark_add = false) || $emit('login')">
-      Sign In
-    </action-button>
-    <h2>Don't have an account?</h2>
-    <action-button secondary class="self" @click="(show_bookmark_add = false) || $emit('signup')">
-      Create an Account
-    </action-button>
-  </div>
-</b-modal>
-<b-modal
-  v-model="show_share"
-  has-modal-card
-  trap-focus
-  :destroy-on-hide="false"
-  aria-role="dialog"
-  aria-label="Show share buttons"
-  aria-modal
-  >
-  <div class="card share-modal">
-    <h2>Share <span class="close" @click="show_share = false">&times;</span></h2>
-    <div>
-    <social-button mode="facebook" :opportunity="opportunity" />
-    <social-button mode="twitter" :opportunity="opportunity" />
-    <social-button mode="linkedin" :opportunity="opportunity" />
-  </div>
-  </div>
-</b-modal>
-<b-modal
-  v-model="show_ididthis_tooltip"
-  has-modal-card
-  trap-focus
-  :destroy-on-hide="false"
-  aria-role="dialog"
-  aria-label="Show tooltip"
-  aria-modal
-  >
-  <div class="card">
-    <h2>Help Scientists <span class="close" @click="show_ididthis_tooltip = false">&times;</span></h2>
-    <p>You can help scientists studying public participation in science
-    by logging your participation in this science opportunity.</p>
-    <p>Make an account to save your participation in your Science Near Me dashboard!</p>
-  </div>
-</b-modal>
-<b-modal
-  v-model="show_review_add"
-  has-modal-card
-  trap-focus
-  :destroy-on-hide="false"
-  aria-role="dialog"
-  aria-label="Add a Review"
-  aria-modal
-  >
-  <div class="card">
-    <div v-if="user.authenticated" class="flex-col review-add-modal">
-      <h2>Rate &amp; Review <span class="close" @click="show_review_add = false">&times;</span></h2>
-      <div class="stars">
-        <stars v-model="new_review.rating" editable />
-      </div>
-      <b-input v-model="new_review.comment" type="textarea" />
-      <div class="buttons">
-        <action-button primary @click="do_review">
-          Submit
-        </action-button>
-        <action-button class="text-btn" @click="show_review_add = false">
-          Cancel
-        </action-button>
-
+  <b-modal
+    v-model="show_calendar_add"
+    has-modal-card
+    trap-focus
+    :destroy-on-hide="false"
+    aria-role="dialog"
+    aria-label="Add to calendar"
+    aria-modal
+    >
+    <div class="card">
+      <h2>Add to Calendar <span class="close" @click="show_calendar_add = false">&times;</span></h2>
+      <div v-for="pair in upcoming" :key="pair[0].toISOString()" class="calendar-row">
+        <label>
+          {{ pair[0].toLocaleString() }}
+        </label>
+        <ul class="calendar-add">
+          <li><calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+          <li><calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+          <li><calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+          <li><calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+        </ul>
       </div>
     </div>
-    <div v-else class="flex-col">
-      <h2>You must be signed in to add a review <span class="close" @click="show_review_add = false">&times;</span></h2>
-      <action-button primary class="self" @click="(show_review_add = false) || $emit('login')">
+  </b-modal>
+  <b-modal
+    v-model="show_bookmark_add"
+    has-modal-card
+    trap-focus
+    :destroy-on-hide="false"
+    aria-role="dialog"
+    aria-label="Add a Review"
+    aria-modal
+    >
+    <div class="card flex-col">
+      <h2>You must be signed in to save an opportunity <span class="close" @click="show_bookmark_add = false">&times;</span></h2>
+      <action-button primary class="self" @click="(show_bookmark_add = false) || $emit('login')">
         Sign In
       </action-button>
       <h2>Don't have an account?</h2>
-      <action-button tertiary class="self" @click="(show_review_add = false) || $emit('signup')">
+      <action-button secondary class="self" @click="(show_bookmark_add = false) || $emit('signup')">
         Create an Account
       </action-button>
     </div>
-  </div>
-</b-modal>
-<b-modal
-  v-model="show_didit_logged_out"
-  has-modal-card
-  trap-focus
-  :destroy-on-hide="false"
-  aria-role="dialog"
-  aria-label="Add a Review"
-  aria-modal
-  >
-  <div class="card flex-col">
-    <h2>Thanks for letting us know! But&hellip; <span class="close" @click="show_didit_logged_out = false">&times;</span></h2>
-    <p>
-      We love hearing about people engaged in science, and to
-      better support these opportunities we could use some
-      additional information about you!
-    </p>
-    <p>
-      For now we'll save that you've done this activity in your
-      browser's storage, but making an account will make sure you
-      don't lose credit for your participation.
-    </p>
-    <p>
-      Besides helping science, you'll get better recommendations
-      plus the ability to save opportunities for later and track
-      your progress in science learning.
-    </p>
-    <div>
-      <action-button tertiary @click="(show_didit_logged_out = false) || $emit('signup')">
-        Create an account
-      </action-button>
-      <action-button primary @click="(show_didit_logged_out = false) || $emit('login')">
-        Sign In
-      </action-button>
+  </b-modal>
+  <b-modal
+    v-model="show_share"
+    has-modal-card
+    trap-focus
+    :destroy-on-hide="false"
+    aria-role="dialog"
+    aria-label="Show share buttons"
+    aria-modal
+    >
+    <div class="card share-modal">
+      <h2>Share <span class="close" @click="show_share = false">&times;</span></h2>
+      <div>
+        <social-button mode="facebook" :opportunity="opportunity" />
+        <social-button mode="twitter" :opportunity="opportunity" />
+        <social-button mode="linkedin" :opportunity="opportunity" />
+      </div>
     </div>
-  </div>
-</b-modal>
-
+  </b-modal>
+  <b-modal
+    v-model="show_ididthis_tooltip"
+    has-modal-card
+    trap-focus
+    :destroy-on-hide="false"
+    aria-role="dialog"
+    aria-label="Show tooltip"
+    aria-modal
+    >
+    <div class="card">
+      <h2>Help Scientists <span class="close" @click="show_ididthis_tooltip = false">&times;</span></h2>
+      <p>
+        You can help scientists studying public participation in science
+        by logging your participation in this science opportunity.
+      </p>
+      <p>
+        Make an account to save your participation in your Science Near Me dashboard!
+      </p>
+    </div>
+  </b-modal>
+  <b-modal
+    v-model="show_review_add"
+    has-modal-card
+    trap-focus
+    :destroy-on-hide="false"
+    aria-role="dialog"
+    aria-label="Add a Review"
+    aria-modal
+    >
+    <div class="card">
+      <div v-if="user.authenticated" class="flex-col review-add-modal">
+        <h2>Rate &amp; Review <span class="close" @click="show_review_add = false">&times;</span></h2>
+        <div class="stars">
+          <stars v-model="new_review.rating" editable />
+        </div>
+        <b-input v-model="new_review.comment" type="textarea" />
+        <div class="buttons">
+          <action-button primary @click="do_review">
+            Submit
+          </action-button>
+          <action-button class="text-btn" @click="show_review_add = false">
+            Cancel
+          </action-button>
+        </div>
+      </div>
+      <div v-else class="flex-col">
+        <h2>You must be signed in to add a review <span class="close" @click="show_review_add = false">&times;</span></h2>
+        <action-button primary class="self" @click="(show_review_add = false) || $emit('login')">
+          Sign In
+        </action-button>
+        <h2>Don't have an account?</h2>
+        <action-button tertiary class="self" @click="(show_review_add = false) || $emit('signup')">
+          Create an Account
+        </action-button>
+      </div>
+    </div>
+  </b-modal>
+  <b-modal
+    v-model="show_didit_logged_out"
+    has-modal-card
+    trap-focus
+    :destroy-on-hide="false"
+    aria-role="dialog"
+    aria-label="Add a Review"
+    aria-modal
+    >
+    <div class="card flex-col">
+      <h2>Thanks for letting us know! But&hellip; <span class="close" @click="show_didit_logged_out = false">&times;</span></h2>
+      <p>
+        We love hearing about people engaged in science, and to
+        better support these opportunities we could use some
+        additional information about you!
+      </p>
+      <p>
+        For now we'll save that you've done this activity in your
+        browser's storage, but making an account will make sure you
+        don't lose credit for your participation.
+      </p>
+      <p>
+        Besides helping science, you'll get better recommendations
+        plus the ability to save opportunities for later and track
+        your progress in science learning.
+      </p>
+      <div>
+        <action-button tertiary @click="(show_didit_logged_out = false) || $emit('signup')">
+          Create an account
+        </action-button>
+        <action-button primary @click="(show_didit_logged_out = false) || $emit('login')">
+          Sign In
+        </action-button>
+      </div>
+    </div>
+  </b-modal>
 </article>
 </template>
 
@@ -797,14 +791,26 @@ export default {
         async do_didit() {
             if(this.user.authenticated) {
                 try {
-                    await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/didit', {}, this.$store.state.auth);
+                    if(this.did.didit) {
+                        await this.$axios.$delete('/api/ui/entity/' + this.opportunity.slug + '/didit', {}, this.$store.state.auth);
 
-                    this.did.didit = true;
+                        this.did.didit = false;
 
-                    this.$buefy.toast.open({
-                        message: 'Logged participation',
-                        type: 'is-success',
-                    });
+                        this.$buefy.toast.open({
+                            message: 'Removed participation log',
+                            type: 'is-success',
+                        });
+                    }
+                    else {
+                        await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/didit', {}, this.$store.state.auth);
+
+                        this.did.didit = true;
+
+                        this.$buefy.toast.open({
+                            message: 'Logged participation',
+                            type: 'is-success',
+                        });
+                    }
                 }
                 catch(error) {
                     this.did.didit = true;
