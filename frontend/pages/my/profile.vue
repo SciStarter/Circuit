@@ -140,6 +140,11 @@
       </div>
     </component>
   </component>
+  <div class="account-ops">
+    <b-button type="is-success" @click="$buefy.toast.open({message: 'Saved', type: 'is-success'})">
+      Save
+    </b-button>
+  </div>
   <div class="delete-account">
     <button @click="delete_account">
       Delete Account
@@ -398,6 +403,10 @@ export default {
                 display: flex;
             }
         }
+    }
+
+    .account-ops {
+        margin: 2rem;
     }
 
     .delete-account {
