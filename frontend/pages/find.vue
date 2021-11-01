@@ -456,6 +456,9 @@ export default {
         },
 
         suggested_partners() {
+            if(!this.query.partner_text) {
+                return [];
+            }
             const text = this.query.partner_text.toLowerCase();
             return this.partners.filter(p => p.name.toLowerCase().indexOf(text) >= 0);
         },

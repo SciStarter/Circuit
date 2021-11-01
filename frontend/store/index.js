@@ -187,7 +187,11 @@ export const actions = {
     commit("save_user", user);
 
     if (next) {
-      this.$router.push({ name: next, query: next_query || {} });
+      if (next[0] == "/") {
+        this.$router.push({ path: next, query: next_query || {} });
+      } else {
+        this.$router.push({ name: next, query: next_query || {} });
+      }
     } else {
       this.$router.go(0);
     }
@@ -256,7 +260,11 @@ export const actions = {
     commit("save_user", user);
 
     if (next) {
-      this.$router.push({ name: next, query: next_query || {} });
+      if (next[0] == "/") {
+        this.$router.push({ path: next, query: next_query || {} });
+      } else {
+        this.$router.push({ name: next, query: next_query || {} });
+      }
     } else {
       this.$router.go(0);
     }

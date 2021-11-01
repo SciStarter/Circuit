@@ -259,7 +259,7 @@
 
       <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
         <div class="card">
-          <login-form next="find" @close="show_login=false">
+          <login-form :next="$route.path" @close="show_login=false">
             <dynamic-block group="login-modal" item="standard" class="content" />
           </login-form>
         </div>
@@ -267,7 +267,7 @@
 
       <b-modal v-model="show_signup" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
         <div class="card">
-          <signup-form next="find" @close="show_signup=false">
+          <signup-form :next="$route.path" @close="show_signup=false">
             <dynamic-block group="signup-modal" item="standard" class="content" />
           </signup-form>
         </div>
