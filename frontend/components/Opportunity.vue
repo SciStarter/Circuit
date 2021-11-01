@@ -216,7 +216,7 @@
           Maximum Age: {{ opportunity.max_age }}
         </p>
         <p v-if="has_value(opportunity.languages)" class="item">
-          Languages: {{ opportunity.languages.join(', ') }}
+          Languages: {{ languages }}
         </p>
 
         <div class="description">
@@ -607,6 +607,25 @@ export default {
     },
 
     computed: {
+        languages() {
+            let ret = [];
+
+            for(let lang of this.opportunity.languages) {
+                switch(lang) {
+                case 'en':
+                case 'en-US':
+                case 'en-GB':
+                case 'english':
+                    ret.push('English');
+                    break;
+                default:
+                    ret.push(lang);
+                }
+            }
+
+            return ret.join(', ');
+        },
+
         enable_calendar() {
             if(this.has_value(this.opportunity.start_datetimes)) {
                 return this.has_value(this.opportunity.end_datetimes)
