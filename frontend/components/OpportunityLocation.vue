@@ -29,6 +29,9 @@
       Unknown location
     </p>
   </div>
+  <div v-else-if="isOpportunity && opportunity.location_type == 'near'">
+    In a specific area
+  </div>
   <span v-else>Unrecognized location type {{ opportunity.location_type }}</span>
 </div>
 </template>
