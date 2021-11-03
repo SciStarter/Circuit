@@ -6,11 +6,11 @@ static OPENCAGE_API_KEY: Lazy<String> =
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("serializing query failed")]
-    Surf(String),
+    #[error("serializing query {0:?} failed: {1}")]
+    Surf(Query, String),
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Query {
     key: &'static str,
     q: String,
@@ -30,10 +30,10 @@ impl Query {
         // Alternative: we may be able to use https://www.geonames.org/export/web-services.html
         let result: Response = surf::get("https://api.opencagedata.com/geocode/v1/json")
             .query(self)
-            .map_err(|err| Error::Surf(err.to_string()))?
+            .map_err(|err| Error::Surf(self.clone(), err.to_string()))?
             .recv_json()
             .await
-            .map_err(|err| Error::Surf(err.to_string()))?;
+            .map_err(|err| Error::Surf(self.clone(), err.to_string()))?;
 
         Ok(result)
     }
@@ -49,14 +49,14 @@ impl Query {
 }
 
 #[readonly::make]
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Status {
     pub message: String,
     pub code: u16,
 }
 
 #[readonly::make]
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Point {
     #[serde(rename = "lat")]
     pub latitude: f32,
@@ -65,16 +65,30 @@ pub struct Point {
 }
 
 #[readonly::make]
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
+pub struct Location {
+    pub city: Option<String>,
+    pub town: Option<String>,
+    pub county: Option<String>,
+    pub state: String,
+    pub state_code: String,
+    pub postcode: Option<String>,
+    pub country: String,
+    pub country_code: String,
+}
+
+#[readonly::make]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Match {
     pub confidence: u16,
     pub formatted: String,
     pub geometry: Point,
+    pub components: Location,
 }
 
 // Partial, we're not interested in everything that comes back from the API
 #[readonly::make]
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Response {
     pub status: Status,
     pub results: Vec<Match>,
