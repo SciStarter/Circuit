@@ -57,7 +57,7 @@ pub async fn activities(_req: tide::Request<Database>) -> tide::Result {
     todo!()
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 struct GeoPlace {
     near: String,
     longitude: f32,
@@ -65,20 +65,20 @@ struct GeoPlace {
     proximity: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 enum GeoLookup {
     Coords,
     Near,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct GeoQuery {
     lookup: GeoLookup,
     place: GeoPlace,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct GeoResult {
     places: Vec<GeoPlace>,
 }
@@ -111,7 +111,29 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
         places: results
             .iter()
             .map(|m| GeoPlace {
-                near: m.formatted.to_string(),
+                near: format!(
+                    "{}, {} {}, {}",
+                    if let Some(city) = &m.components.city {
+                        city.clone()
+                    } else if let Some(town) = &m.components.town {
+                        town.clone()
+                    } else if let Some(county) = &m.components.county {
+                        county.clone()
+                    } else {
+                        String::new()
+                    },
+                    m.components.state_code,
+                    if let Some(code) = &m.components.postcode {
+                        if let Some((before, _)) = code.split_once('-') {
+                            before.to_string()
+                        } else {
+                            code.to_string()
+                        }
+                    } else {
+                        String::new()
+                    },
+                    m.components.country
+                ),
                 longitude: m.geometry.longitude,
                 latitude: m.geometry.latitude,
                 proximity,
