@@ -293,11 +293,6 @@
         </action-button>
       </div> -->
 
-      <div class="map" :class="{'open': show_map}">
-        <a @click="show_map = false">&laquo; back</a>
-        <div ref="map_display" />
-      </div>
-
       <div class="related">
         <h2>Nearby &amp; Similar Opportunities</h2>
         <template v-if="!loading_recommended">
@@ -473,6 +468,12 @@
       </div>
     </div>
   </b-modal>
+
+  <div class="map" :class="{'open': show_map}">
+    <a @click="show_map = false">&laquo; back</a>
+    <div ref="map_display" />
+  </div>
+
 </article>
 </template>
 
@@ -1133,7 +1134,7 @@ img.opportunity-image {
     box-sizing: border-box;
     border: 2px solid $snm-color-border;
     padding: 5px 1rem 1rem 1rem;
-    z-index: 50;
+    z-index: 99;
 
     &.open {
         right: 1vw;
