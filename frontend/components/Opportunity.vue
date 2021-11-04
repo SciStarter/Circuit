@@ -116,8 +116,8 @@
             <span v-if="did.like">You<br>liked this</span><span v-else>Like</span>
           </div>
 
-          <div class="opp-action-btn">
-            <action-button v-if="enable_calendar" class="round-btn" @click="show_calendar_add = true">
+          <div v-if="enable_calendar" class="opp-action-btn">
+            <action-button class="round-btn" @click="show_calendar_add = true">
               <div class="icon calendar">
                 <time-icon />
               </div>
