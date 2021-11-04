@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-frontend-beta
-        image: scistarter/circuit-frontend:0.1.54
+        image: scistarter/circuit-frontend:0.1.55
         ports:
         - containerPort: 3000
         env:

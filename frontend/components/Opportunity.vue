@@ -628,8 +628,9 @@ export default {
         },
 
         enable_calendar() {
-            if(this.has_value(this.opportunity.start_datetimes)) {
-                return this.has_value(this.opportunity.end_datetimes)
+            if(this.has_value(this.upcoming)) {
+                const now = new Date();
+                return this.upcoming[0][0] > now;
             }
 
             return false;
