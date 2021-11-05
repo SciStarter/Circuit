@@ -234,17 +234,17 @@
         </nuxt-link>
       </div>
 
-      <div class="social opportunity-section">
-        <h2>Social Media</h2>
-        <p>
-          <strong>Hashtags:</strong>
-          {{ opportunity.opp_hashtags.join(', ') || '#science' }}
-        </p>
-        <p v-for="(value, key) in opportunity.opp_social_handles" :key="key">
-          <strong>{{ title_case(key) }}:</strong>
-          <a :href="value">{{ value }}</a>
-        </p>
-      </div>
+      <!-- <div class="social opportunity-section"> -->
+      <!--   <h2>Social Media</h2> -->
+      <!--   <p> -->
+      <!--     <strong>Hashtags:</strong> -->
+      <!--     {{ opportunity.opp_hashtags.join(', ') || '#science' }} -->
+      <!--   </p> -->
+      <!--   <p v-for="(value, key) in opportunity.opp_social_handles" :key="key"> -->
+      <!--     <strong>{{ title_case(key) }}: </strong> -->
+      <!--     <a :href="value">{{ value }}</a> -->
+      <!--   </p> -->
+      <!-- </div> -->
 
       <div class="reviews">
         <div class="reviews-header">
