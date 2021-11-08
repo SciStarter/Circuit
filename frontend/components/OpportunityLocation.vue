@@ -1,12 +1,25 @@
 <template>
 <div class="opportunity-location">
-  <span v-if="opportunity.location_type == 'online'">Online</span>
+  <p v-if="!isOpportunity && opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
+    <em>See map on opportunity page</em>
+  </p>
+  <p v-else-if="!isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
+    <em>See map on opportunity page</em>
+  </p>
+  <p v-else-if="isOpportunity && opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
+    In a specific area
+  </p>
+  <p v-else-if="isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
+    In a specific area
+  </p>
+  <span v-else-if="opportunity.location_type == 'online'">Online</span>
   <span v-else-if="opportunity.location_type == 'any'">Anywhere</span>
   <ul v-else-if="opportunity.location_type == 'at'">
     <li v-if="opportunity.location_name">
       {{ opportunity.location_name }}
     </li>
-    <li v-if="short">{{ opportunity.address_city }}, {{ opportunity.address_state }}
+    <li v-if="short">
+      {{ opportunity.address_city }}, {{ opportunity.address_state }}
     </li>
     <li v-if="opportunity.address_street && (!short || !opportunity.location_name)">
       {{ opportunity.address_street }}
@@ -18,20 +31,6 @@
       {{ opportunity.address_country }}
     </li>
   </ul>
-  <div v-else-if="!isOpportunity && opportunity.location_type == 'near'">
-    <p v-if="opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
-      <em>See map on opportunity page</em>
-    </p>
-    <p v-else-if="opportunity.location_point && opportunity.location_point.type === 'Point'">
-      <em>See map on opportunity page</em>
-    </p>
-    <p v-else>
-      Unknown location
-    </p>
-  </div>
-  <div v-else-if="isOpportunity && opportunity.location_type == 'near'">
-    In a specific area
-  </div>
   <span v-else>Unrecognized location type {{ opportunity.location_type }}</span>
 </div>
 </template>

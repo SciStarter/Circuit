@@ -20,6 +20,8 @@ use uuid::Uuid;
 
 use crate::ui::{okay, request_person};
 
+const FIFTY_MILES: f32 = 80467.0;
+
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .at("partners", |r| r.get(partners))
@@ -244,10 +246,8 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
         query.withdrawn = Some(false);
     }
 
-    if let (Some(longitude), Some(latitude), Some(proximity)) =
-        (search.longitude, search.latitude, search.proximity)
-    {
-        query.near = Some((longitude, latitude, proximity));
+    if let (Some(longitude), Some(latitude)) = (search.longitude, search.latitude) {
+        query.near = Some((longitude, latitude, search.proximity.unwrap_or(FIFTY_MILES)));
     }
 
     match (search.online, search.physical) {
@@ -283,16 +283,12 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
         }
     };
 
-    let matches: Vec<OpportunityExterior> = Opportunity::load_matching(
-        db,
-        dbg!(&query),
-        search.sort.unwrap_or_default(),
-        pagination,
-    )
-    .await?
-    .into_iter()
-    .map(|m| m.exterior)
-    .collect();
+    let matches: Vec<OpportunityExterior> =
+        Opportunity::load_matching(db, &query, search.sort.unwrap_or_default(), pagination)
+            .await?
+            .into_iter()
+            .map(|m| m.exterior)
+            .collect();
 
     let total = Opportunity::count_matching(db, &query).await?;
 
