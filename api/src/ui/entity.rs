@@ -396,9 +396,12 @@ pub async fn get_me(mut req: tide::Request<Database>) -> tide::Result {
 
 pub async fn register_interest(mut req: tide::Request<Database>) -> tide::Result {
     let slug = req.param("slug")?.to_string();
-    let person = request_person(&mut req)
-        .await?
-        .ok_or_else(|| tide::Error::from_str(400, "authentication required"))?;
+    let person = if let Some(person) = request_person(&mut req).await? {
+        person
+    } else {
+        return okay_empty();
+    };
+
     let db = req.state();
 
     common::model::opportunity::for_slug::add_interest_for_slug(db, &slug, &person.exterior.uid)
