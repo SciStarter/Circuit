@@ -583,7 +583,7 @@ export default {
             if(!this.filtering) {
                 this.$router.push({ name: 'find', query: this.query });
             }
-        }, 500),
+        }, 1000, {trailing: true}),
     }
 }
 </script>

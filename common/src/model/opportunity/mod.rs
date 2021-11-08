@@ -1044,6 +1044,8 @@ fn build_matching_query(
     query_string.push_str(" FROM (SELECT *");
 
     let mut calc_sort = || {
+        query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'at' THEN 0 WHEN exterior ->> 'location_type' = 'near' THEN 1 ELSE 99 END AS _sort_location_priority");
+
         query_string.push_str(
             ", CASE WHEN location_polygon IS NOT NULL THEN sqrt(ST_Area(location_polygon, false)) / 2",
         );
@@ -1100,7 +1102,9 @@ fn build_matching_query(
             query_string.push_str(" ORDER BY (exterior ->> 'title') ASC");
         }
         OpportunityQueryOrdering::Closest => {
-            query_string.push_str(" ORDER BY _sort_distance ASC, _sort_time ASC");
+            query_string.push_str(
+                " ORDER BY _sort_location_priority ASC, _sort_distance ASC, _sort_time ASC",
+            );
         }
         OpportunityQueryOrdering::Soonest => {
             query_string.push_str(" ORDER BY _sort_time ASC, _sort_distance ASC")
@@ -1117,7 +1121,7 @@ fn build_matching_query(
         }
     };
 
-    Ok((query_string, params))
+    Ok(dbg!((query_string, params)))
 }
 
 fn slugify(source: &str) -> String {

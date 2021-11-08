@@ -473,7 +473,6 @@
     <a @click="show_map = false">&laquo; back</a>
     <div ref="map_display" />
   </div>
-
 </article>
 </template>
 
@@ -1139,7 +1138,9 @@ img.opportunity-image {
 
     &.open {
         right: 1vw;
-        width: 98vw;
+        width: 50vw;
+        min-width: 300px;
+        min-height: 300px;
         opacity: 1;
     }
 
@@ -1149,8 +1150,9 @@ img.opportunity-image {
 
     > div {
         display: block;
-        width: calc(98vw - 2rem);
-        height: calc(98vw - 2rem);
+        width: calc(50vw - 2rem);
+        min-width: calc(300px - 2rem);
+        height: calc(50vh - 2rem);
     }
 }
 
