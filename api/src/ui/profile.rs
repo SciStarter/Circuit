@@ -278,16 +278,17 @@ pub async fn get_involved(mut req: tide::Request<Database>) -> tide::Result {
 
     while let Some(result) = stream.next().await {
         if let Ok(inv) = result {
-            let obj = if query.opp.unwrap_or(false) {
-                let opp = Opportunity::load_by_uid(req.state(), &inv.exterior.opportunity).await?;
-                let mut obj = serde_json::to_value(inv)?;
-                obj["opportunity"] = serde_json::to_value(opp.exterior)?;
-                obj
+            if query.opp.unwrap_or(false) {
+                if let Ok(opp) =
+                    Opportunity::load_by_uid(req.state(), &inv.exterior.opportunity).await
+                {
+                    let mut obj = serde_json::to_value(inv)?;
+                    obj["opportunity"] = serde_json::to_value(opp.exterior)?;
+                    involved.push(obj);
+                }
             } else {
-                serde_json::to_value(inv)?
+                involved.push(serde_json::to_value(inv)?);
             };
-
-            involved.push(obj);
         }
     }
 
