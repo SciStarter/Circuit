@@ -365,6 +365,9 @@ export default {
 
     watch: {
         async here_and_now_query(query) {
+            if((query.latitude == 0 && query.longitude == 0) || query.near == '') {
+                return;
+            }
             let result = await this.$axios.$get('/api/ui/finder/search', { params: query });
             this.here_and_now = result.matches.slice(0, 6);
         },
