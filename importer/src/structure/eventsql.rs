@@ -279,6 +279,14 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
             } else {
                 opp.exterior.location_type = common::model::opportunity::LocationType::Any;
             }
+        } else if let Some(addr) = &partner.address {
+            opp.exterior.location_type = common::model::opportunity::LocationType::At;
+            opp.exterior.location_name = addr.name.clone();
+            opp.exterior.address_street = addr.street.clone();
+            opp.exterior.address_city = addr.city.clone();
+            opp.exterior.address_state = addr.state.clone();
+            opp.exterior.address_zip = addr.zip.clone();
+            opp.exterior.address_country = addr.country.clone();
         } else {
             opp.exterior.location_type = common::model::opportunity::LocationType::Any;
         }
