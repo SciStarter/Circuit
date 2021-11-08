@@ -160,6 +160,7 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
                 person.interior.zip_code = ssp.zip_code;
                 person.interior.phone = ssp.phone;
                 person.interior.newsletter = ssp.newsletter;
+                person.interior.join_channel = JoinChannel::SciStarter;
 
                 // Do we actually want to do this? It could be a way
                 // to spoof the system.

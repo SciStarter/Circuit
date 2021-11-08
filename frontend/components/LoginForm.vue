@@ -11,9 +11,9 @@
         Do you have a
         <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter">
         account?
-        <nuxt-link to="/login-scistarter">
+        <a @click="via_scistarter">
           Log in with your SciStarter account
-        </nuxt-link>
+        </a>
         .
         <b-tooltip label="SciStarter is a citizen science database.">
           <b-button label="?" />
@@ -126,6 +126,11 @@ export default {
             } else {
                 this.$buefy.dialog.alert('Invalid email or password.')
             }
+        },
+
+        async via_scistarter() {
+            this.$emit('close');
+            this.$router.push({path: '/login-scistarter', query: {next: this.$route.fullPath}});
         }
     }
 }
