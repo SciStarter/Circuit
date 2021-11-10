@@ -4,12 +4,12 @@
     <em>See map on opportunity page</em>
   </p>
   <p v-else-if="!isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
-    <li v-if="opportunity.location_name">
+    <span v-if="opportunity.location_name">
       {{ opportunity.location_name }}
-    </li>
-    <li v-else-if="(opportunity.address_city || opportunity.address_state) && !short">
+    </span>
+    <span v-else-if="(opportunity.address_city || opportunity.address_state) && !short">
       {{ opportunity.address_city }}, {{ opportunity.address_state }}
-    </li>
+    </span>
     <em v-else>See map on opportunity page</em>
   </p>
   <p v-else-if="isOpportunity && opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
