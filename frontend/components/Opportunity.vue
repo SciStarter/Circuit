@@ -48,23 +48,23 @@
 
             <div class="involvement">
               <div class="reviews-likes">
-                <span v-if="reviews !== null">
+                <!-- <span v-if="reviews !== null">
                   <stars v-model="reviews.average" />
                   {{ reviews.reviews.length }}
-                </span>
+                </span> -->
                 <span v-if="likes !== null" class="like-count">
                   <like-icon :class="{'liked': did.like}" />
                   {{ likes }}
                 </span>
               </div>
-              <div class="numbers">
+              <!-- <div class="numbers">
                 <p>
                   {{ saves }} People Interested
                 </p>
                 <p>
                   {{ didit }} People Report Doing This Opportunity
                 </p>
-              </div>
+              </div> -->
             </div>
           </div>
         </div>
@@ -108,7 +108,7 @@
           </div>
 
           <div class="opp-action-btn">
-            <action-button class="round-btn" secondary @click="do_like">
+            <action-button class="round-btn" secondary @click="do_like" ref="likeBtn">
               <div class="icon like" :class="{marked:did.like}">
                 <like-icon />
               </div>
@@ -172,7 +172,7 @@
           <div class="icon" :class="{marked:did.didit}">
             <plus-icon />
           </div>
-          <span v-if="did.didit">I Did This</span><span v-else>You Did This</span>
+          <span v-if="!did.didit">I Did This</span><span v-else>You Did This</span>
         </action-button>
         <action-button class="round-btn tooltip" @click="show_ididthis_tooltip = true">
           <div class="icon">
@@ -201,26 +201,26 @@
       <div class="more-info opportunity-section">
         <h2>More Information</h2>
         <p v-if="has_value(opportunity.cost)" class="item">
-          Cost: {{ opportunity.cost !== 'free' ? 'Yes' : 'No' }}
+          <span class="opp-label">Cost:</span> {{ opportunity.cost !== 'free' ? 'Yes' : 'No' }}
         </p>
         <p v-if="has_value(opportunity.ticket_required)" class="item">
-          Ticket Required: {{ opportunity.ticket_required ? 'Yes' : 'No' }}
+          <span class="opp-label">Ticket Required:</span> {{ opportunity.ticket_required ? 'Yes' : 'No' }}
         </p>
         <p v-if="has_value(opportunity.opp_venue)" class="item">
-          Venue Type: {{ venue_type }}
+          <span class="opp-label">Venue Type:</span> {{ venue_type }}
         </p>
         <p v-if="has_value(opportunity.min_age) && opportunity.min_age > 0" class="item">
-          Minimum Age: {{ opportunity.min_age }}
+          <span class="opp-label">Minimum Age:</span> {{ opportunity.min_age }}
         </p>
         <p v-if="has_value(opportunity.max_age) && opportunity.max_age < 999" class="item">
-          Maximum Age: {{ opportunity.max_age }}
+          <span class="opp-label">Maximum Age:</span> {{ opportunity.max_age }}
         </p>
         <p v-if="has_value(opportunity.languages)" class="item">
-          Languages: {{ languages }}
+          <span class="opp-label">Languages:</span> {{ languages }}
         </p>
 
         <div class="description">
-          <h2>About This Science Opportunity</h2>
+          <h3>About This Science Opportunity</h3>
           <read-more v-model="description_open">
             <vue-markdown :source="opportunity.description" class="content" />
           </read-more>
@@ -496,7 +496,7 @@ import ReadMore from "~/components/ReadMore"
 import MapMarker from '~/assets/img/marker.png'
 import LocationIcon from '~/assets/img/location-marker.svg?inline'
 import TimeIcon from '~/assets/img/calendar.svg?inline'
-import KeywordsIcon from '~/assets/img/speech-bubble.svg?inline'
+import KeywordsIcon from '~/assets/img/tag.svg?inline'
 import LikeIcon from '~/assets/img/like.svg?inline'
 import SavedIcon from '~/assets/img/saved-science-opportunities.svg?inline'
 import StarIcon from '~/assets/img/star-on.svg?inline'
@@ -806,6 +806,7 @@ export default {
                     type: 'is-success'
                 });
             }
+            console.log(this.$refs.likeBtn.$refs);
         },
 
         async do_didit() {
@@ -1042,7 +1043,7 @@ img.opportunity-image {
     object-fit: contain;
     object-position: center center;
     overflow: hidden;
-    background-color: $snm-color-border;
+    background-color: #f9f9f9;
     border: 1px solid $snm-color-border;
 }
 
@@ -1124,7 +1125,7 @@ img.opportunity-image {
 
 .map {
     position: fixed;
-    top: 10vh;
+    top: 0;
     right: 0vw;
     width: 0vw;
     opacity: 0;
@@ -1134,13 +1135,14 @@ img.opportunity-image {
     box-sizing: border-box;
     border: 2px solid $snm-color-border;
     padding: 5px 1rem 1rem 1rem;
-    z-index: 99;
+    z-index: 999;
 
     &.open {
         right: 1vw;
         width: 50vw;
-        min-width: 300px;
-        min-height: 300px;
+        height: 100%;
+        // min-width: 300px;
+        // min-height: 300px;
         opacity: 1;
     }
 
@@ -1150,14 +1152,21 @@ img.opportunity-image {
 
     > div {
         display: block;
-        width: calc(50vw - 2rem);
-        min-width: calc(300px - 2rem);
-        height: calc(50vh - 2rem);
+        // width: calc(50vw - 2rem);
+        // min-width: calc(300px - 2rem);
+        // height: calc(50vh - 2rem);
+        width: 100%;
+        height: 100%;
     }
 }
 
 .opportunity-section {
   padding:1rem;
+  border-bottom: 16px solid $snm-color-border;
+
+  .opp-label, h3 {
+    font-weight: bold;
+  }
 }
 
 .opportunity-name {
@@ -1177,7 +1186,8 @@ img.opportunity-image {
         font-size: $snm-font-large;
         color: $snm-color-info;
         line-height: 1.2;
-        letter-spacing: 0px
+        letter-spacing: 0px;
+        margin-bottom: 0.5rem;
     }
 }
 
@@ -1188,7 +1198,8 @@ img.opportunity-image {
     line-height: 22px;
     letter-spacing: 0.16px;
     color: $snm-color-glance;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
+    margin-top:1rem;
 }
 
 .involvement {
@@ -1200,6 +1211,8 @@ img.opportunity-image {
             line-height: 19px;
             letter-spacing: 0px;
             color: $snm-color-element-dark;
+            padding: 5px 8px;
+            border: 1px solid #efefef;
 
             > :first-child {
                 margin-right: 0.75rem;
@@ -1381,9 +1394,12 @@ img.opportunity-image {
     }
 }
 
+.opp-head {
+  border:0;
+}
 .more-info {
-    border-top: 1px solid $snm-color-border;
-    border-bottom: 1px solid $snm-color-border;
+    border-top: 16px solid $snm-color-border;
+    border-bottom: 16px solid $snm-color-border;
 
     > *:not(:first-child) {
         border-top: 1px solid $snm-color-border;
@@ -1420,7 +1436,6 @@ img.opportunity-image {
     display: flex;
     flex-wrap: wrap;
     border-top: 1px solid $snm-color-border;
-    border-bottom: 1px solid $snm-color-border;
 
     h2 {
         width: 100%;
@@ -1472,6 +1487,7 @@ img.opportunity-image {
 .reviews {
     position: relative;
     min-height: 3rem;
+    border-bottom: 16px solid $snm-color-border;
 
      h2 {
         color: $snm-color-element-light;
@@ -1563,7 +1579,7 @@ img.opportunity-image {
 
         h3 {
             font-family: $snm-font-heading;
-            font-size: $snm-font-medium;
+            font-size: 1.1rem;
             font-weight: bold;
             line-height: 1.2;
             color: $snm-color-element-med;
@@ -1626,6 +1642,7 @@ img.opportunity-image {
   .opportunity-section {
     padding:1.5rem 0;
 
+
     h2 {
       font-size: rem(24px);
     }
@@ -1633,7 +1650,7 @@ img.opportunity-image {
 
   .opp-head-top {
     display: flex;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
 
 
@@ -1702,6 +1719,7 @@ img.opportunity-image {
     max-width: 200px;
     border-radius: 6px;
     object-fit:contain;
+    max-height: 180px;
   }
   .related {
     > h2 {
@@ -1738,6 +1756,10 @@ img.opportunity-image {
     font-size:12px;
     overflow:hidden;
     border-radius: 100%;
+  }
+
+  .opportunity-section, .reviews {
+    border-bottom: 0;
   }
 
 }
