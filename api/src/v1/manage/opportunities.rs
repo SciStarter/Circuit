@@ -36,6 +36,7 @@ struct OpportunitiesPage {
     pub partner: Uuid,
     pub partners: Vec<PartnerReference>,
     pub matches: Vec<Opportunity>,
+    pub num_matches: usize,
 }
 
 #[derive(Deserialize)]
@@ -55,25 +56,30 @@ async fn search(req: tide::Request<Database>) -> tide::Result {
     let form: OpportunitiesForm = req.query()?;
     let db = req.state();
 
+    let matches = Opportunity::load_matching(
+        db,
+        &OpportunityQuery {
+            title_contains: form.title.clone(),
+            partner: form.partner.clone(),
+            accepted: form.accepted,
+            withdrawn: form.withdrawn,
+            ..Default::default()
+        },
+        OpportunityQueryOrdering::Alphabetical,
+        Pagination::All,
+    )
+    .await?;
+
+    let num_matches = matches.len();
+
     Ok(OpportunitiesPage {
         accepted: form.accepted,
         withdrawn: form.withdrawn,
-        title: form.title.clone().unwrap_or_else(String::new),
-        partner: form.partner.clone().unwrap_or_default(),
+        title: form.title.unwrap_or_else(String::new),
+        partner: form.partner.unwrap_or_default(),
         partners: Partner::catalog(db).await?,
-        matches: Opportunity::load_matching(
-            db,
-            &OpportunityQuery {
-                title_contains: form.title,
-                partner: form.partner,
-                accepted: form.accepted,
-                withdrawn: form.withdrawn,
-                ..Default::default()
-            },
-            OpportunityQueryOrdering::Alphabetical,
-            Pagination::All,
-        )
-        .await?,
+        matches,
+        num_matches,
     }
     .into())
 }
