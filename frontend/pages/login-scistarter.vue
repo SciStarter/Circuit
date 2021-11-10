@@ -2,7 +2,15 @@
   <div class="snm-wrapper">
     <div class="snm-container standalone-form">
       <h1>Log In with Your SciStarter Account</h1>
-        <login-scistarter-form :next="$route.query.next" :query="next_query" @cancel="$router.go(1)" />
+      <login-scistarter-form :next="$route.query.next" :query="next_query" @cancel="$router.go(1)" />
+      <p class="legal">
+        You are granting SciStarter permission to share your profile
+        information and user data with Science Near Me (SNM) and you
+        agree to the
+        <a href="/terms" target="_blank">Terms of Service</a>,
+        <a href="/privacy" target="_blank">Privacy Policy</a>, and
+        <a href="/informed-consent" target="_blank">Participant Research Agreement</a>.
+      </p>
     </div>
   </div>
 </template>
@@ -49,6 +57,10 @@ export default {
     }
     .field.is-floating-label {
       margin-bottom: 2rem;
+    }
+    .legal {
+        margin-top: 2rem;
+        font-size: 90%;
     }
   }
 </style>
