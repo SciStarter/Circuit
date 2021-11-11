@@ -108,7 +108,7 @@
           </div>
 
           <div class="opp-action-btn">
-            <action-button class="round-btn" secondary @click="do_like" ref="likeBtn">
+            <action-button ref="likeBtn" class="round-btn" secondary @click="do_like">
               <div class="icon like" :class="{marked:did.like}">
                 <like-icon />
               </div>
@@ -183,16 +183,16 @@
 
       <div class="partner-and-org">
         <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
-          <figcaption>Provided by</figcaption>
+          <figcaption>Provided By</figcaption>
           <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on" new-tab>
-            <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name + ' logo'" :title="opportunity.partner_name">
+            <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name" :title="opportunity.partner_name">
             <span v-else>{{ opportunity.partner_name }}</span>
           </component>
         </figure>
         <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
           <figcaption>Hosted By</figcaption>
           <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" campaign="opp-page" content="hosted-by" new-tab>
-            <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name + ' logo'" :title="opportunity.organization_name">
+            <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name" :title="opportunity.organization_name">
             <span v-else>{{ opportunity.organization_name }}</span>
           </component>
         </figure>
@@ -806,7 +806,7 @@ export default {
                     type: 'is-success'
                 });
             }
-            console.log(this.$refs.likeBtn.$refs);
+            this.$refs.likeBtn.blur();
         },
 
         async do_didit() {
@@ -1389,7 +1389,7 @@ img.opportunity-image {
         img {
             object-fit: contain;
             object-position: center center;
-            vertical-align: text-top;
+            vertical-align: middle;
             min-height: 32px;
             max-height: 64px;
         }

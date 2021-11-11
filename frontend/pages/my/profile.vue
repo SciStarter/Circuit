@@ -146,7 +146,7 @@
     </b-button>
   </div>
   <div class="delete-account">
-    <button @click="delete_account">
+    <button @click="confirm_delete_account">
       Delete Account
     </button>
   </div>
@@ -322,8 +322,20 @@ export default {
             await this.$axios.$put('/api/ui/profile/', this.profile, this.$store.state.auth);
         },
 
+        confirm_delete_account() {
+            this.$buefy.dialog.confirm({
+                title: 'Deleting account',
+                message: 'Are you sure you want to <b>delete</b> your account? This action cannot be undone.',
+                confirmText: 'Delete Account',
+                type: 'is-danger',
+                hasIcon: true,
+                onConfirm: this.delete_account
+            });
+        },
+
         async delete_account() {
             await this.$axios.$delete('/api/ui/profile/', this.$store.state.auth);
+            this.$buefy.toast.open('Account deleted!');
         },
     },
 }

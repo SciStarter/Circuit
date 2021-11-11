@@ -261,10 +261,11 @@ export default {
             {'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&descriptors[]=star_party', 'title': 'Explore Earth and Space', 'description': 'Feed your curiosity with an expert guide', 'image': ExploreSpaceImage, 'image2x': ExploreSpaceImage2x},
             {'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&descriptors[]=festival', 'title': 'Celebrate Science', 'description': 'Go to a science festival', 'image': CelebrateScienceImage, 'image2x': CelebrateScienceImage2x},
             {'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&descriptors[]=citizen_science', 'title': 'Make a Difference', 'description': 'Participate in science or serve your community', 'image': MakeDifferenceImage, 'image2x': MakeDifferenceImage2x},
-            {'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&max_age=13', 'title': 'For Kids', 'description': 'Where kids can explore, learn, and get excited about science', 'image': ForKidsImage, 'image2x': ForKidsImage2x},
         ];
 
         Structures.random_order(intents);
+
+        intents.push({'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&max_age=13', 'title': 'For Kids', 'description': 'Where kids can explore, learn, and get excited about science', 'image': ForKidsImage, 'image2x': ForKidsImage2x});
 
         return {
             topics,
