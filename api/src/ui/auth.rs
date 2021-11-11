@@ -157,6 +157,8 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
                         )
                     })?
                     .to_owned();
+                person.interior.first_name = Some(ssp.first_name);
+                person.interior.last_name = Some(ssp.last_name);
                 person.interior.zip_code = ssp.zip_code;
                 person.interior.phone = ssp.phone;
                 person.interior.newsletter = ssp.newsletter;
