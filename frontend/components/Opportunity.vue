@@ -1128,6 +1128,7 @@ img.opportunity-image {
     top: 0;
     right: -100vw;
     width: 100vw;
+    height: calc(100% - 2rem);
     opacity: 0;
     background-color: $snm-color-background;
     overflow: hidden;
@@ -1139,8 +1140,8 @@ img.opportunity-image {
 
     &.open {
         right: 0;
-        width: 100vw;
-        height: 100%;
+        // width: 100vw;
+        // height: 100%;
         // min-width: 300px;
         // min-height: 300px;
         opacity: 1;
