@@ -1126,8 +1126,8 @@ img.opportunity-image {
 .map {
     position: fixed;
     top: 0;
-    right: 0vw;
-    width: 0vw;
+    right: -100vw;
+    width: 100vw;
     opacity: 0;
     background-color: $snm-color-background;
     overflow: hidden;
@@ -1138,8 +1138,8 @@ img.opportunity-image {
     z-index: 999;
 
     &.open {
-        right: 1vw;
-        width: 50vw;
+        right: 0;
+        width: 100vw;
         height: 100%;
         // min-width: 300px;
         // min-height: 300px;
@@ -1760,6 +1760,10 @@ img.opportunity-image {
 
   .opportunity-section, .reviews {
     border-bottom: 0;
+  }
+
+  .map.open {
+    width: 50vw;
   }
 
 }
