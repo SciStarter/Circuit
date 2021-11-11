@@ -107,7 +107,7 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
     }
 
     let mut results = result.results.clone();
-    results.sort_unstable_by_key(|m| -(m.confidence as i32));
+    results.sort_unstable_by_key(|m| (m.confidence as i32));
 
     let places = GeoResult {
         places: results
