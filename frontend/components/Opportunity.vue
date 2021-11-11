@@ -1388,7 +1388,7 @@ img.opportunity-image {
         img {
             object-fit: contain;
             object-position: center center;
-            vertical-align: text-top;
+            vertical-align: middle;
             min-height: 32px;
             max-height: 64px;
         }
