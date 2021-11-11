@@ -61,7 +61,13 @@ export default {
             required: false,
             default: false,
         },
-    }
+    },
+
+    methods: {
+        blur() {
+            this.$refs.actionBtn.blur();
+        }
+    },
 }
 </script>
 
