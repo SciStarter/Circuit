@@ -1827,18 +1827,6 @@ button.action-button.round-btn, .find-out-more {
     fill: #b5b5b5;
   }
 
-  &:hover {
-    > .icon {
-      background-color: $snm-color-element-med;
-        svg {
-          left:0;
-          fill: #fff;
-          path {
-            fill: #fff;
-          }
-        }
-    }
-  }
 }
 
 .opp-action-btn {
@@ -1868,11 +1856,32 @@ button.action-button.round-btn, .find-out-more {
     line-height: 1;
     color: #000;
   }
-  &:hover {
-    > .icon {
-      background-color: #fff;
-      svg,path {
-        fill: $snm-color-element-med!important;
+
+}
+
+// So many mobile problems with hover. Move into hover media query
+@media (hover: hover) {
+  button.action-button.round-btn, .find-out-more {
+    &:hover {
+      > .icon {
+        background-color: $snm-color-element-med;
+          svg {
+            left:0;
+            fill: #fff;
+            path {
+              fill: #fff;
+            }
+          }
+      }
+    }
+  }
+  .find-out-more {
+    &:hover {
+      > .icon {
+        background-color: #fff;
+        svg,path {
+          fill: $snm-color-element-med!important;
+        }
       }
     }
   }
