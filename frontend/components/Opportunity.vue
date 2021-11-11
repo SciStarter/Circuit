@@ -806,7 +806,7 @@ export default {
                     type: 'is-success'
                 });
             }
-            console.log(this.$refs.likeBtn.$refs);
+            this.$refs.likeBtn.blur();
         },
 
         async do_didit() {
