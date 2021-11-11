@@ -1,37 +1,30 @@
 <template>
 <div id="find" :class="{filtering: filtering}">
-    <!-- This syntax used in the event handlers is kind of weird, but
-    it does what we want. First the assignment expression is
-    evaluated, then the result of that expression is passed as an
-    argument to search, which ignores its arguments and initiates a
-    search. The extra parentheses are in case JavaScript starts
-    accepting keyword arguments at some point. So, in the end the
-    value is changed and then a search is initiated. -->
     <general-filters
       id="filters-general"
       :text="query.text"
       :place="place"
       :beginning="beginning"
       :ending="ending"
-      @text="search((query.text=$event))"
-      @place="search((place=$event))"
-      @beginning="search((beginning=$event))"
-      @ending="search((ending=$event))"
+      @text="set_query('text', $event)"
+      @place="set_query('page', 0, undefined, [place=$event])"
+      @beginning="set_query('beginning', $event)"
+      @ending="set_query('ending', $event)"
       />
   <div class="snm-container">
   <div id="filters-ordering">
     <b-field id="filter-physical">
-      <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online" @input="search">
+      <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online" @input="set_query('page', 0)">
         <span class="radio-label">In-Person<br> &amp;&nbsp;Online</span>
       </b-radio-button>
-      <b-radio-button v-model="query.physical" native-value="in-person" data-context="find-sort-in-person" @input="search">
+      <b-radio-button v-model="query.physical" native-value="in-person" data-context="find-sort-in-person" @input="set_query('page', 0)">
         <span class="radio-label">In-Person<br> Only</span>
       </b-radio-button>
-      <b-radio-button v-model="query.physical" native-value="online" data-context="find-sort-online" @input="search">
+      <b-radio-button v-model="query.physical" native-value="online" data-context="find-sort-online" @input="set_query('page', 0)">
         <span class="radio-label">Online Only</span>
       </b-radio-button>
     </b-field>
-    <mini-select id="filter-sort" v-model="query.sort" label="Sort:" data-context="find-sort-order" @input="search">
+    <mini-select id="filter-sort" v-model="query.sort" label="Sort:" data-context="find-sort-order" @input="set_query('page', 0)">
       <option value="closest">
         Closest
       </option>
@@ -387,7 +380,7 @@ export default {
             set(val) {
                 if(val) {
                     Vue.set(this.query, 'beginning', (new Date(val)).toISOString());
-                    this.search();
+                    this.set_query('page', 0);
                 } else {
                     Vue.delete(this.query, 'beginning');
                     this.search();
@@ -403,7 +396,7 @@ export default {
             set(val) {
                 if(val) {
                     Vue.set(this.query, 'ending', (new Date(val)).toISOString());
-                    this.search();
+                    this.set_query('page', 0);
                 } else {
                     Vue.delete(this.query, 'ending');
                     this.search();
@@ -427,13 +420,13 @@ export default {
                     Vue.set(this.query, 'longitude', val.longitude);
                     Vue.set(this.query, 'near', val.near);
                     Vue.set(this.query, 'proximity', val.proximity);
-                    this.search();
+                    this.set_query('page', 0);
                 } else {
                     Vue.delete(this.query, 'latitude');
                     Vue.delete(this.query, 'longitude');
                     Vue.delete(this.query, 'near');
                     Vue.delete(this.query, 'proximity');
-                    this.search();
+                    this.set_query('page', 0);
                 }
             }
         },
@@ -561,13 +554,25 @@ export default {
             }
         },
 
-        set_query(name, value, marker) {
+        // Results should always be ignored
+        set_query(name, value, marker, results) {
             if(value !== marker) {
                 Vue.set(this.query, name, value);
             } else {
                 Vue.delete(this.query, name);
             }
+
+            if(name != 'page') {
+                Vue.set(this.query, 'page', 0);
+            }
+
             this.search();
+        },
+
+        set_query_multiple(items) {
+            for(let item of items) {
+                this.set_query(item.name, item.value, item.marker);
+            }
         },
 
         clear() {
