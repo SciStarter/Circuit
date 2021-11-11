@@ -108,7 +108,7 @@
           </div>
 
           <div class="opp-action-btn">
-            <action-button class="round-btn" secondary @click="do_like" ref="likeBtn">
+            <action-button ref="likeBtn" class="round-btn" secondary @click="do_like">
               <div class="icon like" :class="{marked:did.like}">
                 <like-icon />
               </div>

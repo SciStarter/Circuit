@@ -78,7 +78,7 @@ export default {
                 const patch = {}
 
                 if (!this.value.proximity || this.value.proximity < 1 || this.value.proximity > 100000) {
-                    patch.proximity = 80467
+                    patch.proximity = 40233
                 }
 
                 if (!this.value.longitude) {
