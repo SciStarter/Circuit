@@ -1129,10 +1129,11 @@ img.opportunity-image {
     right: -100vw;
     width: 100vw;
     height: calc(100% - 2rem);
-    opacity: 0;
+    // opacity: 0;
     background-color: $snm-color-background;
     overflow: hidden;
-    transition: width 0.5s, opacity 0.5s, right 0.5s;
+    transition: all 0.5s;
+    -webkit-transition: all 0.5s;
     box-sizing: border-box;
     border: 2px solid $snm-color-border;
     padding: 5px 1rem 1rem 1rem;
@@ -1144,7 +1145,7 @@ img.opportunity-image {
         // height: 100%;
         // min-width: 300px;
         // min-height: 300px;
-        opacity: 1;
+        // opacity: 1;
     }
 
     > a {
@@ -1664,6 +1665,10 @@ img.opportunity-image {
     margin-bottom: 0.5rem;
   }
 
+  .opportunity-section, .reviews {
+    border-bottom: 0;
+  }
+
   .more-info {
     padding: 0;
     margin: 2rem 0;
@@ -1759,9 +1764,7 @@ img.opportunity-image {
     border-radius: 100%;
   }
 
-  .opportunity-section, .reviews {
-    border-bottom: 0;
-  }
+
 
   .map.open {
     width: 50vw;
