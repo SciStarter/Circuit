@@ -1,5 +1,18 @@
 <template>
-<article v-if="!hidden" class="opportunity-card" :class="{'rule': rule,'has-trash':trash}">
+<article v-if="!hidden" class="opportunity-card" :class="{'rule': rule,'has-trash':trash, 'opp-loader':loader}">
+  <template v-if="loader">
+    <div class="primary">
+      <div class="oc-loader-img linear-background"></div>
+      <div style="flex:1">
+        <!-- <div class="oc-loader-h2 linear-background"> </div> -->
+        <div class="oc-loader-h1 linear-background"> </div>
+        <div class="oc-loader-p linear-background"> </div>
+        <div class="oc-loader-p linear-background"> </div>
+      </div>
+    </div>
+    <div class="secondary"></div>
+  </template>
+  <template v-else>
   <button v-if="trash" class="trash" @click="$emit('trash', opportunity)">
     <trash-icon />
   </button>
@@ -32,6 +45,7 @@
       <opportunity-keywords :opportunity="opportunity" />
     </div>
   </div>
+</template>
 </article>
 </template>
 
@@ -79,6 +93,11 @@ export default {
         },
 
         hidden: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        loader: {
             type: Boolean,
             required: false,
             default: false,
@@ -146,9 +165,10 @@ export default {
     padding: 1rem;
     flex: 0 1 100px;
 
-    img {
+    img, .oc-loader-img {
         width: 80px;
         height: 80px;
+        display: block;
         border: none;
         border-radius: 10px;
         overflow: hidden;
@@ -160,7 +180,7 @@ export default {
     }
 
     div {
-        h2 {
+        h2, .oc-loader-h2 {
             font-size: $snm-font-smaller;
             font-weight: bold;
             font-family: $snm-font-content;
@@ -169,7 +189,7 @@ export default {
             line-height: 16px;
         }
 
-        h1 {
+        h1, .oc-loader-h1 {
             text-decoration: underline;
             color: $snm-color-element-med;
             font-family: $snm-font-heading;
@@ -180,7 +200,7 @@ export default {
             margin-bottom: 8px;
         }
 
-        small {
+        small, .oc-loader-p {
             display: none;
         }
     }
@@ -257,7 +277,7 @@ export default {
 
     .primary {
         div {
-            small {
+            small, .oc-loader-p {
                 display: block;
                 font-family: $snm-font-content;
                 font-size: $snm-font-smaller;
@@ -302,8 +322,45 @@ export default {
 }
 
 
+@keyframes placeHolderShimmer{
+    0%{
+        background-position: -468px 0
+    }
+    100%{
+        background-position: 468px 0
+    }
+}
+.linear-background {
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name: placeHolderShimmer;
+    animation-timing-function: linear;
+    background: #f6f7f8;
+    background: linear-gradient(to right, #eeeeee 8%, #dddddd 18%, #eeeeee 33%);
+    background-size: 1000px 104px;
+    position: relative;
+    overflow: hidden;
+}
 
+.oc-loader-h1, .oc-loader-h2, .oc-loader-p {
+  display: block;
+  height: 36px;
+  width: 100%;
+  margin-bottom:8px;
+}
 
+.oc-loader-h2 {
+  height: 14px;
+}
 
+.oc-loader-p {
+  height:11px;
+  margin-bottom:3px;
+}
+
+.opp-loader {
+  max-height: 200px;
+}
 
 </style>
