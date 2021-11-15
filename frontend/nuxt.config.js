@@ -80,6 +80,7 @@ export default {
           "https://api.mapbox.com",
           "https://events.mapbox.com",
           "www.google-analytics.com",
+          "https://geocode.arcgis.com",
         ],
         "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net"],
         "object-src": ["'self'"],

@@ -2,15 +2,15 @@
 <article v-if="!hidden" class="opportunity-card" :class="{'rule': rule,'has-trash':trash, 'opp-loader':loader}">
   <template v-if="loader">
     <div class="primary">
-      <div class="oc-loader-img linear-background"></div>
+      <div class="oc-loader-img linear-background" />
       <div style="flex:1">
-        <!-- <div class="oc-loader-h2 linear-background"> </div> -->
-        <div class="oc-loader-h1 linear-background"> </div>
-        <div class="oc-loader-p linear-background"> </div>
-        <div class="oc-loader-p linear-background"> </div>
+        <!-- <div class="oc-loader-h2 linear-background" /> -->
+        <div class="oc-loader-h1 linear-background" />
+        <div class="oc-loader-p linear-background" />
+        <div class="oc-loader-p linear-background" />
       </div>
     </div>
-    <div class="secondary"></div>
+    <div class="secondary" />
   </template>
   <template v-else>
   <button v-if="trash" class="trash" @click="$emit('trash', opportunity)">
@@ -76,8 +76,9 @@ export default {
 
     props: {
         opportunity: {
-            type: Object,
-            required: true
+            type: [Object, null],
+            required: false,
+            default: null,
         },
 
         trash: {
