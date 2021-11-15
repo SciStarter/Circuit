@@ -1,6 +1,6 @@
 <template>
   <div class="snm-wrapper">
-    <div class="snm-container">
+    <div class="snm-container just-content">
       <dynamic-block class="content" :group="entity.slug" item="content" />
     </div>
   </div>
@@ -16,3 +16,9 @@ export default {
   }
 }
 </script>
+
+<style>
+.not-authenticated  .just-content {
+  padding-top: 2rem;
+}
+</style>

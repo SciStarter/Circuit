@@ -41,7 +41,12 @@
     <div class="snm-container">
       <h2>Here &amp; Now near {{ city }}</h2>
       <div id="opportunity-cards">
-        <opportunity-card v-for="opp in here_and_now" :key="opp.uid" :opportunity="opp" />
+        <template v-if="here_and_now.length > 0">
+          <opportunity-card   v-for="opp in here_and_now" :key="opp.uid" :opportunity="opp" />
+        </template>
+        <template v-else>
+          <opportunity-card v-for="i in 6" loader opportunity="asdf" :key="i" />
+        </template>
       </div>
       <nuxt-link :to="here_and_now_link" class="see-more">
         See More Here &amp; Now Opportunities

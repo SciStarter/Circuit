@@ -1159,6 +1159,10 @@ footer {
     padding-left: 200px;
   }
 
+  .not-authenticated  .just-content {
+    padding-top: 2rem;
+  }
+
   .not-authenticated footer {
     padding-top:2rem;
   }
