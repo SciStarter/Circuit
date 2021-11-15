@@ -42,10 +42,10 @@
       <h2>Here &amp; Now near {{ city }}</h2>
       <div id="opportunity-cards">
         <template v-if="here_and_now.length > 0">
-          <opportunity-card   v-for="opp in here_and_now" :key="opp.uid" :opportunity="opp" />
+          <opportunity-card v-for="opp in here_and_now" :key="opp.uid" :opportunity="opp" />
         </template>
         <template v-else>
-          <opportunity-card v-for="i in 6" loader opportunity="asdf" :key="i" />
+          <opportunity-card v-for="i in 6" :key="i" loader />
         </template>
       </div>
       <nuxt-link :to="here_and_now_link" class="see-more">

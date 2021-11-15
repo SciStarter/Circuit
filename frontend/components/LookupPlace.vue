@@ -8,8 +8,7 @@
       :value="sanitized_value.near"
       placeholder="e.g. Iowa City, IA"
       @typing="completions"
-      @select="change($event)"
-      @input="change({near: $event})"
+      @select="select"
       />
   </b-field>
   <b-field label="Distance" :label-position="labelPosition" class="distance">
@@ -148,33 +147,51 @@ export default {
 
             this.num_loading += 1
 
-            this.$axios.$post('/api/ui/finder/geo', { lookup: 'coords', place: this.sanitized_value })
-                .then(({ places }) => { this.matches = places })
+            this.$axios.$get('https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?f=json&text=' + encodeURIComponent(near))
+                .then(({ suggestions }) => { this.matches = suggestions.map(x => x.text); })
                 .catch((error) => { this.matches = []; console.error(error) })
                 .finally(() => { this.num_loading -= 1 })
         }, 500),
 
-        complete_near () {
+        complete_near() {
             this.num_loading += 1
 
-      this.$axios.$post('/api/ui/finder/geo', { lookup: 'near', place: this.value })
-        .then(({ places }) => {
-          if (places.length > 0) {
-            this.change({ near: places[0].near })
-          }
-        })
-        .catch((error) => { console.error(error) })
-        .finally(() => { this.num_loading -= 1 })
-    },
+            this.$axios.$post('/api/ui/finder/geo', { lookup: 'near', place: this.value })
+                .then(({ places }) => {
+                    if (places.length > 0) {
+                        this.change({ near: places[0].near })
+                    }
+                })
+                .catch((error) => { console.error(error) })
+                .finally(() => { this.num_loading -= 1 })
+        },
 
-    change (delta) {
-        if(delta['near'] === "") {
-            delta.latitude = 0;
-            delta.longitude = 0;
+        select(evt) {
+            if(evt === null || evt === undefined) {
+                return;
+            }
+
+            this.num_loading += 1
+
+            this.$axios.$post('/api/ui/finder/geo', { lookup: 'coords', place: { near: evt, longitude: 0, latitude: 0, proximity: this.sanitized_value.proximity }})
+                .then(({ places }) => {
+                    if (places.length > 0) {
+                        places[0].near = evt;
+                        this.change(places[0])
+                    }
+                })
+                .catch((error) => { console.error(error) })
+                .finally(() => { this.num_loading -= 1 })
+        },
+
+        change(delta) {
+            if(delta['near'] === "") {
+                delta.latitude = 0;
+                delta.longitude = 0;
+            }
+            this.sanitized_value = Object.assign({}, this.sanitized_value, delta);
         }
-        this.sanitized_value = Object.assign({}, this.sanitized_value, delta);
     }
-  }
 }
 </script>
 

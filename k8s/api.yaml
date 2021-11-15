@@ -5,7 +5,7 @@ metadata:
   labels:
     app: circuit-api-beta
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: circuit-api-beta

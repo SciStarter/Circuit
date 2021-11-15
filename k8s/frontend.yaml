@@ -5,7 +5,7 @@ metadata:
   labels:
     app: circuit-frontend-beta
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: circuit-frontend-beta
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-frontend-beta
-        image: scistarter/circuit-frontend:0.1.64
+        image: scistarter/circuit-frontend:0.1.66
         ports:
         - containerPort: 3000
         env:
