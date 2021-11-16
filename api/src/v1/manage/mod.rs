@@ -38,6 +38,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         })
         .at("content/", content::routes)
         .at("opportunities/", opportunities::routes)
+        .at("health/", |r| r.get(health))
 }
 
 #[derive(Template)]
@@ -439,4 +440,541 @@ async fn person(mut req: tide::Request<Database>) -> tide::Result {
         }
         _ => unimplemented!(),
     }
+}
+
+mod filters {
+    pub fn health(ratio: &f32) -> ::askama::Result<String> {
+        let ratio = *ratio;
+        let color = if ratio < 0.5 {
+            format!("#FF{:02X}00", (ratio * 512.0) as u8)
+        } else {
+            format!("#{:02X}FF00", ((1.0 - ratio) * 512.0) as u8)
+        };
+
+        Ok(format!(
+            r#"<div style="text-align: center; background-color: {}"><span style="color: #fff; font-weight: bold; mix-blend-mode: exclusion">{:.1}%</span></div>"#,
+            &color,
+            ratio * 100.0
+        ))
+    }
+}
+
+#[derive(Template)]
+#[template(path = "manage/health.html")]
+struct HealthPage {
+    pub accepted: Option<bool>,
+    pub withdrawn: Option<bool>,
+    pub current: Option<bool>,
+    pub partner: Option<Uuid>,
+    pub partners: Vec<PartnerReference>,
+    pub num_matches: f32,
+    pub partner_created: f32,
+    pub partner_updated: f32,
+    pub slug: f32,
+    pub partner_name: f32,
+    pub partner_website: f32,
+    pub partner_logo_url: f32,
+    pub partner_opp_url: f32,
+    pub organization_name: f32,
+    pub organization_type: f32,
+    pub organization_website: f32,
+    pub organization_logo_url: f32,
+    pub opp_venue: f32,
+    pub opp_descriptor: f32,
+    pub min_age: f32,
+    pub max_age: f32,
+    pub pes_domain: f32,
+    pub tags: f32,
+    pub opp_topics: f32,
+    pub ticket_required: f32,
+    pub title: f32,
+    pub description: f32,
+    pub short_desc: f32,
+    pub image_url: f32,
+    pub image_credit: f32,
+    pub start_datetimes: f32,
+    pub end_datetimes: f32,
+    pub attraction_hours: f32,
+    pub cost: f32,
+    pub languages: f32,
+    pub opp_hashtags: f32,
+    pub opp_social_handles: f32,
+    pub is_online: f32,
+    pub location_type: f32,
+    pub location_point: f32,
+    pub location_polygon: f32,
+    pub address_street: f32,
+    pub address_city: f32,
+    pub address_state: f32,
+    pub address_country: f32,
+    pub address_zip: f32,
+    pub contact_name: f32,
+    pub contact_email: f32,
+    pub contact_phone: f32,
+}
+
+#[derive(Deserialize)]
+struct HealthForm {
+    pub accepted: Option<bool>,
+    pub withdrawn: Option<bool>,
+    pub current: Option<bool>,
+    pub partner: Option<Uuid>,
+}
+
+async fn health(req: tide::Request<Database>) -> tide::Result {
+    let _admin = match authorized_admin(&req, &Permission::ManageOpportunities).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let form: HealthForm = req.query()?;
+
+    let mut narrow = "(exterior ->> 'entity_type') = 'opportunity'".to_string();
+    let mut params = vec![];
+
+    if let Some(uid) = &form.partner {
+        narrow.push_str(" AND (exterior ->> 'partner') = $1");
+        params.push(uid.to_string());
+    }
+
+    if let Some(accepted) = &form.accepted {
+        if *accepted {
+            narrow.push_str(" AND (interior ->> 'accepted') = 'true'");
+        } else {
+            narrow.push_str(" AND (interior ->> 'accepted') != 'true'");
+        }
+    }
+
+    if let Some(withdrawn) = &form.accepted {
+        if *withdrawn {
+            narrow.push_str(" AND (interior ->> 'withdrawn') = 'true'");
+        } else {
+            narrow.push_str(" AND (interior ->> 'withdrawn') != 'true'");
+        }
+    }
+
+    if let Some(current) = &form.current {
+        if *current {
+            narrow.push_str(" AND current = true");
+        } else {
+            narrow.push_str(" AND current = false");
+        }
+    }
+
+    let db = req.state();
+
+    async fn count(db: &Database, narrow: &str, params: &Vec<String>) -> Result<f32, sqlx::Error> {
+        let query = format!("SELECT COUNT(*) FROM c_opportunity WHERE {}", narrow);
+        let ret: i64 = params
+            .iter()
+            .fold(sqlx::query_scalar(&query), |q, p| q.bind(p))
+            .fetch_one(db)
+            .await?;
+        Ok(ret as f32)
+    }
+
+    let num_matches = count(db, &narrow, &params).await?;
+
+    Ok(HealthPage {
+        accepted: form.accepted,
+        withdrawn: form.withdrawn,
+        current: form.current,
+        partner: form.partner,
+        partners: Partner::catalog(db).await?,
+        num_matches,
+        partner_created: {
+            count(
+                db,
+                &format!(
+                    "{} AND (exterior -> 'partner_created') != 'null'::jsonb",
+                    &narrow
+                ),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        partner_updated: {
+            count(
+                db,
+                &format!(
+                    "{} AND (exterior -> 'partner_updated') != 'null'::jsonb",
+                    &narrow
+                ),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        slug: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'slug') != 'null'::jsonb AND (exterior ->> 'slug') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        partner_name: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'partner_name') != 'null'::jsonb AND (exterior ->> 'partner_name') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        partner_website: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'partner_website') != 'null'::jsonb AND (exterior ->> 'partner_website') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        partner_logo_url: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'partner_logo_url') != 'null'::jsonb AND (exterior ->> 'partner_logo_url') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        partner_opp_url: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'partner_opp_url') != 'null'::jsonb AND (exterior ->> 'partner_opp_url') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        organization_name: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'organization_name') != 'null'::jsonb AND (exterior ->> 'organization_name') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        organization_type: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'organization_type') != 'null'::jsonb AND (exterior ->> 'organization_type') != 'unspecified'", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        organization_website: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'organization_website') != 'null'::jsonb AND (exterior ->> 'organization_website') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        organization_logo_url: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'organization_logo_url') != 'null'::jsonb AND (exterior ->> 'organization_logo_url') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        opp_venue: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'opp_venue') != 'null'::jsonb AND (exterior -> 'opp_venue') != '[]'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        opp_descriptor: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'opp_descriptor') != 'null'::jsonb AND (exterior -> 'opp_descriptor') != '[]'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        min_age: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'min_age') != 'null'::jsonb AND (exterior -> 'min_age') != '0'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        max_age: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'max_age') != 'null'::jsonb AND (exterior -> 'max_age') != '999'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        pes_domain: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'pes_domain') != 'null'::jsonb AND (exterior ->> 'pes_domain') != 'unspecified'", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        tags: {
+            count(
+                db,
+                &format!(r#"{} AND (exterior -> 'tags') != 'null'::jsonb AND (exterior -> 'tags') != '[]'::jsonb AND (exterior -> 'tags') != '[""]'::jsonb"#, &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        opp_topics: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'opp_topics') != 'null'::jsonb AND (exterior -> 'opp_topics') != '[]'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        ticket_required: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'ticket_required') != 'null'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        title: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'title') != 'null'::jsonb AND (exterior ->> 'title') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        description: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'description') != 'null'::jsonb AND (exterior ->> 'description') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        short_desc: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'short_desc') != 'null'::jsonb AND (exterior ->> 'short_desc') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        image_url: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'image_url') != 'null'::jsonb AND (exterior ->> 'image_url') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        image_credit: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'image_credit') != 'null'::jsonb AND (exterior ->> 'image_credit') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        start_datetimes: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'start_datetimes') != 'null'::jsonb AND (exterior -> 'start_datetimes') != '[]'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        end_datetimes: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'end_datetimes') != 'null'::jsonb AND (exterior -> 'end_datetimes') != '[]'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        attraction_hours: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'attraction_hours') != 'null'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        cost: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'cost') != 'null'::jsonb AND (exterior ->> 'cost') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        languages: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'languages') != 'null'::jsonb AND (exterior -> 'languages') != '[]'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        opp_hashtags: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'opp_hashtags') != 'null'::jsonb AND (exterior -> 'opp_hashtags') != '[]'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        opp_social_handles: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'opp_social_handles') != 'null'::jsonb AND (exterior -> 'opp_social_handles') != '{{}}'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        is_online: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'is_online') != 'null'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        location_type: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'location_type') != 'null'::jsonb AND (exterior ->> 'location_type') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        location_point: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'location_point') != 'null'::jsonb AND (exterior -> 'location_point') != '{{}}'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        location_polygon: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'location_polygon') != 'null'::jsonb AND (exterior -> 'location_polygon') != '{{}}'::jsonb", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        address_street: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'address_street') != 'null'::jsonb AND (exterior ->> 'address_street') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        address_city: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'address_city') != 'null'::jsonb AND (exterior ->> 'address_city') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        address_state: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'address_state') != 'null'::jsonb AND (exterior ->> 'address_state') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        address_country: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'address_country') != 'null'::jsonb AND (exterior ->> 'address_country') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        address_zip: {
+            count(
+                db,
+                &format!("{} AND (exterior -> 'address_zip') != 'null'::jsonb AND (exterior ->> 'address_zip') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        contact_name: {
+            count(
+                db,
+                &format!("{} AND (interior -> 'contact_name') != 'null'::jsonb AND (interior ->> 'contact_name') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        contact_email: {
+            count(
+                db,
+                &format!("{} AND (interior -> 'contact_email') != 'null'::jsonb AND (interior ->> 'contact_email') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+        contact_phone: {
+            count(
+                db,
+                &format!("{} AND (interior -> 'contact_phone') != 'null'::jsonb AND (interior ->> 'contact_phone') != ''", &narrow),
+                &params,
+            )
+            .await?
+                / num_matches
+        },
+    }
+    .into())
 }

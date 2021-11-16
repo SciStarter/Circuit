@@ -1,0 +1,383 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/api/docs/bulma.css">
+    <link rel="stylesheet" href="/api/docs/manage.css">
+    <title>Partner health summary</title>
+  </head>
+  <body>
+    <section class="section">
+      <div class="container">
+        <a href="..">Back to manage</a>
+        <h1 class="title">Partner health summary</h1>
+
+        <form method="get">
+          <select name="partner">
+            <option value="">Partner</option>
+            {% for option in partners %}
+            <option value="{{option.uid}}"{% match partner %}{% when Some with (partner) %}{% if option.uid.eq(partner) %} selected{% endif %}{% else %} {% endmatch %}>{{option.name}}</option>
+            {% endfor %}
+          </select>
+          <select name="current">
+            <option value="">Current or Not</option>
+            <option value="true"{% match current %}{% when Some with (true) %} selected{% else %}{% endmatch %}>Current</option>
+            <option value="false"{% match current %}{% when Some with (false) %} selected{% else %}{% endmatch %}>Not Current</option>
+          </select>
+          <select name="accepted">
+            <option value="">Accepted or Not</option>
+            <option value="true"{% match accepted %}{% when Some with (true) %} selected{% else %}{% endmatch %}>Accepted</option>
+            <option value="false"{% match accepted %}{% when Some with (false) %} selected{% else %}{% endmatch %}>Not Accepted</option>
+          </select>
+          <select name="withdrawn">
+            <option value="">Withdrawn or Not</option>
+            <option value="true"{% match withdrawn %}{% when Some with (true) %} selected{% else %}{% endmatch %}>Withdrawn</option>
+            <option value="false"{% match withdrawn %}{% when Some with (false) %} selected{% else %}{% endmatch %}>Not Withdrawn</option>
+          </select>
+          <input type="submit" value="Search">
+          <span>({{ num_matches }} matching opportunities)</span>
+        </form>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field">
+              <label class="label">UID</label>
+              <div class="control">
+                {{ 1.0|health|safe }}
+              </div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field">
+              <label class="label">Created</label>
+              <div class="control">
+                {{ partner_created|health|safe }}
+              </div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field">
+              <label class="label">Updated</label>
+              <div class="control">
+                {{ partner_updated|health|safe }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Slug</label>
+          <div class="control">
+            {{ slug|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Partner Name</label>
+          <div class="control">
+            {{ partner_name|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Partner Website</label>
+          <div class="control">
+            {{ partner_website|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Partner Logo URL</label>
+          <div class="control">
+            {{ partner_logo_url|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Partner Opportunity URL</label>
+          <div class="control">
+            {{ partner_opp_url|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Organization Name</label>
+          <div class="control">
+            {{ organization_name|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Organization Type</label>
+          <div class="control">
+            {{ organization_type|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Organization Website</label>
+          <div class="control">
+            {{ organization_website|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Organization Logo URL</label>
+          <div class="control">
+            {{ organization_logo_url|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="columns">
+            <div class="column">
+              <label class="label">Opportunity Venue Types</label>
+            </div>
+            <div class="column">
+            </div>
+          </div>
+          <div class="control">
+            {{ opp_venue|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="columns">
+            <div class="column">
+              <label class="label">Opportunity Descriptors</label>
+            </div>
+            <div class="column">
+            </div>
+          </div>
+          <div class="control">
+            {{ opp_descriptor|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Minimum Age</label>
+          <div class="control">
+            {{ min_age|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Maximum Age</label>
+          <div class="control">
+            {{ max_age|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Domain (Public Engagement in Science)</label>
+          <div class="control">
+            {{ pes_domain|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Tags</label>
+          <div class="control">
+            {{ tags|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="columns">
+            <div class="column">
+              <label class="label">Opportunity Topics</label>
+            </div>
+            <div class="column">
+            </div>
+          </div>
+          <div class="control">
+            {{ opp_topics|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Ticket Required</label>
+          <div class="control">
+            {{ ticket_required|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Title</label>
+          <div class="control">
+            {{ title|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Description</label>
+          <div class="control">
+            {{ description|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Short Description (elevator pitch)</label>
+          <div class="control">
+            {{ short_desc }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Image URL</label>
+          <div class="control">
+            {{ image_url|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Image Credit</label>
+          <div class="control">
+            {{ image_credit|health|safe }}
+          </div>
+        </div>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field">
+              <label class="label">Begins</label>
+              <div class="control">
+                {{ start_datetimes|health|safe }}
+              </div>
+            </div>
+          </div>
+
+          <div class="column">
+            <div class="field">
+              <label class="label">Ends</label>
+              <div class="control">
+                {{ end_datetimes|health|safe }}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="field">
+          <label class="label">Daily Hours</label>
+          <div class="control">
+            {{ attraction_hours|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Has Cost</label>
+          <div class="control">
+            {{ cost|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Languages</label>
+          <div class="control">
+            {{ languages|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Hashtags</label>
+          <div class="control">
+            {{ opp_hashtags|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Social Handles</label>
+          <div class="control">
+            {{ opp_social_handles|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Is Online</label>
+          <div class="control">
+            {{ is_online|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Location Type</label>
+          <div class="control">
+            {{ location_type|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Point</label>
+          <div class="control">
+            {{ location_point|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Opportunity Geometry</label>
+          <div class="control">
+            {{ location_polygon|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Street</label>
+          <div class="control">
+            {{ address_street|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">City</label>
+          <div class="control">
+            {{ address_city|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">State/Province</label>
+          <div class="control">
+            {{ address_state|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Country</label>
+          <div class="control">
+            {{ address_country|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Zip</label>
+          <div class="control">
+            {{ address_zip|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Contact Name</label>
+          <div class="control">
+            {{ contact_name|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Contact Email</label>
+          <div class="control">
+            {{ contact_email|health|safe }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Contact Phone</label>
+          <div class="control">
+            {{ contact_phone|health|safe }}
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
