@@ -6,6 +6,7 @@
       :data="matches"
       field="near"
       :value="sanitized_value.near"
+      :name="'new-' + Math.random()"
       placeholder="e.g. Iowa City, IA"
       @typing="completions"
       @select="select"

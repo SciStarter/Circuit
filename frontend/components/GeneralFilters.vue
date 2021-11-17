@@ -4,7 +4,7 @@
   <div class="basic-filter-backdrop">
     <div class="gf-fields">
       <b-field label="Search" label-position="inside" data-context="find-keywords">
-        <b-input ref="search_keywords" v-model="text_proxy" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+        <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
       </b-field>
       <lookup-place v-model="place_proxy" label-position="inside" data-context="find-lookup-place" />
       <div class="centered-row">

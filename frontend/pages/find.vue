@@ -132,13 +132,14 @@
       </fieldset>
       <fieldset data-context="find-organization">
         <label>Host Organization</label>
-        <b-input :value="get_query('host', '')" type="text" @input="set_query('host', $event, '')" />
+        <b-input :value="get_query('host', '')" :name="'new-' + Math.random()" type="text" @input="set_query('host', $event, '')" />
       </fieldset>
       <fieldset data-context="find-partner">
         <label>Partner Organization</label>
         <b-autocomplete
           v-model="query.partner_text"
           :data="suggested_partners"
+          :name="'new-' + Math.random()"
           field="name"
           clearable
           keep-first
