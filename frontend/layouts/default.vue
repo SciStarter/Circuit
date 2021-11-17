@@ -1,5 +1,10 @@
 <template>
 <div id="page" :class="{'authenticated': authenticated, 'not-authenticated': !authenticated}">
+  <div class="beta-banner snm-wrapper">
+    <div class="snm-container">
+    <p><img src="~assets/img/atom.svg?data" /><b>We're in beta!</b> If you find a bug or have feedback, you can email <a href="mailto:info@sciencenearme.org">info@sciencenearme.org</a>.</p>
+  </div>
+  </div>
   <header class="flex flex-align-center flex-justify-sb">
     <button class="toggle-menu mobile-only" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu" @click="menu = !menu">
       <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
@@ -56,17 +61,17 @@
             <ul>
               <li class="mobile-only">
                 <nuxt-link to="/find">
-                  <find-icon class="menu-icon" /> Find Science Opportunities
+                  <find-icon class="menu-icon" /> Find Opportunities
                 </nuxt-link>
               </li>
               <li class="mobile-only">
                 <nuxt-link to="/my/saved">
-                  <saved-icon class="menu-icon" /> Saved Science Opportunities
+                  <saved-icon class="menu-icon" /> Saved Opportunities
                 </nuxt-link>
               </li>
               <li class="mobile-only">
                 <nuxt-link to="/my/science">
-                  <science-icon class="menu-icon" /> My Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
+                  <science-icon class="menu-icon" /> My Activity Log<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
                 </nuxt-link>
               </li>
               <li class="mobile-only">
@@ -144,15 +149,15 @@
               <strong v-if="owner">My Participation</strong>
 
               <nuxt-link to="/find">
-                <find-icon /> Find Science Opportunities
+                <find-icon /> Find Opportunities
               </nuxt-link>
 
               <nuxt-link to="/my/saved">
-                <saved-icon /> Saved Science Opportunities
+                <saved-icon /> Saved Opportunities
               </nuxt-link>
 
               <nuxt-link to="/my/science">
-                <science-icon /> My Science<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
+                <science-icon /> My Activity Log<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
               </nuxt-link>
 
               <nuxt-link to="/my/goals">
@@ -1045,6 +1050,7 @@ footer {
 
                 svg {
                     margin-right: 1rem;
+                    min-width: 20px;
 
                     * {
                         fill: currentColor;
@@ -1207,6 +1213,8 @@ footer {
 .modal .card {
     margin: 1rem;
     padding: 1rem;
+    max-height: 100%;
+    overflow: auto;
 }
 
 @media (max-width: $mobile-screen) {
@@ -1284,6 +1292,43 @@ footer {
 
   }
 
+}
+
+.beta-banner {
+  text-align: center;
+  padding: 0.5rem!important;
+  border-bottom: 1px solid #efefef;
+  img {
+    height: 20px;
+    vertical-align:middle;
+    position:relative;
+    top: -2px;
+    left: -2px;
+  }
+}
+.authenticated .beta-banner, .not-authenticated .beta-banner {
+  margin-top: 52px;
+  margin-bottom: -52px;
+}
+
+@media (min-width:$fullsize-screen) {
+  .not-authenticated .beta-banner {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  .authenticated .beta-banner {
+    margin-top: 80px;
+    padding-left: 200px!important;
+    margin-bottom: -80px;
+  }
+}
+
+
+
+@media (min-width:1200px) {
+  .authenticated .beta-banner {
+    padding-left: 280px!important;
+  }
 }
 
 </style>
