@@ -1047,20 +1047,24 @@ fn build_matching_query(
     query_string.push_str(" FROM (SELECT *");
 
     let mut calc_sort = || {
-        query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' THEN 99 WHEN location_point IS NOT NULL THEN 0 WHEN location_polygon IS NOT NULL THEN 1 ELSE 99 END AS _sort_location_priority");
-
-        query_string.push_str(
-            ", CASE WHEN location_polygon IS NOT NULL THEN sqrt(ST_Area(location_polygon, false)) / 2",
-        );
+        query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' THEN 99 WHEN location_polygon IS NOT NULL THEN 1 WHEN location_point IS NOT NULL THEN 0 ELSE 99 END AS _sort_location_priority");
 
         if let Some((lon_param, lat_param)) = point {
+            query_string.push_str(
+                &format!(", CASE WHEN location_polygon IS NOT NULL THEN ST_Distance(location_polygon, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)", lon_param, lat_param)
+            );
+
             query_string
                 .push_str(&format!(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)",
                                    lon_param, lat_param));
+
+            // This constant number is roughly the square root of the surface area of the earth, in meters
+            query_string.push_str(" ELSE 22585394 END AS _sort_distance");
+        } else {
+            query_string.push_str(", 22585394 AS _sort_distance");
         }
 
-        // This constant number is roughly the square root of the surface area of the earth, in meters
-        query_string.push_str(" ELSE 22585394 END AS _sort_distance");
+        query_string.push_str(", CASE WHEN location_polygon IS NOT NULL THEN ST_Area(location_polygon, false) ELSE 0 END AS _sort_area");
 
         // look for the nearest future start, and fall back to
         // sorting as if it started now if there are none.
@@ -1106,11 +1110,11 @@ fn build_matching_query(
         }
         OpportunityQueryOrdering::Closest => {
             query_string.push_str(
-                " ORDER BY _sort_location_priority ASC, _sort_distance ASC, _sort_time ASC",
+                " ORDER BY _sort_location_priority ASC, _sort_distance ASC, _sort_area ASC, _sort_time ASC",
             );
         }
         OpportunityQueryOrdering::Soonest => {
-            query_string.push_str(" ORDER BY _sort_time ASC, _sort_distance ASC")
+            query_string.push_str(" ORDER BY _sort_time ASC, _sort_distance ASC, _sort_area ASC")
         }
         OpportunityQueryOrdering::Native => query_string.push_str(" ORDER BY id ASC"),
         OpportunityQueryOrdering::Any => {}
