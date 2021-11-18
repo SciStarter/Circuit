@@ -39,13 +39,13 @@
     <nuxt-link to="/find?physical=online&descriptors[]=citizen_science">
       Online, Anytime Science
     </nuxt-link>
-    <nuxt-link :to="search_url + '&topics[]=astronomy_and_space'">
+    <nuxt-link :to="near_url + '&topics[]=astronomy_and_space'">
       Astronomy Near Me
     </nuxt-link>
-    <nuxt-link :to="search_url + '&descriptors[]=live_science'">
+    <nuxt-link :to="near_url + '&descriptors[]=live_science'">
       Museums Near Me
     </nuxt-link>
-    <nuxt-link :to="search_url + '&descriptors[]=festival'">
+    <nuxt-link :to="near_url + '&descriptors[]=festival'">
       Festivals Near Me
     </nuxt-link>
   </div>
@@ -116,6 +116,26 @@ export default {
     },
 
     computed: {
+        near_url() {
+            let chunks = ['/find?sort=closest'];
+
+            if(this.$store.state.here) {
+                chunks.push('&near=');
+                chunks.push(encodeURIComponent(this.$store.state.here.near));
+
+                chunks.push('&longitude=');
+                chunks.push(encodeURIComponent(this.$store.state.here.longitude));
+
+                chunks.push('&latitude=');
+                chunks.push(encodeURIComponent(this.$store.state.here.latitude));
+
+                chunks.push('&proximity=');
+                chunks.push(encodeURIComponent(this.$store.state.here.proximity));
+            }
+
+            return chunks.join('');
+        },
+
         search_url() {
             let chunks = ['/find?physical='];
 

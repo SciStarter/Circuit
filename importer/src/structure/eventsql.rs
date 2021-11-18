@@ -353,6 +353,8 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
             .into_iter()
             .collect();
         }
+
+        opp.exterior.opp_topics.append(&mut partner.topics.clone());
     } else {
         println!("Warning: Opportunity data is not present in the record");
         return None;

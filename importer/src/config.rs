@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 
-use common::model::opportunity::{Domain, OpportunityImportRecord};
+use common::model::opportunity::{Domain, OpportunityImportRecord, Topic};
 use importer::format::{self, Format};
 use importer::source::{self, Source};
 use importer::structure::{self, OneOrMany, PartnerAddress, PartnerFlag, PartnerInfo, Structure};
@@ -35,6 +35,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             ),
             domain: Domain::LiveScience,
             descriptor: vec![],
+            topics: vec![],
             flags: vec![PartnerFlag::Cost],
             address: Some(PartnerAddress {
                 name: "The Discovery".to_string(),
@@ -61,6 +62,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             ),
             domain: Domain::LiveScience,
             descriptor: vec![],
+            topics: vec![],
             flags: vec![],
             address: None,
             timezone: Some(chrono_tz::US::Central),
@@ -77,6 +79,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             partner_website: Some("https://astronomyontap.org/".to_string()),
             partner_logo_url: Some("".to_string()),
             domain: Domain::LiveScience,
+            topics: vec![Topic::AstronomyAndSpace],
             descriptor: vec![],
             flags: vec![],
             address: None,
@@ -97,6 +100,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             ),
             domain: Domain::LiveScience,
             descriptor: vec![],
+            topics: vec![],
             flags: vec![],
             address: Some(PartnerAddress {
                 name: "Museum of Discovery and Science".to_string(),

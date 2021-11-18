@@ -5,10 +5,10 @@
       <slot />
     </div>
   </div>
-  <button class="slide left no-mobile show-tablet" @click="scroll(-items_scroll(),$event)" ref="leftBtn" :class="{'hidden':leftBtnHidden}">
+  <button ref="leftBtn" class="slide left no-mobile show-tablet" :class="{'hidden':leftBtnHidden}" @click="scroll(-items_scroll(),$event)">
     <span>&lsaquo;</span>
   </button>
-  <button class="slide right no-mobile show-tablet" @click="scroll(items_scroll(),$event)" ref="rightBtn" :class="{'hidden':rightBtnHidden}">
+  <button ref="rightBtn" class="slide right no-mobile show-tablet" :class="{'hidden':rightBtnHidden}" @click="scroll(items_scroll(),$event)">
     <span>&rsaquo;</span>
   </button>
 </div>

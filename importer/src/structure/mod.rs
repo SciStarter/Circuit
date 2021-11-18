@@ -41,6 +41,7 @@ pub struct PartnerInfo<Tz: TimeZone> {
     pub partner_logo_url: Option<String>,
     pub domain: common::model::opportunity::Domain,
     pub descriptor: Vec<common::model::opportunity::Descriptor>,
+    pub topics: Vec<common::model::opportunity::Topic>,
     pub flags: Vec<PartnerFlag>,
     pub address: Option<PartnerAddress>,
     pub timezone: Option<Tz>,
