@@ -16,9 +16,9 @@
     </nuxt-link>
 
     <div class="flex">
-        <button class="toggle-search" title="Toggle search box" :aria-pressed="String(search)" data-context="header-search" @click="toggle_search">
-          <img src="~assets/img/search.svg?data">
-        </button>
+        <nuxt-link :to="'/find' + search_query" class="toggle-search" data-context="header-search">
+          search opportunities <img src="~assets/img/search.svg?data">
+        </nuxt-link>
 
         <aside :class="{toggled: search}" class="search-box">
           <div class="search-box-container">
@@ -562,16 +562,21 @@ header {
         border: 1px solid $snm-color-action-border;
         border-radius: 5px;
         padding: 5px;
-        width: 24px;
         height: 24px;
         box-shadow: 0px 3px 6px $snm-color-shadow;
         position: relative;
         top: -1px;
+        white-space: nowrap;
+        color: $snm-color-element-dark;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
 
         img {
             display: block;
             width: 14px;
             height: 14px;
+            margin-left: 6px;
         }
     }
 
