@@ -5,10 +5,10 @@
       <slot />
     </div>
   </div>
-  <button class="slide left no-mobile show-tablet" @click="scroll(-items_scroll())">
+  <button class="slide left no-mobile show-tablet" @click="scroll(-items_scroll(),$event)" ref="leftBtn" :class="{'hidden':leftBtnHidden}">
     <span>&lsaquo;</span>
   </button>
-  <button class="slide right no-mobile show-tablet" @click="scroll(items_scroll())">
+  <button class="slide right no-mobile show-tablet" @click="scroll(items_scroll(),$event)" ref="rightBtn" :class="{'hidden':rightBtnHidden}">
     <span>&rsaquo;</span>
   </button>
 </div>
@@ -19,6 +19,12 @@ import { calc } from 'csscalc';
 
 export default {
     name: "SidewaysSlider",
+    data(){
+      return {
+        leftBtnHidden: true,
+        rightBtnHidden: false
+      }
+    },
 
     methods: {
         items_width() {
@@ -37,7 +43,7 @@ export default {
             return this.scroll_width() - this.items_width();
         },
 
-        scroll(by) {
+        scroll(by, $event) {
             const to = Math.max(0, Math.min(this.$refs.scroll.scrollLeft + by, this.max_scroll()));
 
             const do_scroll = () => {
@@ -51,6 +57,18 @@ export default {
                     this.$refs.scroll.scrollLeft += amount
                     window.requestAnimationFrame(do_scroll);
                 }
+            }
+
+            // if (this.$refs.)
+            // this.$refs.leftBtn.classList.remove('no-more');
+            // this.$refs.rightBtn.classList.remove('no-more');
+            // this.target.classList.add('no-more');
+            if (this.leftBtnHidden) {
+              this.leftBtnHidden = false;
+              this.rightBtnHidden = true;
+            } else {
+              this.leftBtnHidden = true;
+              this.rightBtnHidden = false;
             }
 
             do_scroll();
@@ -125,6 +143,9 @@ export default {
   }
   .show-tablet {
     display: block!important;
+  }
+  .hidden {
+    display: none!important;
   }
 }
 </style>

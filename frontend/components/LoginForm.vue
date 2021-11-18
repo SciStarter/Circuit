@@ -26,9 +26,9 @@
     <b-field label="Password" :type="validate_password.type" :message="validate_password.message" label-position="on-border">
       <b-input v-model="login.password" type="password" required />
     </b-field>
-    <div class="forgot">
+    <!-- <div class="forgot">
       <a href="">forgot password?</a>
-    </div>
+    </div> -->
     <div class="flex flex-justify-sb">
       <b-button :loading="working" type="is-primary" @click="log_in">
         Log in
