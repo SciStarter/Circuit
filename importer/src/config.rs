@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 
-use common::model::opportunity::{Domain, OpportunityImportRecord, Topic};
+use common::model::opportunity::{Descriptor, Domain, OpportunityImportRecord, Topic};
 use importer::format::{self, Format};
 use importer::source::{self, Source};
 use importer::structure::{self, OneOrMany, PartnerAddress, PartnerFlag, PartnerInfo, Structure};
@@ -80,7 +80,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             partner_logo_url: Some("".to_string()),
             domain: Domain::LiveScience,
             topics: vec![Topic::AstronomyAndSpace],
-            descriptor: vec![],
+            descriptor: vec![Descriptor::Community],
             flags: vec![],
             address: None,
             timezone: Some(chrono::Utc),

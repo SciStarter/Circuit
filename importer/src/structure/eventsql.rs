@@ -294,12 +294,7 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
         if let Some(custom) = node.custom {
             opp.exterior.opp_venue = custom.indoors_outdoors.unwrap_or_default();
 
-            opp.exterior.opp_descriptor = partner
-                .descriptor
-                .iter()
-                .cloned()
-                .chain(custom.descriptor.into_iter())
-                .collect();
+            opp.exterior.opp_descriptor = custom.descriptor.into_iter().collect();
 
             opp.exterior.min_age = custom.min_age.unwrap_or(0);
 
@@ -354,6 +349,9 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
             .collect();
         }
 
+        opp.exterior
+            .opp_descriptor
+            .append(&mut partner.descriptor.clone());
         opp.exterior.opp_topics.append(&mut partner.topics.clone());
     } else {
         println!("Warning: Opportunity data is not present in the record");
