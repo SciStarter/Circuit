@@ -1066,15 +1066,15 @@ fn build_matching_query(
 
         query_string.push_str(", CASE WHEN location_polygon IS NOT NULL THEN ST_Area(location_polygon, false) ELSE 0 END AS _sort_area");
 
-        // look for the nearest future start, and fall back to
-        // sorting as if it started now if there are none.
-        //
-        // Where there is no start time, sort it far into the
-        // future.
+        // We bump ongoing opportunities so that they sort as a week in the future, to give actual timely opportunities priority
         query_string.push_str(r#",
             CASE
-              WHEN jsonb_array_length(exterior -> 'start_datetimes') > 0
-              THEN COALESCE((SELECT value::timestamptz FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > NOW() LIMIT 1), NOW())
+              WHEN jsonb_array_length(exterior -> 'start_datetimes') = 0 AND jsonb_array_length(exterior -> 'end_datetimes') = 0
+              THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
+              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              THEN (SELECT MIN(value::timestamptz) FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP LIMIT 1)
+              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text(exterior -> 'end_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
               ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
             END AS _sort_time
         "#);

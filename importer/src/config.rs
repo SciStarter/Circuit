@@ -34,7 +34,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
                 "https://nvdm.org/wp-content/themes/discoverypress-site/assets/svgs/discovery-logo.svg".to_string(),
             ),
             domain: Domain::LiveScience,
-            descriptor: vec![],
+            descriptor: vec![Descriptor::Community],
             topics: vec![],
             flags: vec![PartnerFlag::Cost],
             address: Some(PartnerAddress {
