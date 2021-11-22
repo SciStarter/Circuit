@@ -5,6 +5,11 @@ export default {
 
   prettify: false,
 
+  server: {
+    host: "::",
+    port: 3000,
+  },
+
   loading: "~/components/LoadingSpinner.vue",
 
   // Global page headers: https://go.nuxtjs.dev/config-head
