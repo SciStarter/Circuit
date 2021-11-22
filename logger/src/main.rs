@@ -142,6 +142,6 @@ async fn main() -> tide::Result<()> {
     app.at("internal/log").post(from_server);
     app.at("internal/click").post(click_server);
 
-    app.listen("0.0.0.0:9000").await?;
+    app.listen("[::]:9000").await?;
     Ok(())
 }
