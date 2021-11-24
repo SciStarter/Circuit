@@ -17,7 +17,7 @@
 
     <div class="flex">
         <nuxt-link :to="'/find' + search_query" class="toggle-search" data-context="header-search">
-          search opportunities <img src="~assets/img/search.svg?data">
+          Search Opportunities <img src="~assets/img/search.svg?data">
         </nuxt-link>
 
         <aside :class="{toggled: search}" class="search-box">
