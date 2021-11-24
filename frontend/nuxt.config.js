@@ -1,5 +1,3 @@
-const DOMAIN = "beta.sciencenearme.org";
-
 export default {
   //__fake__: console.log(process.env),
 
@@ -187,27 +185,34 @@ export default {
   // In production, these requests won't normally make it to the
   // Nuxt server, so this is mostly for local development.
   proxy: {
-    "/api": process.env.LOCAL_API_URL || "https://" + DOMAIN,
+    "/api": process.env.LOCAL_API_URL || "https://" + process.env.DOMAIN,
   },
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: "https://" + DOMAIN,
+    baseURL: "https://" + process.env.DOMAIN,
   },
 
   // These two sections override config values at runtime
   publicRuntimeConfig: {
     mapboxToken: process.env.MAPBOX_TOKEN,
     axios: {
-      browserBaseURL: process.env.LOCAL_API_URL ? "/" : "https://" + DOMAIN,
+      browserBaseURL: process.env.LOCAL_API_URL ? "/"
+      : "https://" + process.env.DOMAIN,
     },
   },
 
   privateRuntimeConfig: {
     axios: {
       baseURL: process.env.LOCAL_API_URL ||
-        "http://" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_HOST + ":" +
-          process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_PORT,
+          (process.env.DOMAIN == "beta.sciencenearme.org")
+        ? (
+          "http://" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_HOST +
+          ":" +
+          process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_PORT
+        )
+        : ("http://" + process.env.CIRCUIT_API_SERVICE_SERVICE_HOST + ":" +
+          process.env.CIRCUIT_API_SERVICE_SERVICE_PORT),
     },
   },
 };

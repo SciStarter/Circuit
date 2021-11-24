@@ -61,4 +61,69 @@ spec:
   ports:
     - protocol: TCP
       port: 9000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-logger-deploy
+  labels:
+    app: circuit-logger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circuit-logger
+  template:
+    metadata:
+      labels:
+        app: circuit-logger
+    spec:
+      containers:
+      - name: circuit-logger
+        image: scistarter/circuit-logger:0.1.7
+        ports:
+        - containerPort: 9000
+        env:
+        - name: LOGGER_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: LOGGER_ENDPOINT
+        - name: LOGGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: LOGGER_ACCESS_KEY
+        - name: LOGGER_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: LOGGER_SECRET
+        - name: CLICK_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: CLICK_ENDPOINT
+        - name: CLICK_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: CLICK_ACCESS_KEY
+        - name: CLICK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: CLICK_SECRET
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circuit-logger-service
+spec:
+  selector:
+    app: circuit-logger
+  ports:
+    - protocol: TCP
+      port: 9000
+
 

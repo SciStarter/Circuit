@@ -5,7 +5,7 @@ metadata:
   labels:
     app: circuit-soon
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: circuit-soon
