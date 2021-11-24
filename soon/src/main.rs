@@ -22,7 +22,7 @@ async fn main() -> tide::Result<()> {
     app.at("/").serve_file("static/index.html")?;
     app.at("/").serve_dir("static/")?;
 
-    app.listen("0.0.0.0:8000").await?;
+    app.listen("[::]:8000").await?;
 
     Ok(())
 }

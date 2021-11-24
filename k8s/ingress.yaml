@@ -54,13 +54,41 @@ spec:
   - host: sciencenearme.org
     http: &http_rules
       paths:
+      - path: /api/v1
+        pathType: Prefix
+        backend:
+          service:
+            name: circuit-api-service
+            port:
+              number: 8000
+      - path: /api/ui
+        pathType: Prefix
+        backend:
+          service:
+            name: circuit-api-service
+            port:
+              number: 8000
+      - path: /api/docs
+        pathType: Prefix
+        backend:
+          service:
+            name: circuit-api-service
+            port:
+              number: 8000
+      - path: /api/log
+        pathType: Prefix
+        backend:
+          service:
+            name: circuit-logger-service
+            port:
+              number: 9000
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: circuit-soon-service
+            name: circuit-frontend-service
             port:
-              number: 8000
+              number: 3000
   - host: www.sciencenearme.org
     http: *http_rules
 ---
