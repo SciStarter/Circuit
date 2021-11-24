@@ -2,7 +2,10 @@
 
 use common::{model, Database, INTERNAL_UID};
 use sqlx::postgres::PgPoolOptions;
-use tide::log;
+use tide::{
+    listener::{ConcurrentListener, Listener},
+    log,
+};
 use tide_fluent_routes::{fs::ServeFs, prelude::*};
 
 pub mod crypto;
@@ -106,7 +109,7 @@ async fn main() -> tide::Result<()> {
             }),
     );
 
-    app.listen("0.0.0.0:8000").await?;
+    app.listen("[::]:8000").await?;
 
     Ok(())
 }

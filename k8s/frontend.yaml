@@ -5,7 +5,7 @@ metadata:
   labels:
     app: circuit-frontend-beta
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: circuit-frontend-beta
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-frontend-beta
-        image: scistarter/circuit-frontend:0.1.70
+        image: scistarter/circuit-frontend:0.1.72
         ports:
         - containerPort: 3000
         env:
@@ -25,6 +25,8 @@ spec:
             secretKeyRef:
               name: mapbox
               key: MAPBOX_TOKEN
+        - name: DOMAIN
+          value: "beta.sciencenearme.org"
 ---
 apiVersion: v1
 kind: Service
@@ -36,4 +38,44 @@ spec:
   ports:
     - protocol: TCP
       port: 3000
-
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-frontend-deploy
+  labels:
+    app: circuit-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: circuit-frontend
+  template:
+    metadata:
+      labels:
+        app: circuit-frontend
+    spec:
+      containers:
+      - name: circuit-frontend
+        image: scistarter/circuit-frontend:0.1.72
+        ports:
+        - containerPort: 3000
+        env:
+        - name: MAPBOX_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: mapbox
+              key: MAPBOX_TOKEN
+        - name: DOMAIN
+          value: "sciencenearme.org"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circuit-frontend-service
+spec:
+  selector:
+    app: circuit-frontend
+  ports:
+    - protocol: TCP
+      port: 3000
