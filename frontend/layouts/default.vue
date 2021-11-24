@@ -17,7 +17,7 @@
 
     <div class="flex">
         <nuxt-link :to="'/find' + search_query" class="toggle-search" data-context="header-search">
-          search opportunities <img src="~assets/img/search.svg?data">
+          <img src="~assets/img/search.svg?data"> <span class="no-mobile">Search Opportunities</span>
         </nuxt-link>
 
         <aside :class="{toggled: search}" class="search-box">
@@ -571,12 +571,13 @@ header {
         display: flex;
         align-items: center;
         flex-shrink: 0;
+        font-weight:bold;
 
         img {
             display: block;
             width: 14px;
             height: 14px;
-            margin-left: 6px;
+            // margin-left: 6px;
         }
     }
 
@@ -869,6 +870,7 @@ footer {
             img {
                 width: 20px;
                 height: 20px;
+                margin-right: 6px;
             }
         }
 
