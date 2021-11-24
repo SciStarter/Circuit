@@ -56,6 +56,21 @@
                   <like-icon :class="{'liked': did.like}" />
                   {{ likes }}
                 </span>
+
+                <span v-if="has_value(opportunity.cost)" class="quick-label">
+                  <template v-if="opportunity.cost !== 'free'">
+                    <cost-icon /> Cost
+                  </template>
+                  <template v-else>
+                    <free-icon /> Free
+                  </template>
+                </span>
+
+                <span v-if="has_value(opportunity.opp_venue)" class="quick-label">
+                  {{ venue_type }}
+                </span>
+
+
               </div>
               <!-- <div class="numbers">
                 <p>
@@ -200,14 +215,15 @@
 
       <div class="more-info opportunity-section">
         <h2>More Information</h2>
-        <p v-if="has_value(opportunity.cost)" class="item">
-          <span class="opp-label">Cost:</span> {{ opportunity.cost !== 'free' ? 'Yes' : 'No' }}
-        </p>
+        <div class="description">
+          <!-- <h3>About This Science Opportunity</h3> -->
+          <read-more v-model="description_open">
+            <vue-markdown :source="opportunity.description" class="content" />
+          </read-more>
+        </div>
+
         <p v-if="has_value(opportunity.ticket_required)" class="item">
           <span class="opp-label">Ticket Required:</span> {{ opportunity.ticket_required ? 'Yes' : 'No' }}
-        </p>
-        <p v-if="has_value(opportunity.opp_venue)" class="item">
-          <span class="opp-label">Venue Type:</span> {{ venue_type }}
         </p>
         <p v-if="has_value(opportunity.min_age) && opportunity.min_age > 0" class="item">
           <span class="opp-label">Minimum Age:</span> {{ opportunity.min_age }}
@@ -219,12 +235,7 @@
           <span class="opp-label">Languages:</span> {{ languages }}
         </p>
 
-        <div class="description">
-          <h3>About This Science Opportunity</h3>
-          <read-more v-model="description_open">
-            <vue-markdown :source="opportunity.description" class="content" />
-          </read-more>
-        </div>
+
       </div>
 
       <div v-if="has_value(opportunity.tags)" class="tags opportunity-section">
@@ -505,6 +516,8 @@ import LinkIcon from '~/assets/img/link.svg?inline'
 import AtomIcon from '~/assets/img/atom.svg?inline'
 import ShareIcon from '~/assets/img/share.svg?inline'
 import PlusIcon from '~/assets/img/plus.svg?inline'
+import CostIcon from '~/assets/img/cost.svg?inline'
+import FreeIcon from '~/assets/img/free.svg?inline'
 
 export default {
     components: {
@@ -530,7 +543,9 @@ export default {
         LinkIcon,
         AtomIcon,
         ShareIcon,
-        PlusIcon
+        PlusIcon,
+        FreeIcon,
+        CostIcon
     },
 
     props: {
@@ -1217,7 +1232,7 @@ img.opportunity-image {
             border: 1px solid #efefef;
 
             > :first-child {
-                margin-right: 0.75rem;
+                margin-right: 6px;
             }
 
             // svg.liked * {
@@ -1226,9 +1241,9 @@ img.opportunity-image {
 
         }
 
-        span:not(:first-of-type) {
-            margin-left: 3rem;
-        }
+        // span:not(:first-of-type) {
+        //     margin-left: 3rem;
+        // }
 
 
     }
@@ -1611,6 +1626,27 @@ img.opportunity-image {
 .opportunity-left {
   .opportunity-location, .opportunity-time, .opportunity-keywords {
     font-weight: bold;
+  }
+}
+
+.involvement .reviews-likes .quick-label {
+  font-weight: bold;
+  background-color: $snm-color-background-medlight;
+  border:0;
+  border-radius:4px;
+  box-shadow: none;
+  color: $snm-color-background-meddark;
+  margin-left: 1rem;
+
+  svg {
+    width:20px;
+    height: 20px;
+    position: relative;
+    top:4px;
+    margin-right: 4px;
+    * {
+      fill: $snm-color-background-meddark;
+    }
   }
 }
 
