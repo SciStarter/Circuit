@@ -9,6 +9,10 @@
         {
             "url": "https://beta.sciencenearme.org/api/v1",
             "description": "Beta server on ScienceNearMe.org"
+        },
+        {
+            "url": "https://sciencenearme.org/api/v1",
+            "description": "API server on ScienceNearMe.org"
         }
     ],
     "components": {

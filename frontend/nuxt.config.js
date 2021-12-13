@@ -66,6 +66,7 @@ export default {
           "'self'",
           "'unsafe-eval'", // Needed to compile dynamic content into Vue components. TODO Investigate alternatives.
           "'unsafe-inline'", // Needed for bootstrapping the root Vue component. 'strict-dynamic' with addMeta=true would also work, but not alongside 'unsafe-eval'
+          "https://sciencenearme.org/",
           "www.googletagmanager.com",
           "www.google-analytics.com",
         ],
@@ -79,6 +80,7 @@ export default {
         "connect-src": [
           "'self'",
           "data:",
+          "https://sciencenearme.org/",
           "https://*.tiles.mapbox.com",
           "https://api.mapbox.com",
           "https://events.mapbox.com",
