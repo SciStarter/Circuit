@@ -1,10 +1,12 @@
 #![forbid(unsafe_code)]
 
 use common::{model, Database, INTERNAL_UID};
+use http_types::headers::HeaderValue;
 use sqlx::postgres::PgPoolOptions;
 use tide::{
     listener::{ConcurrentListener, Listener},
     log,
+    security::{CorsMiddleware, Origin},
 };
 use tide_fluent_routes::{fs::ServeFs, prelude::*};
 
@@ -97,8 +99,42 @@ async fn main() -> tide::Result<()> {
 
     let mut app = tide::with_state(pool);
 
-    // https://crates.io/crates/tide-fluent-routes
+    app.with(
+        CorsMiddleware::new()
+            .allow_methods(
+                "GET, POST, PUT, DELETE, OPTIONS"
+                    .parse::<HeaderValue>()
+                    .unwrap(),
+            )
+            .allow_headers(
+                "Authorization, Content-Type"
+                    .parse::<HeaderValue>()
+                    .unwrap(),
+            )
+            .allow_origin(Origin::List(vec![
+                "https://sciencenearme.org".to_string(),
+                "https://www.sciencenearme.org".to_string(),
+                "https://beta.sciencenearme.org".to_string(),
+                #[cfg(debug_assertions)]
+                "http://localhost:3000".to_string(),
+            ]))
+            .allow_credentials(true),
+    );
+
+    // app.with(tide::utils::Before(
+    //     |request: tide::Request<common::Database>| async move {
+    //         dbg!(&request);
+    //         request
+    //     },
+    // ));
+
+    // app.with(tide::utils::After(|response: tide::Response| async move {
+    //     dbg!(&response);
+    //     Ok(response)
+    // }));
+
     app.register(
+        // https://crates.io/crates/tide-fluent-routes
         root()
             .at("api/v1/", v1::routes)
             .at("api/ui/", ui::routes)

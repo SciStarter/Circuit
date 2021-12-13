@@ -75,12 +75,12 @@ def run_tests(partner_uid, partner_secret):
 
     opp = create_opportunity(
         token,
-        # This is a very minimal opportunity entry, which would not be
-        # accepted for publication.
+        # This is a very minimal opportunity entry.
         {
             "uid": str(uuid.uuid4()),
             "partner_name": "testclient",
             "title": "test opportunity",
+            "partner_opp_url": "https://slashdot.org/",
         },
     )
 
@@ -104,9 +104,11 @@ def run_tests(partner_uid, partner_secret):
     print("Updated:")
     pprint(opp)
 
+    # Default status should be accepted for new opportunities
+    assert opp["accepted"] == True
+
     # Verifying that the read-only fields have not changed
     assert opp["partner"] == partner_uid
-    assert opp["accepted"] == False
 
     print("Get own:")
     pprint(get_opportunity_full(token, opp["uid"]))
