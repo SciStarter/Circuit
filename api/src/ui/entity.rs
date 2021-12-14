@@ -51,7 +51,7 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
         .await
         .with_status(|| StatusCode::NotFound)?;
 
-    if opp.interior.accepted.unwrap_or(false)
+    if (opp.interior.accepted.unwrap_or(false) && !opp.interior.withdrawn)
         || person
             .as_ref()
             .map(|p| p.check_permission(&Permission::ManageOpportunities))
