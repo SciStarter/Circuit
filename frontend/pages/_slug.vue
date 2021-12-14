@@ -20,11 +20,20 @@ export default {
         };
     },
 
-    async asyncData ({ params, $axios }) {
-        const entity = await $axios.$get('/api/ui/entity/' + params.slug);
-        const layout = entity.entity_type.page ? entity.entity_type.page.layout : entity.entity_type;
+    async asyncData ({ params, error, $axios }) {
+        try {
+            const entity = await $axios.$get('/api/ui/entity/' + params.slug);
+            const layout = entity.entity_type.page ? entity.entity_type.page.layout : entity.entity_type;
 
-        return { entity, layout };
+            return { entity, layout };
+        } catch(x) {
+            console.warn(x);
+            error({
+                statusCode: 404,
+                message: "Not Found"
+            });
+            return {};
+        }
     },
 
     head () {

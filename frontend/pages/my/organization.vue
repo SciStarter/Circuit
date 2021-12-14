@@ -23,6 +23,8 @@ export default {
                 statusCode: 401,
                 message: "Authentication required"
             });
+
+            return;
         }
 
         let partners = [];
