@@ -21,7 +21,7 @@
     <div>
       <h2>{{ subtitle }}</h2>
       <h1>{{ opportunity.title }}</h1>
-      <small>{{ opportunity.short_desc }}</small>
+      <small><vue-markdown :source="opportunity.short_desc" class="content" /></small>
       <opportunity-notice :opportunity="opportunity" mode="all" />
     </div>
   </nuxt-link>
@@ -50,6 +50,8 @@
 </template>
 
 <script>
+import VueMarkdown from "vue-markdown"
+
 import OpportunityLocation from "~/components/OpportunityLocation"
 import OpportunityTime from "~/components/OpportunityTime"
 import OpportunityKeywords from "~/components/OpportunityKeywords"
@@ -63,6 +65,8 @@ import TrashIcon from '~/assets/img/trash.svg?inline'
 
 export default {
     components: {
+        VueMarkdown,
+
         OpportunityLocation,
         OpportunityTime,
         OpportunityKeywords,

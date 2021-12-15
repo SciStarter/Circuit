@@ -37,6 +37,7 @@
         "nuxt-buefy": "^0.4.4",
         "nuxt-build-optimisations": "^1.0.7",
         "nuxt-custom-headers": "^2.1.0",
+        "showdown": "^1.9.1",
         "sortablejs": "^1.14.0",
         "vue-add-to-calendar": "^1.0.7",
         "vue-fmt": "/home/djarb/source/others/vue-fmt/",
