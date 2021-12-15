@@ -192,7 +192,7 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    baseURL: "https://" + process.env.DOMAIN,
+    baseURL: process.env.LOCAL_API_URL || "https://" + process.env.DOMAIN,
   },
 
   // These two sections override config values at runtime
@@ -206,15 +206,15 @@ export default {
 
   privateRuntimeConfig: {
     axios: {
-      baseURL: process.env.LOCAL_API_URL ||
-          (process.env.DOMAIN == "beta.sciencenearme.org")
+      baseURL: process.env.LOCAL_API_URL ? process.env.LOCAL_API_URL
+      : ((process.env.DOMAIN == "beta.sciencenearme.org")
         ? (
           "http://" + process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_HOST +
           ":" +
           process.env.CIRCUIT_API_SERVICE_BETA_SERVICE_PORT
         )
         : ("http://" + process.env.CIRCUIT_API_SERVICE_SERVICE_HOST + ":" +
-          process.env.CIRCUIT_API_SERVICE_SERVICE_PORT),
+          process.env.CIRCUIT_API_SERVICE_SERVICE_PORT)),
     },
   },
 };

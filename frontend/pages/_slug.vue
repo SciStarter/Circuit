@@ -8,6 +8,8 @@
 // component, and update the PageLayout or EntityType enumeration (as
 // appropriate for the component) in common/src/model/opportunity/mod.rs
 
+import showdown from 'showdown';
+
 export default {
     name: 'Dynamic',
 
@@ -28,20 +30,24 @@ export default {
             return { entity, layout };
         } catch(x) {
             console.warn(x);
+
             error({
                 statusCode: 404,
                 message: "Not Found"
             });
+
             return {};
         }
     },
 
     head () {
+        let converter = new showdown.Converter();
+
         return {
             'title': this.entity.title + ' - Science Near Me',
             'meta': [
-                { hid: 'description', name: 'description', content: this.entity.short_desc || this.entity.description },
-                { hid: 'og:description', property: 'og:description', content: this.entity.short_desc || this.entity.description },
+                { hid: 'description', name: 'description', content: converter.makeHtml(this.entity.short_desc || this.entity.description) },
+                { hid: 'og:description', property: 'og:description', content: converter.makeHtml(this.entity.short_desc || this.entity.description) },
                 { hid: 'og:title', property: 'og:title', content: this.entity.title + ' - Science Near Me'},
                 { hid: 'og:url', property: 'og:url', content: 'https://sciencenearme.org/' + this.entity.slug },
                 { hid: 'og:image', property: 'og:image', content: this.entity.image_url || require('~/assets/img/logo.jpg') },

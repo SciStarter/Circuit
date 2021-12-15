@@ -258,6 +258,11 @@
               Cookies Policy
             </nuxt-link>
           </li>
+          <li>
+            <nuxt-link to="/research-participant">
+              Research Participant
+            </nuxt-link>
+          </li>
         </ul>
       </div>
       </div>

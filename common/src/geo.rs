@@ -70,7 +70,7 @@ pub struct Location {
     pub city: Option<String>,
     pub town: Option<String>,
     pub county: Option<String>,
-    pub state: String,
+    pub state: Option<String>,
     pub state_code: String,
     pub postcode: Option<String>,
     pub country: String,
