@@ -1047,7 +1047,7 @@ fn build_matching_query(
     query_string.push_str(" FROM (SELECT *");
 
     let mut calc_sort = || {
-        query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' THEN 99 WHEN location_polygon IS NOT NULL THEN 1 WHEN location_point IS NOT NULL THEN 0 ELSE 99 END AS _sort_location_priority");
+        query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' THEN 1 WHEN location_polygon IS NOT NULL THEN 0 WHEN location_point IS NOT NULL THEN 0 ELSE 99 END AS _sort_location_priority");
 
         if let Some((lon_param, lat_param)) = point {
             query_string.push_str(
