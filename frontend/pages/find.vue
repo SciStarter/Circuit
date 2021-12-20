@@ -4,7 +4,7 @@
   <div v-if="filtering == false" class="mobile-search-recap mobile-only">
       <div>
         <div v-if="query.text != ''" class="bold">{{query.text}}</div>
-        <div><span class="bold">{{city}}</span> <span v-if="place.proximity"> within {{place.proximity}} miles</span><span v-else> within 25 miles</span></div>
+        <div><span class="bold">{{city}}</span> <span v-if="place.proximity"> within {{within_display}} miles</span><span v-else> within 25 miles</span></div>
         <div>{{beginning_display}}<span v-if="ending_display"> &mdash; {{ending_display}}</span></div>
         <div v-if="filter_num > 0">+ {{filter_num}} filters</div>
       </div>
@@ -562,6 +562,24 @@ export default {
           if (!this.query.ending){return false}
           let d = new Date(this.query.ending)
           return d.toLocaleString('default', { month: 'short' ,day: 'numeric',year: 'numeric'});
+        },
+        within_display(){
+          switch (this.place.proximity) {
+            case 80467:
+              return 50;
+              break;
+            case 40233:
+              return 25;
+              break;
+            case 16093:
+              return 10;
+              break;
+            case 8046:
+              return 5;
+              break;
+            default:
+              return 25;
+          }
         }
     },
 
