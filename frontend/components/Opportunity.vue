@@ -36,6 +36,8 @@
 
   <div class="snm-container">
     <div class="opportunity-left">
+      <div class="opp-breadcrumb">{{prevRoute}}</div>
+
       <div class="opp-head opportunity-section">
         <div class="opp-head-top">
           <img v-if="has_value(opportunity.image_url)" :src="opportunity.image_url" class="opportunity-image" :title="opportunity.image_credit">
@@ -587,6 +589,7 @@ export default {
             show_map: false,
             description_open: false,
             mobile_menu_open: false,
+            prevRoute: null
         }
     },
 
@@ -620,7 +623,6 @@ export default {
             fetch_didit(),
         ]);
     },
-
     computed: {
         languages() {
             let ret = [];

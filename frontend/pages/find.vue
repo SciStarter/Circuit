@@ -1,5 +1,18 @@
 <template>
 <div id="find" :class="{filtering: filtering}">
+
+  <div v-if="filtering == false" class="mobile-search-recap mobile-only">
+      <div>
+        <div v-if="query.text != ''" class="bold">{{query.text}}</div>
+        <div><span class="bold">{{city}}</span> <span v-if="place.proximity"> within {{place.proximity}} miles</span><span v-else> within 25 miles</span></div>
+        <div>{{beginning_display}}<span v-if="ending_display"> &mdash; {{ending_display}}</span></div>
+        <div v-if="filter_num > 0">+ {{filter_num}} filters</div>
+      </div>
+        <action-button id="filter-trigger" text @click="filtering = true">
+          Refine search
+        </action-button>
+  </div>
+
     <general-filters
       id="filters-general"
       :text="query.text"
@@ -12,6 +25,8 @@
       @ending="set_query('ending', $event)"
       />
   <div class="snm-container">
+
+
   <div id="filters-ordering">
     <b-field id="filter-physical">
       <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online" @input="set_query('page', 0)">
@@ -32,9 +47,9 @@
         Soonest
       </option>
     </mini-select>
-    <action-button id="filter-trigger" contrast-fg @click="filtering = true">
-      Refine results
-    </action-button>
+    <!-- <action-button id="filter-trigger" text @click="filtering = true">
+      Refine search
+    </action-button> -->
   </div>
   <div id="filters-refine">
     <div>
@@ -167,7 +182,7 @@
     <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" />
   </template>
     <template v-else>
-      <div class="alert">
+      <div class="alert no-results">
         <p>No results.</p>
       </div>
     </template>
@@ -509,6 +524,44 @@ export default {
 
         query_link() {
             return 'https://sciencenearme.org' + this.$route.fullPath;
+        },
+        city() {
+            if(!this.$store.state.here.near) {
+                return false;
+            }
+
+            const parts = this.$store.state.here.near.split(',');
+
+            if(parts.length == 0) {
+                return 'you';
+            }
+
+            if(parts.length <= 3) {
+                return parts[0];
+            }
+
+            return parts.slice(-3)[0];
+        },
+        filter_num(){
+          let num = 0;
+          if (this.max_age_active) {num++;}
+          if (this.min_age_active) {num++;}
+          if (this.cost == "free") {num++;}
+          num+=this.selected_topics.length;
+          num+=this.selected_descriptors.length;
+          if (this.selected_partner) {num++;}
+          if (this.venue_type != "either") {num++;}
+          return num;
+        },
+        beginning_display(){
+          if (!this.query.beginning){return false}
+          let d = new Date(this.query.beginning)
+          return d.toLocaleString('default', { month: 'short' ,day: 'numeric',year: 'numeric'});
+        },
+        ending_display(){
+          if (!this.query.ending){return false}
+          let d = new Date(this.query.ending)
+          return d.toLocaleString('default', { month: 'short' ,day: 'numeric',year: 'numeric'});
         }
     },
 
@@ -608,6 +661,7 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid $snm-color-border;
 }
 
 #filter-physical {
@@ -780,6 +834,7 @@ export default {
     grid-row: 1;
     grid-column: 1/3;
     justify-content: flex-start;
+    border-bottom:0;
     #filter-physical {
       margin-right: 1rem;
     }
@@ -936,5 +991,22 @@ export default {
     padding-left:2rem;
     padding-right: 2rem;
   }
+}
+
+.mobile-search-recap {
+  font-size: 13px;
+  padding: 0.5rem 1rem;
+  background-color: #efefef;
+  line-height:1.4;
+  display: flex;
+  justify-content:space-between;
+  .bold {
+    font-size:16px;
+    font-weight:bold;
+    line-height: 1.25;
+  }
+}
+.no-results {
+  padding:1rem;
 }
 </style>
