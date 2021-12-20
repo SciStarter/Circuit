@@ -1,5 +1,5 @@
 <template>
-  <button class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large}" :disabled="disabled" @click="$emit('click')" ref="actionBtn">
+  <button class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large, 'text':text}" :disabled="disabled" @click="$emit('click')" ref="actionBtn">
     <slot />
   </button>
 </template>
@@ -57,6 +57,11 @@ export default {
             default: false,
         },
         large: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        text: {
             type: Boolean,
             required: false,
             default: false,
@@ -231,6 +236,18 @@ button.action-button {
         clip-path: polygon(0 0, 100% 100%, 100% 0);
         box-sizing: border-box;
       }
+    }
+
+    &.text {
+      border: 0;
+      background-color:transparent;
+      box-shadow:none;
+      font-weight:normal;
+      color: $snm-color-element-med;
+      padding:0;
+      margin:0;
+      width:auto;
+      height:auto;
     }
 
 }

@@ -8,14 +8,14 @@
       </b-field>
       <lookup-place v-model="place_proxy" label-position="inside" data-context="find-lookup-place" />
       <div class="centered-row">
-        <b-field label="From" label-position="inside" data-context="find-beginning">
+        <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
           <b-datepicker
             v-model="beginning_proxy"
             editable
             icon="calendar-today"
             />
         </b-field>
-        <b-field label="Until" label-position="inside" data-context="find-ending">
+        <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
           <b-datepicker
             v-model="ending_proxy"
             editable
@@ -381,6 +381,17 @@ export default {
         max-width: 50%;
         margin-bottom:1rem;
       }
+    }
+  }
+}
+
+@media (max-width:959px){
+  #find {
+    .gf-fields {
+      padding:1rem;
+    }
+    .date {
+      max-width: 48%;
     }
   }
 }

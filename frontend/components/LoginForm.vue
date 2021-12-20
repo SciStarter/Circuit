@@ -15,7 +15,7 @@
           Log in with your SciStarter account
         </a>
         .
-        <b-tooltip label="SciStarter is a citizen science database.">
+        <b-tooltip label="SciStarter is a citizen science database." position="is-left">
           <b-button label="?" />
         </b-tooltip>
       </p>
