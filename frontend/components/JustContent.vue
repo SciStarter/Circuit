@@ -17,7 +17,7 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss" scoped>
 .not-authenticated  .just-content {
   padding-top: 2rem;
 }
@@ -25,4 +25,12 @@ export default {
   max-width: 800px;
   margin: 0 auto;
 }
+a, a span {
+  color: $snm-color-element-med!important;
+  font-family: $snm-font-content!important;
+}
+a:hover, a:hover span {
+  color: $snm-color-element-dark!important;
+}
+
 </style>

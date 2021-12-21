@@ -55,7 +55,7 @@
         </div>
         </aside>
 
-        <aside :class="{toggled: menu}" class="menu-box" @click="menu = !menu">
+        <aside :class="{toggled: !menu}" class="menu-box" @click="menu = !menu">
           <div v-if="authenticated" class="authenticated">
             <span class="no-mobile" data-context="header-username">{{ username }}</span>
             <ul>
