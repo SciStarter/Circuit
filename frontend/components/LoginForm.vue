@@ -20,6 +20,7 @@
         </b-tooltip>
       </p>
     </div>
+    <form>
     <b-field label="Email" :type="validate_email.type" :message="validate_email.message" label-position="on-border">
       <b-input v-model="login.email" type="email" required />
     </b-field>
@@ -37,6 +38,7 @@
         Cancel
       </b-button> -->
     </div>
+  </form>
   </div>
 </template>
 

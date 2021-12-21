@@ -7,6 +7,7 @@
           <b-button label="?" />
       </b-tooltip></p>
     </div>
+    <form>
     <b-field :type="validate_email.type" :message="validate_email.message" label-position="on-border">
         <template #label>
                 Email <span class="has-required">*</span>
@@ -65,6 +66,7 @@
         Cancel
       </b-button>
     </div>
+  </form>
   </div>
 </template>
 

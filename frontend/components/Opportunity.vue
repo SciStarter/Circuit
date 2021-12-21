@@ -1418,6 +1418,7 @@ img.opportunity-image {
             vertical-align: middle;
             min-height: 32px;
             max-height: 64px;
+            margin-bottom: 1rem;
         }
     }
 }
