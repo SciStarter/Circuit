@@ -1,5 +1,5 @@
 <template>
-<component :is="selected_component" :entity="entity" :user="user" @login="$parent.$emit('login')" @signup="$parent.$emit('signup')" />
+<component :is="selected_component" :entity="entity" :user="user" :from-search="fromSearch" @login="$parent.$emit('login')" @signup="$parent.$emit('signup')" />
 </template>
 
 <script>
@@ -20,6 +20,18 @@ export default {
             'X-Content-Type-Options': 'nosniff',
             'Referrer-Policy': 'strict-origin-when-cross-origin',
         };
+    },
+
+    data() {
+        return {
+            fromSearch: false,
+        };
+    },
+
+    beforeRouteEnter(to, from, next) {
+        next(it => {
+            it.fromSearch = (from.path == '/find');
+        });
     },
 
     async asyncData ({ params, error, $axios }) {
