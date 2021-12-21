@@ -2,6 +2,7 @@
 <div class="general-filters">
   <div class="snm-container">
   <div class="basic-filter-backdrop">
+    <form>
     <div class="gf-fields">
       <b-field label="Search" label-position="inside" data-context="find-keywords">
         <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
@@ -33,6 +34,7 @@
         Include Online Opportunities
       </b-checkbox>
     </b-field>
+  </form>
   </div>
 </div>
   <div v-if="quickLinks" class="quick-links snm-container">
@@ -300,7 +302,7 @@ export default {
           min-width: 140px;
         }
 
-        .basic-filter-backdrop {
+        .basic-filter-backdrop form {
             display: inline-flex;
             flex-direction: column;
             align-items: center;
@@ -312,7 +314,7 @@ export default {
 
 
 
-            >div {
+             > div {
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -366,7 +368,7 @@ export default {
             }
         }
     }
-    #find .general-filters .basic-filter-backdrop {
+    #find .general-filters .basic-filter-backdrop form {
       margin-top: 3rem;
     }
 }
