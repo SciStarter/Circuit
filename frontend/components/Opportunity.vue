@@ -36,7 +36,14 @@
 
   <div class="snm-container">
     <div class="opportunity-left">
-      <div class="opp-breadcrumb">{{prevRoute}}</div>
+      <div v-if="!prevRoute" class="opp-breadcrumbs">
+        <nuxt-link to="/">Home</nuxt-link> &nbsp;>&nbsp;
+        <nuxt-link to="/find">Search Opportunities</nuxt-link> &nbsp;>&nbsp;
+        {{ opportunity.title }}
+      </div>
+      <div v-else>
+          <a  @click="$router.go(-1)">&laquo; Back to Search</a>
+      </div>
 
       <div class="opp-head opportunity-section">
         <div class="opp-head-top">
@@ -560,6 +567,7 @@ export default {
             type: Object,
             required: true,
         },
+
     },
 
     data() {
@@ -721,7 +729,7 @@ export default {
                 'geometry': geom,
                 'properties': props,
             };
-        },
+        }
     },
 
     watch: {
@@ -979,6 +987,7 @@ export default {
             return true;
         }
     },
+
 }
 </script>
 
