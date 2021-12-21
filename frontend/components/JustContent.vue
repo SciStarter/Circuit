@@ -21,4 +21,8 @@ export default {
 .not-authenticated  .just-content {
   padding-top: 2rem;
 }
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+}
 </style>
