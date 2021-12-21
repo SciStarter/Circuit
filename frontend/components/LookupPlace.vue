@@ -1,6 +1,6 @@
 <template>
 <b-field class="lookup-place">
-  <b-field label="Near" :label-position="labelPosition" class="location-input">
+  <b-field label="Near" :label-position="labelPosition" class="location-input" autocomplete="off">
     <b-autocomplete
       :loading="loading"
       :data="matches"
