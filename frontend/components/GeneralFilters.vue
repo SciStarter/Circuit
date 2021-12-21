@@ -2,7 +2,7 @@
 <div class="general-filters">
   <div class="snm-container">
   <div class="basic-filter-backdrop">
-    <form>
+    <form @submit.prevent="search">
     <div class="gf-fields">
       <b-field label="Search" label-position="inside" data-context="find-keywords">
         <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
@@ -25,7 +25,7 @@
             />
         </b-field>
       </div>
-      <action-button v-if="searchButton" id="quick-search-btn" principal large arrow @click="search">
+      <action-button v-if="searchButton" id="quick-search-btn" principal large arrow type="submit">
         <search-icon />
       </action-button>
     </div>
