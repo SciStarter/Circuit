@@ -58,9 +58,9 @@
       </b-field>
     </div>
     <div class="flex flex-justify-sb">
-      <b-button :loading="working" type="is-primary" @click="sign_up">
+      <action-button :loading="working" type="is-primary" primary @click="sign_up">
         Sign up
-      </b-button>
+      </action-button>
       <b-button type="is-text" @click="cancel">
         Cancel
       </b-button>

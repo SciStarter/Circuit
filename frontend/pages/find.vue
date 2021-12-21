@@ -179,7 +179,7 @@
   </div>
   <section id="results">
     <template v-if="matches.length > 0">
-    <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" />
+    <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" previous-page="find" />
   </template>
     <template v-else>
       <div class="alert no-results">

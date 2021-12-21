@@ -30,9 +30,9 @@
       <a href="">forgot password?</a>
     </div> -->
     <div class="flex flex-justify-sb">
-      <b-button :loading="working" type="is-primary" @click="log_in">
+      <action-button :loading="working" type="is-primary" primary @click="log_in">
         Log in
-      </b-button>
+      </action-button>
       <!-- <b-button type="is-text" @click="cancel">
         Cancel
       </b-button> -->
