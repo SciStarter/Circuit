@@ -218,11 +218,11 @@
               API Documentation
             </external-link>
           </li>
-          <li>
-            <nuxt-link to="/contact">
-              Customize &amp; Embed the Opportunity Finder
-            </nuxt-link>
-          </li>
+          <!-- <li> -->
+          <!--   <nuxt-link to="/contact"> -->
+          <!--     Customize &amp; Embed the Opportunity Finder -->
+          <!--   </nuxt-link> -->
+          <!-- </li> -->
         </ul>
 
         <div class="partner">
