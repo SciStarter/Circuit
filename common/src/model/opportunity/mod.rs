@@ -1321,6 +1321,7 @@ impl Opportunity {
 
         self.exterior.title = self.exterior.title.trim_matches(char::is_whitespace).into();
 
+        self.exterior.short_desc = ammonia::clean(&self.exterior.short_desc);
         self.exterior.description = ammonia::clean(&self.exterior.description);
 
         if let None = &self.exterior.location_point {
