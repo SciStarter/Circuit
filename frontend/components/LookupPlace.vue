@@ -7,6 +7,7 @@
       field="near"
       :value="sanitized_value.near"
       :name="'new-' + Math.random()"
+      :clearable="true"
       placeholder="e.g. Iowa City, IA"
       @typing="completions"
       @select="select"
@@ -25,6 +26,9 @@
       </option>
       <option :value="8046">
         5 miles
+      </option>
+      <option :value="0">
+        Anywhere
       </option>
       <!-- <option v-if="value_miles" :value="sanitized_value.proximity"> -->
       <!--   {{ value_miles }} miles -->
@@ -168,8 +172,12 @@ export default {
         },
 
         select(evt) {
-            if(evt === null || evt === undefined) {
+            if(evt === undefined) {
                 return;
+            }
+
+            if(evt === null || evt === '') {
+                this.change({near: '', longitude: 0, latitude: 0, proximity: 0});
             }
 
             this.num_loading += 1

@@ -13,6 +13,7 @@ use bytes::{BufMut, Bytes, BytesMut};
 ///         {
 ///           "node": {
 ///             "id": "cG9zdDoxNTk5OQ==",
+///             "guid": "https://some-url/",
 ///             "content": "Click <a href=\"https://www.google.com/maps/d/u/0/edit?mid=133AFgi4qoZEpJpVC2L32_nIWbDErawmr&amp;ll=43.83100913970273%2C-90.53918123190857&amp;z=7\">HERE</a> to explore the fun activities and content from the 2020 Wisconsin Science Festival. The dots on the map include links from the recordings of our live events as well as great videos and at-home activities you can enjoy any time you'd like!\r\n\r\nMark your calendars for next year's Wisconsin Science Festival, October 21-24, 2021.",
 ///             "cost": null,
 ///             "currencySymbol": null,
@@ -92,12 +93,16 @@ const QUERY: &'static str = r#"{
       edges {
         node {
           id
-          content(format: RAW)
+          guid
+          content
           cost
           currencySymbol
           endDate
           link
           modifiedGmt
+          dateGmt
+          duration
+          excerpt
           origin
           phone
           recurring
@@ -105,7 +110,7 @@ const QUERY: &'static str = r#"{
           startDates
           status
           timezone
-          title(format: RAW)
+          title
           linkedData {
             location {
               url
