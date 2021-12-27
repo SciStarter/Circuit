@@ -125,6 +125,15 @@ export default {
                 }
             }
 
+            if(this.opportunity.tags) {
+                for(let tag of this.opportunity.tags) {
+                    if(tag && !seen[tag] && tag.slice(0, 9) != 'internal_') {
+                        seen[tag] = true;
+                        ret.push(tag);
+                    }
+                }
+            }
+
             return ret;
         }
     },

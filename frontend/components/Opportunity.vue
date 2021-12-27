@@ -36,13 +36,13 @@
 
   <div class="snm-container">
     <div class="opportunity-left">
-      <div v-if="!prevRoute" class="opp-breadcrumbs">
+      <div v-if="fromSearch">
+          <a @click="$router.go(-1)">&laquo; Back to Search</a>
+      </div>
+      <div v-else class="opp-breadcrumbs">
         <nuxt-link to="/">Home</nuxt-link> &nbsp;>&nbsp;
         <nuxt-link to="/find">Search Opportunities</nuxt-link> &nbsp;>&nbsp;
         {{ opportunity.title }}
-      </div>
-      <div v-else>
-          <a  @click="$router.go(-1)">&laquo; Back to Search</a>
       </div>
 
       <div class="opp-head opportunity-section">
@@ -568,6 +568,11 @@ export default {
             required: true,
         },
 
+        fromSearch: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
     },
 
     data() {
@@ -597,7 +602,6 @@ export default {
             show_map: false,
             description_open: false,
             mobile_menu_open: false,
-            prevRoute: null
         }
     },
 

@@ -365,7 +365,7 @@ export default {
                 return parts[0];
             }
 
-            return parts.slice(-3)[0];
+            return parts.slice(-3)[0] || 'you';
         },
     },
 
