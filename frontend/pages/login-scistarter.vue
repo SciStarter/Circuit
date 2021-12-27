@@ -2,7 +2,12 @@
   <div class="snm-wrapper">
     <div class="snm-container standalone-form">
       <h1>Log In with Your SciStarter Account</h1>
-      <login-scistarter-form :next="$route.query.next" :query="next_query" @cancel="$router.go(1)" />
+      <login-scistarter-form :next="$route.query.next" :query="next_query" @cancel="$router.back()" />
+      <p class="legal">
+        If you do not remember your SciStarter password, you
+        can <a href="https://scistarter.org/login"
+        target="_blank">reset it on SciStarter</a>.
+      </p>
       <p class="legal">
         You are granting SciStarter permission to share your profile
         information and user data with Science Near Me (SNM) and you

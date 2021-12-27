@@ -86,7 +86,32 @@ struct GeoResult {
 }
 
 pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
-    let search: GeoQuery = req.body_json().await?;
+    let search: GeoQuery = match req.body_json().await {
+        Ok(search) => search,
+        Err(_) => {
+            return okay(&GeoResult {
+                places: vec![GeoPlace {
+                    near: String::new(),
+                    longitude: 0.0,
+                    latitude: 0.0,
+                    proximity: 0.0,
+                }],
+            });
+        }
+    };
+
+    if search.place.near.is_empty() && search.place.latitude == 0.0 && search.place.longitude == 0.0
+    {
+        return okay(&GeoResult {
+            places: vec![GeoPlace {
+                near: String::new(),
+                longitude: 0.0,
+                latitude: 0.0,
+                proximity: 0.0,
+            }],
+        });
+    }
+
     let proximity = search.place.proximity;
 
     let query = geo::Query::new(
@@ -246,8 +271,10 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
         query.withdrawn = Some(false);
     }
 
-    if let (Some(longitude), Some(latitude)) = (search.longitude, search.latitude) {
-        query.near = Some((longitude, latitude, search.proximity.unwrap_or(FIFTY_MILES)));
+    if search.proximity != Some(0.0) {
+        if let (Some(longitude), Some(latitude)) = (search.longitude, search.latitude) {
+            query.near = Some((longitude, latitude, search.proximity.unwrap_or(FIFTY_MILES)));
+        }
     }
 
     match (search.online, search.physical) {

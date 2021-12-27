@@ -126,12 +126,15 @@ const QUERY: &'static str = r#"{
       edges {
         node {
           id
-          content(format: RAW)
+          guid
+          content
           cost
           currencySymbol
           endDate
           link
           dateGmt
+          duration
+          excerpt
           modifiedGmt
           origin
           phone
@@ -140,7 +143,7 @@ const QUERY: &'static str = r#"{
           startDates
           status
           timezone
-          title(format: RAW)
+          title
           linkedData {
             location {
               url

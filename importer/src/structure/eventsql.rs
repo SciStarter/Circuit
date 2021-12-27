@@ -101,11 +101,14 @@ struct DataFeaturedImage {
 #[serde(default, rename_all = "camelCase")]
 struct DataNode {
     id: String,
+    guid: String,
     date_gmt: String,
+    duration: Option<u32>,
     end_date: Option<String>,
     modified_gmt: String,
     link: String,
     linked_data: DataLinked,
+    excerpt: Option<String>,
     tags: DataTags,
     title: Option<String>,
     slug: String,
@@ -138,7 +141,7 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
     let mut opp = Opportunity::default();
 
     if let Some(node) = data.node {
-        opp.exterior.uid = uuid::Uuid::new_v5(&partner.partner, node.id.as_bytes());
+        opp.exterior.uid = uuid::Uuid::new_v5(&partner.partner, node.guid.as_bytes());
 
         opp.exterior.partner = partner.partner.clone();
 
@@ -182,6 +185,7 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
 
         opp.exterior.title = node.title.unwrap_or_else(|| node.slug.to_title_case());
 
+        opp.exterior.short_desc = node.excerpt.unwrap_or_default();
         opp.exterior.description = node.linked_data.description;
 
         opp.exterior.image_url = if let Some(img) = node.featured_image {
@@ -308,7 +312,7 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
                 .as_str()
                 == "yes";
 
-            opp.exterior.short_desc = custom.short_description.unwrap_or_else(String::new);
+            opp.exterior.short_desc = custom.short_description.unwrap_or(opp.exterior.short_desc);
 
             opp.exterior.organization_type = custom.organization_type.unwrap_or_default();
 
