@@ -11,6 +11,18 @@
       <profile-item v-model="profile.first_name" label="First Name" @input="save" />
       <profile-item v-model="profile.last_name" label="Last Name" @input="save" />
       <profile-item v-model="profile.private" label="Privacy Setting" label-true="Private" label-false="Public" @input="save" />
+      <div id="allow-comm">
+        <label class="label">Accept messages from all users, opportunity providers, and researchers.</label>
+        <b-field>
+           <b-switch v-model="profile.allow_emails"
+               true-value="Yes"
+               false-value="No"
+               type="is-success">
+               {{ profile.allow_emails }}
+           </b-switch>
+       </b-field>
+       <small>If you turn this off, only Science Near Me staff and Opportunity Providers can email you.</small>
+      </div>
     </component>
     <component :is="tab" label="Research Questions" class="research-questions">
       <h2>The following fields are used for scientific research.</h2>
@@ -458,5 +470,19 @@ export default {
             }
         }
     }
+}
+
+#allow-comm {
+  padding: 1rem;
+  .label {
+    margin-bottom: 0.3rem;
+    display:block;
+  }
+  .field {
+    margin-bottom: 0.3rem;
+  }
+  small {
+    font-style: italic;
+  }
 }
 </style>
