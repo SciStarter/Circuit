@@ -14,7 +14,7 @@
         agree to the
         <a href="/terms" target="_blank">Terms of Service</a>,
         <a href="/privacy" target="_blank">Privacy Policy</a>, and
-        <a href="/informed-consent" target="_blank">Participant Research Agreement</a>.
+        <a href="/research-participant" target="_blank">Participant Research Agreement</a>.
       </p>
     </div>
   </div>

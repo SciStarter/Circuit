@@ -48,8 +48,8 @@
       <b-field>
         <b-checkbox v-model="signup.agree">
           I agree to the <a href="/terms" target="_blank">Terms of
-          Service</a> and <a href="/privacy" target="_blank">Privacy
-          Policy</a>.
+          Service</a>, <a href="/privacy" target="_blank">Privacy
+          Policy</a>, and <a href="/research-participant" target="_blank">Research Participation Agreement</a>.
         </b-checkbox>
       </b-field>
       <b-field>
