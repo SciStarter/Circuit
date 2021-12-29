@@ -677,7 +677,7 @@ export default {
         },
 
         subtitle() {
-            return this.opportunity.organization_name || this.opportunity.partner_name;
+            return this.opportunity.organization_name || ""; //this.opportunity.partner_name;
         },
 
         elevator_pitch() {
