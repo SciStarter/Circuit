@@ -32,6 +32,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 struct OpportunitiesPage {
     pub accepted: Option<bool>,
     pub withdrawn: Option<bool>,
+    pub current: Option<bool>,
     pub title: String,
     pub partner: Uuid,
     pub partners: Vec<PartnerReference>,
@@ -45,6 +46,7 @@ struct OpportunitiesForm {
     pub withdrawn: Option<bool>,
     pub title: Option<String>,
     pub partner: Option<Uuid>,
+    pub current: Option<bool>,
 }
 
 async fn search(req: tide::Request<Database>) -> tide::Result {
@@ -63,6 +65,7 @@ async fn search(req: tide::Request<Database>) -> tide::Result {
             partner: form.partner.clone(),
             accepted: form.accepted,
             withdrawn: form.withdrawn,
+            current: Some(form.current.unwrap_or(true)),
             ..Default::default()
         },
         OpportunityQueryOrdering::Alphabetical,
@@ -75,7 +78,8 @@ async fn search(req: tide::Request<Database>) -> tide::Result {
     Ok(OpportunitiesPage {
         accepted: form.accepted,
         withdrawn: form.withdrawn,
-        title: form.title.unwrap_or_else(String::new),
+        current: form.current,
+        title: form.title.unwrap_or_default(),
         partner: form.partner.unwrap_or_default(),
         partners: Partner::catalog(db).await?,
         matches,

@@ -30,6 +30,10 @@
             <option value="true"{% match withdrawn %}{% when Some with (true) %} selected{% else %}{% endmatch %}>Withdrawn</option>
             <option value="false"{% match withdrawn %}{% when Some with (false) %} selected{% else %}{% endmatch %}>Not Withdrawn</option>
           </select>
+          <select name="current">
+            <option value="true"{% match current %}{% when Some with (true) %} selected{% else %}{% endmatch %}>Current</option>
+            <option value="false"{% match current %}{% when Some with (false) %} selected{% else %}{% endmatch %}>Past</option>
+          </select>
           <input type="submit" value="Search">
           <span>({{ num_matches }} matching opportunities)</span>
         </form>

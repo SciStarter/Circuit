@@ -733,6 +733,7 @@ pub struct OpportunityQuery {
     /// probability of retaining any given result in the match set, in the range (0-1).
     pub sample: Option<f32>,
     pub exclude: Option<Vec<Uuid>>,
+    pub current: Option<bool>,
 }
 
 #[derive(Debug)]
@@ -742,6 +743,7 @@ enum ParamValue {
     RawString(String),
     RawFloat(f32),
     RawInt(i32),
+    RawBool(bool),
     //RawUuid(Uuid),
     RawVecString(Vec<String>),
     Bool(bool),
@@ -768,6 +770,7 @@ impl ParamValue {
             ParamValue::RawString(val) => query.bind(val),
             ParamValue::RawFloat(val) => query.bind(val),
             ParamValue::RawInt(val) => query.bind(val),
+            ParamValue::RawBool(val) => query.bind(val),
             //ParamValue::RawUuid(val) => query.bind(val),
             ParamValue::RawVecString(val) => query.bind(val),
             ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
@@ -818,6 +821,13 @@ fn build_matching_query(
         clauses.push(format!(
             "(${}::jsonb) @> (interior -> 'withdrawn')",
             ParamValue::Bool(val).append(&mut params)
+        ));
+    }
+
+    if let Some(val) = query.current {
+        clauses.push(format!(
+            r#""current" = ${}"#,
+            ParamValue::RawBool(val).append(&mut params)
         ));
     }
 
