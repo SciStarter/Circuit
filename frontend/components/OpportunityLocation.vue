@@ -5,7 +5,7 @@
   </p>
   <p v-else-if="!isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
     <span v-if="opportunity.location_name">
-      {{ opportunity.location_name }}
+      {{ opportunity.location_name }} {{ opportunity.address_state }}
     </span>
     <span v-else-if="(opportunity.address_city || opportunity.address_state) && !short">
       {{ opportunity.address_city }}, {{ opportunity.address_state }}
@@ -17,7 +17,7 @@
   </p>
   <ul v-else-if="isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
     <li v-if="opportunity.location_name">
-      {{ opportunity.location_name }}
+      {{ opportunity.location_name }} {{ opportunity.address_state }}
     </li>
     <li v-if="short">
       {{ opportunity.address_city }}, {{ opportunity.address_state }}
@@ -36,7 +36,7 @@
   <span v-else-if="opportunity.location_type == 'any'">Anywhere</span>
   <ul v-else-if="opportunity.location_type == 'at'">
     <li v-if="opportunity.location_name">
-      {{ opportunity.location_name }}
+      {{ opportunity.location_name }} {{ opportunity.address_state }}
     </li>
     <li v-if="short">
       {{ opportunity.address_city }}, {{ opportunity.address_state }}
