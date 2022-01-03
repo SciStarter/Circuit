@@ -818,6 +818,7 @@ export default {
             this.show_map = true;
             setTimeout(() => {
                 let bounds = extent(this.location_geojson);
+                this.map_widget.resize();
                 this.map_widget.fitBounds([[bounds[0]-0.01, bounds[1]-0.01], [bounds[2]+0.01, bounds[3]+0.01]]);
             }, 500)
         },
