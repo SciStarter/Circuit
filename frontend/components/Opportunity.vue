@@ -104,7 +104,7 @@
               <opportunity-location :opportunity="opportunity" is-opportunity />
               <opportunity-notice :opportunity="opportunity" mode="place" />
             </div>
-            <a v-if="(opportunity.location_type == 'at' || opportunity.location_type == 'near') && has_value(location_geojson)" @click="show_map = true">see&nbsp;on&nbsp;map</a>
+            <a v-if="(opportunity.location_type == 'at' || opportunity.location_type == 'near') && has_value(location_geojson)" @click="open_map">see&nbsp;on&nbsp;map</a>
           </div>
           <div class="info time">
             <time-icon />
@@ -812,6 +812,14 @@ export default {
         async register_interest() {
             await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/interest', {}, this.$store.state.auth);
             this.$store.commit('increment_user_reports_pending');
+        },
+
+        open_map() {
+            this.show_map = true;
+            setTimeout(() => {
+                let bounds = extent(this.location_geojson);
+                this.map_widget.fitBounds([[bounds[0]-0.01, bounds[1]-0.01], [bounds[2]+0.01, bounds[3]+0.01]]);
+            }, 500)
         },
 
         async do_like() {
