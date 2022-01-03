@@ -348,6 +348,7 @@ export default {
 
         async delete_account() {
             await this.$axios.$delete('/api/ui/profile/', this.$store.state.auth);
+            this.$router.replace('/');
             this.$buefy.toast.open('Account deleted!');
         },
     },
