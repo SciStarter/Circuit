@@ -17,7 +17,8 @@
            <b-switch v-model="profile.allow_emails"
                true-value="Yes"
                false-value="No"
-               type="is-success">
+               type="is-success"
+               @input="save">
                {{ profile.allow_emails }}
            </b-switch>
        </b-field>

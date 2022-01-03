@@ -328,6 +328,7 @@ pub struct PersonInterior {
     pub permissions: Vec<Permission>,
     pub private: bool,
     pub newsletter: bool,
+    pub allow_emails: bool,
 }
 
 impl Default for PersonInterior {
@@ -358,6 +359,7 @@ impl Default for PersonInterior {
             permissions: Default::default(),
             private: false,
             newsletter: false,
+            allow_emails: true,
         }
     }
 }
