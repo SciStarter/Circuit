@@ -21,7 +21,7 @@
                <b-field>
                   <b-radio v-model="widgetType"
                       native-value="finder">
-                      Show the finder so people can search science opportunities
+                      Show the finder to allow people can search science opportunities
                   </b-radio>
                 </b-field>
               </div>
@@ -178,6 +178,7 @@
           </section>
 
           <section v-if="widgetType=='finder'">
+            <h2>Select Your Widget Style</h2>
             <div class="radio-selects">
               <h3>Widget Size</h3>
               <b-field>
