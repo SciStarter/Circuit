@@ -421,7 +421,7 @@ export default {
   border:0!important;
 
 
-  .one-thin, .two-thin {
+  .short-thin, .tall-thin {
     width:100%;
     border:0;
 
@@ -462,24 +462,20 @@ export default {
     }
 
   }
-
-  .one-wide {
-    .primary {
-      padding-top:0;
-    }
-  }
 }
-.two-thin .opportunity-card.widget:nth-child(2) {
+.tall-thin .opportunity-card.widget:not(:first-child), .short-thin .opportunity-card.widget:not(:first-child) {
   border-top:1px solid $border!important;
   border-radius:0;
   padding-top:10px;
 }
 
-.two-wide .opportunity-card.widget {
-  border:1px solid $border!important;
-  border-radius:6px;
-  margin:8px;
-  width: calc(100% - 16px);
+.tall-wide, .short-wide {
+  .opportunity-card.widget {
+    border:1px solid $border!important;
+    border-radius:6px;
+    margin:8px;
+    width: calc(100% - 16px);
+  }
 }
 
 </style>

@@ -63,9 +63,11 @@
         Include Online Opportunities
       </b-checkbox>
     </b-field> -->
-    <action-button :loading="working" type="is-primary" principal>
-      Search
-    </action-button>
+    <div class="center-submit-btn">
+      <action-button :loading="working" type="is-primary" principal>
+        Search
+      </action-button>
+    </div>
   </form>
   </div>
   <div v-if="widgetLayout=='finder-thin'" class="widget-finder-thin">
@@ -84,9 +86,11 @@
           <label>Until</label>
         </div>
     </div>
+    <div class="center-submit-btn">
       <action-button :loading="working" type="is-primary" principal>
         Search
       </action-button>
+    </div>
   </form>
   </div>
 </template>
@@ -506,6 +510,11 @@ export default {
         width:100%;
         margin-bottom:8px;
       }
+    }
+    .center-submit-btn {
+      display: flex;
+      justify-content:center;
+      align-items:center;
     }
 
 }

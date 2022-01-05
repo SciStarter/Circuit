@@ -1,0 +1,68 @@
+.base-typography {
+
+  h1, h2, h3, h4 {
+    font-weight: bold;
+    font-family: $snm-font-heading;
+    line-height: 1.2;
+  }
+
+  h1,
+  .h1 {
+    font-size: 2.827rem;
+    color: $snm-color-background-meddark;
+    margin-bottom: 18.77px;
+    &.alt {
+      color: $snm-color-background-medium;
+    }
+  }
+  h2,
+  .h2 {
+    font-size: 1.999rem;
+    color: $snm-color-background-meddark;
+    margin-bottom: 16.01px;
+    &.alt {
+      color: $snm-color-background-medium;
+    }
+  }
+  h2 + p, h3 + p, h4 + p {
+    margin-top: -10px;
+  }
+  h3,
+  .h3 {
+    font-size: 1.414rem;
+    margin-bottom: 9.38px;
+    color: $snm-color-background-meddark;
+    &.alt {
+      color: $snm-color-background-medium;
+    }
+  }
+  h4,
+  .h4 {
+    font-size: 1rem;
+    color: $snm-color-background-meddark;
+    margin-bottom:1rem;
+    &.alt {
+      color: $snm-color-background-medium;
+    }
+  }
+  h5,
+  .h5 {
+    font-size: 0.707rem;
+  }
+  h6,
+  .h6 {
+    font-size: 0.5rem;
+  }
+  p {
+    font-size: 1rem;
+    margin: 0 0 10px;
+  }
+
+  .head {
+    border-bottom: 1px solid $snm-color-border;
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+  }
+
+
+}

@@ -2,14 +2,21 @@
 <div class="widget" :class="[style,layout]">
 
   <!--
-    style:  header
+    style (projects):
+            header
             no-header
-    layout: one-thin - shows one project @ 200px wide
-            two-thin - shows two projects stacked @ 200px wide
-            one-wide - shows one project @ 375px wide
-            two-wide - shows two projects stacked @ 375px wide
+    layout (projects):
+            short-thin - shows one project @ 200px wide
+            tall-thin - shows two projects stacked @ 200px wide
+            short-wide - shows one project @ 375px wide
+            tall-wide - shows two projects stacked @ 375px wide
+    max (projects):
+            [integer] - select a number between 1 and 10??  to limit the amount returned
+
+    layout (finder):
             finder-thin - shows finder @ 200px wide - does not have 'no-header'
             finder-wide - shows finder @ 375px wide - does not have 'no-header'
+
             combo-thin - shows one project and finder stacked @ 200px wide - not doing for now
             combo-wide - shows one project and finder stacked @ 375px wide - not doing for now
   -->
@@ -34,25 +41,24 @@
       <opportunity-card v-for="opp in opps" :key="opp.uid" :opportunity="opp" widget :widgetlayout="layout" />
     </div>
     <div v-else>
-        <general-filters widget :widgetLayout="layout" />
+        <general-filters widget :widget-layout="layout" />
     </div>
   </div>
 
 
   <div class="powered">
+    <template v-if="!layout.includes('finder')">
+    See More at <a href="https://sciencenearme.org">Science Near Me</a>
+    </template>
+    <template v-else>
     Powered by <a href="https://sciencenearme.org">Science Near Me</a>
+    </template>
   </div>
 
 </div>
 </template>
 
 <script>
-//////// REMOVE /////////////////////////////////////////
-function randomIntFromInterval(min, max) { // min and max included
-  return Math.floor(Math.random() * (max - min + 1) + min)
-}
-//////// END REMOVE /////////////////////////////////////////
-
   export default {
       layout: "empty",
       data() {
@@ -69,18 +75,19 @@ function randomIntFromInterval(min, max) { // min and max included
         layout() {
           return this.$route.query.layout
         },
+        max() {
+          if (this.$route.query.max) {
+            return this.$route.query.max
+          }
+          return 1;
+        },
         type() {
           return this.$route.query.type
         },
         //////// REMOVE /////////////////////////////////////////
         opps() {
           // HELPS GET ME OPPORTUNITIES IN LOCAL
-          let rand = randomIntFromInterval(1,9);
-          if (this.layout == 'two-thin' || this.layout == 'two-wide') {
-            return this.matches.slice(rand - 2,rand);
-          } else {
-            return this.matches.slice(rand - 1,rand);
-          }
+          return this.matches.slice(0,this.max);
         }
         //////// END REMOVE /////////////////////////////////////////
       }
@@ -99,12 +106,12 @@ $powered:18px;
   display: flex;
   flex-direction: column;
 }
-.one-thin, .two-thin, .finder-thin, .combo-thin {
+.short-thin, .tall-thin, .finder-thin, .combo-thin {
   width:200px;
   border:1px solid $border;
   border-radius:6px;
 }
-.one-wide, .two-wide, .finder-wide, .combo-wide {
+.short-wide, .tall-wide, .finder-wide, .combo-wide {
   width:375px;
   border:1px solid $border;
   border-radius:6px;
@@ -173,49 +180,49 @@ $powered:18px;
   padding-top:10px;
 }
 
-.one-thin.header {
+.short-thin.header {
   height: 325px;
   .widget-content {
     max-height:325px - $header - $powered;
   }
 }
-.one-thin.no-header {
+.short-thin.no-header {
   height:275px;
   .widget-content {
     max-height:275px - $powered;
   }
 }
-.one-wide.header {
+.short-wide.header {
   height:250px;
   .widget-content {
     max-height:250px - $header - $powered;
   }
 }
-.one-wide.no-header {
+.short-wide.no-header {
   height:200px;
   .widget-content {
     max-height:200px - $powered;
   }
 }
-.two-thin.header {
+.tall-thin.header {
   height:575px;
   .widget-content {
     max-height:575px - $header - $powered;
   }
 }
-.two-thin.no-heder {
+.tall-thin.no-heder {
   height:525px;
   .widget-content {
     max-height:525px - $powered;
   }
 }
-.two-wide.header {
+.tall-wide.header {
   height:475px;
   .widget-content {
     max-height:475px - $header - $powered;
   }
 }
-.two-wide.no-header {
+.tall-wide.no-header {
   height:425px;
   .widget-content {
     max-height:425px - $powered;
