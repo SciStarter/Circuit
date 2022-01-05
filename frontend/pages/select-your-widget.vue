@@ -21,7 +21,7 @@
                <b-field>
                   <b-radio v-model="widgetType"
                       native-value="finder">
-                      Show the finder to allow people can search science opportunities
+                      Show the finder to allow people to search science opportunities
                   </b-radio>
                 </b-field>
               </div>
