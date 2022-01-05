@@ -164,12 +164,28 @@
                   </div>
                   <div class="nested">
                     <h4>Activity Type</h4>
-                    checkboxes of all activity types here
+                    <b-field>
+                        <b-checkbox v-model="filters.activities">
+                            checkboxes of all activity types here
+                        </b-checkbox>
+                    </b-field>
                   </div>
                   <div class="nested">
                     <h4>Organization</h4>
                     <p>Limit your results to one or more host organizations. Beging typing the organization and select when it displays in the dropdown menu.</p>
-                    autocomplete of host orgs here
+
+                    <b>[autocomplete of host orgs here. Allow multiselect. Partner orgs on finder filters.]</b>
+                    <!-- <b-autocomplete
+                      v-model="query.partner_text"
+                      :data="suggested_partners"
+                      :name="'new-' + Math.random()"
+                      field="name"
+                      clearable
+                      keep-first
+                      select-on-click-outside
+                      @select="selected_partner = $event"
+                      /> -->
+
                   </div>
 
                 </div>
