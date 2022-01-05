@@ -1,5 +1,5 @@
 <template>
-<b-field class="lookup-place">
+<b-field class="lookup-place" :class="{'stacked':stacked,'widget':widget}">
   <b-field label="Near" :label-position="labelPosition" class="location-input" autocomplete="off">
     <b-autocomplete
       :loading="loading"
@@ -62,6 +62,16 @@ export default {
             type: String,
             required: false,
             default: 'on-border'
+        },
+        stacked: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
+        widget: {
+            type: Boolean,
+            required: false,
+            default: false
         }
     },
 
@@ -207,6 +217,7 @@ export default {
 <style lang="scss">
 .lookup-place .autocomplete .dropdown-menu {
     width: 350px;
+    text-align:left;
 }
 .lookup-place {
   margin-top: 1.2rem;
@@ -222,6 +233,34 @@ export default {
 }
 .lookup-place .distance {
   width: 115px;
+}
+
+.stacked {
+  .field,.field-body, .field.has-addons{
+    display: block!important;
+  }
+  .field-body .field .field {
+    margin-bottom:8px;
+  }
+  input,select {
+    border-radius: 6px!important;
+  }
+  .distance,.control, .select, select {
+    width:100%!important;
+  }
+  .autocomplete .dropdown-menu,.autocomplete .dropdown-content {
+      width: 180px;
+      text-align:left;
+  }
+  a.dropdown-item {
+    padding-right:1rem;
+  }
+}
+
+.widget {
+  .autocomplete .dropdown-content {
+    max-height:110px;
+  }
 }
 
 </style>

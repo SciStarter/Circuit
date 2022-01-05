@@ -5,7 +5,8 @@
   </p>
   <p v-else-if="!isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
     <span v-if="opportunity.location_name">
-      {{ opportunity.location_name }} {{ opportunity.address_state }}
+      <template v-if="shortstacked">{{ opportunity.location_name }}, {{ opportunity.address_state }}</template>
+      <template v-else>{{ opportunity.location_name }} {{ opportunity.address_state }}</template>
     </span>
     <span v-else-if="(opportunity.address_city || opportunity.address_state) && !short">
       {{ opportunity.address_city }}, {{ opportunity.address_state }}
@@ -64,6 +65,11 @@ export default {
         },
 
         short: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
+        shortstacked: {
             type: Boolean,
             required: false,
             default: false

@@ -1,5 +1,5 @@
 <template>
-<article v-if="!hidden" class="opportunity-card" :class="{'rule': rule,'has-trash':trash, 'opp-loader':loader}">
+<article v-if="!hidden" class="opportunity-card" :class="{'rule': rule,'has-trash':trash, 'opp-loader':loader, 'widget':widget}">
   <template v-if="loader">
     <div class="primary">
       <div class="oc-loader-img linear-background" />
@@ -12,6 +12,39 @@
     </div>
     <div class="secondary" />
   </template>
+
+  <!-- widget -->
+  <template v-else-if="widget">
+    <div :class="widgetlayout">
+      <nuxt-link :to="'https://sciencenearme.org/' + opportunity.slug" class="primary">
+        <img :src="image">
+        <div>
+          <h2>{{ subtitle }}</h2>
+          <h1>{{ opportunity.title }}</h1>
+          <small><vue-markdown :source="opportunity.short_desc" class="content" /></small>
+          <opportunity-notice :opportunity="opportunity" mode="all" />
+        </div>
+      </nuxt-link>
+      <div class="secondary">
+        <div class="info location">
+          <location-icon />
+          <div>
+            <opportunity-location :opportunity="opportunity" :short="true" shortstacked="true" />
+            <opportunity-notice :opportunity="opportunity" mode="place" />
+          </div>
+        </div>
+        <div class="info time">
+          <time-icon />
+          <div>
+            <opportunity-time :opportunity="opportunity" />
+            <opportunity-notice :opportunity="opportunity" mode="time" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+  <!-- end widget -->
+
   <template v-else>
   <button v-if="trash" class="trash" @click="$emit('trash', opportunity)">
     <trash-icon />
@@ -107,6 +140,16 @@ export default {
             required: false,
             default: false,
         },
+        widget: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        widgetlayout: {
+            type: String,
+            required: false,
+            default: undefined,
+        },
     },
 
     computed: {
@@ -169,6 +212,7 @@ export default {
     display: flex;
     padding: 1rem;
     flex: 0 1 100px;
+    align-items:center;
 
     img, .oc-loader-img {
         width: 80px;
@@ -203,6 +247,9 @@ export default {
             font-weight: bold;
             line-height: 22px;
             margin-bottom: 8px;
+        }
+        h1 {
+          line-height:1.2;
         }
 
         small, .oc-loader-p {
@@ -366,6 +413,73 @@ export default {
 
 .opp-loader {
   max-height: 200px;
+}
+
+/************* WIDGET ********************/
+.opportunity-card.widget {
+  width:100%;
+  border:0!important;
+
+
+  .one-thin, .two-thin {
+    width:100%;
+    border:0;
+
+    .primary {
+      display: block;
+      padding:0 10px;
+      img {
+        width:100%;
+        max-height:92px;
+        object-fit: contain;
+        background-color:#efefef;
+        margin-bottom:4px;
+        border:1px solid $border;
+      }
+      h1 {
+        line-height:1.1;
+      }
+      h2 {
+        font-size:12px;
+        line-height:1;
+        margin-bottom:2px;
+      }
+    }
+
+    .secondary {
+      width:100%;
+      padding:0 10px;
+      background-color:#fff;
+      .info {
+        width:100%;
+        min-width:1px;
+        line-height:1.2;
+        font-size:13px;
+        svg {
+          margin-top:0.15rem;
+        }
+      }
+    }
+
+  }
+
+  .one-wide {
+    .primary {
+      padding-top:0;
+    }
+  }
+}
+.two-thin .opportunity-card.widget:nth-child(2) {
+  border-top:1px solid $border!important;
+  border-radius:0;
+  padding-top:10px;
+}
+
+.two-wide .opportunity-card.widget {
+  border:1px solid $border!important;
+  border-radius:6px;
+  margin:8px;
+  width: calc(100% - 16px);
 }
 
 </style>

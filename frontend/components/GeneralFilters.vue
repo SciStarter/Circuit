@@ -1,5 +1,6 @@
 <template>
-<div class="general-filters">
+<div class="general-filters" :class="{'widget':widget}">
+  <template v-if="!widget">
   <div class="snm-container">
   <div class="basic-filter-backdrop">
     <form @submit.prevent="search">
@@ -37,6 +38,58 @@
   </form>
   </div>
 </div>
+</template>
+<template v-if="widget">
+  <div v-if="widgetLayout=='finder-wide'" class="widget-finder-wide">
+    <form @submit.prevent="search">
+    <div class="gf-fields">
+      <b-field label="Search" label-position="inside" data-context="find-keywords">
+        <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+      </b-field>
+      <lookup-place v-model="place_proxy" label-position="inside" data-context="find-lookup-place" widget />
+      <div class="centered-row">
+        <div class="date-input">
+          <input type="date" v-model="beginning_proxy" />
+          <label>From</label>
+        </div>
+        <div class="date-input">
+          <input type="date" v-model="ending_proxy" />
+          <label>Until</label>
+        </div>
+      </div>
+    </div>
+    <!-- <b-field>
+      <b-checkbox v-model="include_online_proxy">
+        Include Online Opportunities
+      </b-checkbox>
+    </b-field> -->
+    <action-button :loading="working" type="is-primary" principal>
+      Search
+    </action-button>
+  </form>
+  </div>
+  <div v-if="widgetLayout=='finder-thin'" class="widget-finder-thin">
+    <form @submit.prevent="search">
+    <div class="gf-fields">
+      <b-field label="Search" label-position="inside" data-context="find-keywords">
+        <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+      </b-field>
+      <lookup-place v-model="place_proxy" label-position="inside" data-context="find-lookup-place" stacked />
+        <div class="date-input">
+          <input type="date" v-model="beginning_proxy" />
+          <label>From</label>
+        </div>
+        <div class="date-input">
+          <input type="date" v-model="ending_proxy" />
+          <label>Until</label>
+        </div>
+    </div>
+      <action-button :loading="working" type="is-primary" principal>
+        Search
+      </action-button>
+  </form>
+  </div>
+</template>
   <div v-if="quickLinks" class="quick-links snm-container">
     <nuxt-link to="/find?physical=online&descriptors[]=citizen_science">
       Online, Anytime Science
@@ -114,6 +167,16 @@ export default {
             type: Boolean,
             required: false,
             default: false,
+        },
+        widget: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        widgetLayout: {
+            type: String,
+            required: false,
+            default: undefined,
         },
     },
 
@@ -396,6 +459,55 @@ export default {
       max-width: 48%;
     }
   }
+}
+
+/****** WIDGET *******/
+.general-filters.widget {
+    background-color: $snm-color-background-medium;
+    display:block;
+    padding:10px;
+    padding-top:18px;
+
+    .field {
+      margin:0;
+      margin-bottom:8px;
+    }
+
+    input[type='date'] {
+      height:52px;
+      padding-left:0.7rem;
+      box-sizing: border-box;
+      width: 100%;
+
+    }
+    .date-input {
+      position:relative;
+      width:48%;
+      label {
+        position: absolute;
+        left: 1em;
+        font-size: calc(1rem * 0.75);
+        background-color: transparent;
+        z-index: 5;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        max-width: calc(100% - 2em);
+        overflow: hidden;
+        font-weight:bold;
+        top:4px;
+      }
+    }
+    .centered-row {
+      justify-content:space-between;
+    }
+
+    .widget-finder-thin {
+      .date-input {
+        width:100%;
+        margin-bottom:8px;
+      }
+    }
+
 }
 
 </style>
