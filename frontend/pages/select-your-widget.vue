@@ -384,6 +384,9 @@ section {
 
 .flex2 {
   flex:0 0 375px;
+  align-self: flex-start;
+  position:sticky;
+  top:20px;
 }
 }
 
