@@ -16,7 +16,7 @@
   <!-- widget -->
   <template v-else-if="widget">
     <div :class="widgetlayout">
-      <nuxt-link :to="'https://sciencenearme.org/' + opportunity.slug" class="primary">
+      <a :href="'https://sciencenearme.org/' + opportunity.slug" class="primary" target="_blank">
         <img :src="image">
         <div>
           <h2>{{ subtitle }}</h2>
@@ -24,7 +24,7 @@
           <small><vue-markdown :source="opportunity.short_desc" class="content" /></small>
           <opportunity-notice :opportunity="opportunity" mode="all" />
         </div>
-      </nuxt-link>
+      </a>
       <div class="secondary">
         <div class="info location">
           <location-icon />
