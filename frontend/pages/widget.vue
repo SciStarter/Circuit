@@ -48,10 +48,10 @@
 
   <div class="powered">
     <template v-if="!layout.includes('finder')">
-    See More at <a href="https://sciencenearme.org">Science Near Me</a>
+    See More at <a href="https://sciencenearme.org/">Science Near Me</a>
     </template>
     <template v-else>
-    Powered by <a href="https://sciencenearme.org">Science Near Me</a>
+    Powered by <a href="https://sciencenearme.org/">Science Near Me</a>
     </template>
   </div>
 
