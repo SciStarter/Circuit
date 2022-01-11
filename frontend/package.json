@@ -40,7 +40,7 @@
         "showdown": "^1.9.1",
         "sortablejs": "^1.14.0",
         "vue-add-to-calendar": "^1.0.7",
-        "vue-fmt": "/home/djarb/source/others/vue-fmt/",
+        "vue-fmt": "file:../../../source/others/vue-fmt",
         "vue-geolocation-api": "^0.1.21",
         "vue-markdown": "^2.2.4"
     },

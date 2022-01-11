@@ -3,7 +3,7 @@
     <div class="snm-container standalone-form">
       <h1>Log In</h1>
 
-      <login-form :next="$route.query.next" :query="next_query" @cancel="$router.go(1)" />
+      <login-form :next="$route.query.next" :query="next_query" @cancel="$router.back()" />
     </div>
   </div>
 </template>

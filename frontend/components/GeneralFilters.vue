@@ -8,7 +8,7 @@
       <b-field label="Search" label-position="inside" data-context="find-keywords">
         <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
       </b-field>
-      <lookup-place v-model="place_proxy" label-position="inside" data-context="find-lookup-place" />
+      <lookup-place v-model="place_proxy" @valid="set_valid" label-position="inside" data-context="find-lookup-place" />
       <div class="centered-row">
         <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
           <b-datepicker
@@ -26,7 +26,7 @@
             />
         </b-field>
       </div>
-      <action-button v-if="searchButton" id="quick-search-btn" principal large arrow type="submit">
+      <action-button v-if="searchButton" id="quick-search-btn" :disabled="!location_valid" principal large arrow type="submit">
         <search-icon />
       </action-button>
     </div>
@@ -46,7 +46,7 @@
       <b-field label="Search" label-position="inside" data-context="find-keywords">
         <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
       </b-field>
-      <lookup-place v-model="place_proxy" label-position="inside" data-context="find-lookup-place" widget />
+      <lookup-place v-model="place_proxy" @valid="set_valid" label-position="inside" data-context="find-lookup-place" widget />
       <div class="centered-row">
         <div class="date-input">
           <input type="date" v-model="beginning_proxy" />
@@ -64,7 +64,7 @@
       </b-checkbox>
     </b-field> -->
     <div class="center-submit-btn">
-      <action-button :loading="working" type="is-primary" principal>
+      <action-button :loading="working" :disabled="!location_valid" type="is-primary" principal>
         Search
       </action-button>
     </div>
@@ -76,7 +76,7 @@
       <b-field label="Search" label-position="inside" data-context="find-keywords">
         <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
       </b-field>
-      <lookup-place v-model="place_proxy" label-position="inside" data-context="find-lookup-place" stacked />
+      <lookup-place v-model="place_proxy" @valid="set_valid" label-position="inside" data-context="find-lookup-place" stacked />
         <div class="date-input">
           <input type="date" v-model="beginning_proxy" />
           <label>From</label>
@@ -182,6 +182,12 @@ export default {
             required: false,
             default: undefined,
         },
+    },
+
+    data() {
+        return {
+            location_valid: false,
+        };
     },
 
     computed: {
@@ -303,6 +309,11 @@ export default {
     methods: {
         search() {
             this.$router.push(this.search_url);
+        },
+
+        set_valid(valid) {
+            this.location_valid=valid;
+            this.$emit('valid', valid);
         }
     },
 }

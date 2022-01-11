@@ -1,55 +1,55 @@
 <template>
-  <div class="signup-form">
-    <slot />
-    <div class="form-header">
-      <p>Already have an account? <a href="/login">Login here</a>.</p>
-      <p>Do you have a <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter" /> account? <a href="/login-scistarter">Log in with your SciStarter account</a>.<b-tooltip label="SciStarter is a citizen science database."  position="is-left">
-          <b-button label="?" />
-      </b-tooltip></p>
-    </div>
-    <form>
+<div class="signup-form">
+  <slot />
+  <div class="form-header">
+    <p>Already have an account? <a href="/login">Login here</a>.</p>
+    <p>Do you have a <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter" /> account? <a href="/login-scistarter">Log in with your SciStarter account</a>.<b-tooltip label="SciStarter is a citizen science database."  position="is-left">
+        <b-button label="?" />
+    </b-tooltip></p>
+  </div>
+  <form @submit.prevent="0">
     <b-field :type="validate_email.type" :message="validate_email.message" label-position="on-border">
-        <template #label>
-                Email <span class="has-required">*</span>
-            </template>
+      <template #label>
+        Email <span class="has-required">*</span>
+      </template>
       <b-input v-model="signup.email" type="email" required />
     </b-field>
     <b-field label-position="on-border">
       <template #label>
-              Username <span class="has-required">*</span>
-          </template>
+        Username <span class="has-required">*</span>
+      </template>
       <b-input v-model="signup.username" type="text" required />
     </b-field>
     <b-field :type="validate_password.type" :message="validate_password.message" label-position="on-border">
       <template #label>
-              Password <span class="has-required">*</span>
-          </template>
+        Password <span class="has-required">*</span>
+      </template>
       <b-input v-model="signup.password" type="password" required />
     </b-field>
     <b-field :type="validate_password_repeat.type" :message="validate_password_repeat.message" label-position="on-border">
       <template #label>
-              Repeat Password <span class="has-required">*</span>
-          </template>
+        Repeat Password <span class="has-required">*</span>
+      </template>
       <b-input v-model="password_repeat" type="password" required />
     </b-field>
     <b-field label-position="on-border">
       <template #label>
-              Zip/Postal Code <span class="has-required">*</span>
-          </template>
+        Zip/Postal Code <span class="has-required">*</span>
+      </template>
       <b-input v-model="signup.zip_code" type="text" />
     </b-field>
     <b-field label-position="on-border">
       <template #label>
-              Phone <span class="has-optional">optional</span>
-          </template>
+        Phone <span class="has-optional">optional</span>
+      </template>
       <b-input v-model="signup.phone" type="tel" />
     </b-field>
     <div class="form-push">
       <b-field>
         <b-checkbox v-model="signup.agree">
           I agree to the <a href="/terms" target="_blank">Terms of
-          Service</a>, <a href="/privacy" target="_blank">Privacy
-          Policy</a>, and <a href="/research-participant" target="_blank">Research Participation Agreement</a>.
+            Service</a>, <a href="/privacy" target="_blank">Privacy
+            Policy</a>, and <a href="/research-participant" target="_blank">Research Participation Agreement</a>.
         </b-checkbox>
       </b-field>
       <b-field>
@@ -67,7 +67,7 @@
       </b-button>
     </div>
   </form>
-  </div>
+</div>
 </template>
 
 <script>

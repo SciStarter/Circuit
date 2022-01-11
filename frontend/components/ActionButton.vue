@@ -1,5 +1,5 @@
 <template>
-  <button class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large, 'text':text}" :disabled="disabled" @click="$emit('click')" ref="actionBtn">
+  <button ref="actionBtn" type="button" class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large, 'text':text}" :disabled="disabled" @click="$emit('click')">
     <slot />
   </button>
 </template>

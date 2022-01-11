@@ -20,25 +20,25 @@
         </b-tooltip>
       </p>
     </div>
-    <form>
-    <b-field label="Email" :type="validate_email.type" :message="validate_email.message" label-position="on-border">
-      <b-input v-model="login.email" type="email" required />
-    </b-field>
-    <b-field label="Password" :type="validate_password.type" :message="validate_password.message" label-position="on-border">
-      <b-input v-model="login.password" type="password" required />
-    </b-field>
-    <!-- <div class="forgot">
-      <a href="">forgot password?</a>
-    </div> -->
-    <div class="flex flex-justify-sb">
-      <action-button :loading="working" type="is-primary" primary @click="log_in">
-        Log in
-      </action-button>
-      <!-- <b-button type="is-text" @click="cancel">
-        Cancel
-      </b-button> -->
-    </div>
-  </form>
+    <form @submit.prevent="0">
+      <b-field label="Email" :type="validate_email.type" :message="validate_email.message" label-position="on-border">
+        <b-input v-model="login.email" type="email" required />
+      </b-field>
+      <b-field label="Password" :type="validate_password.type" :message="validate_password.message" label-position="on-border">
+        <b-input v-model="login.password" type="password" required />
+      </b-field>
+      <!-- <div class="forgot">
+           <a href="">forgot password?</a>
+      </div> -->
+      <div class="flex flex-justify-sb">
+        <action-button :loading="working" type="is-primary" primary @click="log_in">
+          Log in
+        </action-button>
+        <!-- <b-button type="is-text" @click="cancel">
+             Cancel
+             </b-button> -->
+      </div>
+    </form>
   </div>
 </template>
 
@@ -119,7 +119,7 @@ export default {
 
             this.working = true
 
-            const user = await this.$store.dispatch('login', this.login)
+            const user = await this.$store.dispatch('login', this.login);
 
             this.working = false
 

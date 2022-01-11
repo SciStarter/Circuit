@@ -37,7 +37,7 @@
   <div class="snm-container">
     <div class="opportunity-left">
       <div v-if="fromSearch">
-          <a @click="$router.go(-1)">&laquo; Back to Search</a>
+          <a @click="$router.push({ name: 'find', query: $store.state.last_search })">&laquo; Back to Search</a>
       </div>
       <div v-else class="opp-breadcrumbs">
         <nuxt-link to="/">Home</nuxt-link> &nbsp;>&nbsp;

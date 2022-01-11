@@ -21,10 +21,10 @@
   <h1>What would you like to do <near-icon class="inline-sign" /> {{ city }}?</h1>
     <sideways-slider>
       <div v-for="intent in intents" :key="intent.title" class="intent-card">
-        <nuxt-link :to="intent.link">
+        <nuxt-link :to="intent.link + (here_and_now_query.longitude ? ('&longitude=' + here_and_now_query.longitude + '&latitude=' + here_and_now_query.latitude) : '')">
           <img :title="intent.title" :src="intent.image" :srcset="intent.image + ' 1x,' + intent.image2x + ' 2x'">
         </nuxt-link>
-        <nuxt-link :to="intent.link" class="intent-title">
+        <nuxt-link :to="intent.link + (here_and_now_query.longitude ? ('&longitude=' + here_and_now_query.longitude + '&latitude=' + here_and_now_query.latitude) : '')" class="intent-title">
           {{ intent.title }}
         </nuxt-link>
         <p>

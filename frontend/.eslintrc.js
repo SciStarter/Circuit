@@ -24,5 +24,9 @@ module.exports = {
     "vue/no-v-html": "off",
     "vue/html-indent": "off",
     "vue/one-component-per-file": "off",
+    "vue/singleline-html-element-content-newline": "off",
+    "vue/multiline-html-element-content-newline": "off",
+    "vue/mustache-interpolation-spacing": "off",
+    "vue/attributes-order": "off",
   },
 };

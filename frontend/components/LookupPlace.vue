@@ -11,6 +11,7 @@
       placeholder="e.g. Iowa City, IA"
       @typing="completions"
       @select="select"
+      @input="$emit('valid', false)"
       />
   </b-field>
   <b-field label="Distance" :label-position="labelPosition" class="distance">
@@ -155,8 +156,9 @@ export default {
 
     methods: {
         completions: debounce(function (near) {
+            this.matches = []
+
             if (near.length < 3) {
-                this.matches = []
                 return
             }
 
@@ -174,7 +176,7 @@ export default {
             this.$axios.$post('/api/ui/finder/geo', { lookup: 'near', place: this.value })
                 .then(({ places }) => {
                     if (places.length > 0) {
-                        this.change({ near: places[0].near })
+                        this.change({ near: places[0].near });
                     }
                 })
                 .catch((error) => { console.error(error) })
@@ -208,7 +210,10 @@ export default {
                 delta.latitude = 0;
                 delta.longitude = 0;
             }
+
             this.sanitized_value = Object.assign({}, this.sanitized_value, delta);
+
+            this.$emit('valid', !this.sanitized_value.near || !!this.sanitized_value.latitude || !!this.sanitized_value.longitude);
         }
     }
 }

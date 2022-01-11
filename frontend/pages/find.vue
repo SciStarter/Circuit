@@ -19,27 +19,28 @@
       :place="place"
       :beginning="beginning"
       :ending="ending"
-      @text="set_query('text', $event)"
-      @place="set_query('page', 0, undefined, [place=$event])"
-      @beginning="set_query('beginning', $event)"
-      @ending="set_query('ending', $event)"
+      @text="set_query_interactive('text', $event)"
+      @place="set_query_interactive('page', 0, undefined, [place=$event])"
+      @beginning="set_query_interactive('beginning', $event)"
+      @ending="set_query_interactive('ending', $event)"
+      @valid="location_valid=$event"
       />
   <div class="snm-container">
 
 
   <div id="filters-ordering">
     <b-field id="filter-physical">
-      <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online" @input="set_query('page', 0)">
+      <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online" @input="set_query_interactive('page', 0)">
         <span class="radio-label">In-Person<br> &amp;&nbsp;Online</span>
       </b-radio-button>
-      <b-radio-button v-model="query.physical" native-value="in-person" data-context="find-sort-in-person" @input="set_query('page', 0)">
+      <b-radio-button v-model="query.physical" native-value="in-person" data-context="find-sort-in-person" @input="set_query_interactive('page', 0)">
         <span class="radio-label">In-Person<br> Only</span>
       </b-radio-button>
-      <b-radio-button v-model="query.physical" native-value="online" data-context="find-sort-online" @input="set_query('page', 0)">
+      <b-radio-button v-model="query.physical" native-value="online" data-context="find-sort-online" @input="set_query_interactive('page', 0)">
         <span class="radio-label">Online Only</span>
       </b-radio-button>
     </b-field>
-    <mini-select id="filter-sort" v-model="query.sort" label="Sort:" data-context="find-sort-order" @input="set_query('page', 0)">
+    <mini-select id="filter-sort" v-model="query.sort" label="Sort:" data-context="find-sort-order" @input="set_query_interactive('page', 0)">
       <option value="closest">
         Closest
       </option>
@@ -147,7 +148,7 @@
       </fieldset>
       <fieldset data-context="find-organization">
         <label>Host Organization</label>
-        <b-input :value="get_query('host', '')" :name="'new-' + Math.random()" type="text" @input="set_query('host', $event, '')" />
+        <b-input :value="get_query('host', '')" :name="'new-' + Math.random()" type="text" @input="set_query_interactive('host', $event, '')" />
       </fieldset>
       <fieldset data-context="find-partner">
         <label>Partner Organization</label>
@@ -188,7 +189,7 @@
     </template>
   </section>
   <section id="pagination">
-    <pagination :page-index="pagination.page_index" :last-page="pagination.last_page" @switch="set_query('page', $event) || search()" />
+    <pagination :page-index="pagination.page_index" :last-page="pagination.last_page" @switch="set_query_interactive('page', $event)" />
     <div class="mobile-only">
       <h1>Share Your Results</h1>
       <p>Share the list by copying the link below</p>
@@ -202,7 +203,7 @@
     <action-button @click="clear">
       Clear Filters
     </action-button>
-    <action-button primary @click="apply">
+    <action-button primary @click="apply" :disabled="!location_valid">
       Apply
     </action-button>
   </div>
@@ -317,7 +318,7 @@ export default {
             partners,
             descriptors,
             topics,
-            opportunities: []
+            opportunities: [],
         };
 
         return Object.assign(local, results);
@@ -325,6 +326,8 @@ export default {
 
     data() {
         return {
+            location_valid: true,
+            initialization: false,
             query: Object.assign(empty_query(), this.$route.query),
         };
     },
@@ -350,7 +353,7 @@ export default {
             },
 
             set(value) {
-                this.set_query('min_age', value ? 0 : undefined);
+                this.set_query_interactive('min_age', value ? 0 : undefined);
             }
         },
 
@@ -360,7 +363,7 @@ export default {
             },
 
             set(value) {
-                this.set_query('max_age', value ? 120 : undefined);
+                this.set_query_interactive('max_age', value ? 120 : undefined);
             }
         },
 
@@ -371,7 +374,7 @@ export default {
 
             set(value) {
                 if(this.min_age_active) {
-                    this.set_query('min_age', value);
+                    this.set_query_interactive('min_age', value);
                 }
             }
         },
@@ -383,7 +386,7 @@ export default {
 
             set(value) {
                 if(this.max_age_active) {
-                    this.set_query('max_age', value);
+                    this.set_query_interactive('max_age', value);
                 }
             }
         },
@@ -396,7 +399,7 @@ export default {
             set(val) {
                 if(val) {
                     Vue.set(this.query, 'beginning', (new Date(val)).toISOString());
-                    this.set_query('page', 0);
+                    this.set_query_interactive('page', 0);
                 } else {
                     Vue.delete(this.query, 'beginning');
                     this.search();
@@ -412,7 +415,7 @@ export default {
             set(val) {
                 if(val) {
                     Vue.set(this.query, 'ending', (new Date(val)).toISOString());
-                    this.set_query('page', 0);
+                    this.set_query_interactive('page', 0);
                 } else {
                     Vue.delete(this.query, 'ending');
                     this.search();
@@ -436,13 +439,13 @@ export default {
                     Vue.set(this.query, 'longitude', val.longitude);
                     Vue.set(this.query, 'near', val.near);
                     Vue.set(this.query, 'proximity', val.proximity);
-                    this.set_query('page', 0);
+                    this.set_query_interactive('page', 0);
                 } else {
                     Vue.delete(this.query, 'latitude');
                     Vue.delete(this.query, 'longitude');
                     Vue.delete(this.query, 'near');
                     Vue.delete(this.query, 'proximity');
-                    this.set_query('page', 0);
+                    this.set_query_interactive('page', 0);
                 }
             }
         },
@@ -460,7 +463,7 @@ export default {
 
             set(value) {
                 this.query.partner_text = value ? value.name : "";
-                this.set_query('partner', value ? value.uid : undefined);
+                this.set_query_interactive('partner', value ? value.uid : undefined);
             }
         },
 
@@ -479,7 +482,7 @@ export default {
             },
 
             set(values) {
-                this.set_query('descriptors[]', values.map(opt => opt[0]));
+                this.set_query_interactive('descriptors[]', values.map(opt => opt[0]));
             }
         },
 
@@ -494,7 +497,7 @@ export default {
             },
 
             set(values) {
-                this.set_query('topics[]', values.map(opt => opt[0]));
+                this.set_query_interactive('topics[]', values.map(opt => opt[0]));
             }
         },
 
@@ -508,7 +511,7 @@ export default {
             },
 
             set(value) {
-                this.set_query('cost', value, 'any');
+                this.set_query_interactive('cost', value, 'any');
             }
         },
 
@@ -518,7 +521,7 @@ export default {
             },
 
             set(value) {
-                this.set_query('venue_type', value, 'either');
+                this.set_query_interactive('venue_type', value, 'either');
             }
         },
 
@@ -586,10 +589,7 @@ export default {
     watchQuery: true,
 
     mounted() {
-        this.$nextTick(() => {
-            this.$nuxt.$loading.start()
-            setTimeout(() => this.$nuxt.$loading.finish(), 500)
-        });
+        this.initialization = true;
     },
 
     methods: {
@@ -626,15 +626,19 @@ export default {
             }
         },
 
-        // Results should always be ignored
+        // The results param should be ignored
         set_query(name, value, marker, results) {
-            if(value !== marker) {
-                Vue.set(this.query, name, value);
-            } else {
+            if(value === marker) {
                 Vue.delete(this.query, name);
+            } else {
+                Vue.set(this.query, name, value);
             }
+        },
 
-            if(name != 'page') {
+        set_query_interactive(name, value, marker, results) {
+            this.set_query(name, value, marker, results);
+
+            if(!this.initialization && name != 'page') {
                 Vue.set(this.query, 'page', 0);
             }
 
@@ -657,8 +661,14 @@ export default {
         },
 
         search: debounce(function() {
-            if(!this.filtering) {
+            if(process.client && this.initialization) {
+                this.initialization = false;
+            }
+            else if(this.location_valid && !this.filtering) {
+                this.$nuxt.$loading.start();
+                this.$store.commit('set_last_search', this.query);
                 this.$router.push({ name: 'find', query: this.query });
+                this.$nuxt.$loading.finish();
             }
         }, 1000, {trailing: true}),
     }

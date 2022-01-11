@@ -24,6 +24,8 @@ export const state = () => ({
   descriptors: {},
 
   here: {},
+
+  last_search: null,
 });
 
 export const mutations = {
@@ -90,6 +92,10 @@ export const mutations = {
 
   here(state, place) {
     state.here = place;
+  },
+
+  set_last_search(state, search) {
+    state.last_search = JSON.parse(JSON.stringify(search));
   },
 };
 
@@ -168,6 +174,7 @@ export const actions = {
         password,
       });
     } catch (error) {
+      console.warn(error);
       return {
         authenticated: false,
         message: error.response

@@ -55,7 +55,7 @@
         </div>
         </aside>
 
-        <aside :class="{toggled: !menu}" class="menu-box" @click="menu = !menu">
+        <aside :class="{toggled: menu}" class="menu-box" @click="menu = !menu">
           <div v-if="authenticated" class="authenticated">
             <span class="no-mobile" data-context="header-username">{{ username }}</span>
             <ul>
@@ -269,7 +269,7 @@
 
       <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
         <div class="card">
-          <login-form :next="$route.path" @close="show_login=false">
+          <login-form @close="show_login=false">
             <dynamic-block group="login-modal" item="standard" class="content" />
           </login-form>
         </div>
@@ -277,7 +277,7 @@
 
       <b-modal v-model="show_signup" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
         <div class="card">
-          <signup-form :next="$route.path" @close="show_signup=false">
+          <signup-form @close="show_signup=false">
             <dynamic-block group="signup-modal" item="standard" class="content" />
           </signup-form>
         </div>
