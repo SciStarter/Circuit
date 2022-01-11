@@ -72,7 +72,7 @@ export default {
             case 'facebook':
                 return 'https://www.facebook.com/sharer.php?u=' + url;
             case 'linkedin':
-                return 'https://www.linkedin.com/shareArticle?url=' + url + '&title=' + title;
+                return 'https://www.linkedin.com/sharing/share-offsite/?url=' + url;
             default:
                 return 'unknown';
             }

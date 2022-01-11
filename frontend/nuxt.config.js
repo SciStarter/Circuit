@@ -157,6 +157,8 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+    extractCSS: (process.env.NODE_ENV === "development") ? false : true,
+
     babel: {
       plugins: [
         ["@babel/plugin-proposal-private-property-in-object", { loose: true }],
