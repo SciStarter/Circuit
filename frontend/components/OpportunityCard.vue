@@ -29,7 +29,7 @@
         <div class="info location">
           <location-icon />
           <div>
-            <opportunity-location :opportunity="opportunity" :short="true" shortstacked="true" />
+            <opportunity-location :opportunity="opportunity" :short="true" :shortstacked="true" />
             <opportunity-notice :opportunity="opportunity" mode="place" />
           </div>
         </div>

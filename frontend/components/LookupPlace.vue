@@ -45,6 +45,8 @@ import debounce from 'lodash/debounce'
 const MILES = 0.000621371
 
 export default {
+    name: "LookupPlace",
+
     props: {
         value: {
             type: Object,

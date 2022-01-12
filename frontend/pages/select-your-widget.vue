@@ -12,14 +12,12 @@
           <h2>Select Which Type of Widget You'd Like</h2>
           <div>
             <b-field>
-              <b-radio v-model="widgetType"
-                       native-value="project">
+              <b-radio v-model="widgetType" native-value="project">
                 Show one or more science opportunities
               </b-radio>
             </b-field>
             <b-field>
-              <b-radio v-model="widgetType"
-                       native-value="finder">
+              <b-radio v-model="widgetType" native-value="finder">
                 Show the finder to allow people to search science opportunities
               </b-radio>
             </b-field>
@@ -32,14 +30,12 @@
           <div class="radio-selects">
             <h3>Header</h3>
             <b-field>
-              <b-radio v-model="header"
-                       native-value="header">
+              <b-radio v-model="header" native-value="header">
                 With Header
               </b-radio>
             </b-field>
             <b-field>
-              <b-radio v-model="header"
-                       native-value="no-header">
+              <b-radio v-model="header" native-value="no-header">
                 Without a Header
               </b-radio>
             </b-field>
@@ -84,14 +80,12 @@
           <div class="radio-selects">
             <h3>Customization</h3>
             <b-field>
-              <b-radio v-model="customize"
-                       native-value="no">
+              <b-radio v-model="customize" native-value="no">
                 Select from all available opportunities on Science Near Me
               </b-radio>
             </b-field>
             <b-field>
-              <b-radio v-model="customize"
-                       native-value="yes">
+              <b-radio v-model="customize" native-value="yes">
                 Filter and customize opportunities
               </b-radio>
             </b-field>
@@ -107,29 +101,27 @@
               <div class="nested">
                 <h4>Location</h4>
                 <b-field>
-                  <b-radio v-model="filters.location"
-                           native-value="global">
+                  <b-radio v-model="filters.location" native-value="global">
                     Global
                   </b-radio>
                 </b-field>
                 <b-field>
-                  <b-radio v-model="filters.location"
-                           native-value="near">
-                    Within some distance of a location
+                  <b-radio v-model="filters.location" native-value="near">
+                    In the vicinity of a specific place
                   </b-radio>
                 </b-field>
                 <div v-if="filters.location=='near'" class="nested">
                   <b-field>
                     <b-autocomplete
-                      :loading="loading_geo"
-                      :data="matches"
+                      :loading="place_loading"
+                      :data="place_matches"
                       field="near"
-                      :value="sanitized_value.near"
+                      :value="filters.near"
                       :name="'new-' + Math.random()"
                       :clearable="true"
                       placeholder="e.g. Iowa City, IA"
-                      @typing="completions_geo"
-                      @select="select_geo"
+                      @typing="place_completions"
+                      @select="place_select"
                       />
                     Center point for the search
                   </b-field>
@@ -142,21 +134,21 @@
               <div class="nested">
                 <h4>Include Online Only Opportunities</h4>
                 <b-field>
-                  <b-radio v-model="filters.online"
-                           native-value="yes">
+                  <b-radio v-model="filters.online" native-value="yes">
                     Include online only opportunities
                   </b-radio>
                 </b-field>
-                <b-radio v-model="filters.online"
-                         native-value="no">
-                  Do not include online only opportunities
-                </b-radio>
-              </div>
-              <div class="nested">
-                <h4>Activity Type</h4>
                 <b-field>
-                  <b-checkbox v-model="filters.activities">
-                    checkboxes of all activity types here
+                  <b-radio v-model="filters.online" native-value="no">
+                    Do not include online only opportunities
+                  </b-radio>
+                </b-field>
+              </div>
+              <div class="nested check-grid" v-if="descriptors && descriptors.length">
+                <h4>Activity Type</h4>
+                <b-field v-for="desc in descriptors" :key="desc[0]">
+                  <b-checkbox v-model="filters.activities" :native-value="desc[0]">
+                    {{desc[1]}}
                   </b-checkbox>
                 </b-field>
               </div>
@@ -164,17 +156,16 @@
                 <h4>Organization</h4>
                 <p>Limit your results to one partner organization. Begin typing the organization name and select when it displays in the dropdown menu.</p>
 
-                <b>[autocomplete of host orgs here. Allow multiselect. Partner orgs on finder filters.]</b>
-                <!-- <b-autocomplete
-                     v-model="query.partner_text"
-                     :data="suggested_partners"
-                     :name="'new-' + Math.random()"
-                     field="name"
-                     clearable
-                     keep-first
-                     select-on-click-outside
-                     @select="selected_partner = $event"
-                     /> -->
+                <b-autocomplete
+                  v-model="filters.partner_text"
+                  :data="suggested_partners"
+                  :name="'new-' + Math.random()"
+                  field="name"
+                  clearable
+                  keep-first
+                  select-on-click-outside
+                  @select="filters.partner = $event ? $event.uid : ''"
+                  />
               </div>
             </div>
           </div>
@@ -185,14 +176,12 @@
           <div class="radio-selects">
             <h3>Widget Size</h3>
             <b-field>
-              <b-radio v-model="finderSize"
-                       native-value="finder-thin">
+              <b-radio v-model="finderSize" native-value="finder-thin">
                 Thin
               </b-radio>
             </b-field>
             <b-field>
-              <b-radio v-model="finderSize"
-                       native-value="finder-wide">
+              <b-radio v-model="finderSize" native-value="finder-wide">
                 Wide
               </b-radio>
             </b-field>
@@ -213,8 +202,19 @@
 import debounce from 'lodash/debounce'
 
 export default {
+    name: "SelectYourWidget",
+
+    async asyncData(context) {
+        return {
+            partners: (await context.store.dispatch('get_partners')).filter(p => p.name != 'Internal'),
+            descriptors: await context.store.dispatch('get_descriptors'),
+        };
+    },
+
     data() {
         return {
+            place_matches: [],
+            place_loading: false,
             widgetType: 'project',
             header: 'header',
             max:1,
@@ -224,11 +224,14 @@ export default {
             filters: {
                 kid: false,
                 location: 'global',
+                near: '',
                 latitude: 0,
                 longitude: 0,
                 proximity: 0,
                 activities:[],
-                online: 'yes'
+                online: 'yes',
+                partner_text: '',
+                partner: '',
             },
             sizes:{
                 'short-thin':{
@@ -283,19 +286,55 @@ export default {
             }
         }
     },
-    computed:{
+
+    computed: {
+        suggested_partners() {
+            if(!this.filters.partner_text) {
+                return [];
+            }
+            const text = this.filters.partner_text.toLowerCase();
+            return this.partners.filter(p => p.name.toLowerCase().indexOf(text) >= 0);
+        },
+
         proximity_miles: {
             get() {
                 return Math.ceil(this.filters.proximity / 1609.34);
             },
             set(value) {
-                this.filters.proximity = value * 1609.34;
+                this.filters.proximity = Math.floor(value * 1609.34);
             }
         },
 
         URLparams(){
             if (this.widgetType == 'project') {
-                return `widget?layout=${this.projectSize}&style=${this.header}&max=${this.max}`
+                let url = `widget?layout=${this.projectSize}&style=${this.header}&max=${this.max}`;
+
+                if(this.filters.kid) {
+                    url += '&max_age=13';
+                }
+
+                if(this.filters.location == 'near' && (this.filters.longitude || this.filters.latitude)) {
+                    url += '&longitude=' + this.filters.longitude;
+                    url += '&latitude=' + this.filters.latitude;
+                    url += '&proximity=' + this.filters.proximity;
+                }
+
+                for(let slug of this.filters.activities) {
+                    url += '&descriptors[]=' + slug;
+                }
+
+                if(this.filters.online === 'yes') {
+                    url += '&physical=in-person-or-online'
+                }
+                else if(this.filters.online === 'no') {
+                    url += '&physical=in-person';
+                }
+
+                if(this.filters.partner) {
+                    url += '&partner=' + this.filters.partner;
+                }
+
+                return url;
             } else {
                 return `widget?layout=${this.finderSize}`
             }
@@ -320,7 +359,51 @@ export default {
                 return this.sizes[this.finderSize].height
             }
         }
-    }
+    },
+
+    methods: {
+        place_completions: debounce(function (near) {
+            this.place_matches = []
+
+            if (near.length < 3) {
+                return
+            }
+
+            this.place_loading = true;
+
+            this.$axios.$get('https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?f=json&text=' + encodeURIComponent(near))
+                .then(({ suggestions }) => { this.place_matches = suggestions.map(x => x.text); })
+                .catch((error) => { this.place_matches = []; console.error(error) })
+                .finally(() => { this.place_loading = false })
+        }, 500),
+
+        place_select(evt) {
+            if(evt === undefined) {
+                return;
+            }
+
+            if(evt === null || evt === '') {
+                this.filters.near = '';
+                this.filters.longitude = 0;
+                this.filters.latitude = 0
+                this.filters.proximity = 0;
+            }
+
+            this.place_loading = true
+
+            this.$axios.$post('/api/ui/finder/geo', { lookup: 'coords', place: { near: evt, longitude: 0, latitude: 0, proximity: this.filters.proximity }})
+                .then(({ places }) => {
+                    if (places.length > 0) {
+                        this.filters.near = evt;
+                        this.filters.longitude = places[0].longitude;
+                        this.filters.latitude = places[0].latitude;
+                        this.filters.proximity = places[0].proximity;
+                    }
+                })
+                .catch((error) => { console.error(error) })
+                .finally(() => { this.place_loading = false })
+        },
+    },
 }
 </script>
 
@@ -355,6 +438,18 @@ export default {
 
 section {
     margin-bottom:2rem;
+}
+
+.check-grid {
+    display: flex;
+    flex-wrap: wrap;
+
+    > * {
+        width: 12rem;
+    }
+    > h4 {
+        flex: 0 0 100%;
+    }
 }
 
 .nested {

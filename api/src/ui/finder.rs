@@ -207,6 +207,7 @@ struct SearchQuery {
     pub participated: Option<bool>,
     pub reviewing: Option<bool>,
     pub withdrawn: Option<bool>,
+    pub sample: Option<bool>,
 }
 
 pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
@@ -235,6 +236,12 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     query.venue_type = search.venue_type;
     query.host = search.host;
     query.partner = search.partner;
+
+    query.sample = if search.sample.unwrap_or(false) {
+        Some(0.25)
+    } else {
+        None
+    };
 
     if let Some(p) = person {
         if search.saved.unwrap_or(false) {

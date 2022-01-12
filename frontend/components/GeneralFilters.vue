@@ -87,7 +87,7 @@
         </div>
     </div>
     <div class="center-submit-btn">
-      <action-button :loading="working" type="is-primary" principal>
+      <action-button :loading="working" :disabled="!location_valid" type="is-primary" principal>
         Search
       </action-button>
     </div>
@@ -186,6 +186,7 @@ export default {
 
     data() {
         return {
+            working: false,
             location_valid: false,
         };
     },
@@ -308,7 +309,12 @@ export default {
 
     methods: {
         search() {
-            this.$router.push(this.search_url);
+            if(this.widget) {
+                window.open('https://sciencenearme.org' + this.search_url, '_blank');
+            }
+            else {
+                this.$router.push(this.search_url);
+            }
         },
 
         set_valid(valid) {

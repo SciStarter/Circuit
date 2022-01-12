@@ -283,7 +283,6 @@ export default {
         return {
             search_place_edit: null,
             search_text: "",
-            search_place_edit: null,
             search_beginning: new Date().toISOString().slice(0, 10),
             search_ending: null,
             search_online: true,
