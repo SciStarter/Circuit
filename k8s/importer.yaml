@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-importer-beta
-        image: scistarter/circuit-importer:0.1.17
+        image: scistarter/circuit-importer:0.1.18
         env:
         - name: DATABASE_URL
           valueFrom:
@@ -38,3 +38,8 @@ spec:
             secretKeyRef:
               name: opencage
               key: OPENCAGE_API_KEY
+        - name: AIRTABLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: airtable-beta
+              key: AIRTABLE_KEY
