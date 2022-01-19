@@ -55,24 +55,24 @@
 
   <div id="by-topic" class="snm-wrapper">
     <div class="snm-container">
-    <h2>Find &amp; Do Science By Topic</h2>
+    <h2>Find &amp; Do Science By Activity Type</h2>
     <b-dropdown aria-role="list" class="mobile-only">
       <template #trigger="{ active }">
         <b-button
-          label="Select Topic"
+          label="Select Activity Type"
           type="is-info"
           :icon-right="active ? 'menu-up' : 'menu-down'"
           />
       </template>
       <b-dropdown-item v-for="topic in topics" :key="topic[0] + '-mobile'" custom aria-role="listitem">
-        <nuxt-link :to="here_and_now_link + '&topics[]=' + topic[0]">
+        <nuxt-link :to="here_and_now_link + '&descriptors[]=' + topic[0]">
           {{ ampersand(topic[1]) }}
         </nuxt-link>
       </b-dropdown-item>
     </b-dropdown>
     <div class="topics no-mobile">
-      <nuxt-link v-for="topic in topics" :key="topic[0]" :to="here_and_now_link + '&topics[]=' + topic[0]">
-        <component :is="component_name(topic[0]) + '-icon'" />
+      <nuxt-link v-for="topic in topics" :key="topic[0]" :to="here_and_now_link + '&descriptors[]=' + topic[0]">
+        <!-- <component :is="component_name(topic[0]) + '-icon'" /> -->
         <span>{{ ampersand(topic[1]) }}</span>
       </nuxt-link>
     </div>
@@ -257,7 +257,7 @@ export default {
         let now = new Date();
         let beginning = encodeURIComponent(now.toISOString());
 
-        let topics = await context.$axios.$get('/api/ui/finder/topics');
+        let topics = await context.$axios.$get('/api/ui/finder/descriptors');
 
         let intents = [
             {'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&descriptors[]=policy&descriptors[]=forum', 'title': 'Listen, Learn, Discuss, Inform', 'description': 'Participate in live dialogues about current science and society issues', 'image': LearnDiscussImage, 'image2x': LearnDiscussImage2x},
