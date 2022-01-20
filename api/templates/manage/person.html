@@ -29,19 +29,19 @@
           <div class="field">
             <div class="control">
               <label class="checkbox">
-                <input type="checkbox" value="true" name="manage_content"{% if person.check_permission(Permission::ManageContent) %} checked{% endif %}>
+                <input type="checkbox" value="true" name="manage_content"{% if person.check_permission(Permission::ManageContent.as_ref()) %} checked{% endif %}>
                 Manage Content
               </label>
               <label class="checkbox">
-                <input type="checkbox" value="true" name="manage_partners"{% if person.check_permission(Permission::ManagePartners) %} checked{% endif %}>
+                <input type="checkbox" value="true" name="manage_partners"{% if person.check_permission(Permission::ManagePartners.as_ref()) %} checked{% endif %}>
                 Manage Partners
               </label>
               <label class="checkbox">
-                <input type="checkbox" value="true" name="manage_persons"{% if person.check_permission(Permission::ManagePersons) %} checked{% endif %}>
+                <input type="checkbox" value="true" name="manage_persons"{% if person.check_permission(Permission::ManagePersons.as_ref()) %} checked{% endif %}>
                 Manage Persons
               </label>
               <label class="checkbox">
-                <input type="checkbox" value="true" name="manage_opportunitues"{% if person.check_permission(Permission::ManageOpportunities) %} checked{% endif %}>
+                <input type="checkbox" value="true" name="manage_opportunitues"{% if person.check_permission(Permission::ManageOpportunities.as_ref()) %} checked{% endif %}>
                 Manage Opportunities
               </label>
             </div>

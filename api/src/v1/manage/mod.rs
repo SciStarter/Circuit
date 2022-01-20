@@ -443,8 +443,24 @@ async fn person(mut req: tide::Request<Database>) -> tide::Result {
 }
 
 mod filters {
-    pub fn health(ratio: &f32) -> ::askama::Result<String> {
-        let ratio = *ratio;
+    pub trait Value {
+        fn as_f32(&self) -> f32;
+    }
+
+    impl Value for f32 {
+        fn as_f32(&self) -> f32 {
+            *self
+        }
+    }
+
+    impl Value for &f32 {
+        fn as_f32(&self) -> f32 {
+            **self
+        }
+    }
+
+    pub fn health<V: Value>(ratio: V) -> ::askama::Result<String> {
+        let ratio = ratio.as_f32();
         let color = if ratio < 0.5 {
             format!("#FF{:02X}00", (ratio * 512.0) as u8)
         } else {
