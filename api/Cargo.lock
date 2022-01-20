@@ -2356,6 +2356,7 @@ dependencies = [
  "readonly",
  "serde",
  "serde_json",
+ "serde_qs",
  "sha2",
  "shellfish",
  "sodiumoxide",
