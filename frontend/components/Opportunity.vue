@@ -165,7 +165,6 @@
               campaign="opp-page"
               content="find-out-more"
               class="find-out-more round-btn"
-              new-tab
               @before="register_interest"
               >
               <div class="icon">
