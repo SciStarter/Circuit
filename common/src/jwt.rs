@@ -1,7 +1,7 @@
 use ::jwt::SignWithKey;
 use ::jwt::VerifyWithKey;
 use chrono::Utc;
-use hmac::{Hmac, NewMac};
+use hmac::{Hmac, Mac};
 use once_cell::sync::Lazy;
 use sha2::Sha256;
 use uuid::Uuid;

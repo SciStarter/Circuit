@@ -27,6 +27,8 @@ pub enum Error {
     Structure(String),
     #[error("Unable to comprehend data")]
     Comprehension,
+    #[error("{0}")]
+    Misc(String),
 }
 
 #[async_trait]

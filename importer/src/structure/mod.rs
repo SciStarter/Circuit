@@ -3,11 +3,13 @@ use chrono::TimeZone;
 use serde_json::Value;
 use uuid::Uuid;
 
+pub mod atlanta_science_fest;
 pub mod eventsjson;
 pub mod eventsql;
 pub mod neon;
 pub mod night_sky_network;
 
+pub use atlanta_science_fest::AtlantaScienceFest;
 pub use eventsjson::EventsJson;
 pub use eventsql::EventsQL;
 pub use night_sky_network::NightSkyNetwork;

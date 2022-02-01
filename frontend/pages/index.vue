@@ -20,10 +20,10 @@
   <h1>What would you like to do <near-icon class="inline-sign" /> {{ city }}?</h1>
     <sideways-slider>
       <div v-for="intent in intents" :key="intent.title" class="intent-card">
-        <nuxt-link :to="intent.link + (here_and_now_query.longitude ? ('&longitude=' + here_and_now_query.longitude + '&latitude=' + here_and_now_query.latitude) : '')">
+        <nuxt-link :to="intent.link">
           <img :title="intent.title" :src="intent.image" :srcset="intent.image + ' 1x,' + intent.image2x + ' 2x'">
         </nuxt-link>
-        <nuxt-link :to="intent.link + (here_and_now_query.longitude ? ('&longitude=' + here_and_now_query.longitude + '&latitude=' + here_and_now_query.latitude) : '')" class="intent-title">
+        <nuxt-link :to="intent.link" class="intent-title">
           {{ intent.title }}
         </nuxt-link>
         <p>
@@ -55,24 +55,24 @@
 
   <div id="by-topic" class="snm-wrapper">
     <div class="snm-container">
-    <h2>Find &amp; Do Science By Topic</h2>
+    <h2>Find &amp; Do Science By Activity Type</h2>
     <b-dropdown aria-role="list" class="mobile-only">
       <template #trigger="{ active }">
         <b-button
-          label="Select Topic"
+          label="Select Activity Type"
           type="is-info"
           :icon-right="active ? 'menu-up' : 'menu-down'"
           />
       </template>
       <b-dropdown-item v-for="topic in topics" :key="topic[0] + '-mobile'" custom aria-role="listitem">
-        <nuxt-link :to="here_and_now_link + '&topics[]=' + topic[0]">
+        <nuxt-link :to="here_and_now_link + '&descriptors[]=' + topic[0]">
           {{ ampersand(topic[1]) }}
         </nuxt-link>
       </b-dropdown-item>
     </b-dropdown>
     <div class="topics no-mobile">
-      <nuxt-link v-for="topic in topics" :key="topic[0]" :to="here_and_now_link + '&topics[]=' + topic[0]">
-        <component :is="component_name(topic[0]) + '-icon'" />
+      <nuxt-link v-for="topic in topics" :key="topic[0]" :to="here_and_now_link + '&descriptors[]=' + topic[0]">
+        <!-- <component :is="component_name(topic[0]) + '-icon'" /> -->
         <span>{{ ampersand(topic[1]) }}</span>
       </nuxt-link>
     </div>
@@ -257,23 +257,15 @@ export default {
         let now = new Date();
         let beginning = encodeURIComponent(now.toISOString());
 
-        let topics = await context.$axios.$get('/api/ui/finder/topics');
+        let intent_order = [0, 1, 2, 3, 4];
+        Structures.random_order(intent_order);
+        intent_order.push(5);
 
-        let intents = [
-            {'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&descriptors[]=policy&descriptors[]=forum', 'title': 'Listen, Learn, Discuss, Inform', 'description': 'Participate in live dialogues about current science and society issues', 'image': LearnDiscussImage, 'image2x': LearnDiscussImage2x},
-            {'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&descriptors[]=maker&descriptors[]=maker_faire', 'title': 'Create or Build', 'description': 'Be creative and do something hands-on', 'image': CreateBuildImage, 'image2x': CreateBuildImage2x, 'order': Math.floor(Math.random() * 100)},
-            {'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&descriptors[]=star_party', 'title': 'Explore Earth and Space', 'description': 'Feed your curiosity with an expert guide', 'image': ExploreSpaceImage, 'image2x': ExploreSpaceImage2x},
-            {'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&descriptors[]=festival', 'title': 'Celebrate Science', 'description': 'Go to a science festival', 'image': CelebrateScienceImage, 'image2x': CelebrateScienceImage2x},
-            {'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&descriptors[]=citizen_science', 'title': 'Make a Difference', 'description': 'Participate in science or serve your community', 'image': MakeDifferenceImage, 'image2x': MakeDifferenceImage2x},
-        ];
-
-        Structures.random_order(intents);
-
-        intents.push({'link': '/find?physical=in-person-or-online&beginning=' + beginning + '&sort=closest&max_age=13', 'title': 'For Kids', 'description': 'Where kids can explore, learn, and get excited about science', 'image': ForKidsImage, 'image2x': ForKidsImage2x});
+        let topics = await context.$axios.$get('/api/ui/finder/descriptors');
 
         return {
             topics,
-            intents,
+            intent_order,
             here_and_now: [],
         };
     },
@@ -342,6 +334,25 @@ export default {
                 '&longitude=' + data['longitude'] +
                 '&latitude=' + data['latitude'] +
                 '&sort=' + data['sort'];
+        },
+
+        intents() {
+            let intents = [
+                {'link': this.here_and_now_link + '&physical=in-person-or-online&text=forum', 'title': 'Listen, Learn, Discuss, Inform', 'description': 'Participate in live dialogues about current science and society issues', 'image': LearnDiscussImage, 'image2x': LearnDiscussImage2x},
+                {'link': this.here_and_now_link + '&physical=in-person-or-online&text=maker', 'title': 'Create or Build', 'description': 'Be creative and do something hands-on', 'image': CreateBuildImage, 'image2x': CreateBuildImage2x, 'order': Math.floor(Math.random() * 100)},
+                {'link': this.here_and_now_link + '&physical=in-person-or-online&descriptors[]=star_party', 'title': 'Explore Earth and Space', 'description': 'Feed your curiosity with an expert guide', 'image': ExploreSpaceImage, 'image2x': ExploreSpaceImage2x},
+                {'link': this.here_and_now_link + '&physical=in-person-or-online&text=festival', 'title': 'Celebrate Science', 'description': 'Go to a science festival', 'image': CelebrateScienceImage, 'image2x': CelebrateScienceImage2x},
+                {'link': this.here_and_now_link + '&physical=in-person-or-online&descriptors[]=citizen_science', 'title': 'Make a Difference', 'description': 'Participate in science or serve your community', 'image': MakeDifferenceImage, 'image2x': MakeDifferenceImage2x},
+                {'link': this.here_and_now_link + '&physical=in-person-or-online&max_age=13', 'title': 'For Kids', 'description': 'Where kids can explore, learn, and get excited about science', 'image': ForKidsImage, 'image2x': ForKidsImage2x}
+            ];
+
+            let ret = [];
+
+            for(let idx of this.intent_order) {
+                ret.push(intents[idx]);
+            };
+
+            return ret;
         },
 
         username() {

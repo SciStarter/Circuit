@@ -15,6 +15,13 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     let hours = Duration::new(60 * 60, 0);
 
     importers.push(Box::new(Import {
+        source: source::Airtable::new("appytM7ldnmIDcbRV", ["Events"]),
+        format: format::Json,
+        structure: structure::AtlantaScienceFest::<2022>,
+        period: 24 * hours,
+    }));
+
+    importers.push(Box::new(Import {
         source: source::HttpGet::new("https://nightsky.jpl.nasa.gov/js/data/events_json_api.cfm"),
         format: format::Json,
         structure: structure::NightSkyNetwork,

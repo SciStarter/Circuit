@@ -31,9 +31,9 @@
       </action-button>
     </div>
     <b-field v-if="searchButton">
-      <b-checkbox v-model="include_online_proxy">
-        Include Online Opportunities
-      </b-checkbox>
+      <!-- <b-checkbox v-model="include_online_proxy"> -->
+      <!--   Include Online Opportunities -->
+      <!-- </b-checkbox> -->
     </b-field>
   </form>
   </div>

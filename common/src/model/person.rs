@@ -252,6 +252,12 @@ pub enum Permission {
     ManageSomething,
 }
 
+impl AsRef<Permission> for Permission {
+    fn as_ref(&self) -> &Permission {
+        self
+    }
+}
+
 impl Permission {
     pub fn grants(grantor: &Permission, grantee: &Permission) -> bool {
         if grantor == grantee {

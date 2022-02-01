@@ -680,7 +680,7 @@ impl Default for OpportunityQueryPhysical {
     }
 }
 
-#[derive(Deserialize, Debug, Copy, Clone)]
+#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum OpportunityQueryOrdering {
     Alphabetical,
@@ -992,45 +992,54 @@ fn build_matching_query(
         match physical {
             OpportunityQueryPhysical::InPersonOrOnline => {}
             OpportunityQueryPhysical::InPerson => {
+                // clauses.push(format!(
+                //     "(${}::jsonb) @> (exterior -> 'is_online')",
+                //     ParamValue::Bool(false).append(&mut params)
+                // ));
+
+                // The area constant is ten thousand square miles in square meters
                 clauses.push(format!(
-                    "(${}::jsonb) @> (exterior -> 'is_online')",
+                    "(((${}::jsonb) @> (exterior -> 'is_online')) AND (location_polygon IS NULL OR ST_Area(location_polygon, false) <= 25899752356) AND (exterior ->> 'location_type' NOT IN ('any', 'unknown')))",
                     ParamValue::Bool(false).append(&mut params)
                 ));
             }
             OpportunityQueryPhysical::Online => {
-                clauses.push(format!(
-                    "(${}::jsonb) @> (exterior -> 'is_online')",
-                    ParamValue::Bool(true).append(&mut params)
-                ));
+                // clauses.push(format!(
+                //     "(${}::jsonb) @> (exterior -> 'is_online')",
+                //     ParamValue::Bool(true).append(&mut params)
+                // ));
+
+                // The area constant is ten thousand square miles in square meters
+                clauses.push(format!("(((${}::jsonb) @> (exterior -> 'is_online')) OR (location_polygon IS NOT NULL AND ST_Area(location_polygon, false) > 25899752356))", ParamValue::Bool(true).append(&mut params)));
             }
         }
     }
 
-    let point = if let Some((longitude, latitude, proximity)) = &query.near {
-        let lon_param = ParamValue::RawFloat(*longitude).append(&mut params);
-        let lat_param = ParamValue::RawFloat(*latitude).append(&mut params);
-        let prox_param = ParamValue::RawFloat(*proximity).append(&mut params);
+    //     let point = if let Some((longitude, latitude, proximity)) = &query.near {
+    //         let lon_param = ParamValue::RawFloat(*longitude).append(&mut params);
+    //         let lat_param = ParamValue::RawFloat(*latitude).append(&mut params);
+    //         let prox_param = ParamValue::RawFloat(*proximity).append(&mut params);
 
-        clauses.push(format!(
-            r#"(
-  (exterior ->> 'location_type') = 'any'
-  OR
-  CASE WHEN location_polygon IS NOT NULL
-    THEN ST_Intersects(ST_Buffer(ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, ${}), location_polygon)
-    ELSE false END
-  OR
-  CASE WHEN location_point IS NOT NULL
-    THEN ST_Distance(ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, location_point, false) < ${}
-    ELSE false END
-)"#,
-            lon_param, lat_param, prox_param,
-            lon_param, lat_param, prox_param
-        ));
+    //         clauses.push(format!(
+    //             r#"(
+    //   (exterior ->> 'location_type') = 'any'
+    //   OR
+    //   CASE WHEN location_polygon IS NOT NULL
+    //     THEN ST_Intersects(ST_Buffer(ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, ${}), location_polygon)
+    //     ELSE false END
+    //   OR
+    //   CASE WHEN location_point IS NOT NULL
+    //     THEN ST_Distance(ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, location_point, false) < ${}
+    //     ELSE false END
+    // )"#,
+    //             lon_param, lat_param, prox_param,
+    //             lon_param, lat_param, prox_param
+    //         ));
 
-        Some((lon_param, lat_param))
-    } else {
-        None
-    };
+    //         Some((lon_param, lat_param))
+    //     } else {
+    //         None
+    //     };
 
     if let Some(probability) = query.sample {
         clauses.push(format!(
@@ -1057,22 +1066,50 @@ fn build_matching_query(
     query_string.push_str(" FROM (SELECT *");
 
     let mut calc_sort = || {
-        query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' THEN 1 WHEN location_polygon IS NOT NULL THEN 0 WHEN location_point IS NOT NULL THEN 0 ELSE 99 END AS _sort_location_priority");
+        if let Some((longitude, latitude, proximity)) = &query.near {
+            let lon_param = ParamValue::RawFloat(*longitude).append(&mut params);
+            let lat_param = ParamValue::RawFloat(*latitude).append(&mut params);
+            let prox_param = ParamValue::RawFloat(*proximity).append(&mut params);
 
-        if let Some((lon_param, lat_param)) = point {
+            query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' OR exterior ->> 'is_online' = 'true' THEN 2 ELSE 1 END AS _sort_location_priority");
+
+            query_string.push_str(", CASE");
+
+            query_string.push_str(&format!(" WHEN exterior ->> 'location_type' = 'any' OR exterior ->> 'is_online' = 'true' THEN ${prox_param}"));
+
             query_string.push_str(
-                &format!(", CASE WHEN location_polygon IS NOT NULL THEN ST_Distance(location_polygon, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)", lon_param, lat_param)
+                &format!(" WHEN location_polygon IS NOT NULL THEN ST_Distance(location_polygon, ST_SetSRID(ST_Point(${lon_param}, ${lat_param}), 4326)::geography, false)")
             );
 
             query_string
-                .push_str(&format!(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)",
-                                   lon_param, lat_param));
+                .push_str(&format!(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${lon_param}, ${lat_param}), 4326)::geography, false)"));
 
-            // This constant number is roughly the square root of the surface area of the earth, in meters
+            // This constant number is roughly the square root of the surface area of the earth, in meters, i.e. about as far away as you can get
             query_string.push_str(" ELSE 22585394 END AS _sort_distance");
+
+            if let Some(OpportunityQueryPhysical::InPerson) = query.physical {
+                clauses.push(format!("(_sort_distance < 1.1 * ${prox_param})"));
+            }
         } else {
-            query_string.push_str(", 22585394 AS _sort_distance");
+            query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' OR exterior ->> 'is_online' = 'true' THEN 0 ELSE 1 END AS _sort_location_priority");
+            query_string.push_str(", 1 AS _sort_distance");
         }
+        // query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' THEN 1 WHEN location_polygon IS NOT NULL THEN 0 WHEN location_point IS NOT NULL THEN 0 ELSE 99 END AS _sort_location_priority");
+
+        // if let Some((lon_param, lat_param)) = point {
+        //     query_string.push_str(
+        //         &format!(", CASE WHEN location_polygon IS NOT NULL THEN ST_Distance(location_polygon, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)", lon_param, lat_param)
+        //     );
+
+        //     query_string
+        //         .push_str(&format!(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, false)",
+        //                            lon_param, lat_param));
+
+        //     // This constant number is roughly the square root of the surface area of the earth, in meters
+        //     query_string.push_str(" ELSE 22585394 END AS _sort_distance");
+        // } else {
+        //     query_string.push_str(", 22585394 AS _sort_distance");
+        // }
 
         query_string.push_str(", CASE WHEN location_polygon IS NOT NULL THEN ST_Area(location_polygon, false) ELSE 0 END AS _sort_area");
 
@@ -1120,11 +1157,13 @@ fn build_matching_query(
         }
         OpportunityQueryOrdering::Closest => {
             query_string.push_str(
-                " ORDER BY _sort_location_priority ASC, _sort_distance ASC, _sort_area ASC, _sort_time ASC",
+                " ORDER BY _sort_location_priority ASC, _sort_distance + sqrt(_sort_area) ASC, _sort_time ASC",
             );
         }
         OpportunityQueryOrdering::Soonest => {
-            query_string.push_str(" ORDER BY _sort_time ASC, _sort_distance ASC, _sort_area ASC")
+            query_string.push_str(
+                " ORDER BY _sort_location_priority ASC, _sort_time ASC, _sort_distance + sqrt(_sort_area) ASC",
+            );
         }
         OpportunityQueryOrdering::Native => query_string.push_str(" ORDER BY id ASC"),
         OpportunityQueryOrdering::Any => {}

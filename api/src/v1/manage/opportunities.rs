@@ -1,8 +1,10 @@
 use askama::Template;
+use chrono::{DateTime, FixedOffset};
 use common::{
     model::{
         opportunity::{
-            EntityType, OpportunityQuery, OpportunityQueryOrdering, PageLayout, PageOptions,
+            Cost, Descriptor, Domain, EntityType, LocationType, OpportunityQuery,
+            OpportunityQueryOrdering, OrganizationType, PageLayout, PageOptions, Topic, VenueType,
         },
         partner::PartnerReference,
         person::Permission,
@@ -109,16 +111,51 @@ mod filters {
 struct OpportunityPage {
     message: String,
     opportunity: Opportunity,
+    all_partners: Vec<PartnerReference>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default, Debug)]
+#[serde(default)]
 struct OpportunityForm {
     title: String,
     slug: String,
     entity_type: String,
+    partner: Option<Uuid>,
     partner_name: String,
+    partner_website: Option<String>,
+    partner_logo_url: Option<String>,
     partner_opp_url: String,
+    organization_name: Option<String>,
+    organization_type: Option<OrganizationType>,
+    organization_website: Option<String>,
+    organization_logo_url: Option<String>,
+    opp_venue: Option<Vec<VenueType>>,
+    opp_descriptor: Option<Vec<Descriptor>>,
+    min_age: Option<i16>,
+    max_age: Option<i16>,
+    pes_domain: Option<Domain>,
     tags: String,
+    opp_topics: Option<Vec<Topic>>,
+    ticket_required: Option<bool>,
+    description: Option<String>,
+    short_desc: Option<String>,
+    image_url: Option<String>,
+    image_credit: Option<String>,
+    start_datetimes: Option<Vec<Option<DateTime<FixedOffset>>>>,
+    end_datetimes: Option<Vec<Option<DateTime<FixedOffset>>>>,
+    cost: Option<Cost>,
+    languages: Option<String>,
+    opp_hashtags: Option<String>,
+    is_online: Option<bool>,
+    location_type: Option<LocationType>,
+    address_street: Option<String>,
+    address_city: Option<String>,
+    address_state: Option<String>,
+    address_country: Option<String>,
+    address_zip: Option<String>,
+    contact_name: Option<String>,
+    contact_email: Option<String>,
+    contact_phone: Option<String>,
     accepted: Option<String>,
     withdrawn: Option<String>,
 }
@@ -127,6 +164,8 @@ impl OpportunityForm {
     fn apply(self, opportunity: &mut Opportunity) -> Result<(), tide::Error> {
         opportunity.interior.accepted = Some(self.accepted.is_some());
         opportunity.interior.withdrawn = self.withdrawn.is_some();
+
+        opportunity.exterior.partner = self.partner.unwrap_or_else(|| INTERNAL_UID.clone());
 
         opportunity.exterior.entity_type = match self.entity_type.as_ref() {
             "attraction" => EntityType::Attraction,
@@ -137,13 +176,68 @@ impl OpportunityForm {
             _ => EntityType::Opportunity,
         };
 
+        opportunity.exterior.languages = self
+            .languages
+            .unwrap_or_default()
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect();
+
+        opportunity.exterior.opp_hashtags = self
+            .opp_hashtags
+            .unwrap_or_default()
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .collect();
+
+        opportunity.exterior.start_datetimes = self
+            .start_datetimes
+            .unwrap_or_default()
+            .into_iter()
+            .flatten()
+            .collect();
+
+        opportunity.exterior.end_datetimes = self
+            .end_datetimes
+            .unwrap_or_default()
+            .into_iter()
+            .flatten()
+            .collect();
+
         opportunity.exterior.title = self.title;
         opportunity.exterior.slug = self.slug;
         opportunity.exterior.partner_name = self.partner_name;
         opportunity.exterior.partner_opp_url = self.partner_opp_url;
+        opportunity.exterior.partner_website = self.partner_website;
+        opportunity.exterior.partner_logo_url = self.partner_logo_url;
+        opportunity.exterior.organization_name = self.organization_name.unwrap_or_default();
+        opportunity.exterior.organization_type = self.organization_type.unwrap_or_default();
+        opportunity.exterior.organization_website = self.organization_website;
+        opportunity.exterior.organization_logo_url = self.organization_logo_url;
+        opportunity.exterior.opp_venue = self.opp_venue.unwrap_or_default();
+        opportunity.exterior.opp_descriptor = self.opp_descriptor.unwrap_or_default();
+        opportunity.exterior.min_age = self.min_age.unwrap_or(0);
+        opportunity.exterior.max_age = self.max_age.unwrap_or(999);
+        opportunity.exterior.pes_domain = self.pes_domain.unwrap_or_default();
         opportunity.exterior.tags = self.tags.split(',').map(|s| s.trim().to_string()).collect();
+        opportunity.exterior.opp_topics = self.opp_topics.unwrap_or_default();
+        opportunity.exterior.ticket_required = self.ticket_required.unwrap_or(false);
+        opportunity.exterior.description = self.description.unwrap_or_default();
+        opportunity.exterior.short_desc = self.short_desc.unwrap_or_default();
+        opportunity.exterior.image_url = self.image_url.unwrap_or_default();
+        opportunity.exterior.image_credit = self.image_credit.unwrap_or_default();
+        opportunity.exterior.cost = self.cost.unwrap_or_default();
+        opportunity.exterior.is_online = self.is_online.unwrap_or(false);
+        opportunity.exterior.location_type = self.location_type.unwrap_or_default();
+        opportunity.exterior.address_street = self.address_street.unwrap_or_default();
+        opportunity.exterior.address_city = self.address_city.unwrap_or_default();
+        opportunity.exterior.address_state = self.address_state.unwrap_or_default();
+        opportunity.exterior.address_country = self.address_country.unwrap_or_default();
+        opportunity.exterior.address_zip = self.address_zip.unwrap_or_default();
 
-        // !!! TODO this is incomplete
+        opportunity.interior.contact_name = self.contact_name.unwrap_or_default();
+        opportunity.interior.contact_email = self.contact_email.unwrap_or_default();
+        opportunity.interior.contact_phone = self.contact_phone.unwrap_or_default();
 
         Ok(())
     }
@@ -162,7 +256,8 @@ async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
     };
 
     if let Method::Post = req.method() {
-        let form: OpportunityForm = req.body_form().await?;
+        let qs = serde_qs::Config::new(5, false);
+        let form: OpportunityForm = dbg!(qs.deserialize_str(&dbg!(req.body_string().await?))?);
 
         form.apply(&mut opportunity)?;
 
@@ -171,6 +266,7 @@ async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
         if let Err(err) = opportunity.store(db).await {
             return Ok(OpportunityPage {
                 message: err.to_string(),
+                all_partners: Partner::catalog(db).await?,
                 opportunity,
             }
             .into());
@@ -179,8 +275,11 @@ async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
         return Ok(redirect(req.url().path()));
     }
 
+    let db = req.state();
+
     let form = OpportunityPage {
         message: String::new(),
+        all_partners: Partner::catalog(db).await?,
         opportunity,
     };
 
@@ -202,7 +301,6 @@ async fn add_opportunity(mut req: tide::Request<Database>) -> tide::Result {
     }
 
     let mut opportunity = Opportunity::default();
-    opportunity.exterior.partner = INTERNAL_UID.clone();
 
     form.apply(&mut opportunity)?;
 

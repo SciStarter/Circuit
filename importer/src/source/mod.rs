@@ -1,11 +1,13 @@
 use crate::Error;
 use bytes::Bytes;
 
+pub mod airtable;
 pub mod eventsql;
 pub mod eventsql_custom;
 pub mod http;
 pub mod neoncrm;
 
+pub use airtable::Airtable;
 pub use eventsql::EventsQL;
 pub use eventsql_custom::EventsQLWithCustom;
 pub use http::HttpGet;
