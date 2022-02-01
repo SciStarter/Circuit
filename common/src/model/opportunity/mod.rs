@@ -680,7 +680,7 @@ impl Default for OpportunityQueryPhysical {
     }
 }
 
-#[derive(Deserialize, Debug, Copy, Clone)]
+#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum OpportunityQueryOrdering {
     Alphabetical,
@@ -992,16 +992,25 @@ fn build_matching_query(
         match physical {
             OpportunityQueryPhysical::InPersonOrOnline => {}
             OpportunityQueryPhysical::InPerson => {
+                // clauses.push(format!(
+                //     "(${}::jsonb) @> (exterior -> 'is_online')",
+                //     ParamValue::Bool(false).append(&mut params)
+                // ));
+
+                // The area constant is ten thousand square miles in square meters
                 clauses.push(format!(
-                    "(${}::jsonb) @> (exterior -> 'is_online')",
+                    "(((${}::jsonb) @> (exterior -> 'is_online')) AND (location_polygon IS NULL OR ST_Area(location_polygon, false) <= 25899752356) AND (exterior ->> 'location_type' NOT IN ('any', 'unknown')))",
                     ParamValue::Bool(false).append(&mut params)
                 ));
             }
             OpportunityQueryPhysical::Online => {
-                clauses.push(format!(
-                    "(${}::jsonb) @> (exterior -> 'is_online')",
-                    ParamValue::Bool(true).append(&mut params)
-                ));
+                // clauses.push(format!(
+                //     "(${}::jsonb) @> (exterior -> 'is_online')",
+                //     ParamValue::Bool(true).append(&mut params)
+                // ));
+
+                // The area constant is ten thousand square miles in square meters
+                clauses.push(format!("(((${}::jsonb) @> (exterior -> 'is_online')) OR (location_polygon IS NOT NULL AND ST_Area(location_polygon, false) > 25899752356))", ParamValue::Bool(true).append(&mut params)));
             }
         }
     }
@@ -1062,7 +1071,7 @@ fn build_matching_query(
             let lat_param = ParamValue::RawFloat(*latitude).append(&mut params);
             let prox_param = ParamValue::RawFloat(*proximity).append(&mut params);
 
-            query_string.push_str(", 1 AS _sort_location_priority");
+            query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' OR exterior ->> 'is_online' = 'true' THEN 2 ELSE 1 END AS _sort_location_priority");
 
             query_string.push_str(", CASE");
 
@@ -1075,7 +1084,12 @@ fn build_matching_query(
             query_string
                 .push_str(&format!(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${lon_param}, ${lat_param}), 4326)::geography, false)"));
 
-            query_string.push_str(" END AS _sort_distance");
+            // This constant number is roughly the square root of the surface area of the earth, in meters, i.e. about as far away as you can get
+            query_string.push_str(" ELSE 22585394 END AS _sort_distance");
+
+            if let Some(OpportunityQueryPhysical::InPerson) = query.physical {
+                clauses.push(format!("(_sort_distance < 1.1 * ${prox_param})"));
+            }
         } else {
             query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' OR exterior ->> 'is_online' = 'true' THEN 0 ELSE 1 END AS _sort_location_priority");
             query_string.push_str(", 1 AS _sort_distance");
@@ -1143,12 +1157,12 @@ fn build_matching_query(
         }
         OpportunityQueryOrdering::Closest => {
             query_string.push_str(
-                " ORDER BY _sort_location_priority ASC, _sort_distance ASC, _sort_time ASC, _sort_area ASC, _sort_time ASC",
+                " ORDER BY _sort_location_priority ASC, _sort_distance + sqrt(_sort_area) ASC, _sort_time ASC",
             );
         }
         OpportunityQueryOrdering::Soonest => {
             query_string.push_str(
-                " ORDER BY _sort_location_priority ASC, _sort_time ASC, _sort_distance ASC, _sort_area ASC, _sort_time ASC",
+                " ORDER BY _sort_location_priority ASC, _sort_time ASC, _sort_distance + sqrt(_sort_area) ASC",
             );
         }
         OpportunityQueryOrdering::Native => query_string.push_str(" ORDER BY id ASC"),

@@ -29,15 +29,22 @@
 
 
   <div id="filters-ordering">
+    <b-tooltip multilined>
+      <b-icon icon="help-circle" />
+      <template v-slot:content>
+        <p><Strong>In-Person:</strong> probably has face-to-face interactions, possibly some travel</p>
+        <p><strong>On-Demand:</strong> probably done independently at your leisure, possibly over the internet</p>
+      </template>
+    </b-tooltip>
     <b-field id="filter-physical">
       <b-radio-button v-model="query.physical" native-value="in-person-or-online" data-context="find-sort-in-person-or-online" @input="set_query_interactive('page', 0)">
-        <span class="radio-label">In-Person<br> &amp;&nbsp;Online</span>
+        <span class="radio-label">Everything</span>
       </b-radio-button>
       <b-radio-button v-model="query.physical" native-value="in-person" data-context="find-sort-in-person" @input="set_query_interactive('page', 0)">
-        <span class="radio-label">In-Person<br> Only</span>
+        <span class="radio-label">In-Person</span>
       </b-radio-button>
       <b-radio-button v-model="query.physical" native-value="online" data-context="find-sort-online" @input="set_query_interactive('page', 0)">
-        <span class="radio-label">Online Only</span>
+        <span class="radio-label">On-Demand</span>
       </b-radio-button>
     </b-field>
     <mini-select id="filter-sort" v-model="query.sort" label="Sort:" data-context="find-sort-order" @input="set_query_interactive('page', 0)">
