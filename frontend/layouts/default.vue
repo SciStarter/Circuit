@@ -283,15 +283,6 @@
         </div>
       </b-modal>
 
-      <b-modal v-model="show_location_cue" aria-role="dialog" aria-label="Location Services Necessary" aria-modal class="mobile-only">
-        <div class="card location_cue">
-          <img src="~assets/img/logo.svg?data">
-          <h1>Turn Location Services On</h1>
-          <p>Science Near Me works best when you allow us to find your location to suggest the best science opportunities near you. You seem to have location services disabled and will have to enable for us to present local activities to you.</p>
-          <p><b>On an iPhone:</b> Go to Settings > Privacy > Location Services and move the switch next to Location Services to the On position.</p>
-          <p><b>On an Android:</b> Tap Settings > Location and move the slider to On.</p>
-        </div>
-      </b-modal>
 
     </div>
 </template>
@@ -348,6 +339,7 @@ export default {
             show_person_dropdown: false,
             show_cookie: false,
             show_location_cue: true,
+            show_location_modal: false,
 
             query: {
                 keywords: '',
@@ -1355,27 +1347,6 @@ footer {
   }
 }
 
-.location_cue {
-  h1 {
-    text-align:center;
-    font-weight:bold;
-    border-bottom: 1px solid $snm-color-border;
-    padding-bottom:8px;
-    margin-bottom:8px;
-    margin-top:10px;
-    text-transform: uppercase;
-  }
-
-  img {
-    margin:0 auto;
-    display: block;
-    width:90px;
-  }
-  p {
-    margin-bottom: 8px;
-    font-size:14px;
-  }
-}
 
 </style>
 

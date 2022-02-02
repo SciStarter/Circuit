@@ -18,6 +18,7 @@
   <div id="intent-filters" class="snm-wrapper">
   <div class="snm-container">
   <h1>What would you like to do <near-icon class="inline-sign" /> {{ city }}?</h1>
+  <span v-if="show_location_cue" class="location-necessary mobile-only">Location Services Necessary <a @click="show_location_modal = true">(learn more)</a></span>
     <sideways-slider>
       <div v-for="intent in intents" :key="intent.title" class="intent-card">
         <nuxt-link :to="intent.link">
@@ -124,6 +125,17 @@
     </action-button>
   </div>
 </div>
+
+<b-modal v-model="show_location_modal" aria-role="dialog" aria-label="Location Services Necessary" aria-modal class="mobile-only">
+  <div class="card location_cue">
+    <img src="~assets/img/logo.svg?data">
+    <h1>Turn Location Services On</h1>
+    <p>Science Near Me works best when you allow us to find your location to suggest the best science opportunities near you. So we may present local opportunities to you, please enable location services.</p>
+    <p><b>On an iPhone:</b> Go to Settings > Privacy > Location Services and move the switch next to Location Services to the On position.</p>
+    <p><b>On an Android:</b> Tap Settings > Location and move the slider to On.</p>
+  </div>
+</b-modal>
+
 </section>
 </template>
 
@@ -280,6 +292,8 @@ export default {
             show_login: false,
             show_signup: false,
             load_here_and_now: false,
+            show_location_cue: true,
+            show_location_modal: false
         };
     },
 
@@ -838,5 +852,33 @@ export default {
     .no-tablet {
       display: block;
     }
+}
+
+.location_cue {
+  h1 {
+    text-align:center;
+    font-weight:bold;
+    border-bottom: 1px solid $snm-color-border;
+    padding-bottom:8px;
+    margin-bottom:8px;
+    margin-top:10px;
+    text-transform: uppercase;
+  }
+
+  img {
+    margin:0 auto;
+    display: block;
+    width:90px;
+  }
+  p {
+    margin-bottom: 8px;
+    font-size:14px;
+  }
+}
+.location-necessary {
+  margin:0 1rem;
+  display: block;
+  font-size:14px;
+  font-style:italic;
 }
 </style>
