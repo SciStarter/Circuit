@@ -131,13 +131,22 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
     let snm_key = KeyPair::from_env("SNM_PAIR")?;
     let scistarter_key = KeyPair::from_env("SCI_PUB")?;
 
-    let sealed: Sealed = surf::post("https://scistarter.org/api/login-for-snm")
+    let response = surf::post("https://scistarter.org/api/login-for-snm")
         .content_type("application/json")
         .body(serde_json::to_string(
             &snm_key.seal(&form, &scistarter_key)?,
         )?)
         .recv_json()
-        .await?;
+        .await;
+
+    let sealed: Sealed = match response {
+        Ok(sealed) => sealed,
+        Err(_) => {
+            return Ok(tide::Response::builder(StatusCode::Forbidden)
+                .body("Incorrect SciStarter email or password")
+                .build());
+        }
+    };
 
     match snm_key.open::<SciStarterPerson>(sealed, Some(&scistarter_key)) {
         Ok(ssp) => {
