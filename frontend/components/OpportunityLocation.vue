@@ -8,7 +8,7 @@
       <template v-if="shortstacked"><template v-if="opportunity.location_name">{{ opportunity.location_name }}, </template>{{ opportunity.address_state }}</template>
       <template v-else>{{ opportunity.location_name }} {{ opportunity.address_state }}</template>
     </span>
-    <span v-else-if="(opportunity.address_city || opportunity.address_state) && !short">
+    <span v-else-if="(opportunity.address_city || opportunity.address_state)">
       <template v-if="opportunity.address_city">{{ opportunity.address_city }}, </template>{{ opportunity.address_state }}
     </span>
     <em v-else>This opportunity is near your search location</em>
