@@ -1,17 +1,17 @@
 <template>
 <div class="opportunity-location">
   <p v-if="!isOpportunity && opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
-    <em>See map on opportunity page</em>
+    <em>This wide-area opportunity is available in your search location</em>
   </p>
   <p v-else-if="!isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
     <span v-if="opportunity.location_name">
-      <template v-if="shortstacked">{{ opportunity.location_name }}, {{ opportunity.address_state }}</template>
+      <template v-if="shortstacked"><template v-if="opportunity.location_name">{{ opportunity.location_name }}, </template>{{ opportunity.address_state }}</template>
       <template v-else>{{ opportunity.location_name }} {{ opportunity.address_state }}</template>
     </span>
     <span v-else-if="(opportunity.address_city || opportunity.address_state) && !short">
-      {{ opportunity.address_city }}, {{ opportunity.address_state }}
+      <template v-if="opportunity.address_city">{{ opportunity.address_city }}, </template>{{ opportunity.address_state }}
     </span>
-    <em v-else>See map on opportunity page</em>
+    <em v-else>This opportunity is near your search location</em>
   </p>
   <p v-else-if="isOpportunity && opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
     In a specific area
