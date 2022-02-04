@@ -338,7 +338,6 @@ export default {
             show_signup: false,
             show_person_dropdown: false,
             show_cookie: false,
-            show_location_cue: true,
             show_location_modal: false,
 
             query: {
@@ -449,6 +448,10 @@ export default {
         username() {
             return this.$store.state.user.username;
         },
+
+        show_location_cue() {
+            return !(this.query.place.latitude || this.query.place.longitude);
+        }
     },
 
     async mounted() {

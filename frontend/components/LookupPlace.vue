@@ -11,7 +11,7 @@
       placeholder="e.g. Iowa City, IA"
       @typing="completions"
       @select="select"
-      @input="$emit('valid', false)"
+      @input="check_valid"
       />
   </b-field>
   <b-field label="Distance" :label-position="labelPosition" class="distance">
@@ -110,7 +110,9 @@ export default {
                     patch.near = ''
                 }
 
-                return Object.assign({}, this.value, patch)
+                const ret = Object.assign({}, this.value, patch);
+
+                return ret
             },
 
             set(val) {
@@ -137,27 +139,10 @@ export default {
         }
     },
 
-    mounted () {
-        if (this.value && this.value.near === '') {
-            if (this.value.longitude !== 0 || this.value.latitude !== 0) {
-                this.complete_near()
-            } else if (this.$geolocation.checkSupport()) {
-                this.num_loading += 1
-
-                this.$geolocation.getCurrentPosition()
-                    .then(({ coords: { latitude, longitude } }) => {
-                        this.change({ longitude, latitude })
-                        this.$nextTick(() => { this.complete_near() })
-                    })
-                    .finally(() => { this.num_loading -= 1 })
-            }
-        }
-
-        this.change(this.sanitized_value)
-    },
-
     methods: {
         completions: debounce(function (near) {
+            this.$emit('valid', false);
+
             this.matches = []
 
             if (near.length < 3) {
@@ -171,19 +156,6 @@ export default {
                 .catch((error) => { this.matches = []; console.error(error) })
                 .finally(() => { this.num_loading -= 1 })
         }, 500),
-
-        complete_near() {
-            this.num_loading += 1
-
-            this.$axios.$post('/api/ui/finder/geo', { lookup: 'near', place: this.value })
-                .then(({ places }) => {
-                    if (places.length > 0) {
-                        this.change({ near: places[0].near });
-                    }
-                })
-                .catch((error) => { console.error(error) })
-                .finally(() => { this.num_loading -= 1 })
-        },
 
         select(evt) {
             if(evt === undefined) {
@@ -215,7 +187,19 @@ export default {
 
             this.sanitized_value = Object.assign({}, this.sanitized_value, delta);
 
-            this.$emit('valid', !this.sanitized_value.near || !!this.sanitized_value.latitude || !!this.sanitized_value.longitude);
+            this.check_valid()
+        },
+
+        check_valid(val) {
+            if(val === undefined) {
+                val = this.sanitized_value;
+            }
+
+            const valid = !val.near || !!val.latitude || !!val.longitude;
+
+            this.$emit('valid', valid);
+
+            return valid;
         }
     }
 }

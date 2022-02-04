@@ -16,27 +16,28 @@
     />
 
   <div id="intent-filters" class="snm-wrapper">
-  <div class="snm-container">
-  <h1>What would you like to do <near-icon class="inline-sign" /> {{ city }}?</h1>
-  <span v-if="show_location_cue" class="location-necessary mobile-only">Location Services Necessary <a @click="show_location_modal = true">(learn more)</a></span>
-    <sideways-slider>
-      <div v-for="intent in intents" :key="intent.title" class="intent-card">
-        <nuxt-link :to="intent.link">
-          <img :title="intent.title" :src="intent.image" :srcset="intent.image + ' 1x,' + intent.image2x + ' 2x'">
-        </nuxt-link>
-        <nuxt-link :to="intent.link" class="intent-title">
-          {{ intent.title }}
-        </nuxt-link>
-        <p>
-          {{ intent.description }}
-        </p>
-      </div>
-    </sideways-slider>
-    <atom-icon id="hydrogen" />
-    <atom-icon id="helium" />
-</div>
-</div>
-
+    <div class="snm-container">
+      <h1>What would you like to do <near-icon class="inline-sign" /> {{ city }}?</h1>
+      <span v-if="show_location_cue" class="location-necessary mobile-only">
+        Location Services Necessary <a @click="show_location_modal = true">(learn more)</a>
+      </span>
+      <sideways-slider>
+        <div v-for="intent in intents" :key="intent.title" class="intent-card">
+          <nuxt-link :to="intent.link">
+            <img :title="intent.title" :src="intent.image" :srcset="intent.image + ' 1x,' + intent.image2x + ' 2x'">
+          </nuxt-link>
+          <nuxt-link :to="intent.link" class="intent-title">
+            {{ intent.title }}
+          </nuxt-link>
+          <p>
+            {{ intent.description }}
+          </p>
+        </div>
+      </sideways-slider>
+      <atom-icon id="hydrogen" />
+      <atom-icon id="helium" />
+    </div>
+  </div>
   <div id="here-now" class="snm-wrapper">
     <div class="snm-container">
       <h2>Here &amp; Now near {{ city }}</h2>
@@ -284,7 +285,7 @@ export default {
 
     data() {
         return {
-            search_place_edit: null,
+            search_place: {near: "", longitude: 0, latitude: 0, proximity: 0},
             search_text: "",
             search_beginning: new Date().toISOString().slice(0, 10),
             search_ending: null,
@@ -292,7 +293,6 @@ export default {
             show_login: false,
             show_signup: false,
             load_here_and_now: false,
-            show_location_cue: true,
             show_location_modal: false
         };
     },
@@ -306,24 +306,14 @@ export default {
     },
 
     computed: {
-        search_place: {
-            get() {
-                if(this.search_place_edit === null) {
-                    return this.$store.state.here;
-                }
-
-                return this.search_place_edit;
-            },
-
-            set(val) {
-                this.search_place_edit = val;
-            }
-        },
-
         here_and_now_query() {
             if(!this.load_here_and_now) {
                 return {};
             };
+
+            if(!this.$store.state.here) {
+                return {};
+            }
 
             let now = new Date();
 
@@ -350,6 +340,14 @@ export default {
                 '&sort=' + data['sort'];
         },
 
+        show_location_cue() {
+            if(process.server) {
+                return true;
+            }
+
+            return !(this.here_and_now_query.latitude || this.here_and_now_query.longitude);
+        },
+
         intents() {
             let intents = [
                 {'link': this.here_and_now_link + '&physical=in-person-or-online&text=forum', 'title': 'Listen, Learn, Discuss, Inform', 'description': 'Participate in live dialogues about current science and society issues', 'image': LearnDiscussImage, 'image2x': LearnDiscussImage2x},
@@ -374,7 +372,7 @@ export default {
         },
 
         city() {
-            if(!this.$store.state.here.near) {
+            if(!this.$store.state.here || !this.$store.state.here.near) {
                 return 'you';
             }
 
@@ -402,7 +400,8 @@ export default {
         },
     },
 
-    mounted() {
+    async mounted() {
+        this.search_place = await this.$store.dispatch("get_here");
         this.load_here_and_now = true;
     },
 

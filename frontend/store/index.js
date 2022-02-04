@@ -23,7 +23,7 @@ export const state = () => ({
 
   descriptors: {},
 
-  here: {},
+  here: null,
 
   last_search: null,
 });
@@ -104,6 +104,53 @@ export const actions = {
     // Load language preference here if we decide to support
     // multiple site translations.
     return state.language || "en";
+  },
+
+  async get_here({ commit, state }) {
+    if (state.here !== null) {
+      return state.here;
+    }
+
+    if (process.server) {
+      return {};
+    }
+
+    if (!this.$geolocation.checkSupport()) {
+      return {};
+    }
+
+    let pos, places;
+
+    try {
+      pos = await this.$geolocation
+        .getCurrentPosition();
+    } catch (error) {
+      console.log(error);
+      return {};
+    }
+
+    try {
+      places = await this.$axios.$post("/api/ui/finder/geo", {
+        lookup: "near",
+        place: {
+          longitude: pos.coords.longitude,
+          latitude: pos.coords.latitude,
+          near: "",
+          proximity: 0,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      return {};
+    }
+
+    if (places.places.length == 0) {
+      return {};
+    }
+
+    commit("here", places.places[0]);
+
+    return places.places[0];
   },
 
   async get_dynamic_block(

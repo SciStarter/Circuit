@@ -49,11 +49,11 @@
       <lookup-place v-model="place_proxy" @valid="set_valid" label-position="inside" data-context="find-lookup-place" widget />
       <div class="centered-row">
         <div class="date-input">
-          <input type="date" v-model="beginning_proxy" />
+          <input type="date" v-model="beginning_proxy">
           <label>From</label>
         </div>
         <div class="date-input">
-          <input type="date" v-model="ending_proxy" />
+          <input type="date" v-model="ending_proxy">
           <label>Until</label>
         </div>
       </div>
@@ -78,11 +78,11 @@
       </b-field>
       <lookup-place v-model="place_proxy" @valid="set_valid" label-position="inside" data-context="find-lookup-place" stacked />
         <div class="date-input">
-          <input type="date" v-model="beginning_proxy" />
+          <input type="date" v-model="beginning_proxy">
           <label>From</label>
         </div>
         <div class="date-input">
-          <input type="date" v-model="ending_proxy" />
+          <input type="date" v-model="ending_proxy">
           <label>Until</label>
         </div>
     </div>
@@ -188,6 +188,7 @@ export default {
         return {
             working: false,
             location_valid: false,
+            default_location: {},
         };
     },
 
