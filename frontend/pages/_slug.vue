@@ -73,7 +73,7 @@ export default {
             return {
                 'opportunity': () => import('~/components/Opportunity'),
                 'just_content': () => import('~/components/JustContent'),
-            }[this.layout] || Opportunity;
+            }[this.layout] || () => import('~/components/Opportunity');
         },
 
         user() {
