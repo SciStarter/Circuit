@@ -1,4 +1,4 @@
-REPO:="scistarter/circuit-api"
+REPO:="scistarter/circuit-api-`git branch --show-current`"
 RELEASE:=0.1
 PATCH=`cat PATCH`
 

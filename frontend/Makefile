@@ -1,4 +1,4 @@
-REPO:="scistarter/circuit-frontend"
+REPO:="scistarter/circuit-frontend-`git branch --show-current`"
 RELEASE:=0.1
 PATCH=`cat PATCH`
 
