@@ -148,9 +148,16 @@ export const actions = {
       return {};
     }
 
-    commit("here", places.places[0]);
+    const place = {
+      near: places.places[0].near,
+      longitude: pos.coords.longitude,
+      latitude: pos.coords.latitude,
+      proximity: 0,
+    };
 
-    return places.places[0];
+    commit("here", place);
+
+    return place;
   },
 
   async get_dynamic_block(
