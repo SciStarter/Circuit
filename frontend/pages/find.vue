@@ -536,7 +536,7 @@ export default {
             return 'https://sciencenearme.org' + this.$route.fullPath;
         },
         city() {
-            if(!this.$store.state.here.near) {
+            if(!this.$store.state.here || !this.$store.state.here.near) {
                 return false;
             }
 
@@ -596,6 +596,7 @@ export default {
     watchQuery: true,
 
     mounted() {
+        this.$store.dispatch("get_here");
         this.initialization = true;
     },
 
