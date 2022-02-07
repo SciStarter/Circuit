@@ -335,7 +335,7 @@ export default {
 
     data() {
         return {
-            loading: true,
+            loading: false,
             location_valid: true,
             query: Object.assign(empty_query(), this.$route.query),
         };
@@ -598,7 +598,6 @@ export default {
     watchQuery: true,
 
     mounted() {
-        this.loading = false;
         this.$store.dispatch("get_here");
     },
 
