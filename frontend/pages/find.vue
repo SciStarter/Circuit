@@ -19,6 +19,7 @@
       :place="place"
       :beginning="beginning"
       :ending="ending"
+      :disabled="loading"
       @text="set_query_interactive('text', $event)"
       @place="set_query_interactive('page', 0, undefined, [place=$event])"
       @beginning="set_query_interactive('beginning', $event)"
@@ -31,7 +32,7 @@
   <div id="filters-ordering">
     <b-tooltip multilined>
       <b-icon icon="help-circle" />
-      <template v-slot:content>
+      <template #content>
         <p><Strong>In-Person:</strong> probably has face-to-face interactions, possibly some travel</p>
         <p><strong>On-Demand:</strong> probably done independently at your leisure, possibly over the internet</p>
       </template>
@@ -47,7 +48,7 @@
         <span class="radio-label">On-Demand</span>
       </b-radio-button>
     </b-field>
-    <mini-select id="filter-sort" v-model="query.sort" label="Sort:" data-context="find-sort-order" @input="set_query_interactive('page', 0)">
+    <mini-select id="filter-sort" v-model="query.sort" :disabled="loading" label="Sort:" data-context="find-sort-order" @input="set_query_interactive('page', 0)">
       <option value="closest">
         Closest
       </option>
@@ -66,18 +67,18 @@
       </h2>
       <fieldset>
         <label>Topic</label>
-        <b-taginput v-model="selected_topics" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="query.topic_text = $event.toLowerCase()" />
+        <b-taginput v-model="selected_topics" :disabled="loading" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="query.topic_text = $event.toLowerCase()" />
       </fieldset>
       <fieldset>
         <label>Activity Type</label>
-        <b-taginput v-model="selected_descriptors" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="query.descriptor_text = $event.toLowerCase()" />
+        <b-taginput v-model="selected_descriptors" :disabled="loading" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="query.descriptor_text = $event.toLowerCase()" />
       </fieldset>
 
       <fieldset>
         <label>Age</label>
         <b-field label="Minimum Age" data-context="find-minimum-age">
-          <b-checkbox v-model="min_age_active" />
-          <b-slider v-model="min_age" :disabled="!min_age_active" :min="0" :max="120" :step="1" size="is-medium" rounded>
+          <b-checkbox v-model="min_age_active" :disabled="loading" />
+          <b-slider v-model="min_age" :disabled="!min_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
             <!-- <b-slider-tick :value="12">
               12
             </b-slider-tick> -->
@@ -97,11 +98,11 @@
               100
             </b-slider-tick>
           </b-slider>
-          <input v-model="min_age" type="text" :disabled="!min_age_active" class="slider-direct">
+          <input v-model="min_age" type="text" :disabled="!min_age_active || loading" class="slider-direct">
         </b-field>
         <b-field label="Maximum Age" data-context="find-maximum-age">
-          <b-checkbox v-model="max_age_active" />
-          <b-slider v-model="max_age" :disabled="!max_age_active" :min="0" :max="120" :step="1" size="is-medium" rounded>
+          <b-checkbox v-model="max_age_active" :disabled="loading" />
+          <b-slider v-model="max_age" :disabled="!max_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
             <!-- <b-slider-tick :value="12">
               12
             </b-slider-tick> -->
@@ -127,10 +128,10 @@
       <fieldset data-context="find-cost">
         <label>Cost</label>
         <p>
-          <b-radio v-model="cost" native-value="any">
+          <b-radio v-model="cost" native-value="any" :disabled="loading">
             Any Cost
           </b-radio>
-          <b-radio v-model="cost" native-value="free">
+          <b-radio v-model="cost" native-value="free" :disabled="loading">
             Free Only
           </b-radio>
         </p>
@@ -141,7 +142,7 @@
              implies four possible states: both checked, one box checked, the
              other box checked, or neither checked. We actually only have
              three meaningful states, so use a select instead. -->
-        <b-select v-model="venue_type" data-context="find-venue-type">
+        <b-select v-model="venue_type" data-context="find-venue-type" :disabled="loading">
           <option value="either">
             Any
           </option>
@@ -155,7 +156,7 @@
       </fieldset>
       <fieldset data-context="find-organization">
         <label>Host Organization</label>
-        <b-input :value="get_query('host', '')" :name="'new-' + Math.random()" type="text" @input="set_query_interactive('host', $event, '')" />
+        <b-input :value="get_query('host', '')" :disabled="loading" :name="'new-' + Math.random()" type="text" @input="set_query_interactive('host', $event, '')" />
       </fieldset>
       <fieldset data-context="find-partner">
         <label>Partner Organization</label>
@@ -163,6 +164,7 @@
           v-model="query.partner_text"
           :data="suggested_partners"
           :name="'new-' + Math.random()"
+          :disabled="loading"
           field="name"
           clearable
           keep-first
@@ -196,7 +198,7 @@
     </template>
   </section>
   <section id="pagination">
-    <pagination :page-index="pagination.page_index" :last-page="pagination.last_page" @switch="set_query_interactive('page', $event)" />
+    <pagination :page-index="pagination.page_index" :disabled="loading" :last-page="pagination.last_page" @switch="set_query_interactive('page', $event)" />
     <div class="mobile-only">
       <h1>Share Your Results</h1>
       <p>Share the list by copying the link below</p>
@@ -333,6 +335,7 @@ export default {
 
     data() {
         return {
+            loading: true,
             location_valid: true,
             initialization: false,
             query: Object.assign(empty_query(), this.$route.query),
@@ -598,6 +601,10 @@ export default {
     mounted() {
         this.$store.dispatch("get_here");
         this.initialization = true;
+    },
+
+    created() {
+        this.loading = false;
     },
 
     methods: {
