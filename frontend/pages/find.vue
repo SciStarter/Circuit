@@ -342,7 +342,6 @@ export default {
         return {
             loading: true,
             location_valid: true,
-            initialization: false,
             query: Object.assign(empty_query(), this.$route.query),
         };
     },
@@ -441,10 +440,10 @@ export default {
         place: {
             get() {
                 return {
-                    latitude: this.query.latitude,
-                    longitude: this.query.longitude,
-                    near: this.query.near,
-                    proximity: this.query.proximity
+                    latitude: this.query.latitude || 0,
+                    longitude: this.query.longitude || 0,
+                    near: this.query.near || "",
+                    proximity: this.query.proximity || 0,
                 };
             },
 
@@ -604,12 +603,8 @@ export default {
     watchQuery: true,
 
     mounted() {
-        this.$store.dispatch("get_here");
-        this.initialization = true;
-    },
-
-    created() {
         this.loading = false;
+        this.$store.dispatch("get_here");
     },
 
     methods: {
@@ -658,7 +653,7 @@ export default {
         set_query_interactive(name, value, marker, results) {
             this.set_query(name, value, marker, results);
 
-            if(!this.initialization && name != 'page') {
+            if(name != 'page') {
                 Vue.set(this.query, 'page', 0);
             }
 
@@ -681,10 +676,7 @@ export default {
         },
 
         search: debounce(function() {
-            if(process.client && this.initialization) {
-                this.initialization = false;
-            }
-            else if(this.location_valid && !this.filtering) {
+            if(this.location_valid && !this.filtering) {
                 this.$nuxt.$loading.start();
                 this.$store.commit('set_last_search', this.query);
                 this.$router.push({ name: 'find', query: this.query });
