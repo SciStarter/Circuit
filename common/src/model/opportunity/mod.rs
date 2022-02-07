@@ -1087,7 +1087,7 @@ fn build_matching_query(
             // This constant number is roughly the square root of the surface area of the earth, in meters, i.e. about as far away as you can get
             query_string.push_str(" ELSE 22585394 END AS _sort_distance");
 
-            if let Some(OpportunityQueryPhysical::InPerson) = query.physical {
+            if *proximity > 0.0 {
                 clauses.push(format!("(_sort_distance < 1.1 * ${prox_param})"));
             }
         } else {
