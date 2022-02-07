@@ -94,7 +94,7 @@ export default {
             get() {
                 const patch = {}
 
-                if (!this.value.proximity || this.value.proximity < 1 || this.value.proximity > 100000) {
+                if (this.value.proximity === undefined || this.value.proximity < 0 || this.value.proximity > 100000) {
                     patch.proximity = 40233
                 }
 
