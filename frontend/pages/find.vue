@@ -48,10 +48,6 @@
         Refine Results
       </h2>
       <fieldset>
-        <label>Topic</label>
-        <b-taginput v-model="selected_topics" :disabled="loading" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="query.topic_text = $event.toLowerCase()" />
-      </fieldset>
-      <fieldset>
         <label>Activity Type</label>
         <b-taginput v-model="selected_descriptors" :disabled="loading" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="query.descriptor_text = $event.toLowerCase()" />
       </fieldset>
@@ -117,6 +113,10 @@
             Free Only
           </b-radio>
         </p>
+      </fieldset>
+      <fieldset>
+        <label>Topic</label>
+        <b-taginput v-model="selected_topics" :data="suggested_topics" field="1" open-on-focus autocomplete data-context="find-topic" @typing="query.topic_text = $event.toLowerCase()" />
       </fieldset>
       <fieldset>
         <label>Venue Type</label>
@@ -835,8 +835,10 @@ export default {
 }
 
 ::v-deep label.b-radio.radio.button {
-    border-color: $snm-color-action-border;
+    // border-color: $snm-color-action-border;
+    border-color: #d5d5d5;
     border-radius: 10px;
+    padding:7px 10px;
 
     span {
         font-family: $snm-font-content;
@@ -936,8 +938,10 @@ export default {
     }
 
     ::v-deep label.b-radio.radio.button {
-        border-color: $snm-color-action-border;
+        // border-color: $snm-color-action-border;
+        border-color: #d5d5d5;
         border-radius: 10px;
+        padding:7px 10px;
 
         span {
             font-family: $snm-font-content;
@@ -1056,5 +1060,13 @@ export default {
 }
 .no-results {
   padding:1rem;
+}
+#filter-physical label {
+  padding-left:10px!important;
+  padding-right:10px!important;
+}
+#filter-physical span {
+  font-size:14px;
+  padding:0;
 }
 </style>

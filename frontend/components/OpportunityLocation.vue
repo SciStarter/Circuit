@@ -1,7 +1,7 @@
 <template>
 <div class="opportunity-location">
   <p v-if="!isOpportunity && opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
-    <em>This wide-area opportunity is available in your search location</em>
+    <em>Multiple locations, including yours!</em>
   </p>
   <p v-else-if="!isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
     <span v-if="opportunity.location_name">
@@ -11,7 +11,7 @@
     <span v-else-if="(opportunity.address_city || opportunity.address_state)">
       <template v-if="opportunity.address_city">{{ opportunity.address_city }}, </template>{{ opportunity.address_state }}
     </span>
-    <em v-else>This opportunity is near your search location</em>
+    <em v-else>Near your search location!</em>
   </p>
   <p v-else-if="isOpportunity && opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
     In a specific area
