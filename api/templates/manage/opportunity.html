@@ -435,7 +435,7 @@
             </div>
           </div>
 
-          <button type="button" onclick="add_a_begin_end_pair()">Add start/end pair</button>
+          <button type="button" onclick="add_a_start_end_pair()">Add start/end pair</button>
 {#
           <div class="field">
             <label class="label">Daily Hours</label>
@@ -687,20 +687,20 @@
         });
       }
 
-      function add_a_begin_end_pair() {
+      function add_a_start_end_pair() {
         let start_global_id = "start_datetimes-" +  Math.random();
         let end_global_id = "end_datetimes-" +  Math.random();
 
         let start_t = document.querySelector('#tpl-start');
         let end_t = document.querySelector('#tpl-end');
 
-        let start = begin_t.content.cloneNode(true);
+        let start = start_t.content.cloneNode(true);
         let end = end_t.content.cloneNode(true);
 
-        let start_local = begin.querySelector(input[type="datetime-local"]);
+        let start_local = start.querySelector(input[type="datetime-local"]);
         let end_local = end.querySelector(input[type="datetime-local"]);
 
-        let start_global = begin.querySelector(input[type="hidden"]);
+        let start_global = start.querySelector(input[type="hidden"]);
         let end_global = end.querySelector(input[type="hidden"]);
 
         start_local.dataset.global = start_global_id;
@@ -714,6 +714,9 @@
 
         start_col.appendChild(start);
         end_col.appendChild(end);
+
+        setup_datetime_view(start_local);
+        setup_datetime_view(end_local);
       }
 
       document.querySelectorAll('input[type="datetime-local"][data-global]').forEach(
