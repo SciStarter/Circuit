@@ -88,7 +88,12 @@ export default {
                 return "Ongoing";
             }
             else {
-                return pair[0].toLocaleString([], { month: 'long', day:'numeric', year:'numeric', hour: 'numeric', minute: '2-digit'});
+                if(pair[0].getFullYear() == pair[1].getFullYear() && pair[0].getMonth() == pair[1].getMonth() && pair[0].getDate() == pair[1].getDate()) {
+                    return pair[0].toLocaleString([], { month: 'long', day:'numeric', year:'numeric', hour: 'numeric', minute: '2-digit'}) + ' through ' + pair[1].toLocaleString([], {hour: 'numeric', minute: '2-digit'});
+                }
+                else {
+                    return pair[0].toLocaleString([], { month: 'long', day:'numeric', year:'numeric', hour: 'numeric', minute: '2-digit'});
+                }
             }
         }
     }
