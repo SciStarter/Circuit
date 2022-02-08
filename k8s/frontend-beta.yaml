@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-frontend-beta
-        image: scistarter/circuit-frontend:deemphasize-physical-0.1.124
+        image: scistarter/circuit-frontend:deemphasize-physical-0.1.127
         ports:
         - containerPort: 3000
         env:
