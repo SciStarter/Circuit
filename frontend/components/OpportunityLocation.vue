@@ -1,6 +1,8 @@
 <template>
 <div class="opportunity-location">
-  <p v-if="!isOpportunity && opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
+  <span v-if="opportunity.location_type == 'online'">Online</span>
+  <span v-else-if="opportunity.location_type == 'any'">Anywhere</span>
+  <p v-else-if="!isOpportunity && opportunity.location_polygon && opportunity.location_polygon.type === 'MultiPolygon'">
     <em>Multiple locations, including yours!</em>
   </p>
   <p v-else-if="!isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
@@ -20,7 +22,7 @@
     <li v-if="opportunity.location_name">
       {{ opportunity.location_name }} {{ opportunity.address_state }}
     </li>
-    <li v-if="short">
+    <li v-else-if="short">
       {{ opportunity.address_city }}, {{ opportunity.address_state }}
     </li>
     <li v-if="opportunity.address_street && (!short || !opportunity.location_name)">
@@ -33,8 +35,6 @@
       {{ opportunity.address_country }}
     </li>
   </ul>
-  <span v-else-if="opportunity.location_type == 'online'">Online</span>
-  <span v-else-if="opportunity.location_type == 'any'">Anywhere</span>
   <ul v-else-if="opportunity.location_type == 'at'">
     <li v-if="opportunity.location_name">
       {{ opportunity.location_name }} {{ opportunity.address_state }}
