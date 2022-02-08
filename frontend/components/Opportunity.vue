@@ -113,6 +113,19 @@
               <opportunity-notice :opportunity="opportunity" mode="time" />
             </div>
           </div>
+
+          <div class="info weblink">
+            <link-icon />
+            <external-link
+              :href="opportunity.partner_opp_url"
+              title="Find out more"
+              campaign="opp-page"
+              content="find-out-more"
+              @before="register_interest"
+              >
+              {{opportunity.partner_opp_url}}
+            </external-link>
+          </div>
           <div class="info keywords">
             <keywords-icon />
             <opportunity-keywords :opportunity="opportunity" />
@@ -1318,6 +1331,13 @@ img.opportunity-image {
         display: block;
         margin-left: 2rem;
         flex-grow: 0;
+    }
+    &.weblink > a {
+      margin-left:0;
+      font-weight:bold;
+      &:hover {
+        text-decoration:underline;
+      }
     }
 }
 
