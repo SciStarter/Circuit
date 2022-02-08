@@ -390,7 +390,7 @@
             <div class="column">
               <div class="field">
                 <label class="label">Begins</label>
-                <div class="control">
+                <div id="start-column" class="control">
                   {% if opportunity.exterior.start_datetimes.is_empty() %}
                   <em>No data entered</em>
                   {% else %}
@@ -401,37 +401,41 @@
                   </p>
                   {% endfor %}
                   {% endif %}
-                  <strong>Add:</strong>
-                  <p>
-                    <input type="datetime-local" data-global="start_datetimes-extra">
-                    <input id="start_datetimes-extra" type="hidden" name="start_datetimes[]">
-                  </p>
+                  <template id="tpl-start">
+                    <p>
+                      <input type="datetime-local" data-global="start_datetimes-@">
+                      <input id="start_datetimes-@" type="hidden" name="start_datetimes[]">
+                    </p>
+                  </template>
                 </div>
               </div>
             </div>
             <div class="column">
               <div class="field">
                 <label class="label">Ends</label>
-                <div class="control">
+                <div id="end-column" class="control">
                   {% if opportunity.exterior.end_datetimes.is_empty() %}
-                    <em>No data entered</em>
+                  <em>No data entered</em>
                   {% else %}
-                    {% for e in opportunity.exterior.end_datetimes %}
-                      <p>
-                        <input type="datetime-local" data-global="end_datetimes-{{loop.index}}">
-                        <input id="end_datetimes-{{loop.index}}" type="hidden" name="end_datetimes[]" value="{{e.to_rfc3339()}}">
-                      </p>
-                    {% endfor %}
-                  {% endif %}
-                  <strong>Add:</strong>
+                  {% for e in opportunity.exterior.end_datetimes %}
                   <p>
-                    <input type="datetime-local" data-global="end_datetimes-extra">
-                    <input id="end_datetimes-extra" type="hidden" name="end_datetimes[]">
+                    <input type="datetime-local" data-global="end_datetimes-{{loop.index}}">
+                    <input id="end_datetimes-{{loop.index}}" type="hidden" name="end_datetimes[]" value="{{e.to_rfc3339()}}">
                   </p>
+                  {% endfor %}
+                  {% endif %}
+                  <template id="tpl-end">
+                    <p>
+                      <input type="datetime-local" data-global="end_datetimes-@">
+                      <input id="end_datetimes-@" type="hidden" name="end_datetimes[]">
+                    </p>
+                  </template>
                 </div>
               </div>
             </div>
           </div>
+
+          <button type="button" onclick="add_a_begin_end_pair()">Add start/end pair</button>
 {#
           <div class="field">
             <label class="label">Daily Hours</label>
@@ -671,7 +675,7 @@
 
       var descriptionMDE = new EasyMDE({element: document.getElementById('description')});
 
-      document.querySelectorAll('input[type="datetime-local"][data-global]').forEach(function(view) {
+      function setup_datetime_view(view) {
         var model = document.getElementById(view.dataset.global);
 
         if(!!model.value) {
@@ -681,7 +685,40 @@
         view.addEventListener('input', function(event) {
           model.value = new Date(view.value).toISOString();
         });
-      });
+      }
+
+      function add_a_begin_end_pair() {
+        let start_global_id = "start_datetimes-" +  Math.random();
+        let end_global_id = "end_datetimes-" +  Math.random();
+
+        let start_t = document.querySelector('#tpl-start');
+        let end_t = document.querySelector('#tpl-end');
+
+        let start = begin_t.content.cloneNode(true);
+        let end = end_t.content.cloneNode(true);
+
+        let start_local = begin.querySelector(input[type="datetime-local"]);
+        let end_local = end.querySelector(input[type="datetime-local"]);
+
+        let start_global = begin.querySelector(input[type="hidden"]);
+        let end_global = end.querySelector(input[type="hidden"]);
+
+        start_local.dataset.global = start_global_id;
+        end_local.dataset.global = end_global_id;
+
+        start_global.id = start_global_id;
+        end_global.id = end_global_id;
+
+        let start_col = document.querySelector('#start-column');
+        let end_col = document.querySelector('#end-column');
+
+        start_col.appendChild(start);
+        end_col.appendChild(end);
+      }
+
+      document.querySelectorAll('input[type="datetime-local"][data-global]').forEach(
+        setup_datetime_view
+      );
     </script>
   </body>
 </html>
