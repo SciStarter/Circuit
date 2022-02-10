@@ -171,7 +171,7 @@
             <span>Share</span>
           </div>
 
-          <div class="opp-action-btn">
+          <div class="opp-action-btn stronger">
             <external-link
               :href="opportunity.partner_opp_url"
               title="Find out more"
@@ -1926,10 +1926,10 @@ button.action-button.round-btn, .find-out-more {
 .find-out-more {
   width: 48px;
   > .icon {
-    background-color:$snm-color-element-med;
+      background-color: $snm-color-heading-ondark;
     svg,path {
       stroke:transparent;
-      fill: #fff!important;
+      fill: $snm-color-element-dark !important;
     }
   }
   >span {
