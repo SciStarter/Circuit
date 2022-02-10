@@ -109,6 +109,8 @@ export default {
 
     methods: {
         async go () {
+            this.$gtm.push({ event: 'external_link', url: this.href });
+
             // Running it directly rather than using $emit so that we
             // can wait on the promise if it's async
             if(this.$listeners.before) {
