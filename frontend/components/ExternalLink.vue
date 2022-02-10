@@ -1,4 +1,4 @@
-<template><a :href="href" :title="title" rel="noopener" @click.stop.prevent="go"><slot /></a></template>
+<template><a class="external-link" :href="href" :title="title" rel="noopener" @click.stop.prevent="go"><slot /></a></template>
 
 <script>
 /*
