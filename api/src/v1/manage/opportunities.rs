@@ -3,8 +3,9 @@ use chrono::{DateTime, FixedOffset};
 use common::{
     model::{
         opportunity::{
-            Cost, Descriptor, Domain, EntityType, LocationType, OpportunityQuery,
-            OpportunityQueryOrdering, OrganizationType, PageLayout, PageOptions, Topic, VenueType,
+            Cost, Descriptor, Domain, EntityType, LocationType, OpenDays, OpenHours,
+            OpportunityQuery, OpportunityQueryOrdering, OrganizationType, PageLayout, PageOptions,
+            Topic, VenueType,
         },
         partner::PartnerReference,
         person::Permission,
@@ -158,6 +159,20 @@ struct OpportunityForm {
     contact_phone: Option<String>,
     accepted: Option<String>,
     withdrawn: Option<String>,
+    monday_opens: Option<String>,
+    monday_closes: Option<String>,
+    tuesday_opens: Option<String>,
+    tuesday_closes: Option<String>,
+    wednesday_opens: Option<String>,
+    wednesday_closes: Option<String>,
+    thursday_opens: Option<String>,
+    thursday_closes: Option<String>,
+    friday_opens: Option<String>,
+    friday_closes: Option<String>,
+    saturday_opens: Option<String>,
+    saturday_closes: Option<String>,
+    sunday_opens: Option<String>,
+    sunday_closes: Option<String>,
 }
 
 impl OpportunityForm {
@@ -238,6 +253,66 @@ impl OpportunityForm {
         opportunity.interior.contact_name = self.contact_name.unwrap_or_default();
         opportunity.interior.contact_email = self.contact_email.unwrap_or_default();
         opportunity.interior.contact_phone = self.contact_phone.unwrap_or_default();
+
+        opportunity.exterior.attraction_hours = if self.monday_opens.is_some()
+            || self.tuesday_opens.is_some()
+            || self.wednesday_opens.is_some()
+            || self.thursday_opens.is_some()
+            || self.friday_opens.is_some()
+            || self.saturday_opens.is_some()
+            || self.sunday_opens.is_some()
+        {
+            Some(OpenDays {
+                monday: if let (Some(opens), Some(closes)) = (self.monday_opens, self.monday_closes)
+                {
+                    Some(OpenHours { opens, closes })
+                } else {
+                    None
+                },
+                tuesday: if let (Some(opens), Some(closes)) =
+                    (self.tuesday_opens, self.tuesday_closes)
+                {
+                    Some(OpenHours { opens, closes })
+                } else {
+                    None
+                },
+                wednesday: if let (Some(opens), Some(closes)) =
+                    (self.wednesday_opens, self.wednesday_closes)
+                {
+                    Some(OpenHours { opens, closes })
+                } else {
+                    None
+                },
+                thursday: if let (Some(opens), Some(closes)) =
+                    (self.thursday_opens, self.thursday_closes)
+                {
+                    Some(OpenHours { opens, closes })
+                } else {
+                    None
+                },
+                friday: if let (Some(opens), Some(closes)) = (self.friday_opens, self.friday_closes)
+                {
+                    Some(OpenHours { opens, closes })
+                } else {
+                    None
+                },
+                saturday: if let (Some(opens), Some(closes)) =
+                    (self.saturday_opens, self.saturday_closes)
+                {
+                    Some(OpenHours { opens, closes })
+                } else {
+                    None
+                },
+                sunday: if let (Some(opens), Some(closes)) = (self.sunday_opens, self.sunday_closes)
+                {
+                    Some(OpenHours { opens, closes })
+                } else {
+                    None
+                },
+            })
+        } else {
+            None
+        };
 
         Ok(())
     }
