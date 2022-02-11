@@ -1,56 +1,54 @@
 <template>
 <div id="find" :class="{filtering: filtering}">
-
   <div v-if="filtering == false" class="mobile-search-recap mobile-only">
-      <div>
-        <div v-if="query.text != ''" class="bold">{{query.text}}</div>
-        <div><span class="bold">{{city}}</span> <span v-if="place.proximity"> within {{within_display}} miles</span><span v-else> within 25 miles</span></div>
-        <div>{{beginning_display}}<span v-if="ending_display"> &mdash; {{ending_display}}</span></div>
-        <div v-if="filter_num > 0">+ {{filter_num}} filters</div>
-      </div>
-        <action-button id="filter-trigger" text @click="filtering = true">
-          Refine search
-        </action-button>
-  </div>
-
-    <general-filters
-      id="filters-general"
-      :text="query.text"
-      :place="place"
-      :beginning="beginning"
-      :ending="ending"
-      :disabled="loading"
-      @text="set_query_interactive('text', $event)"
-      @place="set_query_interactive('page', 0, undefined, [place=$event])"
-      @beginning="set_query_interactive('beginning', $event)"
-      @ending="set_query_interactive('ending', $event)"
-      @valid="location_valid=$event"
-      />
-  <div class="snm-container">
-
-
-  <div id="filters-ordering">
-    <mini-select id="filter-sort" v-model="query.sort" :disabled="loading" label="Sort:" data-context="find-sort-order" @input="set_query_interactive('page', 0)">
-      <option value="closest">
-        Closest
-      </option>
-      <option value="soonest">
-        Soonest
-      </option>
-    </mini-select>
-    <!-- <action-button id="filter-trigger" text @click="filtering = true">
-      Refine search
-    </action-button> -->
-  </div>
-  <div id="filters-refine">
     <div>
-      <h2 class="no-mobile">
-        Refine Results
-      </h2>
-      <fieldset>
-        <label>Activity Type</label>
-        <b-taginput v-model="selected_descriptors" :disabled="loading" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="query.descriptor_text = $event.toLowerCase()" />
-      </fieldset>
+      <div v-if="query.text != ''" class="bold">{{query.text}}</div>
+      <div><span class="bold">{{city}}</span> <span v-if="place.proximity"> within {{within_display}} miles</span><span v-else> within 25 miles</span></div>
+      <div>{{beginning_display}}<span v-if="ending_display"> &mdash; {{ending_display}}</span></div>
+      <div v-if="filter_num > 0">+ {{filter_num}} filters</div>
+    </div>
+    <action-button id="filter-trigger" text @click="filtering = true">
+      Refine search
+    </action-button>
+  </div>
+
+  <general-filters
+    id="filters-general"
+    :text="query.text"
+    :place="place"
+    :beginning="beginning"
+    :ending="ending"
+    :disabled="loading"
+    @text="set_query_interactive('text', $event)"
+    @place="set_query_interactive('page', 0, undefined, [place=$event])"
+    @beginning="set_query_interactive('beginning', $event)"
+    @ending="set_query_interactive('ending', $event)"
+    @valid="location_valid=$event"
+    />
+  <div class="snm-container">
+    <div id="filters-ordering">
+      <mini-select id="filter-sort" v-model="query.sort" :disabled="loading" label="Sort:" data-context="find-sort-order" @input="set_query_interactive('page', 0)">
+        <option value="closest">
+          Closest
+        </option>
+        <option value="soonest">
+          Soonest
+        </option>
+      </mini-select>
+      <span>{{ pagination.total }} opportunities found! <small>use fewer search filter criteria to find more opportunities</small></span>
+      <!-- <action-button id="filter-trigger" text @click="filtering = true">
+           Refine search
+           </action-button> -->
+    </div>
+    <div id="filters-refine">
+      <div>
+        <h2 class="no-mobile">
+          Refine Results
+        </h2>
+        <fieldset>
+          <label>Activity Type</label>
+          <b-taginput v-model="selected_descriptors" :disabled="loading" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="query.descriptor_text = $event.toLowerCase()" />
+        </fieldset>
 
       <fieldset>
         <label>Age</label>
