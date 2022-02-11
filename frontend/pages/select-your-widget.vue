@@ -190,8 +190,8 @@
 
       </div>
       <div class="flex2">
-        <iframe :src="'/'+URLparams" :width="width" :height="height" scrolling="no"></iframe>
-        <textarea>&lt;iframe src="{{link}}" width="{{width}}" height="{{height}}" scrolling="no"&gt;&lt;/iframe&gt;</textarea>
+        <iframe :src="'/'+URLparams" referrerpolicy="origin" :width="width" :height="height" scrolling="no"></iframe>
+        <textarea>&lt;iframe src="{{link}}" referrerpolicy="origin" width="{{width}}" height="{{height}}" scrolling="no"&gt;&lt;/iframe&gt;</textarea>
       </div>
     </div>
   </div>
