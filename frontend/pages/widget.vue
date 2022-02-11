@@ -74,6 +74,12 @@
       layout: "empty",
 
       async asyncData(context) {
+          let analytics = null;
+
+          if(process.server) {
+              analytics = context.$axios.$post('/api/ui/activity/widget', {'site': context.req.headers['referer']});
+          }
+
           let query = {
               beginning: new Date().toISOString(),
               sample: 'true',
@@ -110,6 +116,10 @@
           }
 
           const results = await context.$axios.$get('/api/ui/finder/search', { params: query });
+
+          if(analytics !== null) {
+              await analytics;
+          }
 
           return {
               matches: results.matches,

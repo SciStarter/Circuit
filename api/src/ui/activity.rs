@@ -1,5 +1,6 @@
 use common::Database;
 use once_cell::sync::Lazy;
+use serde::Deserialize;
 use tide::{Response, StatusCode};
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
@@ -24,6 +25,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .at("click", |r| r.post(record_click))
         .at("external", |r| r.post(record_external))
+        .at("widget", |r| r.post(record_widget))
 }
 
 /// Update the clickstream with a single on-site click instance. No-op
@@ -49,6 +51,24 @@ pub async fn record_external(mut req: tide::Request<Database>) -> tide::Result {
                 .body(req.body_json::<serde_json::Value>().await?)
                 .send(),
         );
+    }
+
+    Ok(Response::builder(StatusCode::Ok).build())
+}
+
+#[derive(Deserialize, Debug)]
+struct RecordWidgetForm {
+    site: String,
+}
+
+/// Record when a widget has been loaded on an external site
+pub async fn record_widget(mut req: tide::Request<Database>) -> tide::Result {
+    if let Ok(body) = dbg!(req.body_json::<RecordWidgetForm>().await) {
+        sqlx::query(r#"insert into c_widget_views ("site") values ($1)"#)
+            .bind(body.site)
+            .execute(req.state())
+            .await
+            .ok();
     }
 
     Ok(Response::builder(StatusCode::Ok).build())
