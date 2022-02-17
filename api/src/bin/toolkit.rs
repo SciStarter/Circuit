@@ -1,7 +1,11 @@
 use async_std::prelude::*;
+use clap::Parser;
+use counter::Counter;
+use http_types::Method;
+use serde::Deserialize;
 use shellfish::{async_fn, Command, Shell};
-use sqlx::postgres::PgPoolOptions;
 use sqlx::Row;
+use sqlx::{postgres::PgPoolOptions, Executor};
 
 use common::{
     model::{
@@ -536,9 +540,141 @@ async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     Ok(())
 }
 
-#[async_std::main]
-async fn main() -> Result<(), DynError> {
-    let mut shell = Shell::new_async(State::new().await?, "SNM Toolkit $ ");
+#[derive(Deserialize, Debug)]
+struct UnsubscribeItem {
+    address: String,
+    code: String,
+    error: String,
+    created_at: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct UnsubscribePaging {
+    first: String,
+    next: String,
+    previous: String,
+    last: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct UnsubscribePage {
+    items: Vec<UnsubscribeItem>,
+    paging: UnsubscribePaging,
+}
+
+async fn load_unsubscribes(kind: &str) -> Counter<String> {
+    let auth =
+        surf::http::auth::BasicAuth::new("api", std::env::var("MAILGUN_PRIVATE_KEY").expect("This command should be run in an evironment with access to the Mailgun private key. Run it locally after setting the MAILGUN_PRIVAT_KEY environment variable."));
+    let base = "https://api.mailgun.net/v3/mail.sciencenearme.org";
+
+    let mut counts = Counter::new();
+    let mut url = surf::Url::parse(&format!("{base}/{kind}?limit=100")).unwrap();
+
+    loop {
+        let data: UnsubscribePage = surf::Request::builder(Method::Get, url)
+            .header(auth.name(), auth.value())
+            .recv_json()
+            .await
+            .unwrap();
+
+        url = surf::Url::parse(&data.paging.next).unwrap();
+
+        if data.items.len() == 0 {
+            break;
+        }
+
+        for item in data.items {
+            let stamp =
+                chrono::DateTime::parse_from_rfc2822(&item.created_at.replace("UTC", "+0000"))
+                    .unwrap();
+            counts[&stamp.format("%Y-%m").to_string()] += 1;
+        }
+    }
+
+    counts
+}
+
+async fn unsubscribes(_state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
+    let unsubscribes = load_unsubscribes("unsubscribes").await;
+    let bounces = load_unsubscribes("bounces").await;
+    let complaints = load_unsubscribes("complaints").await;
+
+    let cumulative = unsubscribes + bounces + complaints;
+
+    let mut rows: Vec<_> = cumulative.iter().collect();
+
+    rows.sort_unstable();
+
+    println!(r#""month","unsubscribes""#);
+
+    for row in rows {
+        println!(r#""{}",{}"#, row.0, row.1);
+    }
+
+    Ok(())
+}
+
+async fn new_accounts(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
+    #[cfg(not(feature = "container"))]
+    panic!("Run this command in a production environment");
+
+    let mut joins: Counter<String> = Counter::new();
+
+    let mut stream = sqlx::query!(
+        "SELECT substring(interior ->> 'joined_at' FROM 0 FOR 8) AS month FROM c_person"
+    )
+    .fetch(&state.db);
+
+    while let Some(rec) = stream.next().await {
+        if let Some(month) = rec?.month {
+            joins[&month] += 1;
+        }
+    }
+
+    let mut rows: Vec<_> = joins.iter().collect();
+
+    rows.sort_unstable();
+
+    println!(r#""month","new accounts""#);
+
+    for row in rows {
+        println!(r#""{}",{}"#, row.0, row.1);
+    }
+
+    Ok(())
+}
+
+async fn new_opportunities(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
+    #[cfg(not(feature = "container"))]
+    panic!("Run this command in a production environment");
+
+    let mut opps: Counter<String> = Counter::new();
+
+    let mut stream =
+        sqlx::query!("SELECT substring(created::text from 0 for 8) AS month FROM c_opportunity")
+            .fetch(&state.db);
+
+    while let Some(rec) = stream.next().await {
+        if let Some(month) = rec?.month {
+            opps[&month] += 1;
+        }
+    }
+
+    let mut rows: Vec<_> = opps.iter().collect();
+
+    rows.sort_unstable();
+
+    println!(r#""month","new opportunities""#);
+
+    for row in rows {
+        println!(r#""{}",{}"#, row.0, row.1);
+    }
+
+    Ok(())
+}
+
+async fn run_shell(state: State) -> Result<(), DynError> {
+    let mut shell = Shell::new_async(state, "SNM Toolkit $ ");
 
     shell
         .commands
@@ -615,7 +751,51 @@ async fn main() -> Result<(), DynError> {
         Command::new_async("send an email message".into(), async_fn!(State, send)),
     );
 
+    shell.commands.insert(
+        "unsubscribes".into(),
+        Command::new_async(
+            "print unsubscribe CSV".into(),
+            async_fn!(State, unsubscribes),
+        ),
+    );
+
     shell.run_async().await?;
+
+    Ok(())
+}
+
+#[derive(clap::Subcommand, Debug)]
+enum Action {
+    Shell,
+    Unsubscribes,
+    Joins,
+    Opportunities,
+}
+
+#[derive(Parser, Debug)]
+struct Options {
+    #[clap(subcommand)]
+    command: Option<Action>,
+}
+
+#[async_std::main]
+async fn main() -> Result<(), DynError> {
+    let options = Options::parse();
+
+    let mut state = State::new().await?;
+
+    match options.command.unwrap_or(Action::Shell) {
+        Action::Unsubscribes => {
+            unsubscribes(&mut state, Vec::new()).await?;
+        }
+        Action::Joins => {
+            new_accounts(&mut state, Vec::new()).await?;
+        }
+        Action::Opportunities => {
+            new_opportunities(&mut state, Vec::new()).await?;
+        }
+        Action::Shell => run_shell(state).await?,
+    }
 
     Ok(())
 }
