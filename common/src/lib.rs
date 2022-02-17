@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use thiserror::Error;
 use uuid::Uuid;
 
+pub mod emails;
 pub mod geo;
 pub mod jwt;
 pub mod model;
@@ -154,7 +155,9 @@ pub static LANGUAGES: Lazy<BTreeMap<String, String>> = Lazy::new(|| {
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("Authorization failed")]
+    #[error("Email error: {0}")]
+    Email(String),
+    #[error("Authorization error: {0}")]
     Auth(String),
     #[error("JWT operation failed")]
     JWT(#[from] ::jwt::Error),

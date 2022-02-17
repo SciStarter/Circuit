@@ -481,6 +481,61 @@ async fn checkpassword(_state: &mut State, args: Vec<String>) -> Result<(), DynE
     Ok(())
 }
 
+async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+    if args.len() < 2 {
+        println!("Expected test or template keyword");
+    }
+
+    match args[1].as_str() {
+        "test" => {
+            if args.len() == 5 {
+                let to = &args[2];
+                let subject = &args[3];
+                let body = &args[4];
+
+                common::emails::send(
+                    to,
+                    "Science Near Me <info@sciencenearme.org>",
+                    subject,
+                    body,
+                )
+                .await;
+
+                println!("Sent");
+            }
+        }
+        "template" => {
+            if args.len() == 3 {
+                let slug = &args[2];
+
+                let email = common::emails::EmailMessage::load(&state.db, slug)
+                    .await
+                    .unwrap();
+
+                let mut persons = state.person_query.load_matching(&state.db)?;
+
+                while let Some(result) = persons.next().await {
+                    let person = result.unwrap();
+                    println!("{}", &person.interior.email);
+                    common::emails::send(
+                        &person.interior.email,
+                        "Science Near Me <info@sciencenearme.org>",
+                        &email.subject,
+                        &email.body,
+                    )
+                    .await;
+                }
+                println!("Sent");
+            }
+        }
+        unknown => {
+            println!("unknown keyword {unknown}");
+        }
+    }
+
+    Ok(())
+}
+
 #[async_std::main]
 async fn main() -> Result<(), DynError> {
     let mut shell = Shell::new_async(State::new().await?, "SNM Toolkit $ ");
@@ -553,6 +608,11 @@ async fn main() -> Result<(), DynError> {
             "Check whether a password matches a hash".into(),
             async_fn!(State, checkpassword),
         ),
+    );
+
+    shell.commands.insert(
+        "send".into(),
+        Command::new_async("send an email message".into(), async_fn!(State, send)),
     );
 
     shell.run_async().await?;

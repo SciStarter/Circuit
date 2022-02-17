@@ -1058,6 +1058,38 @@
       ]
     }
   },
+  "93604ba7449414748c0c536477e0bec385753d0e2a83a43c7901eca805cb6382": {
+    "query": "SELECT slug, subject, body FROM c_email_message WHERE slug = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "slug",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 1,
+          "name": "subject",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "body",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "9ba5ac0a254a302fcc36e1ecbb77b0339e18cd8205c421e8146cf9a338df0092": {
     "query": "select I.id, I.exterior, I.interior\nfrom c_involvement as I\nleft join c_opportunity as O\non (I.exterior -> 'opportunity') = (O.exterior -> 'uid')\nwhere\n  ($1::jsonb) @> (I.interior -> 'participant')\nand\n  O.fulltext_english @@ websearch_to_tsquery($4)\nand\n  case\n    when $2::integer is null then (I.exterior ->> 'mode')::integer >= 1\n    else (I.exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (I.exterior ->> 'mode')::integer <= $3::integer\n  end\norder by I.updated desc\nlimit $5 offset $6;\n",
     "describe": {
@@ -1454,6 +1486,20 @@
       "nullable": [
         null
       ]
+    }
+  },
+  "d182f0912e9241f5a82e0b72e1233c70954ba275823d24a4df7b67156754238b": {
+    "query": "INSERT INTO c_email_message (slug, subject, body)\n                  VALUES ($1, $2, $3)\n                  ON CONFLICT (slug)\n                  DO UPDATE SET subject = $2, body = $3 WHERE c_email_message.slug = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": []
     }
   },
   "d5b62ec112d28e12699c6c7a75dee8ab657ea667bcc1d878f720ad3f0426ecff": {
