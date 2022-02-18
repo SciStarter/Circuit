@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use async_std::{
     channel::{unbounded, Receiver, Sender},
@@ -20,7 +20,8 @@ struct Email {
 
 async fn enqueue(mut req: Request<Sender<Email>>) -> tide::Result {
     let email: Email = req.body_json().await?;
-    println!("Queuing email to {}", &email.to);
+    let now = chrono::Utc::now().to_rfc3339();
+    println!("[{now}] Queuing email to {}", &email.to);
     req.state().send(email).await?;
     Ok("queued".into())
 }
@@ -35,9 +36,9 @@ async fn send(recv: Receiver<Email>, xmit: Sender<Email>) {
     loop {
         task::sleep(rate).await;
 
-        println!("Waiting...");
-
         if let Ok(email) = recv.recv().await {
+            let now = chrono::Utc::now().to_rfc3339();
+
             let mut body = String::new();
 
             {
@@ -60,17 +61,17 @@ async fn send(recv: Receiver<Email>, xmit: Sender<Email>) {
                 .await
             {
                 Ok(mut x) => match x.status() {
-                    StatusCode::Ok => println!("Sent email to {}", &email.to),
+                    StatusCode::Ok => println!("[{now}] Sent email to {}", &email.to),
                     StatusCode::TooManyRequests => {
                         xmit.send(email).await.ok();
                         task::sleep(rate_limited).await;
                     }
                     other => {
-                        eprintln!("{other:?} {:?}", x.body_string().await)
+                        eprintln!("[{now}] {other:?} {:?}", x.body_string().await)
                     }
                 },
                 Err(err) => {
-                    eprintln!("Error during send: {err:?}")
+                    eprintln!("[{now}] Error during send: {err:?}")
                 }
             }
         } else {
