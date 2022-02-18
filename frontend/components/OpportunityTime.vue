@@ -84,8 +84,11 @@ export default {
             if(pair[1] < now) {
                 return "Finished " + pair[1].toLocaleString();
             }
-            else if(pair[0] < now && pair[1] > now) {
+            else if(pair[0] < now && pair[1] >= LATEST) {
                 return "Ongoing";
+            }
+            else if(pair[0] < now && pair[1] > now) {
+                return "Ongoing through " + pair[1].toLocaleString([], { month: 'long', day:'numeric', year:'numeric', hour: 'numeric', minute: '2-digit'});
             }
             else {
                 if(pair[0].getFullYear() == pair[1].getFullYear() && pair[0].getMonth() == pair[1].getMonth() && pair[0].getDate() == pair[1].getDate()) {
