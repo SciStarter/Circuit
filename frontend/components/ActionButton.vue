@@ -109,7 +109,7 @@ button.action-button {
     border-radius: 6px;
     margin: 10px 0.5rem;
     padding: 10px;
-    box-shadow: 0px 3px 6px $snm-color-shadow;
+    // box-shadow: 0px 3px 6px $snm-color-shadow;
     font-weight: bold;
     color: var(--foreground);
     background-color: var(--background);

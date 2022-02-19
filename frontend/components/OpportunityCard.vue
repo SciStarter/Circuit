@@ -1,5 +1,5 @@
 <template>
-<article v-if="!hidden" class="opportunity-card" :class="{'rule': rule,'has-trash':trash, 'opp-loader':loader, 'widget':widget}">
+<article v-if="!hidden" class="opportunity-card" :class="{'rule': rule,'has-trash':trash, 'opp-loader':loader, 'widget':widget, 'owner':owner}">
   <template v-if="loader">
     <div class="primary">
       <div class="oc-loader-img linear-background" />
@@ -44,6 +44,29 @@
     </div>
   </template>
   <!-- end widget -->
+
+  <template v-else-if="owner">
+    <nuxt-link :to="'/' + opportunity.slug" class="primary">
+      <img :src="image">
+      <div>
+        <h1>{{ opportunity.title }}</h1>
+        <opportunity-location :opportunity="opportunity" :short="true" class="info" />
+        <opportunity-time :opportunity="opportunity" class="info" />
+      </div>
+    </nuxt-link>
+    <div class="owner-actions">
+          <action-button v-if="owner=='live' || owner=='draft'" tertiary><div class="icon"><edit-icon /></div>Edit</action-button>
+          <b-dropdown aria-role="list" position="is-bottom-left">
+            <template #trigger="{ active }">
+                <b-button class="more-btn"><div class="icon"><more-icon /></div></b-button>
+            </template>
+            <b-dropdown-item aria-role="listitem">View</b-dropdown-item>
+            <!-- <b-dropdown-item aria-role="listitem">Duplicate</b-dropdown-item> -->
+            <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
+        </b-dropdown>
+    </div>
+  </template>
+  <!-- end owner -->
 
   <template v-else>
   <button v-if="trash" class="trash" @click="$emit('trash', opportunity)">
@@ -95,6 +118,8 @@ import LocationIcon from '~/assets/img/location-marker.svg?inline'
 import TimeIcon from '~/assets/img/calendar.svg?inline'
 import KeywordsIcon from '~/assets/img/tag.svg?inline'
 import TrashIcon from '~/assets/img/trash.svg?inline'
+import EditIcon from '~/assets/img/edit-alt.svg?inline'
+import MoreIcon from '~/assets/img/more.svg?inline'
 
 export default {
     components: {
@@ -109,6 +134,8 @@ export default {
         TimeIcon,
         KeywordsIcon,
         TrashIcon,
+        EditIcon,
+        MoreIcon
     },
 
     props: {
@@ -146,6 +173,11 @@ export default {
             default: false,
         },
         widgetlayout: {
+            type: String,
+            required: false,
+            default: undefined,
+        },
+        owner: {
             type: String,
             required: false,
             default: undefined,
@@ -475,6 +507,42 @@ export default {
     border-radius:6px;
     margin:8px;
     width: calc(100% - 16px);
+  }
+}
+
+/*** OWNER **/
+.owner.opportunity-card {
+  display:flex;
+  justify-content: space-between;
+  flex-direction:row;
+  h1 {
+    margin-bottom:2px;
+  }
+  a {
+    flex:auto;
+  }
+  .info {
+    font-size:12px;
+    color: #000;
+    line-height:1.1;
+    margin-bottom:2px;
+  }
+  .owner-actions {
+    background-color: #F5F5F5;
+    display:flex;
+    align-items:center;
+    border-left:1px solid $snm-color-border;
+    padding:0 1rem;
+  }
+  .more-btn {
+    background-color:transparent;
+    border:0;
+    display:flex;
+    align-items:center;
+    .icon {
+      position:relative;
+      top:3px;
+    }
   }
 }
 
