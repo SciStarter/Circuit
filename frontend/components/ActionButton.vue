@@ -1,5 +1,5 @@
 <template>
-  <button ref="actionBtn" type="button" class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large, 'text':text, 'gray':gray, 'tight':tight}" :disabled="disabled" @click="$emit('click')">
+  <button ref="actionBtn" type="button" class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large, 'text':text, 'gray':gray, 'tight':tight, 'text2':text2, 'red':red}" :disabled="disabled" @click="$emit('click')">
     <slot />
   </button>
 </template>
@@ -72,6 +72,16 @@ export default {
             default: false,
         },
         tight: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        text2: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        red: {
             type: Boolean,
             required: false,
             default: false,
@@ -259,6 +269,22 @@ button.action-button {
       width:auto;
       height:auto;
     }
+    &.text2 {
+      border: 0;
+      background-color:transparent;
+      box-shadow:none;
+      font-weight:normal;
+      color: $snm-color-element-med;
+      padding:0;
+      margin:0;
+      width:auto;
+      height:auto;
+      text-decoration: underline;
+
+      &:hover {
+        color: $snm-color-background-meddark;
+      }
+    }
 
     &.gray {
         --border: #696969;
@@ -297,6 +323,16 @@ button.action-button {
         }
       }
     }
+
+    &.primary.red {
+        --border: #640C00;
+        --background: #{$snm-color-info};
+        --foreground: #{$snm-color-element-light};
+
+        &:hover,&:active {
+            --background:#640C00;
+        }
+      }
 
 }
 </style>

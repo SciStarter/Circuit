@@ -1347,7 +1347,7 @@ footer {
   }
 }
 
-.my-submit-opportunity{
+.my-submit-opportunity, .my-edit-opportunity{
   footer, .subfooter {
     display:none;
   }

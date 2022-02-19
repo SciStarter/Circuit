@@ -5,13 +5,6 @@
 
   <div class="snm-container">
 
-    <action-button v-if="editMode" class="round-btn" principal>
-      <div class="icon">
-        <eye-icon />
-      </div>
-      Return to opportunity
-    </action-button>
-
     <ol :class="{'nav-tabs': editMode, 'track': !editMode}">
         <li><a :class="{'tab-link':editMode, 'active':state==1}" @click="(editMode) => state=1"><span v-if="!editMode">1</span>Basic Information</a></li>
         <li><a :class="{'tab-link':editMode, 'active':state==2}" @click="(editMode) => state=2"><span v-if="!editMode">2</span>Required Fields</a></li>

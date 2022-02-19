@@ -34,6 +34,36 @@
     <img v-else src="~assets/img/hamburger.svg?data" title="open mobile menu">
   </button> -->
 
+
+  <div v-if="successAdd" class="snm-container snm-alert">
+    <b-notification
+            type="is-success"
+            aria-close-label="Close notification">
+            Success! Your opportunity is now live. Review and edit below.
+        </b-notification>
+  </div>
+
+  <div v-if="successUpdate" class="snm-container snm-alert">
+    <b-notification
+            type="is-success"
+            aria-close-label="Close notification">
+            Your opportunity has been updated. Review and edit below.
+        </b-notification>
+  </div>
+
+  <div v-if="owner" class="snm-container">
+    <div class="nav-tabs"  id="owner-view">
+        <div class="tab-link active"><div class="icon"><eye-icon /></div>Public View</div>
+        <div v-if="published" class="publish published">
+          This opportunity is live. <action-button text2>Unpublish</action-button>
+        </div>
+        <div v-else class="publish unpublished">
+          This opportunity is hidden. <action-button primary tight red><div class="icon"><edit-alt-icon /></div>Publish</action-button>
+        </div>
+        <action-button primary tight><div class="icon"><edit-alt-icon /></div>Edit Opportunity</action-button>
+    </div>
+  </div>
+
   <div class="snm-container">
     <div class="opportunity-left">
       <div v-if="fromSearch">
@@ -539,6 +569,8 @@ import ShareIcon from '~/assets/img/share.svg?inline'
 import PlusIcon from '~/assets/img/plus.svg?inline'
 import CostIcon from '~/assets/img/cost.svg?inline'
 import FreeIcon from '~/assets/img/free.svg?inline'
+import EyeIcon from '~/assets/img/eye.svg?inline'
+import EditAltIcon from '~/assets/img/edit-alt.svg?inline'
 
 export default {
     components: {
@@ -566,7 +598,9 @@ export default {
         ShareIcon,
         PlusIcon,
         FreeIcon,
-        CostIcon
+        CostIcon,
+        EyeIcon,
+        EditAltIcon
     },
 
     props: {
@@ -614,6 +648,10 @@ export default {
             show_map: false,
             description_open: false,
             mobile_menu_open: false,
+            successAdd: false,
+            successUpdate: false,
+            owner: true,
+            published: true
         }
     },
 
@@ -2119,6 +2157,54 @@ ul.calendar-add li {
 .card .stars{
   margin-top:1rem;
   margin-bottom:0.5rem;
+}
+
+.snm-alert.snm-container {
+  padding:2rem;
+  .notification {
+    width:100%;
+  }
+}
+
+#owner-view {
+  margin: 1rem 2rem 2rem;
+  .icon {
+    margin-right:10px;
+  }
+  svg path, svg circle {
+    fill: #000;
+  }
+
+  .action-button {
+    margin-left: auto;
+  }
+  .action-button svg path {
+    fill: $snm-color-element-light;
+  }
+  .publish {
+    margin:0 1rem;
+    flex-grow:1;
+    border:1px solid $snm-color-border;
+    padding:6px 10px;
+    line-height: 1;
+    margin-bottom: 10px;
+    margin-top: 8px;
+    border-radius:6px;
+    font-size:14px;
+    background-color: #F4F4F4;
+
+
+    &.unpublished {
+      border-color: $snm-color-info;
+      color: $snm-color-info;
+      font-weight:bold;
+      background-color: #FFE0E0;
+      button {
+        margin:0;
+        margin-left: 1rem;
+      }
+    }
+  }
 }
 
 </style>
