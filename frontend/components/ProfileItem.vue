@@ -135,6 +135,10 @@ div.profile-item {
     border-bottom: 1px solid $snm-color-border;
     padding: 1rem;
 
+    &.no-border {
+      border-bottom:0;
+    }
+
     > div:first-child {
         display: flex;
         flex-direction: column;

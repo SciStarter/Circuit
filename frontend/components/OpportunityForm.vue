@@ -541,7 +541,7 @@
 
   <b-modal v-model="show_end_date" :width="640" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal">
     <div class="card">
-      <h1>Select an End Date</h1>
+      <h1>Select an End Date<span class="close" @click="show_end_date = false">&times;</span></h1>
       <p>If your ongoing opportunity has an end date, select below.</p>
       <div class="flex flex-center">
         <b-datepicker v-model="endDate" inline></b-datepicker>
@@ -555,7 +555,7 @@
 
   <b-modal v-model="show_time_periods" :width="800" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal">
     <div class="card">
-      <h1>Add and Customize Dates and Times</h1>
+      <h1>Add and Customize Dates and Times <span class="close" @click="show_time_periods = false">&times;</span></h1>
       <p>Select dates on the calendar. Each date must have at least one time period set on the right.</p>
       <div class="flex">
         <b-field>
@@ -966,6 +966,16 @@ export default {
       font-weight:bold;
       font-size:18px;
       font-family: $snm-font-heading;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      span {
+        font-size: 44px;
+        display: block;
+        line-height: 1;
+        font-weight: normal;
+        cursor:pointer;
+      }
     }
     p {
       margin-bottom:2rem;

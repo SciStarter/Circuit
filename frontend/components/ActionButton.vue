@@ -1,5 +1,5 @@
 <template>
-  <button ref="actionBtn" type="button" class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large, 'text':text, 'gray':gray, 'tight':tight, 'text2':text2, 'red':red}" :disabled="disabled" @click="$emit('click')">
+  <button ref="actionBtn" type="button" class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large, 'text':text, 'gray':gray, 'tight':tight, 'text2':text2, 'red':red, 'icon-only':iconOnly}" :disabled="disabled" @click="$emit('click')">
     <slot />
   </button>
 </template>
@@ -82,6 +82,11 @@ export default {
             default: false,
         },
         red: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        iconOnly: {
             type: Boolean,
             required: false,
             default: false,
@@ -332,6 +337,26 @@ button.action-button {
         &:hover,&:active {
             --background:#640C00;
         }
+      }
+
+      &.tertiary.red {
+          --border: #{$snm-color-info};
+          --background: #fff;
+          --foreground: #{$snm-color-info};
+
+          &:hover,&:active {
+              --background:#{$snm-color-info};
+              --foreground: #fff;
+          }
+        }
+
+      &.icon-only {
+        padding:10px;
+        .icon svg {
+          padding-right:0!important;
+          left:0!important;
+        }
+
       }
 
 }
