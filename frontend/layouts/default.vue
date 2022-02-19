@@ -1,5 +1,5 @@
 <template>
-<div id="page" :class="{'authenticated': authenticated, 'not-authenticated': !authenticated}">
+<div id="page" :class="[$route.name,{'authenticated': authenticated, 'not-authenticated': !authenticated}]">
   <div class="beta-banner snm-wrapper">
     <div class="snm-container">
     <p><img src="~assets/img/atom.svg?data"><b>We're in beta!</b> If you find a bug or have feedback, you can email <a href="mailto:info@sciencenearme.org">info@sciencenearme.org</a>.</p>
@@ -171,11 +171,7 @@
               <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
 
               <nuxt-link v-if="owner" to="/my/opportunities">
-                <my-opportunities-icon /> Current Opportunities
-              </nuxt-link>
-
-              <nuxt-link v-if="owner" to="/my/draft-or-closed">
-                <my-past-opportunities-icon /> Draft &amp; Closed Opportunities
+                <my-opportunities-icon /> Your Opportunities
               </nuxt-link>
 
               <nuxt-link v-if="owner" to="/my/organization">
@@ -183,7 +179,7 @@
               </nuxt-link>
 
               <nuxt-link v-if="owner" to="/my/submit-opportunity">
-                <submit-opportunity-icon /> Submit an Opportunity
+                <submit-opportunity-icon /> Add an Opportunity
               </nuxt-link>
             </nav>
           </div>
@@ -451,7 +447,8 @@ export default {
 
         show_location_cue() {
             return !(this.query.place.latitude || this.query.place.longitude);
-        }
+        },
+
     },
 
     async mounted() {
@@ -1350,6 +1347,11 @@ footer {
   }
 }
 
+.my-submit-opportunity{
+  footer, .subfooter {
+    display:none;
+  }
+}
 
 </style>
 

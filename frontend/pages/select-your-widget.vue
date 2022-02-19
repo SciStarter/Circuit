@@ -111,6 +111,7 @@
                   </b-radio>
                 </b-field>
                 <div v-if="filters.location=='near'" class="nested">
+                  <form>
                   <b-field>
                     <b-autocomplete
                       :loading="place_loading"
@@ -122,16 +123,18 @@
                       placeholder="e.g. Iowa City, IA"
                       @typing="place_completions"
                       @select="place_select"
+                      autocomplete="off"
+                      label="Place"
                       />
-                    Center point for the search
                   </b-field>
+                </form>
+                  <label style="margin-top:10px;display:block">Allowed distance, in miles</label>
                   <b-field>
                     <b-numberinput v-model="proximity_miles" min="1" max="100" controls-position="compact"></b-numberinput>
-                    Allowed distance, in miles
                   </b-field>
                 </div>
               </div>
-              <div class="nested">
+              <!-- <div class="nested">
                 <h4>Include Online Only Opportunities</h4>
                 <b-field>
                   <b-radio v-model="filters.online" native-value="yes">
@@ -143,7 +146,7 @@
                     Do not include online only opportunities
                   </b-radio>
                 </b-field>
-              </div>
+              </div> -->
               <div class="nested check-grid" v-if="descriptors && descriptors.length">
                 <h4>Activity Type</h4>
                 <b-field v-for="desc in descriptors" :key="desc[0]">
@@ -227,7 +230,7 @@ export default {
                 near: '',
                 latitude: 0,
                 longitude: 0,
-                proximity: 0,
+                proximity: 25,
                 activities:[],
                 online: 'yes',
                 partner_text: '',

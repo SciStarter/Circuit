@@ -1,5 +1,5 @@
 <template>
-  <button ref="actionBtn" type="button" class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large, 'text':text}" :disabled="disabled" @click="$emit('click')">
+  <button ref="actionBtn" type="button" class="action-button" :class="{'principal': principal, 'primary': primary, 'secondary': secondary, 'tertiary': tertiary, 'contrast-bg': contrastBg, 'contrast-fg': contrastFg, 'arrow': arrow, 'large': large, 'text':text, 'gray':gray, 'tight':tight}" :disabled="disabled" @click="$emit('click')">
     <slot />
   </button>
 </template>
@@ -66,6 +66,16 @@ export default {
             required: false,
             default: false,
         },
+        gray: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        tight: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
     },
 
     methods: {
@@ -84,7 +94,7 @@ button.action-button {
 
     position: relative;
     font-family: $snm-font-content;
-    font-size: $snm-font-small;
+    font-size: 0.85rem;
     border: 1px solid var(--border);
     border-radius: 6px;
     margin: 10px 0.5rem;
@@ -136,7 +146,7 @@ button.action-button {
         &:hover,&:active {
             --foreground: #{$snm-color-element-light};
             --border: #{$snm-color-background-dark};
-            --background: #{$snm-color-background-medlight};
+            --background: #{$snm-color-background-meddark};
         }
     }
 
@@ -158,11 +168,11 @@ button.action-button {
 
     &.primary {
         --border: #{$snm-color-background-dark};
-        --background: #{$snm-color-element-med};
+        --background: #{$snm-color-background-meddark};
         --foreground: #{$snm-color-element-light};
 
         &:hover,&:active {
-            --background: #{$snm-color-background-medium};
+            --background: #{$snm-color-background-dark};
         }
 
         &.contrast-bg {
@@ -174,7 +184,7 @@ button.action-button {
         }
 
         &:disabled {
-            --background: #{$snm-color-background-light};
+            --background: #{$snm-color-background-disabled};
             --foreground: #{$snm-color-disabled};
             --border: #{$snm-color-disabled};
         }
@@ -248,6 +258,44 @@ button.action-button {
       margin:0;
       width:auto;
       height:auto;
+    }
+
+    &.gray {
+        --border: #696969;
+        --background: #696969;
+        --foreground: #fff;
+
+        &:hover,&:active {
+            --background: #484848;
+        }
+
+        &:disabled {
+            --background: #{$snm-color-background-light};
+            --foreground: #{$snm-color-disabled};
+            --border: #{$snm-color-disabled};
+        }
+    }
+
+    &.tight {
+      padding:4px 8px;
+      box-shadow:none;
+      height:auto;
+      margin-left:0;
+
+      .icon {
+        margin-right:8px;
+        height:auto;
+        width:auto;
+      }
+      .icon svg {
+        width:12px;
+        height:auto;
+        left:auto;
+
+        path {
+          fill: #fff;
+        }
+      }
     }
 
 }
