@@ -181,6 +181,20 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
 
                 person.store(req.state()).await?;
 
+                let message = common::emails::EmailMessage::load(req.state(), "welcome-new-user")
+                    .await
+                    .ok();
+
+                if let Some(message) = message {
+                    common::emails::send(
+                        &person.interior.email,
+                        "Science Near Me <info@sciencenearme.org>",
+                        message.subject,
+                        message.body,
+                    )
+                    .await;
+                }
+
                 person
             };
 
@@ -261,6 +275,20 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
 
     common::log("ui-signup", &jwt);
     person.log(db, LogEvent::Signup).await?;
+
+    let message = common::emails::EmailMessage::load(db, "welcome-new-user")
+        .await
+        .ok();
+
+    if let Some(message) = message {
+        common::emails::send(
+            &person.interior.email,
+            "Science Near Me <info@sciencenearme.org>",
+            message.subject,
+            message.body,
+        )
+        .await;
+    }
 
     okay_with_cookie(
         &p_json,

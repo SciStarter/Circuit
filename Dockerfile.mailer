@@ -1,0 +1,11 @@
+FROM rust:1-bullseye as builder
+ADD common/ /usr/src/common/
+ADD mailer/ /usr/src/mailer/
+WORKDIR /usr/src/mailer/
+RUN cargo install --path . --features container
+RUN strip /usr/local/cargo/bin/mailer
+
+FROM debian:bullseye
+EXPOSE 9100
+COPY --from=builder /usr/local/cargo/bin/mailer /usr/local/bin/mailer
+CMD ["mailer"]

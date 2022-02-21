@@ -41,3 +41,5 @@ sodiumoxide = "0.2.7"
 readonly = "0.2.0"
 thiserror = "1.0.30"
 bytes = { version = "1.1.0", features = ["serde"] }
+counter = "0.5.3"
+clap = { version = "3.1.0", features = ["derive"] }

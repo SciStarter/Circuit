@@ -1,0 +1,39 @@
+{
+  "db": "PostgreSQL",
+  "20508a6dc06815a21e3a9e95db9412c603196a5e5604295c673c5e3d5ce02c36": {
+    "query": "SELECT substring(created::text from 0 for 8) AS month FROM c_opportunity",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "month",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "4de5cb8ae9a7a3bd00031f416671d7286676bfd6a0067093cb3eeead3bd84e9b": {
+    "query": "SELECT substring(interior ->> 'joined_at' FROM 0 FOR 8) AS month FROM c_person",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "month",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        null
+      ]
+    }
+  }
+}
