@@ -1,5 +1,9 @@
-use super::{opportunity::Opportunity, person::Person, Error, PARTNER_NAMESPACE};
-use crate::Database;
+use super::{
+    opportunity::{Opportunity, OrganizationType},
+    person::Person,
+    Error, PARTNER_NAMESPACE,
+};
+use crate::{Database, INTERNAL_UID};
 
 use serde::{Deserialize, Serialize};
 use sqlx;
@@ -19,6 +23,8 @@ pub struct Contact {
 pub struct PartnerExterior {
     pub uid: Uuid,
     pub name: String,
+    pub organization_type: OrganizationType,
+    pub url: Option<String>,
     pub image_url: Option<String>,
     pub description: String,
     pub under: Option<Uuid>,
@@ -42,6 +48,16 @@ pub struct PartnerReference {
     pub name: String,
 }
 
+impl From<Partner> for PartnerReference {
+    fn from(partner: Partner) -> Self {
+        PartnerReference {
+            id: partner.id.unwrap_or(0),
+            uid: partner.exterior.uid,
+            name: partner.exterior.name,
+        }
+    }
+}
+
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Partner {
     pub id: Option<i32>,
@@ -52,6 +68,25 @@ pub struct Partner {
 }
 
 impl Partner {
+    pub fn person_has_permission(&self, uid: &Uuid) -> bool {
+        if uid == &self.interior.prime {
+            return true;
+        }
+
+        if self.interior.authorized.iter().any(|x| x == uid) {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn elide(mut self) -> Partner {
+        self.id = None;
+        self.interior.secret = None;
+
+        self
+    }
+
     pub fn set_secret(&mut self, secret: &str) {
         self.interior.secret = Some(djangohashers::make_password(secret));
     }
@@ -72,8 +107,8 @@ impl Partner {
         }
     }
 
-    pub async fn catalog(db: &Database) -> Result<Vec<PartnerReference>, Error> {
-        Ok(sqlx::query_file!("db/partner/catalog.sql")
+    pub async fn find_by_name(db: &Database, name: &str) -> Result<Vec<PartnerReference>, Error> {
+        Ok(sqlx::query!(r#"SELECT id, (exterior -> 'uid') AS "uid", (exterior -> 'name') AS "name" FROM c_partner WHERE exterior -> 'uid' != $2 AND exterior ->> 'name' ILIKE $1"#, format!("%{name}%"), serde_json::to_value(*INTERNAL_UID)?)
             .map(|row| -> Result<PartnerReference, Error> {
                 Ok(PartnerReference {
                     id: row.id,
@@ -95,9 +130,53 @@ impl Partner {
             .collect())
     }
 
-    pub async fn load_persons(&self, db: &Database) -> Result<Vec<Result<Person, Error>>, Error> {
+    pub async fn catalog(db: &Database) -> Result<Vec<PartnerReference>, Error> {
+        Ok(sqlx::query_file!("db/partner/catalog.sql")
+            .map(|row| -> Result<PartnerReference, Error> {
+                Ok(PartnerReference {
+                    id: row.id,
+                    uid: serde_json::from_value(
+                        row.uid.ok_or_else(|| Error::Missing("uid".to_string()))?,
+                    )?,
+                    name: serde_json::from_value(
+                        row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
+                    )?,
+                })
+            })
+            .fetch_all(db)
+            .await?
+            .into_iter()
+            .flatten()
+            .collect())
+    }
+
+    pub async fn load_authorized_persons(
+        &self,
+        db: &Database,
+    ) -> Result<Vec<Result<Person, Error>>, Error> {
         let mut persons = self.interior.authorized.clone();
         persons.push(self.interior.prime.clone());
+
+        Ok(sqlx::query_file!(
+            "db/partner/fetch_persons.sql",
+            serde_json::to_value(persons)?
+        )
+        .map(|row| {
+            Ok(Person {
+                id: Some(row.id),
+                exterior: serde_json::from_value(row.exterior)?,
+                interior: serde_json::from_value(row.interior)?,
+            })
+        })
+        .fetch_all(db)
+        .await?)
+    }
+
+    pub async fn load_pending_persons(
+        &self,
+        db: &Database,
+    ) -> Result<Vec<Result<Person, Error>>, Error> {
+        let persons = self.interior.pending.clone();
 
         Ok(sqlx::query_file!(
             "db/partner/fetch_persons.sql",

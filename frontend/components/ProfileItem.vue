@@ -3,7 +3,22 @@
   <div>
     <label>{{ label }}</label>
     <b-field v-if="editing">
-      <b-numberinput v-if="value_type === Number" />
+      <div v-if="choices !== null">
+        <b-select v-model="model" >
+          <option v-for="choice in choices" :key="choices[0]" :value="choice[0]">{{choice[1]}}</option>
+        </b-select>
+      </div>
+      <div v-else-if="auto !== null">
+        <b-autocomplete
+          :data="completions"
+          :field="auto.label"
+          :loading="completing"
+          keep-first
+          @typing="load_completions"
+          @select="model = $event ? (auto.value ? $event[auto.value] : $event) : null"
+          />
+      </div>
+      <b-numberinput v-model="model" v-else-if="value_type === Number" />
       <div v-else-if="value_type === Boolean" class="radio-stack">
         <b-radio v-model="model" :native-value="false" size="is-medium">
           {{ labelFalse }}
@@ -27,8 +42,11 @@
       <span v-if="value">{{ labelTrue }}</span>
       <span v-else>{{ labelFalse }}</span>
     </div>
+    <div v-else-if="choices !== null" class="value">
+      {{ choice_label }}
+    </div>
     <div v-else class="value">
-      {{ value }}
+      {{ display ? display : value }}
     </div>
     <a v-if="!editing" @click="editing = true">(edit)</a>
   </div>
@@ -39,6 +57,9 @@
 </template>
 
 <script>
+
+const NoValue = {};
+
 export default {
     name: "ProfileItem",
 
@@ -66,6 +87,18 @@ export default {
             default: "",
         },
 
+        choices: {
+            type: [Array, null],
+            required: false,
+            default: null,
+        },
+
+        auto: {
+            type: [Object, null],
+            required: false,
+            default: null,
+        },
+
         obscure: {
             type: Boolean,
             required: false,
@@ -76,20 +109,28 @@ export default {
             type: String,
             required: false,
             default: "",
-        }
+        },
+
+        display: {
+            type: String,
+            required: false,
+            default: null,
+        },
     },
 
     data() {
         return {
             editing: false,
-            overlay: null,
+            overlay: NoValue,
+            completions: [],
+            completing: false,
         }
     },
 
     computed: {
         model: {
             get() {
-                if(this.overlay !== null) {
+                if(this.overlay !== NoValue) {
                     return this.overlay;
                 }
                 else {
@@ -114,9 +155,27 @@ export default {
                 return null;
             }
         },
+
+        choice_label() {
+            for(let choice of this.choices) {
+                if(choice[0] == this.value) {
+                    return choice[1];
+                }
+            }
+
+            return "Unknown Value";
+        },
     },
 
     methods: {
+        async load_completions(text) {
+            this.completing = true;
+            let query = {};
+            query[this.auto.search_field] = text;
+            this.completions = await this.$axios.$post(this.auto.url, query);
+            this.completing = false;
+        },
+
         save() {
             this.editing = false;
 

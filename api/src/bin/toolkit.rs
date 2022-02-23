@@ -1,5 +1,6 @@
 use async_std::prelude::*;
 use clap::Parser;
+use common::model::Partner;
 use counter::Counter;
 use http_types::Method;
 use serde::Deserialize;
@@ -116,6 +117,7 @@ enum Table {
     Ambiguous,
     Opportunity,
     Person,
+    Partner,
 }
 
 #[derive(Debug)]
@@ -151,10 +153,41 @@ impl Default for PersonQuery {
 }
 
 #[derive(Debug)]
+enum PartnerQuery {
+    Any,
+}
+
+impl PartnerQuery {
+    pub fn load_matching<'db>(
+        &self,
+        db: &'db Database,
+    ) -> Result<impl Stream<Item = Result<Partner, sqlx::Error>> + 'db, DynError> {
+        match self {
+            PartnerQuery::Any => Ok(sqlx::query("select * from c_partner;")
+                .map(|row: sqlx::postgres::PgRow| Partner {
+                    id: row.get("id"),
+                    exterior: serde_json::from_value(row.get("exterior"))
+                        .expect("Error decoding exterior"),
+                    interior: serde_json::from_value(row.get("interior"))
+                        .expect("Error decoding interior"),
+                })
+                .fetch(db)),
+        }
+    }
+}
+
+impl Default for PartnerQuery {
+    fn default() -> Self {
+        PartnerQuery::Any
+    }
+}
+
+#[derive(Debug)]
 struct State {
     db: Database,
     opportunity_query: OpportunityQuery,
     person_query: PersonQuery,
+    partner_query: PartnerQuery,
     table: Table,
 }
 
@@ -171,6 +204,7 @@ impl State {
             db,
             opportunity_query: Default::default(),
             person_query: Default::default(),
+            partner_query: Default::default(),
             table: Table::Ambiguous,
         })
     }
@@ -181,7 +215,28 @@ fn reset_person(state: &mut State) -> Result<(), DynError> {
     Ok(())
 }
 
+fn reset_partner(state: &mut State) -> Result<(), DynError> {
+    state.partner_query = PartnerQuery::default();
+    Ok(())
+}
+
 fn narrow_person(_state: &mut State, args: impl Iterator<Item = String>) -> Result<(), DynError> {
+    for op in operations(args, "=")? {
+        match op {
+            Operator::Equal {
+                attribute: _,
+                value: _,
+            } => {
+                //println!("{} = {}", &attribute, &value);
+                todo!();
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn narrow_partner(_state: &mut State, args: impl Iterator<Item = String>) -> Result<(), DynError> {
     for op in operations(args, "=")? {
         match op {
             Operator::Equal {
@@ -210,7 +265,27 @@ async fn first_person(state: &mut State) -> Result<(), DynError> {
     Ok(())
 }
 
+async fn first_partner(state: &mut State) -> Result<(), DynError> {
+    let mut partners = state.partner_query.load_matching(&state.db)?;
+
+    if let Some(result) = partners.next().await {
+        let partner = result?;
+        println!("{}", serde_json::to_string_pretty(&partner)?);
+    } else {
+        println!("No results");
+    }
+
+    Ok(())
+}
+
 async fn update_persons<F: Fn(&mut Person) -> Result<(), DynError>>(
+    _state: &mut State,
+    _update: F,
+) -> Result<(), DynError> {
+    todo!()
+}
+
+async fn update_partners<F: Fn(&mut Partner) -> Result<(), DynError>>(
     _state: &mut State,
     _update: F,
 ) -> Result<(), DynError> {
@@ -219,6 +294,10 @@ async fn update_persons<F: Fn(&mut Person) -> Result<(), DynError>>(
 
 async fn revalidate_persons(state: &mut State) -> Result<(), DynError> {
     update_persons(state, |_| Ok(())).await
+}
+
+async fn revalidate_partners(state: &mut State) -> Result<(), DynError> {
+    update_partners(state, |_| Ok(())).await
 }
 
 fn reset_opportunity(state: &mut State) -> Result<(), DynError> {
@@ -342,8 +421,9 @@ fn table(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
         "opportunity" => state.table = Table::Opportunity,
         "opp" => state.table = Table::Opportunity,
         "person" => state.table = Table::Person,
+        "partner" => state.table = Table::Partner,
         _ => {
-            return Err("valid identifiers: opp|opportunity|person".into());
+            return Err("valid identifiers: opp|opportunity|person|partner".into());
         }
     };
 
@@ -354,6 +434,7 @@ fn reset(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => reset_opportunity(state)?,
         Table::Person => reset_person(state)?,
+        Table::Partner => reset_partner(state)?,
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -366,6 +447,7 @@ fn narrow(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => narrow_opportunity(state, args.into_iter().skip(1))?,
         Table::Person => narrow_person(state, args.into_iter().skip(1))?,
+        Table::Partner => narrow_partner(state, args.into_iter().skip(1))?,
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -378,6 +460,7 @@ async fn first(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity => first_opportunity(state).await?,
         Table::Person => first_person(state).await?,
+        Table::Partner => first_partner(state).await?,
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -390,6 +473,7 @@ async fn revalidate(state: &mut State, _args: Vec<String>) -> Result<(), DynErro
     match state.table {
         Table::Opportunity => revalidate_opportunities(state).await?,
         Table::Person => revalidate_persons(state).await?,
+        Table::Partner => revalidate_partners(state).await?,
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -405,8 +489,8 @@ async fn accept(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
 
     match state.table {
         Table::Opportunity => accept_opportunities(state, accepted).await?,
-        Table::Person => {
-            return Err("not a meaningful operation on persons".into());
+        Table::Person | Table::Partner => {
+            return Err("not a meaningful operation".into());
         }
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
@@ -423,8 +507,8 @@ async fn withdraw(state: &mut State, args: Vec<String>) -> Result<(), DynError> 
 
     match state.table {
         Table::Opportunity => withdraw_opportunities(state, withdrawn).await?,
-        Table::Person => {
-            return Err("not a meaningful operation on persons".into());
+        Table::Person | Table::Partner => {
+            return Err("not a meaningful operation".into());
         }
         Table::Ambiguous => {
             return Err("select a table before trying this".into());

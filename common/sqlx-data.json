@@ -1,250 +1,250 @@
 {
   "db": "PostgreSQL",
   "113ab265c817affe2e5042ec46586946e57e3aef8339c8baae503d4884410d0c": {
-    "query": "insert into c_person (exterior, interior) values ($1, $2) returning id;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "insert into c_person (exterior, interior) values ($1, $2) returning id;\n"
   },
   "13cf1910ed943c8638d6c2beb75ff84a97c7d75a16a67d660f7e49f18ef53628": {
-    "query": "select id, exterior, interior\nfrom c_partner\nwhere ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior\nfrom c_partner\nwhere ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n"
   },
   "16274e812e6865e37e4b4f3cea7a6cb0af3410c99e8090cffdfcee78dd082de9": {
-    "query": "insert\ninto c_opportunity (exterior, interior)\nvalues (\n  $1::jsonb,\n  case\n    when ($2::jsonb -> 'accepted') = 'null'::jsonb\n    then jsonb_set($2::jsonb, '{accepted}', 'false'::jsonb)\n    else $2::jsonb\n  end\n) returning id;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "insert\ninto c_opportunity (exterior, interior)\nvalues (\n  $1::jsonb,\n  case\n    when ($2::jsonb -> 'accepted') = 'null'::jsonb\n    then jsonb_set($2::jsonb, '{accepted}', 'false'::jsonb)\n    else $2::jsonb\n  end\n) returning id;\n"
   },
   "232db60cfb4ba3a2fd8869075ca90f615000a51968582c00b28f66aa687e63e7": {
-    "query": "select id, exterior, interior from c_partner where id = $1 limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Int4"
         ]
-      },
+      }
+    },
+    "query": "select id, exterior, interior from c_partner where id = $1 limit 1;\n"
+  },
+  "2926fdcfb5c1566b98ce5db414ffcc2f504370e626736795d063305676c6adec": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
       "nullable": [
         false,
         false,
         false
-      ]
-    }
-  },
-  "2926fdcfb5c1566b98ce5db414ffcc2f504370e626736795d063305676c6adec": {
-    "query": "select id, exterior, interior from c_involvement where ($1::jsonb) @> (interior -> 'participant') and ($2::jsonb) @> (exterior -> 'opportunity') limit 1;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "exterior",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 2,
-          "name": "interior",
-          "type_info": "Jsonb"
-        }
       ],
       "parameters": {
         "Left": [
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_involvement where ($1::jsonb) @> (interior -> 'participant') and ($2::jsonb) @> (exterior -> 'opportunity') limit 1;\n"
   },
   "2a6805df4bd8ba9d61737cb668ec77691b8f1cd7b26e2f4d93124ad675463848": {
-    "query": "select exists(select 1 from c_opportunity where lower($1::text) = lower(exterior ->> 'slug')) as \"exists\";\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "exists",
+          "ordinal": 0,
           "type_info": "Bool"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select exists(select 1 from c_opportunity where lower($1::text) = lower(exterior ->> 'slug')) as \"exists\";\n"
   },
   "2df17666d71246bf68b8ee4ef021d2c5a269995271d3f598a94d0df314fec0e4": {
-    "query": "select id, (exterior -> 'uid') as \"uid\", (exterior -> 'name') as \"name\" from c_partner;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "uid",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
       ],
-      "parameters": {
-        "Left": []
-      },
       "nullable": [
         false,
         null,
         null
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "select id, (exterior -> 'uid') as \"uid\", (exterior -> 'name') as \"name\" from c_partner;\n"
   },
   "369aab45590c7324468f76defaaca4885ad0ca6a935d53eb7d056a4fd6871577": {
-    "query": "select (exterior ->> 'uid')::uuid as uid from c_opportunity where lower($1::text) = lower(exterior ->> 'slug') limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "uid",
+          "ordinal": 0,
           "type_info": "Uuid"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select (exterior ->> 'uid')::uuid as uid from c_opportunity where lower($1::text) = lower(exterior ->> 'slug') limit 1;\n"
   },
   "36f5e907e4ae50d5b4273a2c35c0b4111863f7173f2cdbbf7b89cd741a1c3da8": {
-    "query": "select id, exterior, interior from c_opportunity where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_opportunity where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n"
   },
   "3966e9453b13f17e061b7a957fe71e2d1a00ea869abe878738a992b6363b00d1": {
-    "query": "UPDATE c_BLOCK SET \"language\" = $2, \"group\" = $3, item = $4, tags = $5, label = $6, content = $7 WHERE id = $1;\n",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
@@ -255,104 +255,106 @@
           "Text",
           "Text"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "UPDATE c_BLOCK SET \"language\" = $2, \"group\" = $3, item = $4, tags = $5, label = $6, content = $7 WHERE id = $1;\n"
   },
   "398eb5595d78b03579bcc0a2ed80217fd033806ee14b372e8ec4b380d9b8813a": {
-    "query": "insert into c_partner (exterior, interior) values ($1, $2) returning id;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "insert into c_partner (exterior, interior) values ($1, $2) returning id;\n"
   },
   "3a5fe5a398cd6ba3fce8b29dd91e547c991617fce2a7e8c4ca978149377add97": {
-    "query": "select id, exterior, interior from c_opportunity where ($1::jsonb) @> (exterior -> 'partner');\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_opportunity where ($1::jsonb) @> (exterior -> 'partner');\n"
   },
   "3c0fe1e4ace1686507f9ba8f135fc4217d948ef3fc11b0fadfdfee99fa62b4cc": {
-    "query": "select id, exterior, interior from c_person where ($1::jsonb) @> (exterior -> 'uid');\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_person where ($1::jsonb) @> (exterior -> 'uid');\n"
   },
   "3fa82b297f6002eedca5948473a6baf7ec0b3a643ebf6eeded0225231454a08e": {
-    "query": "select count(*) as \"total!\"\nfrom\n  (\n    ( -- Count each \"I did this\" in the timeframe as one\n      select\n        (I.exterior -> 'opportunity') as \"opportunity\",\n        (I.exterior -> 'latest') as \"when\"\n      from c_involvement I\n      where\n        (I.interior ->> 'participant') = $1::text\n      and\n        (I.exterior -> 'mode') = '30'::jsonb\n      and\n        (I.exterior ->> 'latest') >= $2::text\n      and\n        (I.exterior ->> 'latest') <= $3::text\n    )\n  union\n    ( -- Count each partner-reported contribution in the timeframe as one\n      select\n        (P.exterior -> 'opportunity') as \"opportunity\",\n        (P.exterior -> 'when') as \"when\"\n      from c_participation P\n      where\n        (P.interior ->> 'participant') = $1::text\n      and\n        (P.exterior ->> 'when') >= $2::text\n      and\n        (P.exterior ->> 'when') <= $3::text\n    )\n  ) as \"merged\"\n;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "total!",
+          "ordinal": 0,
           "type_info": "Int8"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
@@ -360,37 +362,35 @@
           "Text",
           "Text"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select count(*) as \"total!\"\nfrom\n  (\n    ( -- Count each \"I did this\" in the timeframe as one\n      select\n        (I.exterior -> 'opportunity') as \"opportunity\",\n        (I.exterior -> 'latest') as \"when\"\n      from c_involvement I\n      where\n        (I.interior ->> 'participant') = $1::text\n      and\n        (I.exterior -> 'mode') = '30'::jsonb\n      and\n        (I.exterior ->> 'latest') >= $2::text\n      and\n        (I.exterior ->> 'latest') <= $3::text\n    )\n  union\n    ( -- Count each partner-reported contribution in the timeframe as one\n      select\n        (P.exterior -> 'opportunity') as \"opportunity\",\n        (P.exterior -> 'when') as \"when\"\n      from c_participation P\n      where\n        (P.interior ->> 'participant') = $1::text\n      and\n        (P.exterior ->> 'when') >= $2::text\n      and\n        (P.exterior ->> 'when') <= $3::text\n    )\n  ) as \"merged\"\n;\n"
   },
   "3fc9c7529a30a98931f05a3ae3b447d20175be19f608cccd56a5e00bf7dac34c": {
-    "query": "insert\ninto c_person_log (\"person_id\", \"event\")\nvalues ($1, $2::jsonb)\nreturning \"id\";\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": [
           "Int4",
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "insert\ninto c_person_log (\"person_id\", \"event\")\nvalues ($1, $2::jsonb)\nreturning \"id\";\n"
   },
   "42aeff0b3f4e842b6e554b89136413119fabda020c3ecb09e01f4540b30b092d": {
-    "query": "insert into c_involvement (exterior, interior)\nvalues (\n  jsonb_build_object('opportunity', $2::jsonb, 'first', to_jsonb(now()), 'latest', to_jsonb(now()), 'mode', $3::jsonb),\n  jsonb_build_object('participant', $1::jsonb, 'location', $4::jsonb)\n)\non conflict ((exterior -> 'opportunity'), (interior -> 'participant')) do\nupdate set\n  exterior = jsonb_set(\n    jsonb_set(c_involvement.exterior, '{latest}', to_jsonb(now())),\n    '{mode}',\n    greatest((c_involvement.exterior -> 'mode'), $3::jsonb)\n  ),\n  interior = case when ($4::jsonb = 'null'::jsonb) then c_involvement.interior else jsonb_set(c_involvement.interior, '{location}', $4::jsonb) end\n;\n",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Jsonb",
@@ -398,55 +398,49 @@
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "insert into c_involvement (exterior, interior)\nvalues (\n  jsonb_build_object('opportunity', $2::jsonb, 'first', to_jsonb(now()), 'latest', to_jsonb(now()), 'mode', $3::jsonb),\n  jsonb_build_object('participant', $1::jsonb, 'location', $4::jsonb)\n)\non conflict ((exterior -> 'opportunity'), (interior -> 'participant')) do\nupdate set\n  exterior = jsonb_set(\n    jsonb_set(c_involvement.exterior, '{latest}', to_jsonb(now())),\n    '{mode}',\n    greatest((c_involvement.exterior -> 'mode'), $3::jsonb)\n  ),\n  interior = case when ($4::jsonb = 'null'::jsonb) then c_involvement.interior else jsonb_set(c_involvement.interior, '{location}', $4::jsonb) end\n;\n"
   },
   "43784b21a51db579012c74c0de34cdbe83d73615c41e78408c2472b4ed75d364": {
-    "query": "select R.\"id\", R.\"person\", R.\"rating\", R.\"comment\", R.\"when\",\n  case when P.\"exterior\" is not null then (P.\"exterior\" ->> 'username') else '' end as \"username\",\n  case when P.\"exterior\" is not null then (P.\"exterior\" ->> 'image_url') else '' end as \"image_url\"\nfrom c_opportunity_review R\ninner join c_opportunity O on R.opportunity_id = O.id\nleft outer join c_person P on R.person = (P.exterior ->> 'uid')::uuid\nwhere (O.exterior ->> 'slug') = $1 order by r.\"when\" desc;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "person",
+          "ordinal": 1,
           "type_info": "Uuid"
         },
         {
-          "ordinal": 2,
           "name": "rating",
+          "ordinal": 2,
           "type_info": "Int2"
         },
         {
-          "ordinal": 3,
           "name": "comment",
+          "ordinal": 3,
           "type_info": "Text"
         },
         {
-          "ordinal": 4,
           "name": "when",
+          "ordinal": 4,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 5,
           "name": "username",
+          "ordinal": 5,
           "type_info": "Text"
         },
         {
-          "ordinal": 6,
           "name": "image_url",
+          "ordinal": 6,
           "type_info": "Text"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
       "nullable": [
         false,
         false,
@@ -455,75 +449,88 @@
         false,
         null,
         null
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "select R.\"id\", R.\"person\", R.\"rating\", R.\"comment\", R.\"when\",\n  case when P.\"exterior\" is not null then (P.\"exterior\" ->> 'username') else '' end as \"username\",\n  case when P.\"exterior\" is not null then (P.\"exterior\" ->> 'image_url') else '' end as \"image_url\"\nfrom c_opportunity_review R\ninner join c_opportunity O on R.opportunity_id = O.id\nleft outer join c_person P on R.person = (P.exterior ->> 'uid')::uuid\nwhere (O.exterior ->> 'slug') = $1 order by r.\"when\" desc;\n"
   },
   "4952cde5a0390226da36688f8a2d32e5a52749b7efd1a69be726110fb2669323": {
-    "query": "select id, exterior, interior from c_person where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_person where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n"
   },
   "4b936d63a1c18538d39873008467a3731c529ab8b310d65f677e563e76d6a182": {
-    "query": "insert into c_opportunity_import_record (\"partner\", \"opportunity\", \"created\", \"ignored\")\nvalues ($1, $2, $3, $4)\nreturning \"id\", \"when\", \"partner\", \"opportunity\", \"created\", \"ignored\";\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "when",
+          "ordinal": 1,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 2,
           "name": "partner",
+          "ordinal": 2,
           "type_info": "Uuid"
         },
         {
-          "ordinal": 3,
           "name": "opportunity",
+          "ordinal": 3,
           "type_info": "Uuid"
         },
         {
-          "ordinal": 4,
           "name": "created",
+          "ordinal": 4,
           "type_info": "Bool"
         },
         {
-          "ordinal": 5,
           "name": "ignored",
+          "ordinal": 5,
           "type_info": "Bool"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
@@ -532,26 +539,21 @@
           "Bool",
           "Bool"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "insert into c_opportunity_import_record (\"partner\", \"opportunity\", \"created\", \"ignored\")\nvalues ($1, $2, $3, $4)\nreturning \"id\", \"when\", \"partner\", \"opportunity\", \"created\", \"ignored\";\n"
   },
   "4d1ba739e2e5c521464c4eb89ce69d49b51d14d6c697901d1ffb079b350945a6": {
-    "query": "INSERT INTO c_block (\"language\", \"group\", item, tags, label, content) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": [
@@ -562,274 +564,270 @@
           "Text",
           "Text"
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "INSERT INTO c_block (\"language\", \"group\", item, tags, label, content) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;\n"
   },
   "4eddd9bfc58cd771141b4f9b2c289a485f05e303b6c1d848dc002d187cad7d0e": {
-    "query": "update c_opportunity\nset\n  exterior = $2::jsonb,\n  interior =\n    case\n      when ($3::jsonb -> 'accepted') = 'null'::jsonb\n      then jsonb_set($3::jsonb, '{accepted}', c_opportunity.interior -> 'accepted')\n      else $3::jsonb\n    end\nwhere id = $1;\n",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "update c_opportunity\nset\n  exterior = $2::jsonb,\n  interior =\n    case\n      when ($3::jsonb -> 'accepted') = 'null'::jsonb\n      then jsonb_set($3::jsonb, '{accepted}', c_opportunity.interior -> 'accepted')\n      else $3::jsonb\n    end\nwhere id = $1;\n"
   },
   "58321d77d0c4de7155c40c1f954c8345da576c96162f6c594163052fc92bea8a": {
-    "query": "update c_partner set exterior = $2, interior = $3 where id = $1;\n",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "update c_partner set exterior = $2, interior = $3 where id = $1;\n"
   },
   "58a5b3faeef84fb02e03e9ebab0ec2596cf0e115d1d4e5bbfd3fb6d6f2b3a6a9": {
-    "query": "SELECT * FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 ORDER BY item;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "created",
+          "ordinal": 1,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 2,
           "name": "updated",
+          "ordinal": 2,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 3,
           "name": "language",
+          "ordinal": 3,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 4,
           "name": "group",
+          "ordinal": 4,
           "type_info": "Text"
         },
         {
-          "ordinal": 5,
           "name": "item",
+          "ordinal": 5,
           "type_info": "Text"
         },
         {
-          "ordinal": 6,
           "name": "content",
+          "ordinal": 6,
           "type_info": "Text"
         },
         {
-          "ordinal": 7,
           "name": "tags",
+          "ordinal": 7,
           "type_info": "Text"
         },
         {
-          "ordinal": 8,
           "name": "label",
+          "ordinal": 8,
           "type_info": "Text"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Text",
           "Text"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "SELECT * FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 ORDER BY item;\n"
   },
   "5cea81409892578b39454103d129bbbe8a23b5c04a24b94be72347b3313cf8a5": {
-    "query": "insert\ninto c_opportunity_like (opportunity_id, person)\nvalues ($1, $2)\non conflict do nothing;\n",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
           "Uuid"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "insert\ninto c_opportunity_like (opportunity_id, person)\nvalues ($1, $2)\non conflict do nothing;\n"
   },
   "62ffbbac0271bf049852727ee7a6ebda23461fdc03384c2cd5549d9c1d16e4d7": {
-    "query": "select count(*) saves\nfrom c_involvement I inner join c_opportunity O\non (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')\nwhere (I.exterior -> 'mode')::integer = 20 and (O.exterior ->> 'slug') = $1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "saves",
+          "ordinal": 0,
           "type_info": "Int8"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select count(*) saves\nfrom c_involvement I inner join c_opportunity O\non (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')\nwhere (I.exterior -> 'mode')::integer = 20 and (O.exterior ->> 'slug') = $1;\n"
   },
   "6697921dc3c0df6ff442b11c9c0fa91f5625fdc53c6354914321b3ccb3fd9d65": {
-    "query": "select *\nfrom\n  (\n    ( -- Count each \"I did this\" in the timeframe as one\n      select\n        (I.exterior ->> 'opportunity')::uuid as \"opportunity!\",\n        (I.exterior ->> 'latest')::timestamptz as \"when!\"\n      from c_involvement I\n      where\n        (I.interior ->> 'participant') = $1::text\n      and\n        (I.exterior -> 'mode') = '30'::jsonb\n      and\n        (I.exterior ->> 'latest') >= $2::text\n      and\n        (I.exterior ->> 'latest') <= $3::text\n    )\n  union\n    ( -- Count each partner-reported contribution in the timeframe as one\n      select\n        (P.exterior ->> 'opportunity')::uuid as \"opportunity!\",\n        (P.exterior ->> 'when')::timestamptz as \"when!\"\n      from c_participation P\n      where\n        (P.interior ->> 'participant') = $1::text\n      and\n        (P.exterior ->> 'when') >= $2::text\n      and\n        (P.exterior ->> 'when') <= $3::text\n    )\n  ) as \"merged\"\norder by \"when!\" asc\n;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "opportunity!",
+          "ordinal": 0,
           "type_info": "Uuid"
         },
         {
-          "ordinal": 1,
           "name": "when!",
+          "ordinal": 1,
           "type_info": "Timestamptz"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text"
-        ]
-      },
       "nullable": [
         null,
         null
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "select *\nfrom\n  (\n    ( -- Count each \"I did this\" in the timeframe as one\n      select\n        (I.exterior ->> 'opportunity')::uuid as \"opportunity!\",\n        (I.exterior ->> 'latest')::timestamptz as \"when!\"\n      from c_involvement I\n      where\n        (I.interior ->> 'participant') = $1::text\n      and\n        (I.exterior -> 'mode') = '30'::jsonb\n      and\n        (I.exterior ->> 'latest') >= $2::text\n      and\n        (I.exterior ->> 'latest') <= $3::text\n    )\n  union\n    ( -- Count each partner-reported contribution in the timeframe as one\n      select\n        (P.exterior ->> 'opportunity')::uuid as \"opportunity!\",\n        (P.exterior ->> 'when')::timestamptz as \"when!\"\n      from c_participation P\n      where\n        (P.interior ->> 'participant') = $1::text\n      and\n        (P.exterior ->> 'when') >= $2::text\n      and\n        (P.exterior ->> 'when') <= $3::text\n    )\n  ) as \"merged\"\norder by \"when!\" asc\n;\n"
   },
   "6ff3efed7a7e1ae0be5f36b8c802bbbf4991f826f62254d1ace3051d6d4995aa": {
-    "query": "select id, exterior, interior from c_opportunity where id = $1 limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Int4"
         ]
-      },
+      }
+    },
+    "query": "select id, exterior, interior from c_opportunity where id = $1 limit 1;\n"
+  },
+  "731e1957cf8705f40d16d13e85efb39ea753be689994ab6ee729c4a1e12072b8": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
       "nullable": [
         false,
         false,
         false
-      ]
-    }
-  },
-  "731e1957cf8705f40d16d13e85efb39ea753be689994ab6ee729c4a1e12072b8": {
-    "query": "select id, exterior, interior from c_person where (interior -> 'email_hashes') ? $1;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "exterior",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 2,
-          "name": "interior",
-          "type_info": "Jsonb"
-        }
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_person where (interior -> 'email_hashes') ? $1;\n"
   },
   "7dec6dc80cca1dade56a8eab755c2d840116206d54f7c9b08b6dc9b470608fc0": {
-    "query": "select\n  \"id\",\n  \"person_id\",\n  \"category\",\n  \"target\",\n  \"begin\",\n  \"end\",\n  \"status\" as \"status: GoalStatus\"\nfrom\n  c_person_goals\nwhere\n    \"person_id\" = $1\n  and\n    \"status\" = $2::c_person_goals_status\norder by \"end\" asc\n;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "person_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "category",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "target",
+          "ordinal": 3,
           "type_info": "Int4"
         },
         {
-          "ordinal": 4,
           "name": "begin",
+          "ordinal": 4,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 5,
           "name": "end",
+          "ordinal": 5,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 6,
           "name": "status: GoalStatus",
+          "ordinal": 6,
           "type_info": {
             "Custom": {
-              "name": "c_person_goals_status",
               "kind": {
                 "Enum": [
                   "canceled",
@@ -837,17 +835,26 @@
                   "working",
                   "succeeded"
                 ]
-              }
+              },
+              "name": "c_person_goals_status"
             }
           }
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Int4",
           {
             "Custom": {
-              "name": "c_person_goals_status",
               "kind": {
                 "Enum": [
                   "canceled",
@@ -855,11 +862,64 @@
                   "working",
                   "succeeded"
                 ]
-              }
+              },
+              "name": "c_person_goals_status"
             }
           }
         ]
-      },
+      }
+    },
+    "query": "select\n  \"id\",\n  \"person_id\",\n  \"category\",\n  \"target\",\n  \"begin\",\n  \"end\",\n  \"status\" as \"status: GoalStatus\"\nfrom\n  c_person_goals\nwhere\n    \"person_id\" = $1\n  and\n    \"status\" = $2::c_person_goals_status\norder by \"end\" asc\n;\n"
+  },
+  "80950a68e5badeed5975a1c5cabd085a45fc0b5e786af4dc039da2de675bfa20": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "created",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "language",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "group",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "item",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "content",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "tags",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "label",
+          "ordinal": 8,
+          "type_info": "Text"
+        }
+      ],
       "nullable": [
         false,
         false,
@@ -867,184 +927,116 @@
         false,
         false,
         false,
+        false,
+        false,
         false
-      ]
-    }
-  },
-  "80950a68e5badeed5975a1c5cabd085a45fc0b5e786af4dc039da2de675bfa20": {
-    "query": "SELECT * FROM c_block WHERE id = $1 LIMIT 1;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "created",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 2,
-          "name": "updated",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 3,
-          "name": "language",
-          "type_info": "Varchar"
-        },
-        {
-          "ordinal": 4,
-          "name": "group",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "item",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 6,
-          "name": "content",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 7,
-          "name": "tags",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 8,
-          "name": "label",
-          "type_info": "Text"
-        }
       ],
       "parameters": {
         "Left": [
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "SELECT * FROM c_block WHERE id = $1 LIMIT 1;\n"
   },
   "83254db54e765203368a9452d869af0332b47c607c0ea4dedb21f9af170a0a3b": {
-    "query": "update c_person set exterior = $2, interior = $3 where id = $1;\n",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "update c_person set exterior = $2, interior = $3 where id = $1;\n"
   },
   "84078fb24d45a8726b6e5f99612f933187ff24d3b9f8f990b207f4c95e6f9e49": {
-    "query": "update c_participation set exterior = $2, interior = $3 where id = $1;\n",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "update c_participation set exterior = $2, interior = $3 where id = $1;\n"
   },
   "84410a1ab11d869128fd7556dbc0e956fedbd96ee3597212981b57fe8c04385f": {
-    "query": "insert into c_involvement (exterior, interior) values ($1, $2) returning id;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "insert into c_involvement (exterior, interior) values ($1, $2) returning id;\n"
   },
   "929ffec7bf66135fe540d42efd846e0bafdfa4a8d7895d360b4794e81731a76f": {
-    "query": "SELECT * FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 AND item LIKE $3 LIMIT 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "created",
+          "ordinal": 1,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 2,
           "name": "updated",
+          "ordinal": 2,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 3,
           "name": "language",
+          "ordinal": 3,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 4,
           "name": "group",
+          "ordinal": 4,
           "type_info": "Text"
         },
         {
-          "ordinal": 5,
           "name": "item",
+          "ordinal": 5,
           "type_info": "Text"
         },
         {
-          "ordinal": 6,
           "name": "content",
+          "ordinal": 6,
           "type_info": "Text"
         },
         {
-          "ordinal": 7,
           "name": "tags",
+          "ordinal": 7,
           "type_info": "Text"
         },
         {
-          "ordinal": 8,
           "name": "label",
+          "ordinal": 8,
           "type_info": "Text"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text"
-        ]
-      },
       "nullable": [
         false,
         false,
@@ -1055,60 +1047,72 @@
         false,
         false,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT * FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 AND item LIKE $3 LIMIT 1;\n"
   },
   "93604ba7449414748c0c536477e0bec385753d0e2a83a43c7901eca805cb6382": {
-    "query": "SELECT slug, subject, body FROM c_email_message WHERE slug = $1",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "slug",
+          "ordinal": 0,
           "type_info": "Text"
         },
         {
-          "ordinal": 1,
           "name": "subject",
+          "ordinal": 1,
           "type_info": "Text"
         },
         {
-          "ordinal": 2,
           "name": "body",
+          "ordinal": 2,
           "type_info": "Text"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "SELECT slug, subject, body FROM c_email_message WHERE slug = $1"
   },
   "9ba5ac0a254a302fcc36e1ecbb77b0339e18cd8205c421e8146cf9a338df0092": {
-    "query": "select I.id, I.exterior, I.interior\nfrom c_involvement as I\nleft join c_opportunity as O\non (I.exterior -> 'opportunity') = (O.exterior -> 'uid')\nwhere\n  ($1::jsonb) @> (I.interior -> 'participant')\nand\n  O.fulltext_english @@ websearch_to_tsquery($4)\nand\n  case\n    when $2::integer is null then (I.exterior ->> 'mode')::integer >= 1\n    else (I.exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (I.exterior ->> 'mode')::integer <= $3::integer\n  end\norder by I.updated desc\nlimit $5 offset $6;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
@@ -1119,266 +1123,266 @@
           "Int8",
           "Int8"
         ]
-      },
+      }
+    },
+    "query": "select I.id, I.exterior, I.interior\nfrom c_involvement as I\nleft join c_opportunity as O\non (I.exterior -> 'opportunity') = (O.exterior -> 'uid')\nwhere\n  ($1::jsonb) @> (I.interior -> 'participant')\nand\n  O.fulltext_english @@ websearch_to_tsquery($4)\nand\n  case\n    when $2::integer is null then (I.exterior ->> 'mode')::integer >= 1\n    else (I.exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (I.exterior ->> 'mode')::integer <= $3::integer\n  end\norder by I.updated desc\nlimit $5 offset $6;\n"
+  },
+  "9bb0999b7e5a12c77e56c562fa3f53a8258f4997a37ee2bcde64795efc6ef8a6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
       "nullable": [
         false,
         false,
         false
-      ]
-    }
-  },
-  "9bb0999b7e5a12c77e56c562fa3f53a8258f4997a37ee2bcde64795efc6ef8a6": {
-    "query": "select id, exterior, interior from c_opportunity where lower($1::text) = lower(exterior ->> 'slug') limit 1;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "exterior",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 2,
-          "name": "interior",
-          "type_info": "Jsonb"
-        }
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
+      }
+    },
+    "query": "select id, exterior, interior from c_opportunity where lower($1::text) = lower(exterior ->> 'slug') limit 1;\n"
+  },
+  "9ee25f1bfe3973a5360212a5fb21a6442c95c310e32fc8cfffa395c84e60eecd": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
       "nullable": [
         false,
         false,
         false
-      ]
-    }
-  },
-  "9ee25f1bfe3973a5360212a5fb21a6442c95c310e32fc8cfffa395c84e60eecd": {
-    "query": "select id, exterior, interior from c_person order by (interior -> 'email') limit $1 offset $2;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "exterior",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 2,
-          "name": "interior",
-          "type_info": "Jsonb"
-        }
       ],
       "parameters": {
         "Left": [
           "Int8",
           "Int8"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_person order by (interior -> 'email') limit $1 offset $2;\n"
   },
   "a6078950e864ccf313a410f0a12987a2bcec73567eb8a3e6a415632706f60e12": {
-    "query": "SELECT DISTINCT \"language\" FROM c_block ORDER BY \"language\";\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "language",
+          "ordinal": 0,
           "type_info": "Varchar"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": []
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "SELECT DISTINCT \"language\" FROM c_block ORDER BY \"language\";\n"
   },
   "aa562b84d2aa920e340736a0f965c3e5787b90a8c1eb931993a1822b1d6ea64d": {
-    "query": "select id, exterior, interior from c_involvement where ($1::jsonb) @> (exterior -> 'opportunity');\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_involvement where ($1::jsonb) @> (exterior -> 'opportunity');\n"
   },
   "af342c0fce25415935f95b38e359fffbc643147b51eee8f0f69108aa1d9a57f5": {
-    "query": "select count(*) didit\nfrom c_involvement I inner join c_opportunity O\non (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')\nwhere (I.exterior -> 'mode')::integer >= 30 and (O.exterior ->> 'slug') = $1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "didit",
+          "ordinal": 0,
           "type_info": "Int8"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select count(*) didit\nfrom c_involvement I inner join c_opportunity O\non (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')\nwhere (I.exterior -> 'mode')::integer >= 30 and (O.exterior ->> 'slug') = $1;\n"
   },
   "afa9dbcb55697c235fc59405de57f3d7d83b9e8354e4b2a992c16a306e79872e": {
-    "query": "delete from c_opportunity_like where opportunity_id = $1 and person = $2",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
           "Uuid"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "delete from c_opportunity_like where opportunity_id = $1 and person = $2"
   },
   "b5e0a2e00c94e1d37e6ef7ab175d524ebaca9100d64453e9cc60de99489a4f90": {
-    "query": "select count(*) likes\nfrom c_opportunity_like L inner join c_opportunity O on L.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1 and L.person = $2;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "likes",
+          "ordinal": 0,
           "type_info": "Int8"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
           "Text",
           "Uuid"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select count(*) likes\nfrom c_opportunity_like L inner join c_opportunity O on L.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1 and L.person = $2;\n"
   },
   "c0425047604adf0d688a217b964e5787c81262a6d2f5c32654d53c6bf148c4ca": {
-    "query": "select id, exterior, interior from c_person where (interior -> 'email_hashes') ? $1 order by id limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
+      }
+    },
+    "query": "select id, exterior, interior from c_person where (interior -> 'email_hashes') ? $1 order by id limit 1;\n"
+  },
+  "c052e801bb94dd7532a60b353a2000ae85774fde2803a86095ff7beb751c8af2": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
       "nullable": [
         false,
         false,
         false
-      ]
-    }
-  },
-  "c052e801bb94dd7532a60b353a2000ae85774fde2803a86095ff7beb751c8af2": {
-    "query": "select id, exterior, interior from c_partner where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "exterior",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 2,
-          "name": "interior",
-          "type_info": "Jsonb"
-        }
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
+      }
+    },
+    "query": "select id, exterior, interior from c_partner where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n"
+  },
+  "c0867800b477b7b4e7d7bbda6dd6c00c66d096fcb6300adef057a5cf879d0c02": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
       "nullable": [
         false,
         false,
         false
-      ]
-    }
-  },
-  "c0867800b477b7b4e7d7bbda6dd6c00c66d096fcb6300adef057a5cf879d0c02": {
-    "query": "select id, exterior, interior\nfrom c_involvement\nwhere\n  ($1::jsonb) @> (interior -> 'participant')\nand\n  case\n    when $2::integer is null then (exterior ->> 'mode')::integer >= 1\n    else (exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (exterior ->> 'mode')::integer <= $3::integer\n  end\norder by updated desc\nlimit $4 offset $5;\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "exterior",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 2,
-          "name": "interior",
-          "type_info": "Jsonb"
-        }
       ],
       "parameters": {
         "Left": [
@@ -1388,160 +1392,187 @@
           "Int8",
           "Int8"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior\nfrom c_involvement\nwhere\n  ($1::jsonb) @> (interior -> 'participant')\nand\n  case\n    when $2::integer is null then (exterior ->> 'mode')::integer >= 1\n    else (exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (exterior ->> 'mode')::integer <= $3::integer\n  end\norder by updated desc\nlimit $4 offset $5;\n"
   },
   "c1dd73e6e209f99460d54eb85c68c4cda0e96f6224cb57c09b4ac11428b54b63": {
-    "query": "select exists(select 1 from c_person where (interior -> 'email') ? $1) as \"exists\";\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "exists",
+          "ordinal": 0,
           "type_info": "Bool"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select exists(select 1 from c_person where (interior -> 'email') ? $1) as \"exists\";\n"
   },
   "c838d536528b4bed0199fa4a178aaac56dd87e7c4d862cd1ddf074190ee53a6e": {
-    "query": "select id, exterior, interior from c_involvement where id = $1 limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_involvement where id = $1 limit 1;\n"
   },
   "cb6bcc178c43dad5481ee0ee1d1bb7e53da5da3a58e093a0175decb2c190b3af": {
-    "query": "select id from c_opportunity where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Jsonb"
-        ]
-      },
       "nullable": [
         false
-      ]
-    }
-  },
-  "ce31b38ffa11d0adc8607d19015daee92c05a3148e04626d46ca084f2b99de22": {
-    "query": "select exists(select 1 from c_person where ($1::jsonb) @> (interior -> 'email')) as \"exists\";\n",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "exists",
-          "type_info": "Bool"
-        }
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
+      }
+    },
+    "query": "select id from c_opportunity where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n"
+  },
+  "ce31b38ffa11d0adc8607d19015daee92c05a3148e04626d46ca084f2b99de22": {
+    "describe": {
+      "columns": [
+        {
+          "name": "exists",
+          "ordinal": 0,
+          "type_info": "Bool"
+        }
+      ],
       "nullable": [
         null
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "select exists(select 1 from c_person where ($1::jsonb) @> (interior -> 'email')) as \"exists\";\n"
   },
   "d182f0912e9241f5a82e0b72e1233c70954ba275823d24a4df7b67156754238b": {
-    "query": "INSERT INTO c_email_message (slug, subject, body)\n                  VALUES ($1, $2, $3)\n                  ON CONFLICT (slug)\n                  DO UPDATE SET subject = $2, body = $3 WHERE c_email_message.slug = $1",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Text",
           "Text",
           "Text"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "INSERT INTO c_email_message (slug, subject, body)\n                  VALUES ($1, $2, $3)\n                  ON CONFLICT (slug)\n                  DO UPDATE SET subject = $2, body = $3 WHERE c_email_message.slug = $1"
   },
-  "d5b62ec112d28e12699c6c7a75dee8ab657ea667bcc1d878f720ad3f0426ecff": {
-    "query": "select\n  \"id\",\n  \"person_id\",\n  \"category\",\n  \"target\",\n  \"begin\",\n  \"end\",\n  \"status\" as \"status: GoalStatus\"\nfrom\n  c_person_goals\nwhere\n    \"person_id\" = $1\n  and\n    \"id\" = $2\n;\n",
+  "d54fbc0ec8d9317d567bbb2d0fc06d888cd33d6355c44aa39a829f2bafb36f8b": {
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
+          "name": "uid",
           "ordinal": 1,
-          "name": "person_id",
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "name",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        null,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "SELECT id, (exterior -> 'uid') AS \"uid\", (exterior -> 'name') AS \"name\" FROM c_partner WHERE exterior -> 'uid' != $2 AND exterior ->> 'name' ILIKE $1"
+  },
+  "d5b62ec112d28e12699c6c7a75dee8ab657ea667bcc1d878f720ad3f0426ecff": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
+          "name": "person_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
           "name": "category",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "target",
+          "ordinal": 3,
           "type_info": "Int4"
         },
         {
-          "ordinal": 4,
           "name": "begin",
+          "ordinal": 4,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 5,
           "name": "end",
+          "ordinal": 5,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 6,
           "name": "status: GoalStatus",
+          "ordinal": 6,
           "type_info": {
             "Custom": {
-              "name": "c_person_goals_status",
               "kind": {
                 "Enum": [
                   "canceled",
@@ -1549,171 +1580,175 @@
                   "working",
                   "succeeded"
                 ]
-              }
+              },
+              "name": "c_person_goals_status"
             }
           }
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Int4",
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select\n  \"id\",\n  \"person_id\",\n  \"category\",\n  \"target\",\n  \"begin\",\n  \"end\",\n  \"status\" as \"status: GoalStatus\"\nfrom\n  c_person_goals\nwhere\n    \"person_id\" = $1\n  and\n    \"id\" = $2\n;\n"
   },
   "d97f02bf2620ddcd59b280f5b5d37dc015d2c8e380a46c6aa692901c38e81199": {
-    "query": "select exists(select 1 from c_partner where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "exists",
+          "ordinal": 0,
           "type_info": "Bool"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select exists(select 1 from c_partner where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n"
   },
   "db2d6322979f071f919119e42c4ebcffd92abff51b7b4ab5a2d1ac8b57fed5bf": {
-    "query": "select count(*) likes\nfrom c_opportunity_like L inner join c_opportunity O on L.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "likes",
+          "ordinal": 0,
           "type_info": "Int8"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select count(*) likes\nfrom c_opportunity_like L inner join c_opportunity O on L.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1;\n"
   },
   "dfbd8aa13f6570cf0774521db896fb88c89ab17e532ff95996a5acfe372206d9": {
-    "query": "select id, exterior, interior from c_person where ($1::jsonb) @> (interior -> 'email') limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_person where ($1::jsonb) @> (interior -> 'email') limit 1;\n"
   },
   "e3e4979a8993b5aa8281b730e005b1b9220b4a4ec9320465e04445d4b7162d99": {
-    "query": "SELECT DISTINCT \"item\" FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 ORDER BY \"item\";\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "item",
+          "ordinal": 0,
           "type_info": "Text"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": [
           "Text",
           "Text"
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "SELECT DISTINCT \"item\" FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 ORDER BY \"item\";\n"
   },
   "e831e96bf898cecd31483a504415204c2e5d6cddf1105963d6046e87afc0ad52": {
-    "query": "select exists(select 1 from c_opportunity where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "exists",
+          "ordinal": 0,
           "type_info": "Bool"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select exists(select 1 from c_opportunity where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n"
   },
   "e9e41146b86490f984df1aded1306bed4009f67ca870a07e612caf9f38f8f63d": {
-    "query": "insert into c_participation (exterior, interior) values ($1, $2) returning id;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": [
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "insert into c_participation (exterior, interior) values ($1, $2) returning id;\n"
   },
   "ec6fdfbd3f1cf5dd4004d27742517ddae0575c7ca3c66ff34937cc1f040d5c71": {
-    "query": "insert\ninto c_person_goals (\n    \"person_id\",\n    \"category\",\n    \"target\",\n    \"begin\",\n    \"end\",\n    \"status\"\n  )\nvalues ($1, $2, $3, $4, $5, $6::c_person_goals_status)\nreturning \"id\"\n;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": [
@@ -1724,7 +1759,6 @@
           "Timestamptz",
           {
             "Custom": {
-              "name": "c_person_goals_status",
               "kind": {
                 "Enum": [
                   "canceled",
@@ -1732,149 +1766,150 @@
                   "working",
                   "succeeded"
                 ]
-              }
+              },
+              "name": "c_person_goals_status"
             }
           }
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "insert\ninto c_person_goals (\n    \"person_id\",\n    \"category\",\n    \"target\",\n    \"begin\",\n    \"end\",\n    \"status\"\n  )\nvalues ($1, $2, $3, $4, $5, $6::c_person_goals_status)\nreturning \"id\"\n;\n"
   },
   "ecc9ab2c4fdc34d99d31671d5fba6f4511dffe29bb2d028923bb363bbd0b7904": {
-    "query": "select id, exterior, interior from c_participation where id = $1 limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_participation where id = $1 limit 1;\n"
   },
   "f6f4075f2a6e539d490b730364c608936865aa275e126a84899f8674dfb8a2dd": {
-    "query": "SELECT DISTINCT \"group\" FROM c_block WHERE \"language\" LIKE $1 ORDER BY \"group\";\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "group",
+          "ordinal": 0,
           "type_info": "Text"
         }
       ],
+      "nullable": [
+        false
+      ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "SELECT DISTINCT \"group\" FROM c_block WHERE \"language\" LIKE $1 ORDER BY \"group\";\n"
   },
   "f806527d023d3d81b63b12f2f8d2dde317d262b542e9ad9b0f6bc953adf0b678": {
-    "query": "select exists(select 1 from c_person where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "exists",
+          "ordinal": 0,
           "type_info": "Bool"
         }
       ],
+      "nullable": [
+        null
+      ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select exists(select 1 from c_person where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n"
   },
   "f99671969e2f6f5aa7a282c2f1647a17da671152a1a3dcb0e7d56710c62a5d42": {
-    "query": "select id from c_opportunity where lower($1::text) = lower(exterior ->> 'slug') limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false
       ],
       "parameters": {
         "Left": [
           "Text"
         ]
-      },
-      "nullable": [
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id from c_opportunity where lower($1::text) = lower(exterior ->> 'slug') limit 1;\n"
   },
   "fa0dcc4db58016c21be2ca341bbc3d1d3137c6a43e03cc3b47a0843557e50390": {
-    "query": "select id, exterior, interior from c_person where id = $1 limit 1;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "exterior",
+          "ordinal": 1,
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 2,
           "name": "interior",
+          "ordinal": 2,
           "type_info": "Jsonb"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "select id, exterior, interior from c_person where id = $1 limit 1;\n"
   },
   "face724cbf013b6ed241a6468cbdf58d8729772221e67b6aee66dc9ba237e3bf": {
-    "query": "select count(*) as total\nfrom c_involvement\nwhere\n  ($1::jsonb) @> (interior -> 'participant')\nand\n  case\n    when $2::integer is null then (exterior ->> 'mode')::integer >= 1\n    else (exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (exterior ->> 'mode')::integer <= $3::integer\n  end\n;\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "total",
+          "ordinal": 0,
           "type_info": "Int8"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
@@ -1882,30 +1917,28 @@
           "Int4",
           "Int4"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select count(*) as total\nfrom c_involvement\nwhere\n  ($1::jsonb) @> (interior -> 'participant')\nand\n  case\n    when $2::integer is null then (exterior ->> 'mode')::integer >= 1\n    else (exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (exterior ->> 'mode')::integer <= $3::integer\n  end\n;\n"
   },
   "fccb6cd62e0e484622babec39fe7b15967f61415538ef66b30f20af1eac336dc": {
-    "query": "update c_involvement set exterior = $2, interior = $3 where id = $1;\n",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
           "Jsonb",
           "Jsonb"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "update c_involvement set exterior = $2, interior = $3 where id = $1;\n"
   },
   "fd64e2be2fe8715ed378513a8eb679d24e502a35588c10b994052b850ff546c9": {
-    "query": "update c_person_goals\nset\n    \"category\" = $3,\n    \"target\" = $4,\n    \"begin\" = $5,\n    \"end\" = $6,\n    \"status\" = $7::c_person_goals_status\nwhere\n    \"id\" = $1\nand\n    \"person_id\" = $2\n;\n\n",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
@@ -1916,7 +1949,6 @@
           "Timestamptz",
           {
             "Custom": {
-              "name": "c_person_goals_status",
               "kind": {
                 "Enum": [
                   "canceled",
@@ -1924,32 +1956,33 @@
                   "working",
                   "succeeded"
                 ]
-              }
+              },
+              "name": "c_person_goals_status"
             }
           }
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "update c_person_goals\nset\n    \"category\" = $3,\n    \"target\" = $4,\n    \"begin\" = $5,\n    \"end\" = $6,\n    \"status\" = $7::c_person_goals_status\nwhere\n    \"id\" = $1\nand\n    \"person_id\" = $2\n;\n\n"
   },
   "fed9e4bb161392626d007451daca648e4f0fa9f7324dc837ca5faae946c7eedb": {
-    "query": "select count(*) as total\nfrom c_partner\nwhere ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "total",
+          "ordinal": 0,
           "type_info": "Int8"
         }
+      ],
+      "nullable": [
+        null
       ],
       "parameters": {
         "Left": [
           "Jsonb"
         ]
-      },
-      "nullable": [
-        null
-      ]
-    }
+      }
+    },
+    "query": "select count(*) as total\nfrom c_partner\nwhere ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n"
   }
 }

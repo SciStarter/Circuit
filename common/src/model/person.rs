@@ -288,6 +288,46 @@ impl Permission {
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 #[serde(default)]
+pub struct PersonPrivilegedReference {
+    pub uid: Uuid,
+    pub username: Option<String>,
+    pub email: String,
+    pub image_url: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub phone: Option<String>,
+}
+
+impl From<Person> for PersonPrivilegedReference {
+    fn from(person: Person) -> Self {
+        PersonPrivilegedReference {
+            uid: person.exterior.uid,
+            username: person.exterior.username,
+            email: person.interior.email,
+            image_url: person.exterior.image_url,
+            first_name: person.interior.first_name,
+            last_name: person.interior.last_name,
+            phone: person.interior.phone,
+        }
+    }
+}
+
+impl From<&Person> for PersonPrivilegedReference {
+    fn from(person: &Person) -> Self {
+        PersonPrivilegedReference {
+            uid: person.exterior.uid.clone(),
+            username: person.exterior.username.clone(),
+            email: person.interior.email.clone(),
+            image_url: person.exterior.image_url.clone(),
+            first_name: person.interior.first_name.clone(),
+            last_name: person.interior.last_name.clone(),
+            phone: person.interior.phone.clone(),
+        }
+    }
+}
+
+#[derive(Default, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct PersonExterior {
     pub uid: Uuid,
     pub username: Option<String>,
