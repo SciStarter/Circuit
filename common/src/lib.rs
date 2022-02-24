@@ -15,6 +15,8 @@ pub use time::ToFixedOffset;
 
 pub type Database = Pool<Postgres>;
 
+pub type BoxedError = Box<dyn std::error::Error + Sync + Send + 'static>;
+
 static LOG_ENDPOINT: Lazy<String> = Lazy::new(|| {
     format!(
         "http://{}:{}/internal/log",

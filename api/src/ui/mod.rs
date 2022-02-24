@@ -2,6 +2,7 @@ pub mod activity;
 pub mod auth;
 pub mod entity;
 pub mod finder;
+pub mod invitation;
 pub mod organization;
 pub mod profile;
 
@@ -26,6 +27,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("finder/", finder::routes)
         .at("profile/", profile::routes)
         .at("organization/", organization::routes)
+        .at("invitation/", invitation::routes)
         .at("content", |r| r.get(content))
 }
 

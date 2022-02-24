@@ -1,9 +1,10 @@
-use std::collections::HashMap;
+use std::fmt::Display;
 
 use aho_corasick::AhoCorasick;
 use once_cell::sync::Lazy;
+use sqlx::Error;
 
-use crate::Database;
+use crate::{BoxedError, Database};
 
 static MAILER_ENDPOINT: Lazy<String> = Lazy::new(|| {
     format!(
@@ -20,23 +21,20 @@ pub struct EmailMessage {
     pub body: String,
 }
 
-struct EmailMessageFromDB {
-    slug: String,
-    subject: String,
-    body: String,
-}
-
-impl From<EmailMessageFromDB> for EmailMessage {
-    fn from(src: EmailMessageFromDB) -> Self {
-        EmailMessage {
-            slug: Some(src.slug),
-            subject: src.subject,
-            body: src.body,
-        }
-    }
-}
-
 impl EmailMessage {
+    pub async fn list_messages(db: &Database) -> Result<Vec<String>, Error> {
+        Ok(sqlx::query!(
+            r#"
+SELECT "slug" from "c_email_message" ORDER BY "slug" ASC
+"#
+        )
+        .fetch_all(db)
+        .await?
+        .iter()
+        .map(|x| x.slug.to_string())
+        .collect())
+    }
+
     pub fn new<S0: AsRef<str>, S1: AsRef<str>, S2: AsRef<str>>(
         slug: S0,
         subject: S1,
@@ -49,27 +47,26 @@ impl EmailMessage {
         }
     }
 
-    pub async fn load<S: AsRef<str>>(
-        db: &Database,
-        slug: S,
-    ) -> Result<EmailMessage, Box<dyn std::error::Error>> {
+    pub async fn load<S: AsRef<str>>(db: &Database, slug: S) -> Result<EmailMessage, BoxedError> {
         Ok(sqlx::query_as!(
-            EmailMessageFromDB,
-            "SELECT slug, subject, body FROM c_email_message WHERE slug = $1",
+            EmailMessage,
+            r#"
+SELECT slug AS "slug?", subject, body FROM c_email_message WHERE slug = $1
+"#,
             slug.as_ref()
         )
         .fetch_one(db)
-        .await?
-        .into())
+        .await?)
     }
 
-    pub async fn store(&self, db: &Database) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn store(&self, db: &Database) -> Result<(), BoxedError> {
         if let Some(slug) = &self.slug {
             sqlx::query!(
-                r"INSERT INTO c_email_message (slug, subject, body)
-                  VALUES ($1, $2, $3)
-                  ON CONFLICT (slug)
-                  DO UPDATE SET subject = $2, body = $3 WHERE c_email_message.slug = $1",
+                r"
+INSERT INTO c_email_message (slug, subject, body)
+VALUES ($1, $2, $3)
+ON CONFLICT (slug) DO
+UPDATE SET subject = $2, body = $3",
                 slug,
                 &self.subject,
                 &self.body
@@ -84,10 +81,15 @@ impl EmailMessage {
         }
     }
 
-    pub fn materialize(&self, bindings: &HashMap<String, String>) -> Self {
+    pub fn materialize<S0, S1, B>(&self, bindings: B) -> Self
+    where
+        S0: Display,
+        S1: Display,
+        B: IntoIterator<Item = (S0, S1)>,
+    {
         let (patterns, replacements): (Vec<_>, Vec<_>) = bindings
-            .iter()
-            .map(|(k, v)| (format!("{{{k}}}"), v))
+            .into_iter()
+            .map(|(k, v)| (format!("{{{k}}}"), v.to_string()))
             .unzip();
 
         let ac = AhoCorasick::new(patterns);
@@ -97,6 +99,10 @@ impl EmailMessage {
             subject: ac.replace_all(&self.subject, &replacements),
             body: ac.replace_all(&self.body, &replacements),
         }
+    }
+
+    pub fn slug(&self) -> Option<String> {
+        self.slug.clone()
     }
 }
 
@@ -111,4 +117,14 @@ pub async fn send<S0: AsRef<str>, S1: AsRef<str>, S2: AsRef<str>, S3: AsRef<str>
             .body(serde_json::json!({"to": to.as_ref(), "from": from.as_ref(), "subject": subject.as_ref(), "body": body.as_ref()}))
             .send(),
     );
+}
+
+pub async fn send_message<S0: AsRef<str>>(to: S0, msg: &EmailMessage) {
+    send(
+        to,
+        "Science Near Me <info@sciencenearme.org>",
+        &msg.subject,
+        &msg.body,
+    )
+    .await
 }

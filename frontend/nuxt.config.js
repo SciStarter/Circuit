@@ -130,7 +130,7 @@ export default {
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     // https://go.nuxtjs.dev/buefy
-    ["nuxt-buefy", { css: false }],
+    ["nuxt-buefy", { css: false, defaultProgrammaticPromise: true }],
     // https://go.nuxtjs.dev/axios
     "@nuxtjs/axios",
     // https://www.npmjs.com/package/cookie-universal-nuxt

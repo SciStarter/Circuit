@@ -80,6 +80,21 @@ impl Partner {
         false
     }
 
+    pub fn set_authorized(&mut self, uid: Uuid) {
+        self.set_deauthorized(uid);
+        self.interior.authorized.push(uid);
+    }
+
+    pub fn set_pending(&mut self, uid: Uuid) {
+        self.set_deauthorized(uid);
+        self.interior.pending.push(uid);
+    }
+
+    pub fn set_deauthorized(&mut self, uid: Uuid) {
+        self.interior.pending.retain(|&x| x != uid);
+        self.interior.authorized.retain(|&x| x != uid);
+    }
+
     pub fn elide(mut self) -> Partner {
         self.id = None;
         self.interior.secret = None;

@@ -10,6 +10,7 @@ use tide_fluent_routes::prelude::*;
 use uuid::Uuid;
 
 pub mod content;
+pub mod emails;
 pub mod opportunities;
 
 const BASE: &'static str = "/api/v1/manage/";
@@ -37,6 +38,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
                 .at(":uid", |r| r.get(partner).post(partner))
         })
         .at("content/", content::routes)
+        .at("emails/", emails::routes)
         .at("opportunities/", opportunities::routes)
         .at("health/", |r| r.get(health))
 }

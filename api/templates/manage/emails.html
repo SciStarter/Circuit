@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/api/docs/bulma.css">
+    <title>Emails</title>
+  </head>
+  <body>
+    <section class="section">
+      <div class="container">
+        <a href="..">Back to management dashboard</a>
+        <h1 class="title">Emails</h1>
+        <ul style="list-style: none">
+          {% for slug in slugs %}
+          <li><a href="{{slug}}">{{slug}}</a></li>
+          {% endfor %}
+        </ul>
+
+        <h1>Add Email</h1>
+        <form method="post">
+          <input name="slug" type="text" placeholder="slug">
+          <input class="button is-small" type="submit" value="Add">
+        </form>
+      </div>
+    </section>
+  </body>
+</html>

@@ -2,9 +2,8 @@ FROM rust:1-bullseye as builder
 ADD common/ /usr/src/common/
 ADD api/ /usr/src/api/
 WORKDIR /usr/src/api/
+RUN mv vendor.cargo .cargo
 RUN cargo install --path . --features container
-RUN strip /usr/local/cargo/bin/server
-RUN strip /usr/local/cargo/bin/toolkit
 
 FROM debian:bullseye
 EXPOSE 8000

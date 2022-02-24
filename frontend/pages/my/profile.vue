@@ -4,6 +4,13 @@
     <component :is="tab" label="Profile & Settings">
       <h1>My Profile &amp; Settings</h1>
       <profile-item v-model="profile.email" label="Email (login)" @input="save" />
+      <b-notification
+        v-if="$route.query.pwreset"
+        type="is-warning"
+        aria-close-label="Close notification"
+        role="alert">
+        Please select a new password now.
+      </b-notification>
       <profile-item v-model="profile.password" label="Password" obscure @input="save" />
       <profile-item v-model="profile.username" label="Display Name" @input="save" />
       <profile-item v-model="profile.zip_code" label="Zip/Postal Code" @input="save" />

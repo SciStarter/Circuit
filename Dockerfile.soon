@@ -2,8 +2,8 @@ FROM rust:1-bullseye as builder
 ADD common/ /usr/src/common/
 ADD soon/ /usr/src/soon/
 WORKDIR /usr/src/soon/
+RUN mv vendor.cargo .cargo
 RUN cargo install --path .
-RUN strip /usr/local/cargo/bin/soon
 
 FROM debian:bullseye
 EXPOSE 8000

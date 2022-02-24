@@ -48,6 +48,17 @@ struct LoginForm {
     password: String,
 }
 
+pub fn token_cookie<'c>(jwt: String) -> Cookie<'c> {
+    Cookie::build(TOKEN_COOKIE, jwt)
+        .path("/")
+        .max_age(Duration::hours(SESSION_HOURS))
+        //.domain(&*COOKIE_DOMAIN)
+        .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
+        .http_only(true)
+        .same_site(tide::http::cookies::SameSite::Lax)
+        .finish()
+}
+
 /// Log the current session in to an account, if the validations pass.
 ///
 /// Set a token cookie with the HttpOnly, SameSite=Lax, and (when
@@ -80,17 +91,7 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
         common::log("ui-login", &jwt);
         person.log(db, LogEvent::Login).await?;
 
-        okay_with_cookie(
-            &p_json,
-            Cookie::build(TOKEN_COOKIE, jwt)
-                .path("/")
-                .max_age(Duration::hours(SESSION_HOURS))
-                //.domain(&*COOKIE_DOMAIN)
-                .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
-                .http_only(true)
-                .same_site(tide::http::cookies::SameSite::Lax)
-                .finish(),
-        )
+        okay_with_cookie(&p_json, token_cookie(jwt))
     } else {
         Err(tide::Error::from_str(
             403,
@@ -186,13 +187,7 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
                     .ok();
 
                 if let Some(message) = message {
-                    common::emails::send(
-                        &person.interior.email,
-                        "Science Near Me <info@sciencenearme.org>",
-                        message.subject,
-                        message.body,
-                    )
-                    .await;
+                    common::emails::send_message(&person.interior.email, &message).await;
                 }
 
                 person

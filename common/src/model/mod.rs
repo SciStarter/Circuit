@@ -7,6 +7,7 @@ use thiserror::Error;
 
 pub mod block;
 pub mod geojson;
+pub mod invitation;
 pub mod involvement;
 pub mod opportunity;
 pub mod participation;

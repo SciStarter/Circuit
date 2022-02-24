@@ -27,24 +27,24 @@
   <div v-if="state==2" class="tab-panel">
     <div v-if="pending.length > 0" class="pending">
       <h2>Pending Organization Page Managers</h2>
-      <div v-for="p in pending" class="flex managers">
+      <div v-for="(p, i) in pending" class="flex managers">
         <div class="info"><span v-if="p.first_name && p.last_name">{{p.first_name}} {{p.last_name}}</span><span v-else>{{p.username}}</span></div>
         <div class="info"><a :href="'mailto:'+p.email">{{p.email}}</a></div>
         <div class="info">{{p.phone}}</div>
         <div class="actions">
-          <action-button primary><div class="icon"><check-icon /></div>Approve</action-button>
-          <action-button tertiary icon-only><div class="icon"><trash-icon /></div></action-button>
+          <action-button primary @click="approve_pending(i)"><div class="icon"><check-icon /></div>Approve</action-button>
+          <action-button tertiary icon-only @click="discard_pending(i)"><div class="icon"><trash-icon /></div></action-button>
         </div>
       </div>
     </div>
 
     <h2>Current Organization Page Managers</h2>
-    <div v-for="p in managers" class="flex managers">
+    <div v-for="(p, i) in managers" class="flex managers">
       <div class="info"><span v-if="p.first_name && p.last_name">{{p.first_name}} {{p.last_name}}</span><span v-else>{{p.username}}</span></div>
       <div class="info"><a :href="'mailto:'+p.email">{{p.email}}</a></div>
       <div class="info">{{p.phone}}</div>
       <div class="actions">
-        <action-button tertiary icon-only><div class="icon"><trash-icon /></div></action-button>
+        <action-button v-if="p.uid != user.uid" tertiary icon-only @click="discard_authorized(i)"><div class="icon"><trash-icon /></div></action-button>
       </div>
     </div>
     <action-button primary @click="show_add=true">+ Add New Organization Manager(s)</action-button>
@@ -62,7 +62,7 @@
 
 
   <div class="global-actions">
-    <action-button v-if="can_leave" tertiary red>Leave organization</action-button>
+    <action-button v-if="can_leave" tertiary red @click="leave_org">Leave organization</action-button>
   </div>
 
   <b-modal
@@ -80,12 +80,12 @@
       <p>Organization managers will be able to edit organizational settings and opportunity records. Each email will receive an email link.</p>
       <p class="help">Add Emails of Additional Managers, One per Line</p>
       <b-field>
-        <b-input type="textarea" />
+        <b-input v-model="emails" type="textarea" />
       </b-field>
 
 
       <div>
-        <action-button primary>Send Invitations</action-button>
+        <action-button primary @click="invite">Send Invitations</action-button>
         <action-button tertiary @click="show_add = false">Cancel</action-button>
       </div>
 
@@ -181,6 +181,7 @@ export default {
             state: 1,
             show_add: false,
             parent_org_name: '',
+            emails: '',
         }
     },
 
@@ -220,9 +221,56 @@ export default {
     },
 
     methods: {
+        async invite() {
+            let emails = this.emails.split(/[ \t\r\n,]+/g);
+
+            this.show_add = false;
+            this.emails = '';
+
+            await this.$axios.$post('/api/ui/organization/' + this.selected_partner.uid + '/invite', {emails}, this.$store.state.auth);
+
+            this.$buefy.toast.open('Invitations sent');
+        },
+
+        async approve_pending(idx) {
+            let entry = this.pending[idx];
+            this.pending.splice(idx, 1);
+            this.managers.push(entry);
+            this.selected_partner.pending = this.selected_partner.pending.filter(x => x != entry.uid);
+            this.selected_partner.authorized.push(entry.uid);
+            await this.save();
+        },
+
+        async discard_pending(idx) {
+            let entry = this.pending[idx];
+            this.pending.splice(idx, 1);
+            this.selected_partner.pending = this.selected_partner.pending.filter(x => x != entry.uid);
+            await this.save();
+        },
+
+        async discard_authorized(idx) {
+            let entry = this.managers[idx];
+            this.managers.splice(idx, 1);
+            this.selected_partner.authorized = this.selected_partner.authorized.filter(x => x != entry.uid);
+            await this.save();
+        },
+
+        async leave_org() {
+            let {result} = await this.$buefy.dialog.confirm({
+                message: 'Are you sure you want to give up your authority to manage ' + this.selected_partner.name + ' on Science Near Me?',
+            });
+
+            if(result) {
+                this.selected_partner.authorized = this.selected_partner.authorized.filter(x => x != this.user.uid);
+                await this.save();
+                this.$router.replace('/my/profile');
+                this.$buefy.toast.open('Exited organization');
+            }
+        },
+
         async save() {
             await this.$axios.$put('/api/ui/organization/' + this.selected_partner.uid, this.selected_partner, this.$store.state.auth);
-        }
+        },
     }
 }
 </script>

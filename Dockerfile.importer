@@ -2,8 +2,8 @@ FROM rust:1-bullseye as builder
 ADD common/ /usr/src/common/
 ADD importer/ /usr/src/importer/
 WORKDIR /usr/src/importer/
+RUN mv vendor.cargo .cargo
 RUN cargo install --path . --features container
-RUN strip /usr/local/cargo/bin/service
 
 FROM debian:bullseye
 COPY --from=builder /usr/local/cargo/bin/service /usr/local/bin/service

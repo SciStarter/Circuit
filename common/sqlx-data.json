@@ -21,38 +21,6 @@
     },
     "query": "insert into c_person (exterior, interior) values ($1, $2) returning id;\n"
   },
-  "13cf1910ed943c8638d6c2beb75ff84a97c7d75a16a67d660f7e49f18ef53628": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "exterior",
-          "ordinal": 1,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "interior",
-          "ordinal": 2,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Jsonb"
-        ]
-      }
-    },
-    "query": "select id, exterior, interior\nfrom c_partner\nwhere ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n"
-  },
   "16274e812e6865e37e4b4f3cea7a6cb0af3410c99e8090cffdfcee78dd082de9": {
     "describe": {
       "columns": [
@@ -665,6 +633,18 @@
     },
     "query": "SELECT * FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 ORDER BY item;\n"
   },
+  "5ba1244755f4a5d6434c9eafe15a7fae85990ae2254caef2374d0640a0d2cbf3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\nDELETE FROM \"c_invitation\"\nWHERE \"uid\" = $1\n"
+  },
   "5cea81409892578b39454103d129bbbe8a23b5c04a24b94be72347b3313cf8a5": {
     "describe": {
       "columns": [],
@@ -789,6 +769,27 @@
       }
     },
     "query": "select id, exterior, interior from c_person where (interior -> 'email_hashes') ? $1;\n"
+  },
+  "7cf0ad8045aefbcf4e34dfafe89ba09c8db2c43379d04647858d3cd0e9cddd75": {
+    "describe": {
+      "columns": [
+        {
+          "name": "total",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "select count(*) as total\nfrom c_partner\nwhere (exterior -> 'uid' != $2::jsonb) and (((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb)));\n"
   },
   "7dec6dc80cca1dade56a8eab755c2d840116206d54f7c9b08b6dc9b470608fc0": {
     "describe": {
@@ -987,6 +988,39 @@
       }
     },
     "query": "insert into c_involvement (exterior, interior) values ($1, $2) returning id;\n"
+  },
+  "88ed187d0191f4cfb2854dda49d47e08bc42a0673fa4e8bb9c62ad89260364fb": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "select id, exterior, interior\nfrom c_partner\nwhere (exterior -> 'uid' != $2::jsonb) and (((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb)));\n"
   },
   "929ffec7bf66135fe540d42efd846e0bafdfa4a8d7895d360b4794e81731a76f": {
     "describe": {
@@ -1360,6 +1394,38 @@
     },
     "query": "select id, exterior, interior from c_partner where ($1::jsonb) @> (exterior -> 'uid') limit 1;\n"
   },
+  "c05998a0656d4d68cd9d15e655d3b8e5a88185ce1d9d382ce9a36ff6c821c2dd": {
+    "describe": {
+      "columns": [
+        {
+          "name": "uid",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "target",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "mode: InvitationMode",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\nSELECT \"uid\", \"target\", \"mode\" AS \"mode: InvitationMode\"\nFROM \"c_invitation\"\nWHERE \"uid\" = $1 LIMIT 1\n"
+  },
   "c0867800b477b7b4e7d7bbda6dd6c00c66d096fcb6300adef057a5cf879d0c02": {
     "describe": {
       "columns": [
@@ -1415,6 +1481,20 @@
       }
     },
     "query": "select exists(select 1 from c_person where (interior -> 'email') ? $1) as \"exists\";\n"
+  },
+  "c35ce18571591e3f5e8a8eb9212ee9465f445ff17019cbccea0d1eefe42b0df3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO \"c_invitation\" (\"uid\", \"target\", \"mode\")\nVALUES ($1, $2, $3)\nON CONFLICT (\"uid\") DO\nUPDATE SET \"target\" = $2, \"mode\" = $3\n"
   },
   "c838d536528b4bed0199fa4a178aaac56dd87e7c4d862cd1ddf074190ee53a6e": {
     "describe": {
@@ -1964,25 +2044,5 @@
       }
     },
     "query": "update c_person_goals\nset\n    \"category\" = $3,\n    \"target\" = $4,\n    \"begin\" = $5,\n    \"end\" = $6,\n    \"status\" = $7::c_person_goals_status\nwhere\n    \"id\" = $1\nand\n    \"person_id\" = $2\n;\n\n"
-  },
-  "fed9e4bb161392626d007451daca648e4f0fa9f7324dc837ca5faae946c7eedb": {
-    "describe": {
-      "columns": [
-        {
-          "name": "total",
-          "ordinal": 0,
-          "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "Jsonb"
-        ]
-      }
-    },
-    "query": "select count(*) as total\nfrom c_partner\nwhere ((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb));\n"
   }
 }

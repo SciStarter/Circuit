@@ -1,9 +1,12 @@
-use std::ops::RangeBounds;
-
 use common::{
-    model::{person::PersonPrivilegedReference, Partner, Person, SelectOption},
+    model::{
+        invitation::{Invitation, InvitationMode},
+        person::PersonPrivilegedReference,
+        Partner, Person, SelectOption,
+    },
     Database,
 };
+use serde::Deserialize;
 use serde_json::json;
 use tide::{Status, StatusCode};
 use tide_fluent_routes::{
@@ -23,6 +26,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at(":uid", |r| {
             r.get(get_organization)
                 .put(save_organization)
+                .at("invite", |r| r.post(invite_managers))
                 .at("pending-managers", |r| {
                     r.get(get_pending_managers)
                         .post(add_pending_manager)
@@ -153,6 +157,41 @@ pub async fn save_organization(mut req: tide::Request<Database>) -> tide::Result
     common::log(
         "ui-save-organization",
         &json!({"person": person.exterior.uid, "partner": partner.exterior.uid}),
+    );
+
+    okay_empty()
+}
+
+#[derive(Deserialize)]
+struct InviteForm {
+    emails: Vec<String>,
+}
+
+pub async fn invite_managers(mut req: tide::Request<Database>) -> tide::Result {
+    let (person, partner) = authorized_partner(&mut req).await?;
+
+    let form: InviteForm = req.body_json().await?;
+
+    if let Some(msg) = common::emails::EmailMessage::load(req.state(), "invite-to-organization")
+        .await
+        .ok()
+    {
+        for email in form.emails.iter() {
+            let mut inv = Invitation::new(partner.exterior.uid, InvitationMode::JoinOrganization);
+            inv.store(req.state()).await?;
+            let outgoing = msg.materialize(vec![("invitation", inv.uid())]);
+            common::emails::send_message(email, &outgoing).await;
+        }
+    } else {
+        return Err(tide::Error::from_str(
+            StatusCode::InternalServerError,
+            "Email template not found",
+        ));
+    }
+
+    common::log(
+        "ui-invite-organization-managers",
+        &json!({"person": person.exterior.uid, "partner": partner.exterior.uid, "emails": form.emails}),
     );
 
     okay_empty()

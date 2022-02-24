@@ -626,7 +626,8 @@ impl Person {
     pub async fn count_partners(&self, db: &Database) -> Result<i32, Error> {
         Ok(sqlx::query_file!(
             "db/person/count_partners.sql",
-            serde_json::to_value(self.exterior.uid)?
+            serde_json::to_value(self.exterior.uid)?,
+            serde_json::to_value(*crate::INTERNAL_UID)?,
         )
         .map(|row| row.total)
         .fetch_one(db)
@@ -637,7 +638,8 @@ impl Person {
     pub async fn load_partners(&self, db: &Database) -> Result<Vec<Result<Partner, Error>>, Error> {
         Ok(sqlx::query_file!(
             "db/person/fetch_partners.sql",
-            serde_json::to_value(self.exterior.uid)?
+            serde_json::to_value(self.exterior.uid)?,
+            serde_json::to_value(*crate::INTERNAL_UID)?,
         )
         .map(|row| {
             Ok(Partner {

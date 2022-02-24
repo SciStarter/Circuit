@@ -248,7 +248,11 @@ export const actions = {
     commit("save_user", user);
 
     if (next) {
-      if (next[0] == "/") {
+      if (next.startsWith("/api/")) {
+        if (process.client) {
+          window.location = next;
+        }
+      } else if (next[0] == "/") {
         this.$router.push({ path: next, query: next_query || {} });
       } else {
         this.$router.push({ name: next, query: next_query || {} });
@@ -321,7 +325,11 @@ export const actions = {
     commit("save_user", user);
 
     if (next) {
-      if (next[0] == "/") {
+      if (next.startsWith("/api/")) {
+        if (process.client) {
+          window.location = next;
+        }
+      } else if (next[0] == "/") {
         this.$router.push({ path: next, query: next_query || {} });
       } else {
         this.$router.push({ name: next, query: next_query || {} });
