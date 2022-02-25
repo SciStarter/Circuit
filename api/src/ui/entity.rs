@@ -15,14 +15,16 @@ use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
 };
+use uuid::Uuid;
 
 use crate::ui::okay_empty;
 
 use super::{okay, request_person};
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
-    routes.at(":slug", |r| {
+    routes.post(new_entity).at(":slug", |r| {
         r.get(entity)
+            .put(save_entity)
             .at("me", |r| r.get(get_me))
             .at("interest", |r| r.post(register_interest))
             .at("likes", |r| {
@@ -51,28 +53,127 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
         .await
         .with_status(|| StatusCode::NotFound)?;
 
-    if (opp.interior.accepted.unwrap_or(false) && !opp.interior.withdrawn)
-        || person
-            .as_ref()
-            .map(|p| p.check_permission(&Permission::ManageOpportunities))
-            .unwrap_or(false)
-    {
-        let opp_uid = opp.exterior.uid.clone();
+    let authorized = if let Some(p) = person.as_ref() {
+        p.check_permission(&Permission::ManageOpportunities)
+            || p.check_authorization(db, &opp).await?
+    } else {
+        false
+    };
+
+    if authorized || (opp.interior.accepted.unwrap_or(false) && !opp.interior.withdrawn) {
         common::log(
             "viewed",
             &json!({
-                "who": person.as_ref().map(|p| p.exterior.uid.clone()),
-                "opp": &opp_uid}),
+                "who": person.as_ref().map(|p| p.exterior.uid),
+                "opp": opp.exterior.uid}),
         );
         if let Some(person) = person {
             person
-                .log(db, LogEvent::View(LogIdentifier::Uid(opp_uid)))
+                .log(db, LogEvent::View(LogIdentifier::Uid(opp.exterior.uid)))
                 .await?;
         }
-        okay(&opp.exterior)
+        okay(&opp.into_annotated_exterior(authorized))
     } else {
         Err(tide::Error::from_str(StatusCode::NotFound, "not found"))
     }
+}
+
+pub async fn new_entity(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req).await?;
+
+    let mut opp: Opportunity = req.body_json().await?;
+
+    let authorized = if let Some(p) = person.as_ref() {
+        p.check_permission(&Permission::ManageOpportunities)
+            || p.check_authorization(req.state(), &opp).await?
+    } else {
+        false
+    };
+
+    if !authorized {
+        return Err(tide::Error::from_str(
+            StatusCode::Forbidden,
+            "permissin denied",
+        ));
+    }
+
+    opp.id = None;
+    opp.exterior.uid = Uuid::nil();
+    opp.exterior.slug = String::new();
+    opp.interior.accepted = Some(true);
+
+    opp.store(req.state()).await?;
+
+    common::log(
+        "add-opportunity",
+        &json!({
+            "who": person.as_ref().map(|p| p.exterior.uid),
+            "opp": opp.exterior.uid}),
+    );
+
+    if let Some(person) = person {
+        person
+            .log(
+                req.state(),
+                LogEvent::EditOpportunity(LogIdentifier::Uid(opp.exterior.uid)),
+            )
+            .await?;
+    }
+
+    okay(&opp)
+}
+
+pub async fn save_entity(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req).await?;
+
+    let original = Opportunity::load_by_slug(req.state(), req.param("slug")?).await?;
+
+    let authorized = if let Some(p) = person.as_ref() {
+        p.check_permission(&Permission::ManageOpportunities)
+            || p.check_authorization(req.state(), &original).await?
+    } else {
+        false
+    };
+
+    if !authorized {
+        return Err(tide::Error::from_str(
+            StatusCode::Forbidden,
+            "permissin denied",
+        ));
+    }
+
+    let mut opp: Opportunity = req.body_json().await?;
+
+    opp.id = original.id;
+    opp.exterior.uid = original.exterior.uid;
+    opp.exterior.slug = original.exterior.slug;
+    opp.exterior.partner = original.exterior.partner;
+    opp.interior.accepted = match (original.interior.accepted, opp.interior.accepted) {
+        (None, _) => None,
+        (Some(false), _) => Some(false),
+        (Some(true), None) => Some(true),
+        (Some(true), Some(x)) => Some(x),
+    };
+
+    opp.store(req.state()).await?;
+
+    common::log(
+        "save-opportunity",
+        &json!({
+            "who": person.as_ref().map(|p| p.exterior.uid),
+            "opp": opp.exterior.uid}),
+    );
+
+    if let Some(person) = person {
+        person
+            .log(
+                req.state(),
+                LogEvent::EditOpportunity(LogIdentifier::Uid(opp.exterior.uid)),
+            )
+            .await?;
+    }
+
+    okay(&opp)
 }
 
 pub async fn get_didit(req: tide::Request<Database>) -> tide::Result {

@@ -181,7 +181,7 @@ pub async fn delete_old_saved(mut req: tide::Request<Database>) -> tide::Result 
         if let Ok(mut inv) = result {
             let opp = Opportunity::load_by_uid(req.state(), &inv.exterior.opportunity).await?;
 
-            if opp.ended_as_of(&now) {
+            if opp.expired_as_of(&now) {
                 inv.exterior.mode = Mode::Deleted;
                 inv.store(req.state()).await?;
             }

@@ -17,6 +17,7 @@
 import EyeIcon from '~/assets/img/eye.svg?inline'
 
 export default {
+    name: "EditOpportunity",
   components: {
     EyeIcon
   }

@@ -200,12 +200,14 @@ struct SearchQuery {
     pub venue_type: Option<VenueType>,
     pub host: Option<String>,
     pub partner: Option<Uuid>,
+    pub mine: Option<bool>,
     pub sort: Option<OpportunityQueryOrdering>,
     pub page: Option<u32>,
     pub per_page: Option<u8>,
     pub saved: Option<bool>,
     pub participated: Option<bool>,
     pub reviewing: Option<bool>,
+    pub current: Option<bool>,
     pub withdrawn: Option<bool>,
     pub sample: Option<bool>,
 }
@@ -236,6 +238,7 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     query.venue_type = search.venue_type;
     query.host = search.host;
     query.partner = search.partner;
+    query.current = Some(search.current.unwrap_or(true));
 
     query.sample = if search.sample.unwrap_or(false) {
         Some(0.25)
@@ -244,27 +247,31 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     };
 
     if let Some(p) = person {
+        if search.mine.unwrap_or(false) {
+            query.partner_member = Some(p.exterior.uid);
+        }
+
         if search.saved.unwrap_or(false) {
-            query.saved = Some(p.exterior.uid.clone());
+            query.saved = Some(p.exterior.uid);
         }
 
         if search.participated.unwrap_or(false) {
-            query.participated = Some(p.exterior.uid.clone());
+            query.participated = Some(p.exterior.uid);
         }
 
         match (search.reviewing, search.withdrawn) {
             (Some(reviewing), None) => {
-                query.partner_member = Some(p.exterior.uid.clone());
+                query.partner_member = Some(p.exterior.uid);
                 query.accepted = Some(!reviewing);
                 query.withdrawn = Some(false);
             }
             (None, Some(withdrawn)) => {
-                query.partner_member = Some(p.exterior.uid.clone());
+                query.partner_member = Some(p.exterior.uid);
                 query.accepted = None;
                 query.withdrawn = Some(withdrawn);
             }
             (Some(reviewing), Some(withdrawn)) => {
-                query.partner_member = Some(p.exterior.uid.clone());
+                query.partner_member = Some(p.exterior.uid);
                 query.accepted = Some(!reviewing);
                 query.withdrawn = Some(withdrawn);
             }

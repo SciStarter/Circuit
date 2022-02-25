@@ -35,13 +35,6 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
                 .at("managers", |r| {
                     r.get(get_managers).post(add_manager).delete(remove_manager)
                 })
-                .at("opportunities", |r| {
-                    r.post(add_opportunity).at(":opp_uid", |r| {
-                        r.put(edit_opportunity)
-                            .post(duplicate_opportunity)
-                            .delete(withdraw_opportunity)
-                    })
-                })
         })
 }
 
@@ -244,65 +237,5 @@ pub async fn add_manager(_req: tide::Request<Database>) -> tide::Result {
 
 pub async fn remove_manager(_req: tide::Request<Database>) -> tide::Result {
     common::log("ui-remove-manager", "");
-    todo!()
-}
-
-pub async fn add_opportunity(_req: tide::Request<Database>) -> tide::Result {
-    // OpportunityImportRecord::store(
-    //     db,
-    //     &new_opp.exterior.partner,
-    //     &new_opp.exterior.uid,
-    //     true,
-    //     false,
-    // )
-    // .await?;
-
-    common::log("ui-add-opportunity", "");
-    todo!()
-}
-
-pub async fn duplicate_opportunity(_req: tide::Request<Database>) -> tide::Result {
-    // OpportunityImportRecord::store(
-    //     db,
-    //     &new_opp.exterior.partner,
-    //     &new_opp.exterior.uid,
-    //     true,
-    //     false,
-    // )
-    // .await?;
-
-    common::log("ui-duplicate-opportunity", "");
-    todo!()
-}
-
-// If the opportunity is not approved, delete it instead of marking it
-// withdrawn.
-pub async fn edit_opportunity(_req: tide::Request<Database>) -> tide::Result {
-    // OpportunityImportRecord::store(
-    //     db,
-    //     &new_opp.exterior.partner,
-    //     &new_opp.exterior.uid,
-    //     false,
-    //     false,
-    // )
-    // .await?;
-
-    common::log("ui-edit-opportunity", "");
-    todo!()
-}
-
-// If the opportunity is not approved, delete it instead of marking it
-// withdrawn.
-pub async fn withdraw_opportunity(_req: tide::Request<Database>) -> tide::Result {
-    // OpportunityImportRecord::store(
-    //     db,
-    //     &new_opp.exterior.partner,
-    //     &new_opp.exterior.uid,
-    //     false,
-    //     false,
-    // )
-    // .await?;
-
-    common::log("ui-withdraw-opportunity", "");
     todo!()
 }

@@ -55,14 +55,14 @@
       </div>
     </nuxt-link>
     <div class="owner-actions">
-          <action-button v-if="owner=='live' || owner=='draft'" tertiary><div class="icon"><edit-icon /></div>Edit</action-button>
+          <action-button v-if="owner=='live' || owner=='draft'" tertiary @click="$router.push({name: 'my-opportunity-uid', params: {uid: opportunity.uid}})"><div class="icon"><edit-icon /></div>Edit</action-button>
           <b-dropdown aria-role="list" position="is-bottom-left">
             <template #trigger="{ active }">
                 <b-button class="more-btn"><div class="icon"><more-icon /></div></b-button>
             </template>
-            <b-dropdown-item aria-role="listitem">View</b-dropdown-item>
+            <b-dropdown-item aria-role="listitem" @click="view">View</b-dropdown-item>
             <!-- <b-dropdown-item aria-role="listitem">Duplicate</b-dropdown-item> -->
-            <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
+            <b-dropdown-item aria-role="listitem" @click="$emit('trash', opportunity)">Delete</b-dropdown-item>
         </b-dropdown>
     </div>
   </template>
@@ -192,7 +192,13 @@ export default {
         subtitle() {
             return this.opportunity.organization_name || ""; //this.opportunity.partner_name;
         },
-    }
+    },
+
+    methods: {
+        view() {
+            window.open('/' + this.opportunity.slug, '_blank');
+        }
+    },
 }
 </script>
 

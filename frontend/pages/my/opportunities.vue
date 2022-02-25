@@ -17,29 +17,33 @@
       <h2>Current, Live Opportunities</h2>
       <div class="flex header-actions">
         <b-field label="Search" label-position="inside" data-context="find-keywords">
-          <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+          <b-input ref="search_keywords" v-model="live_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
         </b-field>
         <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
           <b-datepicker
-            v-model="beginning_proxy"
+            v-model="live_from"
             editable
             icon="calendar-today"
             />
         </b-field>
         <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
           <b-datepicker
-            v-model="ending_proxy"
+            v-model="live_until"
             editable
             position="is-bottom-left"
             icon="calendar-today"
             />
         </b-field>
+        <b-field>
+          <b-button @click="load_live(0)">Search</b-button>
+        </b-field>
       </div>
     </div>
 
     <section id="results">
-      <template v-if="matches.length > 0">
-        <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" owner="live" />
+      <template v-if="live.matches.length > 0">
+        <opportunity-card v-for="(opp, i) in live.matches" :key="opp.uid" :opportunity="opp" owner="live" @trash="trash_live(i)"/>
+        <pagination :page-index="live.pagination.page_index" :last-page="live.pagination.last_page" @switch="load_live($event)" />
       </template>
       <template v-else>
         <div class="alert no-results" style="margin-bottom:2rem;">
@@ -55,28 +59,32 @@
       <h2>Draft &amp; Unpublished Opportunities</h2>
       <div class="flex header-actions">
         <b-field label="Search" label-position="inside" data-context="find-keywords">
-          <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+          <b-input ref="search_keywords" v-model="draft_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
         </b-field>
         <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
           <b-datepicker
-            v-model="beginning_proxy"
+            v-model="draft_from"
             editable
             icon="calendar-today"
             />
         </b-field>
         <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
           <b-datepicker
-            v-model="ending_proxy"
+            v-model="draft_until"
             editable
             position="is-bottom-left"
             icon="calendar-today"
             />
         </b-field>
+        <b-field>
+          <b-button @click="load_draft(0)">Search</b-button>
+        </b-field>
       </div>
     </div>
     <section id="results">
-      <template v-if="matches.length > 0">
-        <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" owner="draft" />
+      <template v-if="draft.matches.length > 0">
+        <opportunity-card v-for="(opp, i) in draft.matches" :key="opp.uid" :opportunity="opp" owner="draft" />
+        <pagination :page-index="draft.pagination.page_index" :last-page="draft.pagination.last_page" @switch="load_draft($event)" />
       </template>
       <template v-else>
         <div class="alert no-results" style="margin-bottom:2rem;">
@@ -88,31 +96,35 @@
 
   <div v-if="state==3">
     <div class="flex-header">
-      <h2>Past Opportunities</h2>
+      <h2>Expired and Trashed Opportunities</h2>
       <div class="flex header-actions">
         <b-field label="Search" label-position="inside" data-context="find-keywords">
-          <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+          <b-input ref="search_keywords" v-model="expired_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
         </b-field>
         <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
           <b-datepicker
-            v-model="beginning_proxy"
+            v-model="expired_from"
             editable
             icon="calendar-today"
             />
         </b-field>
         <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
           <b-datepicker
-            v-model="ending_proxy"
+            v-model="expired_until"
             editable
             position="is-bottom-left"
             icon="calendar-today"
             />
         </b-field>
+        <b-field>
+          <b-button @click="load_expired(0)">Search</b-button>
+        </b-field>
       </div>
     </div>
     <section id="results">
-      <template v-if="matches.length > 0">
-        <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" owner="past" />
+      <template v-if="expired.matches.length > 0">
+        <opportunity-card v-for="(opp, i) in expired.matches" :key="opp.uid" :opportunity="opp" owner="past" @trash="trash_expired(i)" />
+        <pagination :page-index="expired.pagination.page_index" :last-page="expired.pagination.last_page" @switch="load_expired($event)" />
       </template>
       <template v-else>
         <div class="alert no-results" style="margin-bottom:2rem;">
@@ -151,75 +163,130 @@
 import AddIcon from '~/assets/img/submit-opportunity.svg?inline'
 
 export default {
-  components: {
-    AddIcon
-  },
-  data(){
-    return{
-      state:1,
-      show_delete_confirm: false,
-      matches:[{"address_city":"Kenton","address_country":"United States","address_state":"OK","address_street":"","address_zip":"73946","attraction_hours":{"friday":null,"monday":null,"saturday":null,"sunday":null,"thursday":null,"tuesday":null,"wednesday":null},"cost":"free","description":"  Please Note the first day of the event is now Friday instead of the normal Saturday. Ending on Saturday instead of the normal Sunday. \n\nOklahoma City Astronomy Club host the  Okie-Tex Star Party  which is consistently rated as one of America’s Top Ten Star Parties! Join us on facebook  www.facebook.com/OkieTexStarParty \n\n","end_datetimes":[],"entity_type":"opportunity","has_end":true,"image_credit":"","image_url":"","is_online":false,"languages":["en-US"],"location_name":"Camp Billy Joe, Kenton Oklahoma","location_point":{"coordinates":[-102.951186,36.896937],"type":"Point"},"location_polygon":{},"location_type":"at","max_age":999,"min_age":0,"opp_descriptor":["star_party"],"opp_hashtags":[],"opp_social_handles":{},"opp_topics":[],"opp_venue":[],"organization_logo_url":null,"organization_name":"","organization_type":"club","organization_website":"","partner":"a844e7ee-6417-5bbc-b97c-f85575836442","partner_created":"2021-03-27T18:57:01-05:00","partner_logo_url":null,"partner_name":"Night Sky Network","partner_opp_url":"https://nightsky.jpl.nasa.gov/event-view.cfm?Event_ID=116840","partner_updated":"2021-03-29T18:26:26-05:00","partner_website":null,"pes_domain":"unspecified","short_desc":"","slug":"okie-tex-star-party","start_datetimes":[],"tags":[],"ticket_required":false,"title":"Okie-Tex Star Party","uid":"379871eb-1bce-57b2-907a-6eb022ffb24c"},{"address_city":"Mayodan","address_country":"United States","address_state":"NC","address_street":"500 Old Mayo Park Road","address_zip":"27027","attraction_hours":{"friday":null,"monday":null,"saturday":null,"sunday":null,"thursday":null,"tuesday":null,"wednesday":null},"cost":"free","description":"The Greensboro Astronomy Club in conjunction with the mayo River State Park will host a free public viewing session on Saturday October 2 beginning at dark.&nbsp; Please see the Mayo River Park site for details.","end_datetimes":[],"entity_type":"opportunity","has_end":false,"image_credit":"","image_url":"https://nightsky.jpl.nasa.gov/club/logos/1.jpg","is_online":false,"languages":["en-US"],"location_name":"Mayo River State Park","location_point":{"coordinates":[-79.947238,36.436543],"type":"Point"},"location_polygon":{},"location_type":"at","max_age":999,"min_age":0,"opp_descriptor":["star_party"],"opp_hashtags":[],"opp_social_handles":{},"opp_topics":[],"opp_venue":[],"organization_logo_url":null,"organization_name":"Greensboro Astronomy Club","organization_type":"club","organization_website":"http://www.greensboroastronomyclub.org","partner":"a844e7ee-6417-5bbc-b97c-f85575836442","partner_created":"2021-07-15T09:00:58-04:00","partner_logo_url":null,"partner_name":"Night Sky Network","partner_opp_url":"https://nightsky.jpl.nasa.gov/event-view.cfm?Event_ID=118044","partner_updated":"2021-07-15T09:00:58-04:00","partner_website":null,"pes_domain":"unspecified","short_desc":"","slug":"stars-and-planets","start_datetimes":[],"tags":[],"ticket_required":false,"title":"Stars and Planets","uid":"e4e43143-ba34-52f2-8fc0-5c03e4956945"},{"address_city":"Michigan City","address_country":"United States","address_state":"MS","address_street":"9714 Highway 72","address_zip":"38647","attraction_hours":{"friday":null,"monday":null,"saturday":null,"sunday":null,"thursday":null,"tuesday":null,"wednesday":null},"cost":"free","description":"Public Viewing.\n\nTelescope mentoring: New Telescope? Telescope proglems? M.A.S. members are ready to help.","end_datetimes":[],"entity_type":"opportunity","has_end":false,"image_credit":"","image_url":"https://nightsky.jpl.nasa.gov/club/logos/MasLogo.gif","is_online":false,"languages":["en-US"],"location_name":"Burton's Sugar Farm","location_point":{"coordinates":[-89.232456,34.945788],"type":"Point"},"location_polygon":{},"location_type":"at","max_age":999,"min_age":0,"opp_descriptor":["star_party"],"opp_hashtags":[],"opp_social_handles":{},"opp_topics":[],"opp_venue":[],"organization_logo_url":null,"organization_name":"Memphis Astronomical Society","organization_type":"club","organization_website":"http://www.memphisastro.org","partner":"a844e7ee-6417-5bbc-b97c-f85575836442","partner_created":"2021-09-26T19:02:59-05:00","partner_logo_url":null,"partner_name":"Night Sky Network","partner_opp_url":"https://nightsky.jpl.nasa.gov/event-view.cfm?Event_ID=118998","partner_updated":"2021-09-26T19:02:59-05:00","partner_website":null,"pes_domain":"unspecified","short_desc":"","slug":"burton-s-sugar-farm-observing-event","start_datetimes":[],"tags":[],"ticket_required":false,"title":"Burton's Sugar Farm Observing Event","uid":"ffd9a2ca-ae7a-513e-8d0e-828b0ff6dee2"}],
-    }
-  }
-}
+    name: "MyOpportunities",
 
-// export default {
-//     httpHeaders() {
-//         return {
-//             'X-XSS-Protection': '1; mode=block',
-//             'X-Frame-Options': 'DENY',
-//             'X-Content-Type-Options': 'nosniff',
-//             'Referrer-Policy': 'same-origin',
-//         };
-//     },
-//
-//     async asyncData(context) {
-//         const user = await context.store.dispatch('get_user');
-//
-//         if(!user.authenticated) {
-//             context.error({
-//                 statusCode: 401,
-//                 message: "Authentication required"
-//             });
-//         }
-//
-//         let partners = [];
-//
-//         try {
-//             partners = await context.$axios.$get('/api/ui/profile/partners', this.$store.state.auth);
-//         }
-//         catch(err) {
-//             context.error({
-//                 statusCode: err.response.status,
-//                 message: err.response.data
-//             });
-//         }
-//
-//         return {
-//             partners,
-//         }
-//     },
-//
-//     data() {
-//         return {
-//             partner_index: 0,
-//         }
-//     },
-//
-//     computed: {
-//         user() {
-//             return this.$store.state.user;
-//         },
-//
-//         choose_partner() {
-//             return this.partners.length > 1;
-//         },
-//
-//         selected_partner() {
-//             return this.partners[this.partner_index] || null;
-//         },
-//     },
-// }
+    components: {
+        AddIcon
+    },
+
+    httpHeaders() {
+        return {
+            'X-XSS-Protection': '1; mode=block',
+            'X-Frame-Options': 'DENY',
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'same-origin',
+        };
+    },
+
+    async asyncData(context) {
+        const user = await context.store.dispatch('get_user');
+
+        if(!user.authenticated) {
+            context.error({
+                statusCode: 401,
+                message: "Authentication required"
+            });
+        }
+
+        let live = {
+            pagination: {
+                "page_index": 0,
+                "per_page": 10,
+                "last_page": 0,
+                "total": 0,
+            },
+            matches: [],
+        };
+
+        let draft = {
+            pagination: {
+                "page_index": 0,
+                "per_page": 10,
+                "last_page": 0,
+                "total": 0,
+            },
+            matches: [],
+        };
+
+        let expired = {
+            pagination: {
+                "page_index": 0,
+                "per_page": 10,
+                "last_page": 0,
+                "total": 0,
+            },
+            matches: [],
+        };
+
+        try {
+            live = await context.$axios.$get('/api/ui/finder/search?mine=true&current=true&sort=alphabetical', context.store.state.auth);
+            draft = await context.$axios.$get('/api/ui/finder/search?mine=true&current=false&withdrawn=true&sort=alphabetical', context.store.state.auth);
+            expired = await context.$axios.$get('/api/ui/finder/search?mine=true&current=false&withdrawn=false&sort=alphabetical', context.store.state.auth);
+        }
+        catch(err) {
+            context.error({
+                statusCode: err.response.status,
+                message: err.response.data
+            });
+        }
+
+        return {
+            live,
+            draft,
+            expired,
+            live_search: "",
+            draft_search: "",
+            expired_search: "",
+            live_from: null,
+            live_until: null,
+            draft_from: null,
+            draft_until: null,
+            expired_from: null,
+            expired_until: null,
+        }
+    },
+
+    data() {
+        return {
+            state:1,
+            show_delete_confirm: false,
+        }
+    },
+
+    computed: {
+        user() {
+            return this.$store.state.user;
+        },
+    },
+
+    methods: {
+        async trash_live(idx) {
+            let opp = this.live.matches[idx];
+            this.live.matches.splice(idx, 1);
+            opp.accepted = false;
+            await this.$axios.$put('/api/ui/entity/' + opp.slug, opp, this.$store.state.auth);
+        },
+
+        async trash_draft(idx) {
+            let opp = this.draft.matches[idx];
+            this.draft.matches.splice(idx, 1);
+            opp.accepted = false;
+            await this.$axios.$put('/api/ui/entity/' + opp.slug, opp, this.$store.state.auth);
+        },
+
+        async load_live(page) {
+            this.live = await this.$axios.$get('/api/ui/finder/search?mine=true&current=true&sort=alphabetical' + (this.live_search ? '&text=' + encodeURIComponent(this.live_search) : '') + (this.live_from ? '&beginning=' + this.live_from.toISOString() : '') + (this.live_until ? '&ending=' + this.live_until.toISOString() : '') + '&page=' + page, this.$store.state.auth);
+        },
+
+        async load_draft(page) {
+            this.draft = await this.$axios.$get('/api/ui/finder/search?mine=true&current=false&withdrawn=true&sort=alphabetical' + (this.draft_search ? '&text=' + encodeURIComponent(this.draft_search) : '') + (this.draft_from ? '&beginning=' + this.draft_from.toISOString() : '') + (this.draft_until ? '&ending=' + this.draft_until.toISOString() : '') + '&page=' + page, this.$store.state.auth);
+        },
+
+        async load_expired(page) {
+            this.expired = await this.$axios.$get('/api/ui/finder/search?mine=true&current=false&withdrawn=false&sort=alphabetical' + (this.expired_search ? '&text=' + encodeURIComponent(this.expired_search) : '') + (this.expired_from ? '&beginning=' + this.expired_from.toISOString() : '') + (this.expired_until ? '&ending=' + this.expired_until.toISOString() : '') + '&page=' + page, this.$store.state.auth);
+        },
+    },
+}
 </script>
 
 <style lang="scss" scoped>
@@ -253,6 +320,11 @@ h1 {
 .header-actions > div {
   margin-left:1rem;
 }
+
+.header-actions button.button {
+    margin-top: 0.25rem;
+}
+
 .push-right {
   margin-left:auto;
   font-size:16px!important;

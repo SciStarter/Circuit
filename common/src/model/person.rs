@@ -598,6 +598,30 @@ impl Person {
         Permission::check(&self.interior.permissions, perm)
     }
 
+    pub async fn check_authorization(
+        &self,
+        db: &Database,
+        opportunity: &Opportunity,
+    ) -> Result<bool, Error> {
+        Ok(sqlx::query!(
+            r#"
+SELECT EXISTS(
+    SELECT 1 FROM c_partner
+    WHERE (
+        (interior -> 'prime') @> $1::jsonb OR
+        (interior -> 'authorized') @> $1::jsonb
+    )
+    AND (exterior -> 'uid') @> $2::jsonb
+) AS "authorized!"
+"#,
+            serde_json::to_value(self.exterior.uid)?,
+            serde_json::to_value(opportunity.exterior.partner)?,
+        )
+        .fetch_one(db)
+        .await?
+        .authorized)
+    }
+
     pub fn set_password(&mut self, password: &str) {
         self.interior.password = Some(djangohashers::make_password(password));
     }

@@ -55,12 +55,12 @@
     <div class="nav-tabs"  id="owner-view">
         <div class="tab-link active"><div class="icon"><eye-icon /></div>Public View</div>
         <div v-if="published" class="publish published">
-          This opportunity is live. <action-button text2>Unpublish</action-button>
+          This opportunity is live. <action-button text2 @click="withdrawn(true)">Unpublish</action-button>
         </div>
         <div v-else class="publish unpublished">
-          This opportunity is hidden. <action-button primary tight red><div class="icon"><edit-alt-icon /></div>Publish</action-button>
+          This opportunity is hidden. <action-button primary tight red @click="withdrawn(false)"><div class="icon"><edit-alt-icon /></div>Publish</action-button>
         </div>
-        <action-button primary tight><div class="icon"><edit-alt-icon /></div>Edit Opportunity</action-button>
+        <action-button primary tight @click="$router.push({name: 'my-opportunity-uid', params: {uid: entity.uid}})"><div class="icon"><edit-alt-icon /></div>Edit Opportunity</action-button>
     </div>
   </div>
 
@@ -650,8 +650,6 @@ export default {
             mobile_menu_open: false,
             successAdd: false,
             successUpdate: false,
-            owner: true,
-            published: true
         }
     },
 
@@ -686,6 +684,14 @@ export default {
         ]);
     },
     computed: {
+        owner() {
+            return this.entity.authorized;
+        },
+
+        published() {
+            return !this.entity.withdrawn;
+        },
+
         languages() {
             let ret = [];
 
@@ -859,6 +865,11 @@ export default {
     },
 
     methods: {
+        async withdrawn(val) {
+            this.entity.withdrawn = val;
+            await this.$axios.$put('/api/ui/entity/' + this.opportunity.slug, this.entity, this.$store.state.auth);
+        },
+
         async register_interest() {
             await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/interest', {}, this.$store.state.auth);
             this.$store.commit('increment_user_reports_pending');

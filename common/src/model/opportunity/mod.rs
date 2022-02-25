@@ -588,6 +588,17 @@ impl std::fmt::Debug for OpportunityExterior {
     }
 }
 
+#[derive(Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct AnnotatedOpportunityExterior {
+    #[serde(flatten)]
+    pub exterior: OpportunityExterior,
+    pub accepted: bool,
+    pub withdrawn: bool,
+    pub current: bool,
+    pub authorized: bool,
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityInterior {
@@ -911,11 +922,14 @@ fn build_matching_query(
     if let Some(val) = &query.partner_member {
         let uuid_param = ParamValue::Uuid(val.clone()).append(&mut params);
         clauses.push(format!(
-            r"jsonb_agg(
-                SELECT (exterior -> 'uid') FROM c_partner
-                  WHERE (interior -> 'authorized') @> (${}::jsonb)
-                  OR (interior -> 'prime') @> (${}::jsonb)
-            ) @> (exterior -> 'partner')",
+            r#"
+(
+    SELECT jsonb_agg("uid") FROM (
+        SELECT (exterior -> 'uid') AS "uid" FROM c_partner
+        WHERE (interior -> 'authorized') @> (${}::jsonb)
+        OR (interior -> 'prime') @> (${}::jsonb)
+    ) AS "authorized_partners"
+) @> (exterior -> 'partner')"#,
             uuid_param, uuid_param,
         ));
     }
@@ -1195,6 +1209,17 @@ impl OpportunityImportRecord {
 }
 
 impl Opportunity {
+    pub fn into_annotated_exterior(self, authorized: bool) -> AnnotatedOpportunityExterior {
+        let current = self.current();
+        AnnotatedOpportunityExterior {
+            exterior: self.exterior,
+            accepted: self.interior.accepted.unwrap_or(false),
+            withdrawn: self.interior.withdrawn,
+            current,
+            authorized,
+        }
+    }
+
     pub fn current_as_of(&self, now: &DateTime<FixedOffset>) -> bool {
         let num_starts = self.exterior.start_datetimes.len();
         let num_ends = self.exterior.end_datetimes.len();
@@ -1204,18 +1229,19 @@ impl Opportunity {
         (num_starts == 1 && num_ends == 0) || start_in_future || end_in_future
     }
 
-    pub fn ended_as_of(&self, now: &DateTime<FixedOffset>) -> bool {
+    pub fn expired_as_of(&self, now: &DateTime<FixedOffset>) -> bool {
         !self.current_as_of(now)
     }
 
     pub fn current(&self) -> bool {
         let now = chrono::Utc::now().to_fixed_offset();
-        self.current_as_of(&now)
+        self.interior.accepted.unwrap_or(false)
+            && !self.interior.withdrawn
+            && self.current_as_of(&now)
     }
 
-    pub fn ended(&self) -> bool {
-        let now = chrono::Utc::now().to_fixed_offset();
-        self.ended_as_of(&now)
+    pub fn expired(&self) -> bool {
+        !self.current()
     }
 
     pub async fn count_matching(db: &Database, query: &OpportunityQuery) -> Result<u32, Error> {
