@@ -8,8 +8,8 @@
   <ul class="nav-tabs">
       <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Current, Live Opportunities</a></li>
       <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Draft &amp; Unpublished</a></li>
-      <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Past Opportunities</a></li>
-      <li class="push-right"><action-button text2>Export Records</action-button></li>
+      <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Expired &amp; Trashed</a></li>
+      <li class="push-right"><action-button text2 @click="export_records">Export Records</action-button></li>
   </ul>
 
   <div v-if="state==1">
@@ -42,7 +42,7 @@
 
     <section id="results">
       <template v-if="live.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in live.matches" :key="opp.uid" :opportunity="opp" owner="live" @trash="trash_live(i)"/>
+        <opportunity-card v-for="(opp, i) in live.matches" :key="opp.uid" :opportunity="opp" owner="live" trash @trash="trash_live(i)"/>
         <pagination :page-index="live.pagination.page_index" :last-page="live.pagination.last_page" @switch="load_live($event)" />
       </template>
       <template v-else>
@@ -83,7 +83,7 @@
     </div>
     <section id="results">
       <template v-if="draft.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in draft.matches" :key="opp.uid" :opportunity="opp" owner="draft" />
+        <opportunity-card v-for="(opp, i) in draft.matches" :key="opp.uid" :opportunity="opp" owner="draft" trash @trash="trash_draft(i)"/>
         <pagination :page-index="draft.pagination.page_index" :last-page="draft.pagination.last_page" @switch="load_draft($event)" />
       </template>
       <template v-else>
@@ -123,7 +123,7 @@
     </div>
     <section id="results">
       <template v-if="expired.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in expired.matches" :key="opp.uid" :opportunity="opp" owner="past" @trash="trash_expired(i)" />
+        <opportunity-card v-for="(opp, i) in expired.matches" :key="opp.uid" :opportunity="opp" owner="past" />
         <pagination :page-index="expired.pagination.page_index" :last-page="expired.pagination.last_page" @switch="load_expired($event)" />
       </template>
       <template v-else>
@@ -260,6 +260,16 @@ export default {
     },
 
     methods: {
+        async export_records() {
+            let data = await this.$axios.$get('/api/ui/profile/opportunities.csv', this.$store.state.auth);
+            let blob = new Blob([data.content], { type: "text/csv" });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = data.filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        },
+
         async trash_live(idx) {
             let opp = this.live.matches[idx];
             this.live.matches.splice(idx, 1);

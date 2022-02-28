@@ -634,6 +634,177 @@ impl std::fmt::Debug for OpportunityInterior {
     }
 }
 
+#[derive(Serialize, Debug)]
+pub struct OpportunityForCsv {
+    pub uid: Uuid,
+    pub slug: String,
+    pub partner_name: String,
+    pub partner_website: Option<String>,
+    pub partner_logo_url: Option<String>,
+    pub partner_created: Option<DateTime<FixedOffset>>,
+    pub partner_updated: Option<DateTime<FixedOffset>>,
+    pub partner_opp_url: String,
+    pub organization_name: String,
+    pub organization_type: OrganizationType,
+    pub organization_website: Option<String>,
+    pub organization_logo_url: Option<String>,
+    pub entity_type: EntityType,
+    pub opp_venue: String,
+    pub opp_descriptor: String,
+    pub min_age: i16,
+    pub max_age: i16,
+    pub pes_domain: Domain,
+    pub tags: String,
+    pub opp_topics: String,
+    pub ticket_required: bool,
+    pub title: String,
+    pub description: String,
+    pub short_desc: String,
+    pub image_url: String,
+    pub image_credit: String,
+    pub start_datetimes: String,
+    pub has_end: bool,
+    pub end_datetimes: String,
+    pub cost: Cost,
+    pub languages: String,
+    pub is_online: bool,
+    pub location_type: LocationType,
+    pub location_name: String,
+    pub location_point: Option<String>,
+    pub location_polygon: Option<String>,
+    pub address_street: String,
+    pub address_city: String,
+    pub address_state: String,
+    pub address_country: String,
+    pub address_zip: String,
+    pub opp_hashtags: String,
+    pub partner: Uuid,
+    pub accepted: Option<bool>,
+    pub withdrawn: bool,
+    pub contact_name: String,
+    pub contact_email: String,
+    pub contact_phone: String,
+    pub extra_data: String,
+}
+
+impl From<Opportunity> for OpportunityForCsv {
+    fn from(opp: Opportunity) -> Self {
+        OpportunityForCsv {
+            uid: opp.exterior.uid,
+            slug: opp.exterior.slug,
+            partner_name: opp.exterior.partner_name,
+            partner_website: opp.exterior.partner_website,
+            partner_logo_url: opp.exterior.partner_logo_url,
+            partner_created: opp.exterior.partner_created,
+            partner_updated: opp.exterior.partner_updated,
+            partner_opp_url: opp.exterior.partner_opp_url,
+            organization_name: opp.exterior.organization_name,
+            organization_type: opp.exterior.organization_type,
+            organization_website: opp.exterior.organization_website,
+            organization_logo_url: opp.exterior.organization_logo_url,
+            entity_type: opp.exterior.entity_type,
+            opp_venue: opp
+                .exterior
+                .opp_venue
+                .into_iter()
+                .fold(String::new(), |mut accum, add| {
+                    if !accum.is_empty() {
+                        accum.push_str(", ");
+                    }
+                    accum.push_str(add.as_ref());
+                    accum
+                }),
+            opp_descriptor: opp.exterior.opp_descriptor.into_iter().fold(
+                String::new(),
+                |mut accum, add| {
+                    if !accum.is_empty() {
+                        accum.push_str(", ");
+                    }
+                    accum.push_str(add.as_ref());
+                    accum
+                },
+            ),
+            min_age: opp.exterior.min_age,
+            max_age: opp.exterior.max_age,
+            pes_domain: opp.exterior.pes_domain,
+            tags: opp
+                .exterior
+                .tags
+                .into_iter()
+                .fold(String::new(), |mut accum, add| {
+                    if !accum.is_empty() {
+                        accum.push_str(", ");
+                    }
+                    accum.push_str(&add);
+                    accum
+                }),
+            opp_topics: opp.exterior.opp_topics.into_iter().fold(
+                String::new(),
+                |mut accum, add| {
+                    if !accum.is_empty() {
+                        accum.push_str(", ");
+                    }
+                    accum.push_str(add.as_ref());
+                    accum
+                },
+            ),
+            ticket_required: opp.exterior.ticket_required,
+            title: opp.exterior.title,
+            description: opp.exterior.description,
+            short_desc: opp.exterior.short_desc,
+            image_url: opp.exterior.image_url,
+            image_credit: opp.exterior.image_credit,
+            start_datetimes: opp.exterior.start_datetimes.into_iter().fold(
+                String::new(),
+                |mut accum, add| {
+                    if !accum.is_empty() {
+                        accum.push_str(", ");
+                    }
+                    accum.push_str(&add.to_rfc3339());
+                    accum
+                },
+            ),
+            has_end: opp.exterior.has_end,
+            end_datetimes: opp.exterior.end_datetimes.into_iter().fold(
+                String::new(),
+                |mut accum, add| {
+                    if !accum.is_empty() {
+                        accum.push_str(", ");
+                    }
+                    accum.push_str(&add.to_rfc3339());
+                    accum
+                },
+            ),
+            cost: opp.exterior.cost,
+            languages: opp.exterior.languages.join(", "),
+            is_online: opp.exterior.is_online,
+            location_type: opp.exterior.location_type,
+            location_name: opp.exterior.location_name,
+            location_point: opp
+                .exterior
+                .location_point
+                .map(|point| serde_json::to_string(&point).unwrap_or_else(|_| "ERROR".to_string())),
+            location_polygon: opp
+                .exterior
+                .location_polygon
+                .map(|poly| serde_json::to_string(&poly).unwrap_or_else(|_| "ERROR".to_string())),
+            address_street: opp.exterior.address_street,
+            address_city: opp.exterior.address_city,
+            address_state: opp.exterior.address_state,
+            address_country: opp.exterior.address_country,
+            address_zip: opp.exterior.address_zip,
+            opp_hashtags: opp.exterior.opp_hashtags.join(", "),
+            partner: opp.exterior.partner,
+            accepted: opp.interior.accepted,
+            withdrawn: opp.interior.withdrawn,
+            contact_name: opp.interior.contact_name,
+            contact_email: opp.interior.contact_email,
+            contact_phone: opp.interior.contact_phone,
+            extra_data: opp.interior.extra_data.to_string(),
+        }
+    }
+}
+
 #[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Opportunity {

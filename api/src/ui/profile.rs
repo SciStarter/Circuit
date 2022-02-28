@@ -3,6 +3,7 @@ use chrono::{FixedOffset, Utc};
 use common::{
     model::{
         involvement::{Involvement, Mode},
+        opportunity::{EntityType, OpportunityForCsv, OpportunityQuery},
         person::{Gender, Goal, GoalStatus},
         Opportunity, Pagination, Person,
     },
@@ -33,6 +34,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         })
         .at("involved", |r| r.get(get_involved).post(set_involvement))
         .at("partners", |r| r.get(get_partners))
+        .at("opportunities.csv", |r| r.get(get_opportunities_csv))
         .at("goals", |r| {
             r.get(get_goals)
                 .post(add_goal)
@@ -361,6 +363,38 @@ pub async fn get_partners(mut req: tide::Request<Database>) -> tide::Result {
         .collect();
 
     okay(&partners)
+}
+
+pub async fn get_opportunities_csv(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req)
+        .await?
+        .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
+
+    let mut query = OpportunityQuery::default();
+    query.entity_type = Some(vec![EntityType::Opportunity, EntityType::Attraction]);
+    query.partner_member = Some(person.exterior.uid);
+    query.accepted = None;
+    query.withdrawn = None;
+
+    let matches = Opportunity::load_matching(
+        req.state(),
+        &query,
+        common::model::opportunity::OpportunityQueryOrdering::Alphabetical,
+        Pagination::All,
+    )
+    .await?;
+
+    let mut out = csv::Writer::from_writer(Vec::new());
+
+    for opp in matches.into_iter() {
+        out.serialize(OpportunityForCsv::from(opp))?;
+    }
+
+    out.flush()?;
+
+    okay(
+        &json!({"filename": "opportunities.csv", "content": String::from_utf8_lossy(&out.into_inner()?)}),
+    )
 }
 
 pub async fn get_goals(mut req: tide::Request<Database>) -> tide::Result {

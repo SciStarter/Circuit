@@ -62,7 +62,7 @@
             </template>
             <b-dropdown-item aria-role="listitem" @click="view">View</b-dropdown-item>
             <!-- <b-dropdown-item aria-role="listitem">Duplicate</b-dropdown-item> -->
-            <b-dropdown-item aria-role="listitem" @click="$emit('trash', opportunity)">Delete</b-dropdown-item>
+            <b-dropdown-item v-if="trash" aria-role="listitem" @click="$emit('trash', opportunity)">Trash</b-dropdown-item>
         </b-dropdown>
     </div>
   </template>
