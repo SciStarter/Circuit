@@ -4,7 +4,7 @@ use super::Error;
 use crate::model::involvement;
 use crate::{geo, Database, ToFixedOffset};
 
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, Duration, FixedOffset, Utc};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -26,6 +26,31 @@ use super::{Pagination, PARTNER_NAMESPACE};
 // that text using non-Latin characters will be retained when slugified.
 pub static SLUGIFY_REPLACE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"[^\pL\pN-]+").expect("Unable to compile SLUGIFY_REPLACE regex"));
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Recurrence {
+    Once,
+    Daily,
+    Weekly,
+}
+
+impl Default for Recurrence {
+    fn default() -> Self {
+        Recurrence::Once
+    }
+}
+
+impl Recurrence {
+    pub fn delta(&self) -> Duration {
+        use Recurrence::*;
+        match self {
+            Once => Duration::days(0),
+            Daily => Duration::days(1),
+            Weekly => Duration::days(7),
+        }
+    }
+}
 
 #[derive(Debug, Serialize)]
 pub struct Review {
@@ -558,6 +583,7 @@ pub struct OpportunityExterior {
     // 2021-09-07 bug prevents alias from working here https://github.com/serde-rs/serde/issues/1504
     #[serde(alias = "end_dates")]
     pub end_datetimes: Vec<DateTime<FixedOffset>>,
+    pub recurrence: Recurrence,
     pub attraction_hours: Option<OpenDays>,
     pub cost: Cost,
     #[serde(default = "en_us")]
@@ -665,6 +691,7 @@ pub struct OpportunityForCsv {
     pub start_datetimes: String,
     pub has_end: bool,
     pub end_datetimes: String,
+    pub recurrence: Recurrence,
     pub cost: Cost,
     pub languages: String,
     pub is_online: bool,
@@ -775,6 +802,7 @@ impl From<Opportunity> for OpportunityForCsv {
                     accum
                 },
             ),
+            recurrence: opp.exterior.recurrence,
             cost: opp.exterior.cost,
             languages: opp.exterior.languages.join(", "),
             is_online: opp.exterior.is_online,

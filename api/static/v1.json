@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Circuit API v1",
-        "version": "1.4.0",
+        "version": "1.5.0",
         "description": ""
     },
     "servers": [
@@ -398,7 +398,18 @@
                         "default": [],
                         "description": "Dates and times at which the opportunity ends. Each entry in end_datetimes should be paired with the corresponding entry in start_datetimes, so an opportunity might begin at start_datetimes[2] and end at end_datetimes[2]"
                     },
+                    "recurrence": {
+                        "type": "string",
+                        "enum": [
+                            "once",
+                            "daily",
+                            "weekly"
+                        ],
+                        "default": "once",
+                        "description": "If set to a value other than 'once', the opportunity start_datetimes and end_datetimes in conjunction with the recurrence period will be used to create additional instances of the opportunity as time passes."
+                    },
                     "attraction_hours": {
+                        "deprecated": true,
                         "type": "object",
                         "properties": {
                             "monday": {

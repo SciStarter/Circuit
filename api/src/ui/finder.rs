@@ -31,6 +31,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("random-categories", |r| r.get(random_categories))
         .at("search", |r| r.get(search))
         .at("geo", |r| r.post(geo))
+        .at("geom", |r| r.post(geom))
 }
 
 pub async fn partners(req: tide::Request<Database>) -> tide::Result {
@@ -169,6 +170,20 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
     };
 
     okay(&places)
+}
+
+#[derive(Deserialize, Debug)]
+struct GeomQuery {
+    q: String,
+}
+
+pub async fn geom(mut req: tide::Request<Database>) -> tide::Result {
+    let search: GeomQuery = req.body_json().await?;
+    let query = geo::GeomQuery::new(search.q, 0.5);
+
+    let result = query.lookup().await?;
+
+    okay(&result)
 }
 
 #[derive(Deserialize)]

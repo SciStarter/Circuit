@@ -8,6 +8,10 @@ static OPENCAGE_API_KEY: Lazy<String> =
 pub enum Error {
     #[error("serializing query {0:?} failed: {1}")]
     Surf(Query, String),
+    #[error("serializing query {0:?} failed: {1}")]
+    SurfGeom(GeomQuery, String),
+    #[error("result structure incompatible: {0}")]
+    Structure(String),
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -15,6 +19,7 @@ pub struct Query {
     key: &'static str,
     q: String,
     no_annotations: u8,
+    limit: u8,
 }
 
 impl Query {
@@ -23,6 +28,7 @@ impl Query {
             key: OPENCAGE_API_KEY.as_str(),
             q: query,
             no_annotations: if annotations { 0 } else { 1 },
+            limit: 1,
         }
     }
 
@@ -92,4 +98,52 @@ pub struct Match {
 pub struct Response {
     pub status: Status,
     pub results: Vec<Match>,
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub struct GeomQuery {
+    pub q: String,
+    pub format: String,
+    pub polygon_geojson: u8,
+    pub polygon_threshold: f32,
+    pub limit: u8,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GeomResult {
+    pub licence: String,
+    pub lon: String,
+    pub lat: String,
+    pub class: String,
+    pub geojson: Option<serde_json::Value>,
+}
+
+impl GeomQuery {
+    pub fn new<Q>(q: Q, threshold: f32) -> Self
+    where
+        Q: AsRef<str>,
+    {
+        GeomQuery {
+            q: q.as_ref().to_string(),
+            format: "json".to_string(),
+            polygon_geojson: 1,
+            polygon_threshold: threshold,
+            limit: 1,
+        }
+    }
+
+    pub async fn lookup(&self) -> Result<GeomResult, Error> {
+        let results: Vec<GeomResult> = surf::get("https://nominatim.openstreetmap.org/search")
+            .header("User-Agent", "ScienceNearMe.org")
+            .query(self)
+            .map_err(|err| Error::SurfGeom(self.clone(), err.to_string()))?
+            .recv_json()
+            .await
+            .map_err(|err| Error::Structure(err.to_string()))?;
+
+        Ok(results
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::Structure("results empty".to_string()))?)
+    }
 }

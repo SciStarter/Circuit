@@ -28,5 +28,9 @@ module.exports = {
     "vue/multiline-html-element-content-newline": "off",
     "vue/mustache-interpolation-spacing": "off",
     "vue/attributes-order": "off",
+    "vue/html-self-closing": "off",
+    "vue/html-closing-bracket-newline": "off",
+    "vue/html-closing-bracket-spacing": "off",
+    "vue/no-multi-spaces": "off",
   },
 };
