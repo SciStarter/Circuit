@@ -12,7 +12,7 @@
     <a class="cancel">cancel</a>
   </div>
 
-  <opportunity-form :partner="selected_partner" :opportunity="opp"/>
+  <opportunity-form v-model="opp" :partner="selected_partner" :timezones="timezones" :descriptors="descriptors" :topics="topics"/>
 
 </div>
 </template>
@@ -38,12 +38,18 @@ export default {
             });
         }
 
+        let timezones = [];
+        let descriptors = [];
+        let topics = [];
         let partners = [];
         let opp = null;
 
         try {
-            opp = await context.$axios.$get('/api/ui/opportunity/');
+            timezones = await context.$axios.$get('/api/ui/timezone', context.store.state.auth);
+            descriptors = await context.$axios.$get('/api/ui/finder/descriptors');
+            topics = await context.$axios.$get('/api/ui/finder/topics');
             partners = await context.$axios.$get('/api/ui/profile/partners', context.store.state.auth);
+            opp = await context.$axios.$get('/api/ui/opportunity/');
         }
         catch(err) {
             context.error({
@@ -53,6 +59,9 @@ export default {
         }
 
         return {
+            timezones,
+            descriptors,
+            topics,
             partners,
             opp,
         }

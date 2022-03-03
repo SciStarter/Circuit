@@ -1,12 +1,13 @@
-use async_std::prelude::*;
+use async_std::prelude::{Stream, StreamExt};
 use clap::Parser;
 use common::model::Partner;
 use counter::Counter;
 use http_types::Method;
 use serde::Deserialize;
 use shellfish::{async_fn, Command, Shell};
+use sqlx::postgres::PgPoolOptions;
 use sqlx::Row;
-use sqlx::{postgres::PgPoolOptions, Executor};
+use std::io::Write;
 
 use common::{
     model::{
@@ -755,6 +756,19 @@ async fn new_opportunities(state: &mut State, _args: Vec<String>) -> Result<(), 
     }
 
     Ok(())
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct TimezoneItem {
+    zone_name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct TimezoneResponse {
+    status: String,
+    message: String,
+    zones: Vec<TimezoneItem>,
 }
 
 async fn run_shell(state: State) -> Result<(), DynError> {

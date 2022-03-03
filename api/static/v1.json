@@ -408,6 +408,19 @@
                         "default": "once",
                         "description": "If set to a value other than 'once', the opportunity start_datetimes and end_datetimes in conjunction with the recurrence period will be used to create additional instances of the opportunity as time passes."
                     },
+                    "end_recurrence": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "default": null,
+                        "description": "The recurrence will cease once it hits a date and time beyond this value, if not null"
+                    },
+                    "timezone": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null,
+                        "description": "The timezone for the opportunity, as an 'America/Los_Angeles' style timezonedb name; used to adjust times for daylight savings time in recurring opportunities"
+                    },
                     "attraction_hours": {
                         "deprecated": true,
                         "type": "object",

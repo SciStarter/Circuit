@@ -23,7 +23,10 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 }
 
 pub async fn blank_opp(_: tide::Request<Database>) -> tide::Result {
-    okay(&Opportunity::default())
+    let mut opp = Opportunity::default();
+    opp.exterior.max_age = 999;
+    opp.interior.withdrawn = true;
+    okay(&opp)
 }
 
 pub async fn add_opp(mut req: tide::Request<Database>) -> tide::Result {

@@ -24,15 +24,15 @@
           <template #label>
             Name of Opportunity<span class="required">*</span>
           </template>
-          <b-input v-model="opportunity.name" has-counter maxlength="64"></b-input>
+          <b-input v-model="value.title" has-counter maxlength="64"></b-input>
         </b-field>
         <b-field message="This is the organization hosting the event, project, or attraction. This might be your organization, a chapter, or similar.">
           <template #label>
             Host Organization<span class="required">*</span>
           </template>
-          <b-input v-model="opportunity.organization_name"></b-input>
+          <b-input v-model="value.organization_name"></b-input>
         </b-field>
-        <b-field :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? 'If this needs to change, you must contact Science Near me.' : '')">
+        <b-field :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '')">
           <template #label>
             Science Near Me partner<span class="required">*</span>
           </template>
@@ -58,7 +58,7 @@
                 <template #label>
                   External link To participate<span class="required">*</span>
                 </template>
-                <b-input type="url" v-model="opportunity.partner_opp_url"></b-input>
+                <b-input type="url" v-model="value.partner_opp_url"></b-input>
               </b-field>
             </div>
           </transition>
@@ -81,7 +81,7 @@
                 <template #label>
                   Search for an address or location<span class="required">*</span>
                 </template>
-                <lookup-geometry v-model="opportunity.location_name" @polygon="location_poly" @point="location_point" @license="location_license" />
+                <lookup-geometry v-model="value.location_name" @polygon="location_poly" @point="location_point" @license="location_license" />
               </b-field>
             </div>
           </transition>
@@ -104,25 +104,13 @@
                 <template #label>
                   Search for an address or location<span class="required">*</span>
                 </template>
-                <!-- <b-autocomplete
-                     :loading="place_loading"
-                     :data="place_matches"
-                     field="near"
-                     :value="filters.near"
-                     :name="'new-' + Math.random()"
-                     :clearable="true"
-                     placeholder="e.g. Iowa City, IA"
-                     @typing="place_completions"
-                     @select="place_select"
-                     autocomplete="off"
-                     label="Place"
-                     /> -->
+                <lookup-geometry v-model="value.location_name" @polygon="location_poly" @point="location_point" @license="location_license" />
               </b-field>
               <b-field message="Must start with http:// or https://">
                 <template #label>
                   External link To participate<span class="required">*</span>
                 </template>
-                <b-input type="url" v-model="opportunity.partner_opp_url"></b-input>
+                <b-input type="url" v-model="value.partner_opp_url"></b-input>
               </b-field>
             </div>
           </transition>
@@ -142,16 +130,16 @@
             </div>
           </div>
           <transition name="slide">
-            <div v-if="when=='ongoing'" class="add">
-              <div class="set-info" v-if="endDate">
+            <div v-if="when=='ongoing'" class="add" @click="show_end_date=true">
+              <div class="set-info" v-if="end_datetime">
                 <div class="flex">
                   <h2>End Date</h2>
                   <div class="push-right">
                     <a class="action" @click="show_end_date=true"><edit-icon /></a>
-                    <a class="action" @click="endDate=null"><close-icon /></a>
+                    <a class="action" @click="end_date_time=null"><close-icon /></a>
                   </div>
                 </div>
-                <p>{{endDate}}</p>
+                <p>{{end_datetime.toLocaleDateString()}}</p>
               </div>
               <action-button v-else primary tight @click="show_end_date=true">+ Add an end date</action-button>
             </div>
@@ -175,33 +163,32 @@
                 <template #label>
                   Select a time zone<span class="required">*</span>
                 </template>
-                <b-select placeholder="Select a time zone">
-                  <!-- <option
-                       v-for="option in data"
-                       :value="option.id"
-                       :key="option.id">
-                       {{ option.user.first_name }}
-                       </option> -->
+                <b-select v-model="value.timezone" placeholder="Select a time zone">
+                  <option v-for="tz in timezones" :value="tz" :key="tz">
+                    {{ tz.replace(/_/g, " ") }}
+                  </option>
                 </b-select>
               </b-field>
-              <div v-if="timePeriods.length == 0" class="times-flex">
+              <div v-if="time_periods.length == 0 || time_periods.length == 1" class="times-flex">
                 <div class="flex">
                   <b-field>
                     <template #label>
                       Starts on:<span class="required">*</span>
                     </template>
                     <b-datepicker
-                      v-model="selected"
+                      v-model="begin_datetime"
                       placeholder="Click to select..."
                       icon="calendar-today"
-                      :icon-right="selected ? 'close-circle' : ''"
+                      :icon-right="begin_datetime ? 'close-circle' : ''"
                       icon-right-clickable
-                      @icon-right-click="clearDate"
+                      @icon-right-click="begin_datetime=null"
                       trap-focus>
                     </b-datepicker>
                     <b-timepicker
+                      v-model="begin_datetime"
                       placeholder="Click to select..."
-                      icon="clock">
+                      icon="clock"
+                      editable>
                     </b-timepicker>
                   </b-field>
                   <b-field>
@@ -209,35 +196,39 @@
                       Ends on:
                     </template>
                     <b-datepicker
-                      v-model="selected"
+                      v-model="end_datetime"
                       placeholder="Click to select..."
                       icon="calendar-today"
-                      :icon-right="selected ? 'close-circle' : ''"
+                      :icon-right="end_datetime ? 'close-circle' : ''"
                       icon-right-clickable
-                      @icon-right-click="clearDate"
+                      @icon-right-click="end_datetime=null"
                       trap-focus>
                     </b-datepicker>
                     <b-timepicker
+                      v-model="end_datetime"
                       placeholder="Click to select..."
-                      icon="clock">
+                      icon="clock"
+                      editable>
                     </b-timepicker>
                   </b-field>
                 </div>
               </div>
 
-              <div v-if="timePeriods.length > 0" class="set-info" style="margin-bottom:1rem;">
+              <div v-if="time_periods.length > 1" class="set-info" style="margin-bottom:1rem;">
                 <div class="flex">
                   <h2>Time Periods</h2>
                   <div class="push-right">
                     <a class="action" @click="show_time_periods=true"><edit-icon /></a>
                   </div>
                 </div>
-                <p>June 8, 2022 8:00pm–9:00pm</p>
-                <p>June 9, 2022 8:00pm–9:00pm, 10:00pm–11:00pm</p>
+                <p v-for="pair in time_periods">
+                  <span v-if="pair[0].getFullYear() == pair[1].getFullYear() && pair[0].getMonth() == pair[1].getMonth() && pair[0].getDate() == pair[1].getDate()">{{pair[0].toLocaleDateString()}} {{pair[0].toLocaleTimeString()}} - {{pair[1].toLocaleTimeString()}}</span>
+                  <span v-else>{{pair[0].toLocaleString()}} - {{pair[1].toLocaleString()}}</span>
+                </p>
               </div>
               <div v-else><action-button primary tight @click="show_time_periods=true"><div class="icon"><time-icon /></div> Add &amp; customize time periods</action-button></div>
 
-              <div v-if="recurrence" class="set-info">
+              <div v-if="can_recur && recurrence" class="set-info">
                 <div class="flex">
                   <h2>Recurrence</h2>
                   <div class="push-right">
@@ -249,9 +240,10 @@
                   <template #label>
                     Select a frequency<span class="required">*</span>
                   </template>
-                  <b-select placeholder="Select a frequency">
-                    <option>Daily</option>
-                    <option>Weekly</option>
+                  <b-select v-model="value.recurrence" placeholder="Select a frequency">
+                    <option value="once">Once</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
                   </b-select>
                 </b-field>
                 <b-field>
@@ -259,17 +251,18 @@
                     Recurrence end date<span class="required">*</span>
                   </template>
                   <b-datepicker
-                    v-model="selected"
+                    :value="value.end_recurrence ? new Date(value.end_recurrence) : null"
+                    @input="value.end_recurrence = $event.toISOString()"
                     placeholder="Click to select..."
                     icon="calendar-today"
-                    :icon-right="selected ? 'close-circle' : ''"
+                    :icon-right="value.end_recurrence ? 'close-circle' : ''"
                     icon-right-clickable
-                    @icon-right-click="clearDate"
+                    @icon-right-click="value.end_recurrence=null"
                     trap-focus>
                   </b-datepicker>
                 </b-field>
               </div>
-              <div v-else><action-button primary tight @click="recurrence=true">+ Add recurrence</action-button></div>
+              <div v-else-if="can_recur"><action-button primary tight @click="recurrence=true">+ Add recurrence</action-button></div>
             </div>
           </transition>
         </label>
@@ -293,7 +286,7 @@
                 <template #label>
                   External link to learn more<span class="required">*</span>
                 </template>
-                <b-input v-model="onlineLink2"></b-input>
+                <b-input v-model="value.organization_website"></b-input>
               </b-field>
             </div>
           </transition>
@@ -324,24 +317,26 @@
           <template #label>
             Short description of opportunity<span class="required">*</span>
           </template>
-          <b-input v-model="shortdesc" maxlength="164" has-counter type="textarea"></b-input>
+          <b-input v-model="value.short_desc" maxlength="164" has-counter type="textarea"></b-input>
         </b-field>
         <b-field class="no-message">
           <template #label>
             Description of opportunity<span class="required">*</span>
           </template>
-          <b-input v-model="desc" type="textarea" class="desc"></b-input>
+          <b-input v-model="value.description" type="textarea" class="desc"></b-input>
         </b-field>
 
         <b-field>
           <template #label>
             Select the activity types that fit your opportunity best<span class="required">*</span>
           </template>
-          <b-input type="input" placeholder="Type to filter activity list" class="filter"/>
+          <b-input :value="descriptors_filter" @input="descriptors_filter = $event.toLowerCase()" type="input" placeholder="Type to filter activity list" class="filter"/>
           <div class="checkbox-wrap">
-            <b-field v-for="a in activities">
-              <b-checkbox>{{a}}</b-checkbox>
-            </b-field>
+            <template v-for="a in descriptors">
+              <b-field v-if="a[1].toLowerCase().indexOf(descriptors_filter) >= 0">
+                <b-checkbox v-model="value.opp_descriptor" :native-value="a[0]">{{a[1]}}</b-checkbox>
+              </b-field>
+            </template>
           </div>
         </b-field>
 
@@ -349,12 +344,10 @@
           <template #label>
             Associated Cost<span class="required">*</span>
           </template>
-          <b-radio v-model="cost"
-                   native-value="free">
+          <b-radio v-model="value.cost" native-value="free">
             Free
           </b-radio>
-          <b-radio v-model="cost"
-                   native-value="cost">
+          <b-radio v-model="value.cost" native-value="cost">
             Cost
           </b-radio>
         </b-field>
@@ -362,13 +355,13 @@
         <label class="label">Age required to participate<span class="required">*</span></label>
         <div class="flex">
           <b-field label="Minimum Age">
-            <b-numberinput controls-position="compact" v-model="min"></b-numberinput>
+            <b-numberinput controls-position="compact" v-model="value.min_age"></b-numberinput>
           </b-field>
           <b-field label="Maximum Age">
-            <b-numberinput controls-position="compact" v-model="max"></b-numberinput>
+            <b-numberinput controls-position="compact" v-model="value.max_age"></b-numberinput>
           </b-field>
         </div>
-        <p class="help mb">If there is no age requirement, set minimum to 0 and maximum to 120</p>
+        <p class="help mb">If there is no age requirement, set minimum to 0 and maximum to 999</p>
 
         <hr />
 
@@ -380,7 +373,7 @@
             Add keywords and key phrases<span class="required">*</span>
           </template>
           <b-taginput
-            v-model="tags"
+            v-model="value.tags"
             ellipsis
             icon="label"
             placeholder="Add a tag"
@@ -388,7 +381,7 @@
           </b-taginput>
         </b-field>
         <p>Most used keywords</p>
-        <action-button v-for="k in mostUsed" tertiary tight>{{k}}</action-button>
+        <action-button v-for="k in mostUsed" :key="k" tertiary tight @click="value.tags.push(k)">{{k}}</action-button>
       </div><!-- state 2 -->
 
       <div v-if="state==3">
@@ -397,9 +390,9 @@
 
         <label class="label">Display Image</label>
         <div class="flex">
-          <img :src="imgSrc" class="display-image"/>
+          <img v-if="value.image_url" :src="value.image_url" class="display-image"/>
           <b-field label="Image URL" message="Must start with http:// or https://">
-            <b-input type="url" />
+            <b-input type="url" v-model="value.image_url" />
           </b-field>
         </div>
 
@@ -409,38 +402,38 @@
         <p class="help mb">While not required, this information will tell prospective participants more about your opportunity and help them find your opportunity.</p>
 
         <b-field label="Ticket Required" class="mb">
-          <b-radio v-model="ticket"
-                   native-value="yes">
+          <b-radio v-model="value.ticket_required" :native-value="true">
             Yes
           </b-radio>
-          <b-radio v-model="ticket"
-                   native-value="no">
+          <b-radio v-model="value.ticket_required" :native-value="false">
             No
           </b-radio>
         </b-field>
 
-        <b-field label="RSVP Required" class="mb">
-          <b-radio v-model="rsvp"
-                   native-value="yes">
-            Yes
-          </b-radio>
-          <b-radio v-model="rsvp"
-                   native-value="no">
-            No
-          </b-radio>
-        </b-field>
+        <!-- RSVP isn't in our data model yet -->
+        <!-- <b-field label="RSVP Required" class="mb"> -->
+        <!--   <b-radio v-model="rsvp" native-value="yes"> -->
+        <!--     Yes -->
+        <!--   </b-radio> -->
+        <!--   <b-radio v-model="rsvp" native-value="no"> -->
+        <!--     No -->
+        <!--   </b-radio> -->
+        <!-- </b-field> -->
 
         <b-field label="Select the topics that fit your opportunity best">
-          <b-input type="input" placeholder="Type to filter topic list" class="filter"/>
+          <b-input :value="topics_filter" @input="topics_filter = $event.toLowerCase()" type="input" placeholder="Type to filter topic list" class="filter"/>
           <div class="checkbox-wrap">
-            <b-field v-for="a in topics">
-              <b-checkbox>{{a}}</b-checkbox>
-            </b-field>
+            <template v-for="t in topics">
+              <b-field v-if="t[1].toLowerCase().indexOf(topics_filter) >= 0">
+                <b-checkbox v-model="value.opp_topics" :native-value="t[0]">{{t[1]}}</b-checkbox>
+              </b-field>
+            </template>
           </div>
         </b-field>
 
-        <b-field label="Select the venue(s) that fit your opportunity best" class="inline-checks">
-          <b-checkbox v-for="a in venues">{{a}}</b-checkbox>
+        <b-field label="Select the venue type(s) that fit your opportunity best" class="inline-checks">
+          <b-checkbox v-model="value.opp_venue" native-value="indoors">Indoors</b-checkbox>
+          <b-checkbox v-model="value.opp_venue" native-value="outdoors">Outdoors</b-checkbox>
         </b-field>
 
         <hr />
@@ -455,7 +448,7 @@
           </template>
 
           <b-taginput
-            v-model="hashtags"
+            v-model="value.opp_hashtags"
             ellipsis
             icon="label"
             placeholder="Add a tag"
@@ -464,15 +457,15 @@
         </b-field>
 
         <b-field label="Twitter Handle" message="must start with @">
-          <b-input v-model="twitter"></b-input>
+          <b-input v-model="value.opp_social_handles.twitter"></b-input>
         </b-field>
 
         <b-field label="Instagram Handle" message="must start with @">
-          <b-input v-model="instagram"></b-input>
+          <b-input v-model="value.opp_social_handles.instagram"></b-input>
         </b-field>
 
         <b-field label="Facebook Page" message="must start with http:// or https://">
-          <b-input v-model="facebook" type="url"></b-input>
+          <b-input v-model="value.opp_social_handles.facebook" type="url"></b-input>
         </b-field>
 
 
@@ -484,16 +477,16 @@
     <div class="form-actions">
       <div class="snm-container">
         <template v-if="editMode">
-          <action-button primary :disabled="saveDisabled">Save &amp; Continue Editing</action-button>
-          <action-button primary :disabled="saveDisabled">Save &amp; View</action-button>
+          <action-button primary :disabled="saveDisabled" @click="save">Save &amp; Continue Editing</action-button>
+          <action-button primary :disabled="saveDisabled" @click="save_and_view">Save &amp; View</action-button>
         </template>
         <template v-else>
           <action-button v-if="state==2 || state==3"  @click="state--" gray>Back</action-button>
           <action-button v-if="state==1" @click="state++" primary :disabled="nextDisabled1">Next Step</action-button>
           <action-button v-if="state==2" @click="state++" primary :disabled="nextDisabled2">Next Step</action-button>
-          <action-button v-if="state<3" tertiary>Save and Complete Later</action-button>
-          <action-button v-if="state==3" primary>Save and Publish</action-button>
-          <action-button v-if="state==3" tertiary>Save and Publish Later</action-button>
+          <action-button v-if="state<3" tertiary @click="save_and_my_opps">Save and Complete Later</action-button>
+          <action-button v-if="state==3" primary @click="save_and_publish">Save and Publish</action-button>
+          <action-button v-if="state==3" tertiary @click="save_and_my_opps">Save and Publish Later</action-button>
 
 
           <template v-if="saveState=='saved'">
@@ -503,7 +496,7 @@
             <div class="save-feedback saving"><img src="~/assets/img/loading-buffering.gif" class="icon" /> saving</div>
           </template>
           <template v-else-if="saveState=='error'">
-            <div class="save-feedback error"><div class="icon"><cross-icon /></div> Error Saving!</div>
+            <div class="save-feedback error"><div class="icon"><cross-icon /></div> unable to save</div>
           </template>
 
         </template>
@@ -518,10 +511,10 @@
       <h1>Select an End Date<span class="close" @click="show_end_date = false">&times;</span></h1>
       <p>If your ongoing opportunity has an end date, select below.</p>
       <div class="flex flex-center">
-        <b-datepicker v-model="endDate" inline></b-datepicker>
+        <b-datepicker v-model="end_datetime" inline></b-datepicker>
       </div>
       <div class="flex flex-center">
-        <action-button tertiary @click="()=>{show_end_date=false,endDate=null}">cancel</action-button>
+        <action-button tertiary @click="()=>{show_end_date=false;end_datetime=null;}">cancel</action-button>
         <action-button primary @click="show_end_date=false">save</action-button>
       </div>
     </div>
@@ -536,52 +529,35 @@
           <template #label>
             Select Dates<span class="required">*</span>
           </template>
-          <b-datepicker v-model="timePeriods" inline multiple></b-datepicker>
+          <b-datepicker v-model="time_periods_dates" inline multiple></b-datepicker>
         </b-field>
         <div id="time-periods">
           <label class="label">Add times to each date<span class="required">*</span></label>
           <div class="tp-list">
 
             <!-- date has no time set -->
-            <div class="tp-item">
+            <div v-for="(pair, idx) in time_periods" class="tp-item">
               <div class="flex">
-                <h2>Tue, Feb 22 2022</h2>
-                <div class="push-right">
-                  <a class="action"><close-icon /></a><!-- this removes date -->
-                </div>
+                <h2>{{ pair[0].toLocaleDateString() }}</h2>
               </div>
               <div class="flex">
                 <b-timepicker
+                  :value="pair[0]"
                   placeholder="Start Time"
-                  icon="clock">
+                  icon="clock"
+                  editable
+                  @input="time_periods_set(idx, 0, $event)">
                 </b-timepicker>
                 <b-timepicker
+                  :value="pair[1]"
+                  position="is-bottom-left"
                   placeholder="End Time"
-                  icon="clock">
+                  icon="clock"
+                  editable
+                  @input="time_periods_set(idx, 1, $event)">
                 </b-timepicker>
               </div>
             </div>
-            <!-- date has one or more times set -->
-            <div class="tp-item">
-              <div class="flex">
-                <h2>Tue, Feb 22 2022</h2>
-                <a class="action push-right"><close-icon /></a><!-- this removes date -->
-              </div>
-              <p>12:00pm&mdash;2:00pm<a class="action inline-action"><close-icon /></a><!-- this removes time --></p>
-              <p>4:00pm&mdash;8:00pm<a class="action inline-action"><close-icon /></a><!-- this removes time --></p>
-              <div class="flex" v-if="show_time">
-                <b-timepicker
-                  placeholder="Start Time"
-                  icon="clock">
-                </b-timepicker>
-                <b-timepicker
-                  placeholder="End Time"
-                  icon="clock">
-                </b-timepicker>
-              </div>
-              <action-button v-else tertiary tight @click="show_time=true">+ Add time</action-button>
-            </div>
-
           </div>
         </div><!-- #time-periods -->
       </div>
@@ -596,6 +572,8 @@
 </template>
 
 <script>
+import debounce from 'lodash/debounce'
+
 import EyeIcon from '~/assets/img/eye.svg?inline'
 import CorrectIcon from '~/assets/img/correct.svg?inline'
 import CrossIcon from '~/assets/img/cross.svg?inline'
@@ -608,6 +586,11 @@ import EditIcon from '~/assets/img/edit.svg?inline'
 import CloseIcon from '~/assets/img/close.svg?inline'
 import LinkIcon from '~/assets/img/link.svg?inline'
 import SnmIcon from '~/assets/img/atom-one-color.svg?inline'
+
+function dbg(x) {
+    console.log(x);
+    return x;
+}
 
 export default {
     name: "OportunityForm",
@@ -639,8 +622,23 @@ export default {
             required: true,
         },
 
-        opportunity: {
+        value: {
             type: Object,
+            required: true,
+        },
+
+        timezones: {
+            type: Array,
+            required: true,
+        },
+
+        descriptors: {
+            type: Array,
+            required: true,
+        },
+
+        topics: {
+            type: Array,
             required: true,
         },
     },
@@ -655,32 +653,165 @@ export default {
             when:null,
             learn:null,
             show_end_date: false,
-            endDate: null,
             recurrence: false,
             show_time_periods: false,
-            timePeriods:[],
             show_time: false,
-            activities:['bioblitz','taco truck','bioblitz','taco truck','bioblitz','taco truck','bioblitz','taco truck','bioblitz','taco truck'],
-            topics:['bioblitz','taco truck','bioblitz','taco truck','bioblitz','taco truck','bioblitz','taco truck','bioblitz','taco truck'],
-            venues:['bioblitz','taco truck','bioblitz','taco truck','bioblitz','taco truck','bioblitz','taco truck','bioblitz','taco truck'],
-            cost: 'free',
-            min:0,
-            max:120,
-            mostUsed: ['family friendly','wombat','taco truck','family friendly','wombat','taco truck','family friendly','wombat'],
-            imgSrc: '/_nuxt/assets/img/no-image-thumb.jpg',
+            mostUsed: ['museum', 'astronomy', 'afterschool', 'library', 'kids', 'citizen science', 'nature'],
+            topics_filter: '',
+            descriptors_filter: '',
         }
     },
 
+    fetch() {
+        this.initialize();
+    },
+
     computed: {
+        can_recur() {
+            if(this.full_span === null) {
+                return false;
+            }
+
+            const millis = this.full_span[1] - this.full_span[0];
+            return millis < 1000 * 60 * 60 * 24 * 7;
+        },
+
+        full_span() {
+            return this.time_periods.reduce((accum, val) => {
+                if(accum === null) {
+                    return [Math.min.apply(null, val), Math.max.apply(null, val)];
+                }
+                else {
+                    const min = Math.min.apply(null, val);
+                    const max = Math.max.apply(null, val);
+                    accum[0] = Math.min(accum[0], min);
+                    accum[1] = Math.max(accum[1], max);
+                    return accum;
+                }
+            }, null);
+        },
+
+        time_periods: {
+            get() {
+                const starts = this.value.start_datetimes;
+                const ends = this.value.end_datetimes;
+
+                const pairs =  Array(Math.max(starts.length, ends.length))
+                      .fill()
+                      .map((_,i) => [new Date(starts[i]), new Date(ends[i])]);
+
+                return pairs;
+            },
+
+            async set(val) {
+                const pairs = val.filter(pair => !!pair[0] && !!pair[1]);
+
+                const starts = [];
+                const ends = [];
+
+                for(let pair of pairs) {
+                    starts.push(await this.datetime_repr(pair[0]));
+                    ends.push(await this.datetime_repr(pair[1]));
+                }
+
+                this.value.start_datetimes = starts;
+                this.value.end_datetimes = ends;
+            },
+        },
+
+        time_periods_dates: {
+            get() {
+                return this.time_periods.map(pair => pair[0]);
+            },
+
+            set(val) {
+                const current = this.time_periods;
+                const updated = [];
+
+                for(let pair of current) {
+                    let idx = val.indexOf(pair[0]);
+
+                    if(idx < 0) {
+                        continue;
+                    }
+                    else {
+                        val.splice(idx, 1);
+                        updated.push(pair);
+                    }
+                }
+
+                for(let dt of val) {
+                    const end = new Date(dt);
+                    end.setHours(23);
+                    end.setMinutes(59);
+                    end.setSeconds(59);
+                    end.setMilliseconds(999)
+                    updated.push([dt, end]);
+                }
+
+                this.time_periods = updated;
+            }
+        },
+
+        begin_datetime: {
+            get() {
+                const l = this.value.start_datetimes.length;
+                if(l > 0) {
+                    return new Date(this.value.start_datetimes[0]);
+                }
+                else {
+                    return null;
+                }
+            },
+
+            async set(val) {
+                if(val === null) {
+                    this.value.start_datetimes = [];
+                }
+                else {
+                    let repr = await this.datetime_repr(val);
+                    if(repr != null) {
+                        this.value.start_datetimes = [repr];
+                    }
+                }
+            },
+        },
+
+        end_datetime: {
+            get() {
+                const l = this.value.end_datetimes.length;
+                if(l > 0) {
+                    return new Date(this.value.end_datetimes[l - 1]);
+                }
+                else {
+                    return null;
+                }
+            },
+
+            async set(val) {
+                if(val === null) {
+                    this.value.end_datetimes = [];
+                    this.value.has_end = false;
+                }
+                else {
+                    let repr = await this.datetime_repr(val, '23:59:59.999');
+                    if(repr != null) {
+                        this.value.end_datetimes = [repr];
+                        this.value.has_end = true;
+                    }
+                }
+            },
+        },
+
         location: {
             get() {
-                if(this.opportunity.is_online && (this.opportunity.location_type == 'at' || this.opportunity.location_type == 'near')) {
+                if(this.value.is_online && (this.value.location_type == 'at' || this.value.location_type == 'near')) {
                     return 'both';
                 }
-                else if(this.opportunity.is_online) {
+                else if(this.value.is_online) {
                     return 'online';
                 }
-                else if(this.opportunity.location_type == 'at' || this.opportunity.location_type == 'near') {
+                else if(this.value.location_type == 'at' || this.value.location_type == 'near') {
                     return 'physical';
                 }
                 else {
@@ -690,19 +821,19 @@ export default {
 
             set(val) {
                 if(val == 'both') {
-                    this.opportunity.is_online = true;
-                    this.opportunity.location_type = 'near';
+                    this.value.is_online = true;
+                    this.value.location_type = 'near';
                 }
                 else if(val == 'online') {
-                    this.opportunity.is_online = true;
-                    this.opportunity.location_type = 'any';
-                    this.opportunity.location_name = '';
-                    this.opportunity.location_point = null;
-                    this.opportunity.location_polygon = null;
+                    this.value.is_online = true;
+                    this.value.location_type = 'any';
+                    this.value.location_name = '';
+                    this.value.location_point = null;
+                    this.value.location_polygon = null;
                 }
                 else if(val == 'physical') {
-                    this.opportunity.is_online = false;
-                    this.opportunity.location_type = 'near';
+                    this.value.is_online = false;
+                    this.value.location_type = 'near';
                 }
                 else {
                     console.error("Unrecognized location value: " + val);
@@ -713,35 +844,146 @@ export default {
 
     watch: {
         partner(val, old) {
-            this.opportunity.partner = val.uid;
-            this.opportunity.partner_name = val.name;
-            this.opportunity.partner_url = val.url;
-            this.opportunity.partner_logo_url = val.image_url;
+            this.value.partner = val.uid;
+            this.value.partner_name = val.name;
+            this.value.partner_url = val.url;
+            this.value.partner_logo_url = val.image_url;
         },
-    },
 
-    mounted() {
-        this.opportunity.partner = this.partner.uid;
-        this.opportunity.partner_name = this.partner.name;
-        this.opportunity.partner_url = this.partner.url;
-        this.opportunity.partner_logo_url = this.partner.image_url;
+        value: {
+            handler() {
+                if(!this.editMode) {
+                    this.save(true);
+                }
+            },
+            deep: true
+        }
     },
 
     methods: {
+        initialize() {
+            this.value.partner = this.partner.uid;
+            this.value.partner_name = this.partner.name;
+            this.value.partner_url = this.partner.url;
+            this.value.partner_logo_url = this.partner.image_url;
+
+            if(!this.value.timezone) {
+                this.value.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            }
+
+            this.learn = this.value.organization_website ? 'link' : 'none';
+            this.when = this.value.start_datetimes.length ? 'time' : 'ongoing';
+        },
+
+        save: debounce(async function(quiet) {
+            this.saveState = 'saving';
+            try {
+                if(this.value.uid == "00000000-0000-0000-0000-000000000000") {
+                    const opp = await this.$axios.$post('/api/ui/opportunity/', this.value, this.$store.state.auth);
+                    this.$emit('input', opp);
+                    this.saveState = 'saved';
+                    return true;
+                }
+                else {
+                    const opp = await this.$axios.$put('/api/ui/opportunity/' + this.value.uid, this.value, this.$store.state.auth);
+                    this.$emit('input', opp);
+                    this.saveState = 'saved';
+                    return true;
+                }
+            }
+            catch(err) {
+                this.saveState = 'error';
+                if(!quiet) {
+                    this.$buefy.dialog.alert("Couldn't save. Make sure you have all the required fields filled in.")
+                }
+                return false;
+            }
+        }),
+
+        async save_and_my_opps() {
+            if(await this.save()) {
+                this.$router.push({name: 'my-opportunities'});
+            }
+        },
+
+        async save_and_publish() {
+            this.value.withdrawn = false;
+            if(await this.save()) {
+                this.$router.push({name: 'slug', params: {slug: this.value.slug}});
+            }
+        },
+
+        async save_and_view() {
+            if(await this.save()) {
+                this.$router.push({name: 'slug', params: {slug: this.value.slug}});
+            }
+        },
+
+        async time_periods_set(idx, cell, datetime) {
+            const val = [...this.time_periods];
+            val[idx][cell] = datetime;
+            this.time_periods = val;
+        },
+
+        async datetime_repr(datetime, default_time) {
+            if(datetime === null || datetime === undefined) {
+                return null;
+            }
+
+            if(!this.value.timezone) {
+                return null;
+            }
+
+            return this.build_datetime(
+                this.date_part(datetime),
+                this.time_part(datetime, default_time),
+                await this.offset_on_day(datetime, this.value.timezone),
+            );
+        },
+
+        async offset_on_day(date, timezone) {
+            let zone = await this.$axios.$get('/api/ui/timezone?name=' + timezone + '&date=' + this.date_part(date));
+            return zone.offset;
+        },
+
+        build_datetime(date, time, offset) {
+            return '' + date + 'T' + time + offset;
+        },
+
+        offset_part(date) {
+            let minutes = -date.getTimezoneOffset();
+            let hh = Math.abs(minutes) / 60;
+            let mm = Math.abs(minutes) % 60;
+
+            return ((minutes < 0) ? '-' : '+') + ('00' + hh).slice(-2) + ':' + ('00' + mm).slice(-2);
+        },
+
+        time_part(date, fallback) {
+            let ret =  '' + ('00' + date.getHours()).slice(-2) + ':' + ('00' + date.getMinutes()).slice(-2) + ':' + ('00' + date.getSeconds()).slice(-2);
+            if(fallback !== undefined && ret == '00:00:00') {
+                return fallback;
+            }
+            return ret;
+        },
+
+        date_part(date) {
+            return '' + date.getFullYear() + '-' + ('00' + (date.getMonth() + 1)).slice(-2) + '-' + ('00' + date.getDate()).slice(-2);
+        },
+
         location_point(point) {
-            this.opportunity.location_type = 'near';
-            this.opportunity.location_point = point;
-            this.opportunity.location_polygon = null;
+            this.value.location_type = 'near';
+            this.value.location_point = point;
+            this.value.location_polygon = null;
         },
 
         location_poly(poly) {
-            this.opportunity.location_type = 'near';
-            this.opportunity.location_point = null;
-            this.opportunity.location_polygon = poly;
+            this.value.location_type = 'near';
+            this.value.location_point = null;
+            this.value.location_polygon = poly;
         },
 
         location_license(text) {
-            this.opportunity.extra_data.location_license = text;
+            this.value.extra_data.location_license = text;
         },
     },
 }

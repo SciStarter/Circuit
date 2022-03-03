@@ -138,7 +138,7 @@
           <div class="field">
             <label class="label">Canonical URL</label>
             <div class="control">
-              <input class="input" type="text" name="partner_opp_url" value="{{opportunity.exterior.partner_opp_url}}">
+              <input class="input" type="text" name="partner_opp_url" value="{% match opportunity.exterior.partner_opp_url %}{% when Some with (url) %}{{url}}{% else %}{% endmatch %}">
             </div>
           </div>
 
@@ -202,7 +202,7 @@
           <div class="field">
             <label class="label">Partner Opportunity URL</label>
             <div class="control">
-              <input class="input" type="text" name="partner_opp_url" value="{{opportunity.exterior.partner_opp_url}}">
+              <input class="input" type="text" name="partner_opp_url" value="{% match opportunity.exterior.partner_opp_url %}{% when Some with (url) %}{{url}}{% else %}{% endmatch %}">
             </div>
           </div>
 

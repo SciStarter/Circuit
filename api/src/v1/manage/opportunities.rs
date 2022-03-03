@@ -125,7 +125,7 @@ struct OpportunityForm {
     partner_name: String,
     partner_website: Option<String>,
     partner_logo_url: Option<String>,
-    partner_opp_url: String,
+    partner_opp_url: Option<String>,
     organization_name: Option<String>,
     organization_type: Option<OrganizationType>,
     organization_website: Option<String>,

@@ -8,6 +8,7 @@ use chrono::{DateTime, Duration, FixedOffset, Utc};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use sqlx::postgres::PgArguments;
 use sqlx::query::Query;
 use sqlx::{prelude::*, Postgres};
@@ -555,7 +556,7 @@ pub struct OpportunityExterior {
     pub partner_logo_url: Option<String>,
     pub partner_created: Option<DateTime<FixedOffset>>,
     pub partner_updated: Option<DateTime<FixedOffset>>,
-    pub partner_opp_url: String,
+    pub partner_opp_url: Option<String>,
     pub organization_name: String,
     pub organization_type: OrganizationType,
     pub organization_website: Option<String>,
@@ -584,6 +585,8 @@ pub struct OpportunityExterior {
     #[serde(alias = "end_dates")]
     pub end_datetimes: Vec<DateTime<FixedOffset>>,
     pub recurrence: Recurrence,
+    pub end_recurrence: Option<DateTime<FixedOffset>>,
+    pub timezone: Option<String>,
     pub attraction_hours: Option<OpenDays>,
     pub cost: Cost,
     #[serde(default = "en_us")]
@@ -669,7 +672,7 @@ pub struct OpportunityForCsv {
     pub partner_logo_url: Option<String>,
     pub partner_created: Option<DateTime<FixedOffset>>,
     pub partner_updated: Option<DateTime<FixedOffset>>,
-    pub partner_opp_url: String,
+    pub partner_opp_url: Option<String>,
     pub organization_name: String,
     pub organization_type: OrganizationType,
     pub organization_website: Option<String>,
@@ -692,6 +695,8 @@ pub struct OpportunityForCsv {
     pub has_end: bool,
     pub end_datetimes: String,
     pub recurrence: Recurrence,
+    pub end_recurrence: Option<String>,
+    pub timezone: Option<String>,
     pub cost: Cost,
     pub languages: String,
     pub is_online: bool,
@@ -803,6 +808,8 @@ impl From<Opportunity> for OpportunityForCsv {
                 },
             ),
             recurrence: opp.exterior.recurrence,
+            end_recurrence: opp.exterior.end_recurrence.map(|dt| dt.to_rfc3339()),
+            timezone: opp.exterior.timezone,
             cost: opp.exterior.cost,
             languages: opp.exterior.languages.join(", "),
             is_online: opp.exterior.is_online,
@@ -1566,8 +1573,8 @@ impl Opportunity {
         self.exterior.partner_opp_url = self
             .exterior
             .partner_opp_url
-            .trim_matches(char::is_whitespace)
-            .into();
+            .as_ref()
+            .map(|url| url.trim_matches(char::is_whitespace).into());
 
         self.exterior.title = self.exterior.title.trim_matches(char::is_whitespace).into();
 
@@ -1612,6 +1619,13 @@ impl Opportunity {
             }
         }
 
+        if let Some(poly) = &self.exterior.location_polygon {
+            if poly["type"] == Value::from("Polygon") {
+                let new = json!({"type": "MultiPolygon", "coordinates": [poly["coordinates"]]});
+                self.exterior.location_polygon = Some(new);
+            }
+        }
+
         if self.exterior.partner_name.is_empty() {
             return Err(Error::Missing("partner_name".into()));
         }
@@ -1624,14 +1638,23 @@ impl Opportunity {
             return Err(Error::Missing("title".into()));
         }
 
-        if self.exterior.partner_opp_url.is_empty() {
-            return Err(Error::Missing("partner_opp_url".into()));
-        }
+        // if self
+        //     .exterior
+        //     .partner_opp_url
+        //     .map(|url| url.is_empty())
+        //     .unwrap_or(true)
+        // {
+        //     return Err(Error::Missing("partner_opp_url".into()));
+        // }
 
         if self.exterior.uid.is_nil() {
             let namespace = Uuid::new_v5(&PARTNER_NAMESPACE, self.exterior.partner_name.as_ref());
 
-            let mut identifier = self.exterior.partner_opp_url.to_string();
+            let mut identifier = self
+                .exterior
+                .partner_opp_url
+                .clone()
+                .unwrap_or_else(|| "sciencenearme.org".to_string());
             identifier.push_str("||");
             identifier.push_str(&self.exterior.title);
 

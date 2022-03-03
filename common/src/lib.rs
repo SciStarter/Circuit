@@ -10,6 +10,7 @@ pub mod geo;
 pub mod jwt;
 pub mod model;
 pub mod time;
+pub mod timezones;
 
 pub use time::ToFixedOffset;
 

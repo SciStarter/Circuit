@@ -144,7 +144,7 @@
             </div>
           </div>
 
-          <div class="info weblink">
+          <div class="info weblink" v-if="opportunity.partner_opp_url">
             <link-icon />
             <external-link
               :href="opportunity.partner_opp_url"
@@ -201,7 +201,7 @@
             <span>Share</span>
           </div>
 
-          <div class="opp-action-btn stronger">
+          <div class="opp-action-btn stronger" v-if="opportunity.partner_opp_url">
             <external-link
               :href="opportunity.partner_opp_url"
               title="Find out more"

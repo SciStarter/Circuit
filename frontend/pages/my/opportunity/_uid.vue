@@ -9,7 +9,7 @@
       Return to opportunity
     </action-button>
   </div>
-  <opportunity-form edit-mode />
+  <opportunity-form v-model="opp" :partner="partner" :timezones="timezones" :descriptors="descriptors" :topics="topics" edit-mode />
 </div>
 </template>
 
@@ -18,70 +18,75 @@ import EyeIcon from '~/assets/img/eye.svg?inline'
 
 export default {
     name: "EditOpportunity",
-  components: {
-    EyeIcon
-  }
+
+    components: {
+        EyeIcon
+    },
+
+    httpHeaders() {
+        return {
+            'X-XSS-Protection': '1; mode=block',
+            'X-Frame-Options': 'DENY',
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'same-origin',
+        };
+    },
+
+    async asyncData(context) {
+        const user = await context.store.dispatch('get_user');
+
+        if(!user.authenticated) {
+            context.error({
+                statusCode: 401,
+                message: "Authentication required"
+            });
+        }
+
+        let timezones = [];
+        let descriptors = [];
+        let topics = [];
+        let partners = [];
+        let opp = null;
+
+        try {
+            timezones = await context.$axios.$get('/api/ui/timezone');
+            descriptors = await context.$axios.$get('/api/ui/finder/descriptors');
+            topics = await context.$axios.$get('/api/ui/finder/topics');
+            partners = await context.$axios.$get('/api/ui/profile/partners', context.store.state.auth);
+            opp = await context.$axios.$get('/api/ui/opportunity/' + context.params.uid, context.store.state.auth);
+        }
+        catch(err) {
+            context.error({
+                statusCode: err.response.status,
+                message: err.response.data
+            });
+        }
+
+        return {
+            timezones,
+            descriptors,
+            topics,
+            partners,
+            opp,
+        }
+    },
+
+    computed: {
+        user() {
+            return this.$store.state.user;
+        },
+
+        partner() {
+            for(let p of this.partners) {
+                if(p.uid == this.opp.partner) {
+                    return p;
+                }
+            }
+
+            return null;
+        }
+    },
 }
-
-
-
-// export default {
-//     httpHeaders() {
-//         return {
-//             'X-XSS-Protection': '1; mode=block',
-//             'X-Frame-Options': 'DENY',
-//             'X-Content-Type-Options': 'nosniff',
-//             'Referrer-Policy': 'same-origin',
-//         };
-//     },
-//
-//     async asyncData(context) {
-//         const user = await context.store.dispatch('get_user');
-//
-//         if(!user.authenticated) {
-//             context.error({
-//                 statusCode: 401,
-//                 message: "Authentication required"
-//             });
-//         }
-//
-//         let partners = [];
-//
-//         try {
-//             partners = await context.$axios.$get('/api/ui/profile/partners', this.$store.state.auth);
-//         }
-//         catch(err) {
-//             context.error({
-//                 statusCode: err.response.status,
-//                 message: err.response.data
-//             });
-//         }
-//
-//         return {
-//             partners,
-//         }
-//     },
-//
-//     data() {
-//         return {
-//             partner_index: 0,
-//         }
-//     },
-//
-//     computed: {
-//         user() {
-//             return this.$store.state.user;
-//         },
-//
-//         choose_partner() {
-//             return this.partners.length > 1;
-//         },
-//
-//         selected_partner() {
-//             return this.partners[this.partner_index] || null;
-//         },
-//     },
-// }
 </script>
 
 <style lang="scss" scoped>

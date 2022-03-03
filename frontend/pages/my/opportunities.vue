@@ -2,7 +2,7 @@
 <div class="your-opportunities snm-container">
   <div class="flex-header">
     <h1>Your Opportunities</h1>
-    <action-button primary><div class="icon"><add-icon /></div>Add a new opportunity</action-button>
+    <action-button primary @click="$router.push({name: 'my-submit-opportunity'})"><div class="icon"><add-icon /></div>Add a new opportunity</action-button>
   </div>
 
   <ul class="nav-tabs">

@@ -7,6 +7,7 @@ pub mod opportunity;
 pub mod organization;
 pub mod profile;
 
+use chrono::NaiveDate;
 use common::model::{self, Person};
 use common::Database;
 use http_types::{mime, Cookie};
@@ -31,6 +32,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("opportunity/", opportunity::routes)
         .at("invitation/", invitation::routes)
         .at("content", |r| r.get(content))
+        .at("timezone", |r| r.get(timezone))
 }
 
 pub fn okay_empty() -> tide::Result<Response> {
@@ -144,5 +146,25 @@ pub async fn content(req: tide::Request<Database>) -> tide::Result {
         Ok(Response::builder(StatusCode::NotFound)
             .body(format!("{} {} {}", query.language, query.group, query.item))
             .build())
+    }
+}
+
+#[derive(Deserialize, Debug)]
+struct TimezoneForm {
+    name: String,
+    date: NaiveDate,
+}
+
+pub async fn timezone(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req).await?;
+
+    if person.is_none() {
+        return Err(tide::Error::from_str(StatusCode::Forbidden, "forbidden"));
+    }
+
+    if let Ok(form) = req.query::<TimezoneForm>() {
+        okay(&common::timezones::timezone(form.name, form.date)?)
+    } else {
+        okay(&common::timezones::timezones())
     }
 }
