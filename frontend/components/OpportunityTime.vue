@@ -40,6 +40,9 @@ export default {
                     return [[dt, LATEST]];
                 }
             }
+            else if(this.opportunity.start_datetimes.length == 0 && this.opportunity.end_datetimes.length == 1) {
+                    return [[EARLIEST, this.opportunity.end_datetimes[0]]];
+            }
             else {
                 return this.opportunity.start_datetimes.map(iso => {
                     let dt = new Date(iso);
