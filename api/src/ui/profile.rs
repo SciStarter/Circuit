@@ -64,6 +64,7 @@ struct ProfilePerson {
     opt_in_research: Option<bool>,
     opt_in_volunteer: Option<bool>,
     private: bool,
+    allow_emails: bool,
 }
 
 impl ProfilePerson {
@@ -86,6 +87,7 @@ impl ProfilePerson {
         person.interior.opt_in_research = self.opt_in_research;
         person.interior.opt_in_volunteer = self.opt_in_volunteer;
         person.interior.private = self.private;
+        person.interior.allow_emails = self.allow_emails;
 
         if let Some(password) = self.password {
             person.set_password(&password);
@@ -115,6 +117,7 @@ impl From<Person> for ProfilePerson {
             opt_in_research: person.interior.opt_in_research,
             opt_in_volunteer: person.interior.opt_in_volunteer,
             private: person.interior.private,
+            allow_emails: person.interior.allow_emails,
         }
     }
 }
