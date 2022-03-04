@@ -2,7 +2,7 @@ use common::{
     jwt::issue_jwt,
     model::{
         involvement::{self, Involvement},
-        person::{JoinChannel, LogEvent},
+        person::{JoinChannel, LogEvent, Permission},
         Person,
     },
     Database,
@@ -307,7 +307,17 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
         person.log(req.state(), LogEvent::Session).await?;
 
         let mut p_json = person_json(&person, &jwt);
-        p_json["num_partners"] = person.count_partners(req.state()).await?.into();
+        p_json["num_partners"] = person
+            .count_partners(req.state())
+            .await?
+            .max(
+                if person.check_permission(&Permission::ManageOpportunities) {
+                    1
+                } else {
+                    0
+                },
+            )
+            .into();
         p_json["reports_pending"] = Involvement::count_for_participant(
             req.state(),
             &person.exterior.uid,
