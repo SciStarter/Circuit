@@ -22,11 +22,11 @@
         <label class="label">Accept messages from all users, opportunity providers, and researchers.</label>
         <b-field>
            <b-switch v-model="profile.allow_emails"
-               true-value="Yes"
-               false-value="No"
+               :true-value="true"
+               :false-value="false"
                type="is-success"
                @input="save">
-               {{ profile.allow_emails }}
+               {{ profile.allow_emails ? 'Yes' : 'No'}}
            </b-switch>
        </b-field>
        <small>If you turn this off, only Science Near Me staff and Opportunity Providers can email you.</small>
