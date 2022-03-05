@@ -205,8 +205,8 @@
         <ul>
           <li><h1>For Providers</h1></li>
           <li>
-            <nuxt-link to="/become-a-partner">
-              Be Part of Science Near Me
+            <nuxt-link to="/add-opportunities">
+              Add Your Opportunities to Science Near Me
             </nuxt-link>
           </li>
           <li>
