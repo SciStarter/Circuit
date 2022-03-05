@@ -486,7 +486,7 @@
           <action-button v-if="state==2" @click="state++" primary :disabled="nextDisabled2">Next Step</action-button>
           <action-button v-if="state<3" tertiary @click="save_and_my_opps">Save and Complete Later</action-button>
           <action-button v-if="state==3" primary @click="save_and_publish">Save and Publish</action-button>
-          <action-button v-if="state==3" tertiary @click="save_and_my_opps">Save and Publish Later</action-button>
+          <action-button v-if="state==3" tertiary @click="save_and_view">Save and Publish Later</action-button>
 
 
           <template v-if="saveState=='saved'">
@@ -659,6 +659,8 @@ export default {
             mostUsed: ['museum', 'astronomy', 'afterschool', 'library', 'kids', 'citizen science', 'nature'],
             topics_filter: '',
             descriptors_filter: '',
+            skip_updates: 0,
+            timeout: 0,
         }
     },
 
@@ -853,7 +855,13 @@ export default {
         value: {
             handler() {
                 if(!this.editMode) {
-                    this.save(true);
+                    if(this.skip_updates > 0) {
+                        this.skip_updates -= 1;
+                    }
+                    else {
+                        clearTimeout(this.timeout);
+                        this.timeout = setTimeout(() => this.save(true), 5000);
+                    }
                 }
             },
             deep: true
@@ -875,17 +883,19 @@ export default {
             this.when = this.value.start_datetimes.length ? 'time' : 'ongoing';
         },
 
-        save: debounce(async function(quiet) {
+        async save(quiet) {
             this.saveState = 'saving';
             try {
                 if(this.value.uid == "00000000-0000-0000-0000-000000000000") {
                     const opp = await this.$axios.$post('/api/ui/opportunity/', this.value, this.$store.state.auth);
+                    this.skip_updates += 1;
                     this.$emit('input', opp);
                     this.saveState = 'saved';
                     return true;
                 }
                 else {
                     const opp = await this.$axios.$put('/api/ui/opportunity/' + this.value.uid, this.value, this.$store.state.auth);
+                    this.skip_updates += 1;
                     this.$emit('input', opp);
                     this.saveState = 'saved';
                     return true;
@@ -898,7 +908,7 @@ export default {
                 }
                 return false;
             }
-        }),
+        },
 
         async save_and_my_opps() {
             if(await this.save()) {
