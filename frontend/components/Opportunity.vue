@@ -2218,4 +2218,26 @@ ul.calendar-add li {
   }
 }
 
+@media (max-width:959px) {
+  #owner-view {
+    margin:1rem 0;
+  }
+  .opp-breadcrumbs {
+    padding-left:1rem;
+  }
+}
+
+@media (max-width:699px){
+  #owner-view {
+    flex-direction:column;
+    .tab-link.active {
+      order:3;
+    }
+    button.action-button.tight {
+      margin-right:auto;
+      margin-left:1rem;
+    }
+  }
+}
+
 </style>
