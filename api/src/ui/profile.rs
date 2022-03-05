@@ -4,8 +4,8 @@ use common::{
     model::{
         involvement::{Involvement, Mode},
         opportunity::{EntityType, OpportunityForCsv, OpportunityQuery},
-        person::{Gender, Goal, GoalStatus},
-        Opportunity, Pagination, Person,
+        person::{Gender, Goal, GoalStatus, Permission},
+        Opportunity, Pagination, Partner, Person,
     },
     Database, ToFixedOffset,
 };
@@ -357,13 +357,31 @@ pub async fn get_partners(mut req: tide::Request<Database>) -> tide::Result {
         .await?
         .ok_or_else(|| tide::Error::from_str(StatusCode::Forbidden, "Authorization required"))?;
 
-    let partners: Vec<common::model::partner::PartnerExterior> = person
-        .load_partners(req.state())
-        .await?
-        .into_iter()
-        .flatten()
-        .map(|p| p.exterior)
-        .collect();
+    let partners: Vec<common::model::partner::PartnerExterior> =
+        if person.check_permission(&Permission::ManageOpportunities) {
+            let ids: Vec<i32> = Partner::catalog(req.state())
+                .await?
+                .into_iter()
+                .map(|p| p.id)
+                .collect();
+
+            let mut exts = Vec::new();
+
+            for id in ids {
+                let partner = Partner::load_by_id(req.state(), id).await?;
+                exts.push(partner.exterior);
+            }
+
+            exts
+        } else {
+            person
+                .load_partners(req.state())
+                .await?
+                .into_iter()
+                .flatten()
+                .map(|p| p.exterior)
+                .collect()
+        };
 
     okay(&partners)
 }

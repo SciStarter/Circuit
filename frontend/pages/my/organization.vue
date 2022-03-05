@@ -1,5 +1,5 @@
 <template>
-<div class="organizations snm-container">
+<div v-if="selected_partner.uid" class="organizations snm-container">
   <p v-if="choose_partner">
     <b-select v-model="partner_index" size="is-large" aria-role="list">
       <option v-for="(partner, idx) in partners" :key="partner.uid" :value="idx" aria-role="listitem">{{partner.name}}</option>
@@ -92,6 +92,12 @@
     </div>
   </b-modal>
 
+</div>
+<div v-else class="organizations snm-container">
+  <h1>No Organization</h1>
+  <p class="paragraph">
+    You have permission to manage opportunities, but you are not a member of any organization, so this page is blank.
+  </p>
 </div>
 </template>
 
@@ -195,7 +201,7 @@ export default {
         },
 
         selected_partner() {
-            return this.partners[this.partner_index] || null;
+            return this.partners[this.partner_index] || {};
         },
 
         can_leave() {
@@ -278,6 +284,10 @@ export default {
 <style lang="scss" scoped>
 .organizations{
     position: relative;
+
+  .paragraph {
+    padding: 2rem;
+  }
 
   h1 {
     font-family: $snm-font-heading;
