@@ -2,7 +2,7 @@
 <div id="edit-opportunity">
   <div class="flex">
     <h1>Edit Opportunity</h1>
-    <action-button class="round-btn" principal>
+    <action-button class="round-btn" principal @click="$router.push({name: 'slug', params: {slug: opp.slug}})">
       <div class="icon">
         <eye-icon />
       </div>
@@ -49,9 +49,9 @@ export default {
         let opp = null;
 
         try {
-            timezones = await context.$axios.$get('/api/ui/timezone');
             descriptors = await context.$axios.$get('/api/ui/finder/descriptors');
             topics = await context.$axios.$get('/api/ui/finder/topics');
+            timezones = await context.$axios.$get('/api/ui/timezone', context.store.state.auth);
             partners = await context.$axios.$get('/api/ui/profile/partners', context.store.state.auth);
             opp = await context.$axios.$get('/api/ui/opportunity/' + context.params.uid, context.store.state.auth);
         }

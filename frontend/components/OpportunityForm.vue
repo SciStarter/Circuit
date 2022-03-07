@@ -482,9 +482,9 @@
           <action-button primary :disabled="saveDisabled" @click="save_and_view">Save &amp; View</action-button>
         </template>
         <template v-else>
-          <action-button v-if="state==2 || state==3"  @click="state--" gray>Back</action-button>
-          <action-button v-if="state==1" @click="state++" primary :disabled="nextDisabled1">Next Step</action-button>
-          <action-button v-if="state==2" @click="state++" primary :disabled="nextDisabled2">Next Step</action-button>
+          <action-button v-if="state==2 || state==3"  @click="go_state(state-1)" gray>Back</action-button>
+          <action-button v-if="state==1" @click="go_state(state+1)" primary :disabled="nextDisabled1">Next Step</action-button>
+          <action-button v-if="state==2" @click="go_state(state+1)" primary :disabled="nextDisabled2">Next Step</action-button>
           <action-button v-if="state<3" tertiary @click="save_and_my_opps">Save and Complete Later</action-button>
           <action-button v-if="state==3" primary @click="save_and_publish">Save and Publish</action-button>
           <action-button v-if="state==3" tertiary @click="save_and_view">Save and Publish Later</action-button>
@@ -882,6 +882,46 @@ export default {
 
             this.learn = this.value.organization_website ? 'link' : 'none';
             this.when = this.value.start_datetimes.length ? 'time' : 'ongoing';
+        },
+
+        validate_state(state) {
+            switch(state) {
+            case 1:
+                if(!this.value.title) return false;
+                if(!this.value.organization_name) return false;
+                if(!this.location) return false;
+                if(this.location === 'online' && !this.value.partner_opp_url) return false;
+                if(this.location === 'both' && !this.value.partner_opp_url) return false;
+                if(this.location === 'physical' && !this.value.location_name) return false;
+                if(this.location === 'both' && !this.value.location_name) return false;
+                if(this.learn === 'link' && !this.value.organization_website) return false;
+                return true;
+            case 2:
+                if(!this.value.short_desc) return false;
+                if(!this.value.description) return false;
+                if(!this.value.tags.length) return false;
+                if(!this.value.opp_descriptor.length) return false;
+                return true;
+            case 3:
+                return true;
+            default:
+                return false;
+            }
+        },
+
+        go_state(new_state) {
+            if(this.validate_state(this.state)) {
+                window.scrollTo(0, 0);
+                this.state = new_state;
+            }
+            else {
+                this.$buefy.toast.open({
+                    duration: 5000,
+                    message: `Please fill in all of the required fields`,
+                    position: 'is-bottom',
+                    type: 'is-danger'
+                });
+            }
         },
 
         async save(quiet) {

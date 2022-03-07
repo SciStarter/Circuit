@@ -34,9 +34,11 @@ export default {
         });
     },
 
-    async asyncData ({ params, error, $axios }) {
+    async asyncData ({ params, error, $axios, store }) {
+        const user = await store.dispatch('get_user');
+
         try {
-            const entity = await $axios.$get('/api/ui/entity/' + params.slug);
+            const entity = await $axios.$get('/api/ui/entity/' + params.slug, store.state.auth ? store.state.auth : undefined);
             const layout = entity.entity_type.page ? entity.entity_type.page.layout : entity.entity_type;
 
             return { entity, layout };
