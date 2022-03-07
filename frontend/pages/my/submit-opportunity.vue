@@ -117,6 +117,8 @@ export default {
   @media (max-width:959px) {
     #submit-opportunity {
       padding:0 20px;
+      padding-top:2rem;
     }
   }
+
 </style>

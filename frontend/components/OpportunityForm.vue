@@ -389,7 +389,7 @@
         <p class="help mb">This is the image that will show when people see your opportunity’s record. If no image URL is provided, participants will see a default image.</p>
 
         <label class="label">Display Image</label>
-        <div class="flex">
+        <div class="flex display-image-wrapper">
           <img v-if="value.image_url" :src="value.image_url" class="display-image"/>
           <b-field label="Image URL" message="Must start with http:// or https://">
             <b-input type="url" v-model="value.image_url" />
@@ -452,7 +452,8 @@
             ellipsis
             icon="label"
             placeholder="Add a tag"
-            aria-close-label="Delete this tag">
+            aria-close-label="Delete this tag"
+            class="hashtags">
           </b-taginput>
         </b-field>
 
@@ -486,17 +487,17 @@
           <action-button v-if="state==2" @click="state++" primary :disabled="nextDisabled2">Next Step</action-button>
           <action-button v-if="state<3" tertiary @click="save_and_my_opps">Save and Complete Later</action-button>
           <action-button v-if="state==3" primary @click="save_and_publish">Save and Publish</action-button>
-          <action-button v-if="state==3" tertiary @click="save_and_my_opps">Save and Publish Later</action-button>
+          <action-button v-if="state==3" tertiary @click="save_and_view">Save and Publish Later</action-button>
 
 
           <template v-if="saveState=='saved'">
-            <div class="save-feedback"><div class="icon"><correct-icon /></div> saved</div>
+            <div class="save-feedback"><div class="icon"><correct-icon /></div><span> saved</span></div>
           </template>
           <template v-else-if="saveState=='saving'">
-            <div class="save-feedback saving"><img src="~/assets/img/loading-buffering.gif" class="icon" /> saving</div>
+            <div class="save-feedback saving"><img src="~/assets/img/loading-buffering.gif" class="icon" /><span> saving</span></div>
           </template>
           <template v-else-if="saveState=='error'">
-            <div class="save-feedback error"><div class="icon"><cross-icon /></div> unable to save</div>
+            <div class="save-feedback error"><div class="icon"><cross-icon /></div><span> unable to save</span></div>
           </template>
 
         </template>
@@ -524,7 +525,7 @@
     <div class="card">
       <h1>Add and Customize Dates and Times <span class="close" @click="show_time_periods = false">&times;</span></h1>
       <p>Select dates on the calendar. Each date must have at least one time period set on the right.</p>
-      <div class="flex">
+      <div class="flex" id="modal-dates">
         <b-field>
           <template #label>
             Select Dates<span class="required">*</span>
@@ -659,6 +660,8 @@ export default {
             mostUsed: ['museum', 'astronomy', 'afterschool', 'library', 'kids', 'citizen science', 'nature'],
             topics_filter: '',
             descriptors_filter: '',
+            skip_updates: 0,
+            timeout: 0,
         }
     },
 
@@ -853,7 +856,13 @@ export default {
         value: {
             handler() {
                 if(!this.editMode) {
-                    this.save(true);
+                    if(this.skip_updates > 0) {
+                        this.skip_updates -= 1;
+                    }
+                    else {
+                        clearTimeout(this.timeout);
+                        this.timeout = setTimeout(() => this.save(true), 5000);
+                    }
                 }
             },
             deep: true
@@ -875,17 +884,19 @@ export default {
             this.when = this.value.start_datetimes.length ? 'time' : 'ongoing';
         },
 
-        save: debounce(async function(quiet) {
+        async save(quiet) {
             this.saveState = 'saving';
             try {
                 if(this.value.uid == "00000000-0000-0000-0000-000000000000") {
                     const opp = await this.$axios.$post('/api/ui/opportunity/', this.value, this.$store.state.auth);
+                    this.skip_updates += 1;
                     this.$emit('input', opp);
                     this.saveState = 'saved';
                     return true;
                 }
                 else {
                     const opp = await this.$axios.$put('/api/ui/opportunity/' + this.value.uid, this.value, this.$store.state.auth);
+                    this.skip_updates += 1;
                     this.$emit('input', opp);
                     this.saveState = 'saved';
                     return true;
@@ -898,7 +909,7 @@ export default {
                 }
                 return false;
             }
-        }),
+        },
 
         async save_and_my_opps() {
             if(await this.save()) {
@@ -1015,6 +1026,8 @@ export default {
         color: #868686;
         cursor: default;
         pointer-events:none;
+        display:flex;
+        line-height:1;
         > span {
             background-color: #868686;
             color: #fff;
@@ -1027,6 +1040,7 @@ export default {
             font-size:12px;
             margin-right:6px;
             font-weight:bold;
+            flex-shrink:0;
         }
         &.active{
             color:$snm-color-element-med;
@@ -1389,7 +1403,72 @@ legend {
     margin-right:2rem;
     margin-bottom:1rem;
   }
+  .hashtags.control {
+    width:100%;
+  }
 
 }
+@media (max-width:1124px){
+  .times-flex .flex {
+    flex-direction:column;
+  }
+}
+
+@media (max-width:799px) {
+  #modal-dates {
+    flex-direction:column;
+  }
+  #time-periods {
+    margin-left:0;
+  }
+}
+
+@media (max-width:600px) {
+  .add {
+    margin-left: 0;
+  }
+  .form-actions {
+    button {
+      margin:10px 2px!important;
+      padding: 12px 12px!important;
+    }
+  }
+}
+
+@media (max-width:560px) {
+  .display-image-wrapper {
+    flex-direction:column;
+  }
+}
+
+@media (max-width: 480px){
+  .times-flex .flex .field-body .field.has-addons {
+    flex-direction:column!important;
+    .datepicker {
+      margin-right:0!important;
+      margin-bottom:10px;
+    }
+  }
+  .form-actions {
+    button {
+      margin:10px 2px 10px 0!important;
+      padding: 12px 8px!important;
+    }
+  }
+}
+
+@media (max-width:460px) {
+  .tp-item .flex {
+    flex-direction:column;
+  }
+  #time-periods .tp-item .timepicker:first-child {
+    margin-right:0;
+  }
+  .save-feedback span {
+    display:none;
+  }
+}
+
+
 
 </style>
