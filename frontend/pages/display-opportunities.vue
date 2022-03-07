@@ -2,7 +2,7 @@
 <div class="snm-wrapper">
   <div class="snm-container base-typography snm-container-first">
     <div class="head">
-      <h1>Display a Widget</h1>
+      <h1>Display Science Near Me Opportunities on Your Website</h1>
       <p>Select and customize a widget to display Science Near Me projects or the Science Near Me finder below and add to your website!</p>
     </div>
 
