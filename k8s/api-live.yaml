@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-api
-        image: scistarter/circuit-api:master-0.1.29
+        image: scistarter/circuit-api:front-end-refactor-0.1.32
         ports:
         - containerPort: 8000
         env:

@@ -73,6 +73,7 @@ export default {
             return {
                 'opportunity': () => import('~/components/Opportunity'),
                 'just_content': () => import('~/components/JustContent'),
+                'add_opportunities': () => import('~/components/AddOpportunities'),
             }[this.layout] || (() => import('~/components/Opportunity'));
         },
 

@@ -188,6 +188,9 @@ impl OpportunityForm {
             "page__just_content" => EntityType::Page(PageOptions {
                 layout: PageLayout::JustContent,
             }),
+            "page__add_opportunities" => EntityType::Page(PageOptions {
+                layout: PageLayout::AddOpportunities,
+            }),
             _ => EntityType::Opportunity,
         };
 

@@ -122,8 +122,11 @@ impl Default for OrganizationType {
 
 #[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
+// Don't forget to update impl super::SelectOption for EntityType and impl OpportunityForm to add options for new layout
+// How can this be centralized so we don't have to repeat?
 pub enum PageLayout {
     JustContent,
+    AddOpportunities,
 }
 
 impl Default for PageLayout {
@@ -157,6 +160,11 @@ impl super::SelectOption for EntityType {
                 ..Default::default()
             })
             .to_option(),
+            EntityType::Page(PageOptions {
+                layout: PageLayout::AddOpportunities,
+                ..Default::default()
+            })
+            .to_option(),
             EntityType::Unspecified.to_option(),
         ]
     }
@@ -182,6 +190,11 @@ impl super::SelectOption for EntityType {
                 PageLayout::JustContent => (
                     "page__just_content".to_string(),
                     "Page - Just Content".to_string(),
+                    EntityType::Page(options.clone()),
+                ),
+                PageLayout::AddOpportunities => (
+                    "page__add_opportunities".to_string(),
+                    "Page - 'Add Opportunities' layout".to_string(),
                     EntityType::Page(options.clone()),
                 ),
             },
