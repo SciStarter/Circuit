@@ -123,7 +123,7 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
         if person.interior.join_channel != JoinChannel::SciStarter {
             return Ok(
                 tide::Response::builder(StatusCode::Forbidden)
-                    .body("Can not log in to that account through SciStarter, because it was not created via SciStarter")
+                    .body("Can not log in to that account through SciStarter, because a Science Near Me account was already created using the same email address. Try <a href=\"/login\">logging in directly</a> using your email address.")
                     .build()
             );
         }
