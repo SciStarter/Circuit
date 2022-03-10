@@ -59,6 +59,22 @@ SELECT slug AS "slug?", subject, body FROM c_email_message WHERE slug = $1
         .await?)
     }
 
+    pub async fn load_or_default<Slug: AsRef<str>, Subject: AsRef<str>, Body: AsRef<str>>(
+        db: &Database,
+        slug: Slug,
+        subject: Subject,
+        body: Body,
+    ) -> EmailMessage {
+        match EmailMessage::load(db, slug).await {
+            Ok(msg) => msg,
+            Err(_) => EmailMessage {
+                slug: None,
+                subject: subject.as_ref().to_string(),
+                body: body.as_ref().to_string(),
+            },
+        }
+    }
+
     pub async fn store(&self, db: &Database) -> Result<(), BoxedError> {
         if let Some(slug) = &self.slug {
             sqlx::query!(

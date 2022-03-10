@@ -1,6 +1,7 @@
 use common::{
     jwt::issue_jwt,
     model::{
+        invitation::{Invitation, InvitationMode},
         involvement::{self, Involvement},
         person::{JoinChannel, LogEvent, Permission},
         Person,
@@ -30,6 +31,7 @@ pub const SESSION_HOURS: i64 = 24 * 90;
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
+        .at("reset", |r| r.post(reset))
         .at("login", |r| r.post(login))
         .at("login-scistarter", |r| r.post(login_scistarter))
         .at("signup", |r| r.post(signup))
@@ -41,6 +43,39 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 const TOKEN_COOKIE: &'static str = "__Host-token";
 #[cfg(debug_assertions)]
 const TOKEN_COOKIE: &'static str = "token";
+
+#[derive(Deserialize)]
+struct ResetForm {
+    email: String,
+}
+
+pub async fn reset(mut req: tide::Request<Database>) -> tide::Result {
+    let form: ResetForm = req.body_json().await?;
+
+    let person = Person::load_by_email(req.state(), &form.email).await?;
+
+    let mut inv = Invitation::new(person.exterior.uid, InvitationMode::PasswordReset);
+    inv.store(req.state()).await?;
+
+    let template = common::emails::EmailMessage::load_or_default(
+        req.state(),
+        "password-reset",
+        "Science Near Me password reset confirmation",
+        r#"<p>This is to confirm your request to reset your Science Near Me password.</p>
+<p>If you did not make such a request, you can safely ignore this email. Nothing will change.</p>
+<p>To confirm the request and change your password, just <a href="https://sciencenearme.org/api/ui/invitation/{{invitation}}">click here</a> and choose a new password.</p>
+<p>Regards,
+~the Science Near Me team</p>
+"#,
+    )
+        .await;
+
+    let msg = template.materialize(vec![("invitation", inv.uid())]);
+
+    common::emails::send_message(form.email, &msg).await;
+
+    Ok("Confirmation message sent.".into())
+}
 
 #[derive(Default, Deserialize, Serialize)]
 struct LoginForm {

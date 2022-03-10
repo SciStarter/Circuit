@@ -355,13 +355,14 @@
         <label class="label">Age required to participate<span class="required">*</span></label>
         <div class="flex">
           <b-field label="Minimum Age">
-            <b-numberinput controls-position="compact" v-model="value.min_age"></b-numberinput>
+            <b-checkbox v-model="has_minimum">There is a minimum age for participants</b-checkbox>
+            <b-numberinput v-if="has_minimum" controls-position="compact" v-model="value.min_age"></b-numberinput>
           </b-field>
           <b-field label="Maximum Age">
-            <b-numberinput controls-position="compact" v-model="value.max_age"></b-numberinput>
+            <b-checkbox v-model="has_maximum">There is a maximum age for participants</b-checkbox>
+            <b-numberinput v-if="has_maximum" controls-position="compact" v-model="value.max_age"></b-numberinput>
           </b-field>
         </div>
-        <p class="help mb">If there is no age requirement, set minimum to 0 and maximum to 999</p>
 
         <hr />
 
@@ -670,6 +671,36 @@ export default {
     },
 
     computed: {
+        has_minimum: {
+            get() {
+                return this.value.min_age > 0;
+            },
+
+            set(val) {
+                if(val) {
+                    this.value.min_age = 1;
+                }
+                else {
+                    this.value.min_age = 0;
+                }
+            }
+        },
+
+        has_maximum: {
+            get() {
+                return this.value.max_age < 999;
+            },
+
+            set(val) {
+                if(val) {
+                    this.value.max_age = 120;
+                }
+                else {
+                    this.value.max_age = 999;
+                }
+            }
+        },
+
         can_recur() {
             if(this.full_span === null) {
                 return false;
