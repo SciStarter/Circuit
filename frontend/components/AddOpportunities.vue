@@ -75,7 +75,7 @@
             <img src="~/assets/img/add-opps/wordpress.jpg" alt="wordpress logo" />
             <dynamic-block group="add-opportunities" item="connect-eventscalendar">
               <p>If your website is powered by self-hosted WordPress, you’ll need to install a few specific plug-ins that will share your opportunities automatically with Science Near Me.</p>
-              <p><span class="step">Step 1:</span> Request a Partner account using WordPress Plug-In Option.</p>
+              <p><span class="step">Step 1:</span> Request a partner account using WordPress Plug-In Option.</p>
               <p><span class="step">Step 2:</span> Follow the steps outlined in the <a href="https://sciencenearme.s3.amazonaws.com/SNM-wordpress-integration.pdf" download>WordPress Guide</a> to install specific plug-ins that are compatible with Science Near Me.</p>
               <p><span class="step">Step 3:</span> Within a week of installing the recommended plug-ins, you should receive an email from us confirming that we’ve received your opportunities and they are accurately showing up in our system and the site.</p>
             </dynamic-block>
