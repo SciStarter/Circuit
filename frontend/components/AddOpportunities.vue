@@ -61,12 +61,12 @@
             <img src="~/assets/img/add-opps/api.svg" alt="API icon" />
             <dynamic-block group="add-opportunities" item="connect-api">
               <p>If you have your opportunities stored in a database, connecting to our API is the optimal option to maintain ongoing sharing of data with Science Near Me. Every change you make in your database will show up automatically in Science Near Me.</p>
-              <p><span class="step">Step 1:</span> Request a provider account using the API option.</p>
+              <p><span class="step">Step 1:</span> Request a partner account using the API option.</p>
               <p><span class="step">Step 2:</span> Refer to our <a href="/api/docs/v1.html">API documentation</a> to connect your opportunity data to Science Near Me using an API.</p>
               <p><span class="step">Step 3:</span> Within a week of connecting your opportunity data to Science Near Me using the API, you should receive an email from us confirming that we’ve received your opportunities and they are accurately showing up in our system and the site.</p>
             </dynamic-block>
           </div>
-          <a class="action-btn" href="mailto:info@sciencenearme.org?subject=Partner Request - API">Request a Provider Account</a>
+          <a class="action-btn" @click="access='API';show_request=true;">Request a Partner Account</a>
         </div>
         <div>
           <div>
@@ -75,12 +75,12 @@
             <img src="~/assets/img/add-opps/wordpress.jpg" alt="wordpress logo" />
             <dynamic-block group="add-opportunities" item="connect-eventscalendar">
               <p>If your website is powered by self-hosted WordPress, you’ll need to install a few specific plug-ins that will share your opportunities automatically with Science Near Me.</p>
-              <p><span class="step">Step 1:</span> Request a provider account using WordPress Plug-In Option.</p>
+              <p><span class="step">Step 1:</span> Request a Partner account using WordPress Plug-In Option.</p>
               <p><span class="step">Step 2:</span> Follow the steps outlined in the <a href="https://sciencenearme.s3.amazonaws.com/SNM-wordpress-integration.pdf" download>WordPress Guide</a> to install specific plug-ins that are compatible with Science Near Me.</p>
               <p><span class="step">Step 3:</span> Within a week of installing the recommended plug-ins, you should receive an email from us confirming that we’ve received your opportunities and they are accurately showing up in our system and the site.</p>
             </dynamic-block>
           </div>
-          <a class="action-btn" href="mailto:info@sciencenearme.org?subject=Partner Request - Wordpress">Request a Provider Account</a>
+          <a class="action-btn" @click="access='Wordpress';show_request=true;">Request a Partner Account</a>
         </div>
         <div>
           <div>
@@ -89,12 +89,12 @@
             <img src="~/assets/img/add-opps/form-icon.svg" alt="form icon" />
             <dynamic-block group="add-opportunities" item="connect-form">
               <p>If you do not yet have a system for organizing your event data, you can enter the opportunities directly into our system one by one.</p>
-              <p><span class="step">Step 1:</span> Request a provider account using our Opportunity Form Option.</p>
-              <p><span class="step">Step 2:</span> Log-in using your provider account information. You’ll see additional options in the left menu once your account is converted by Science Near Me staff.</p>
+              <p><span class="step">Step 1:</span> Request a partner account using our Opportunity Form Option.</p>
+              <p><span class="step">Step 2:</span> Log-in using your partner account information. You’ll see additional options in the left menu once your account is converted by Science Near Me staff.</p>
               <p><span class="step">Step 3:</span> Select “Submit Opportunity” to add each opportunity. You’ll see your opportunities on Science Near Me immediately.</p>
             </dynamic-block>
           </div>
-          <a class="action-btn" href="mailto:info@sciencenearme.org?subject=Partner Request - Opportunity Form">Request a Provider Account</a>
+          <a class="action-btn" @click="access='Form';show_request=true;">Request a Partner Account</a>
         </div>
       </div>
 
@@ -104,6 +104,59 @@
           <p>Learn about options for creating an “exchange” version of our opportunity form that you can host directly on your site. <a href="mailto:info@sciencenearme.org?subject=Exchange Info Request">Contact us</a> for more information.</p>
         </dynamic-block>
       </div>
+
+
+      <b-modal
+        v-model="show_request"
+        has-modal-card
+        trap-focus
+        :destroy-on-hide="false"
+        aria-role="dialog"
+        aria-label="Request Partner Account"
+        aria-modal
+        >
+        <div class="card flex-col">
+          <template v-if="submitted==false">
+          <h2>Request Partner Account <span class="close" @click="show_request = false">&times;</span></h2>
+          <p>Please provide the following information:</p>
+          <form>
+            <b-field label="Your Organization">
+              <b-input v-model="partner"></b-input>
+            </b-field>
+            <b-field label="Type of Access Requested">
+               <b-select placeholder="Select" v-model="access">
+                  <option value="API">API</option>
+                  <option value="Wordpress">Wordpress</option>
+                  <option value="Form">Form</option>
+               </b-select>
+           </b-field>
+            <b-field label="Contact Name">
+              <b-input v-model="name"></b-input>
+            </b-field>
+            <b-field label="Contact Email">
+              <b-input v-model="email"></b-input>
+            </b-field>
+            <b-field label="Contact Phone Number">
+              <b-input v-model="partner"></b-input>
+            </b-field>
+            <b-field label="Contact Address">
+              <b-input v-model="address"></b-input>
+            </b-field>
+            <b-field label="Tell Us a little about the types of opportunities you have.">
+              <b-input maxlength="200" type="textarea" v-model="about"></b-input>
+            </b-field>
+            <b-field label="How many opportunities do you expect to enter on an average year?">
+              <b-numberinput controls-position="compact" v-model="number"></b-numberinput>
+            </b-field>
+            <action-button principal @click="submitted=true">Submit</action-button>
+          </form>
+          </template>
+          <div v-if="submitted">
+              <h2>Thank you for your request! <span class="close" @click="show_request = false">&times;</span></h2>
+              <p>The Science Near Me team will contact you regarding your request within 72 hours.</p>
+          </div>
+        </div>
+      </b-modal>
 
   </div>
 </div>
@@ -122,6 +175,20 @@ export default {
         StepOne,
         StepTwo
     },
+    data(){
+      return {
+        show_request: false,
+        submitted:false,
+        partner: null,
+        name: null,
+        email: null,
+        phone: null,
+        address: null,
+        about: null,
+        number:10,
+        access: null
+      }
+    }
 }
 </script>
 
@@ -271,6 +338,44 @@ export default {
       }
     }
   }
+}
+
+.modal {
+    .card {
+      max-height:90vh;
+      overflow:auto;
+        form button {
+        margin-left:0;
+      }
+        h2 {
+            font-family: $snm-font-heading;
+            font-weight: bold;
+            font-size: $snm-font-medium;
+            line-height: 26px;
+            letter-spacing: 0px;
+            color: $snm-color-background-dark;
+
+            .close {
+                float: right;
+                font-size: $snm-font-larger;
+                position: relative;
+                top: -10px;
+                cursor: pointer;
+            }
+        }
+
+        p {
+            font-family: $snm-font-content;
+            font-weight: normal;
+            font-size: $snm-font-small;
+            line-height: 22px;
+            letter-spacing: 0px;
+            color: $snm-color-tldr;
+            margin: 1rem 0px;
+        }
+
+
+    }
 }
 
 </style>
