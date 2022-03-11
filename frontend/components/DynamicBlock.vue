@@ -96,7 +96,7 @@ export default {
 
     computed: {
         content () {
-            if(this.block === null || this.block.content === null) {
+            if(this.block === null || this.block.content === null || (this.block.label === '' && this.block.content === '')) {
                 return null;
             }
 

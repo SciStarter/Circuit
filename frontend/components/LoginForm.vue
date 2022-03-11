@@ -27,9 +27,9 @@
       <b-field label="Password" :type="validate_password.type" :message="validate_password.message" label-position="on-border">
         <b-input v-model="login.password" type="password" required />
       </b-field>
-      <!-- <div class="forgot">
-           <a href="">forgot password?</a>
-      </div> -->
+      <div class="forgot">
+           <a @click="forgot">forgot password?</a>
+      </div>
       <div class="flex flex-justify-sb">
         <action-button :loading="working" type="is-primary" primary @click="log_in">
           Log in
@@ -106,6 +106,33 @@ export default {
     },
 
     methods: {
+        async forgot() {
+            let {result} = await this.$buefy.dialog.prompt({
+                message: `Email Address`,
+                inputAttrs: {
+                    placeholder: 'e.g. person@example.com',
+                },
+                trapFocus: true,
+            });
+
+            try {
+                await this.$axios.$post('/api/ui/auth/reset', {email: result});
+                this.$buefy.dialog.alert('Confirmation message sent');
+            }
+            catch(err) {
+                this.$buefy.dialog.alert({
+                    title: "Error",
+                    message: "Password reset failed",
+                    type: 'is-danger',
+                    hasIcon: true,
+                    icon: 'times-circle',
+                    iconPack: 'fa',
+                    ariaRole: 'alertdialog',
+                    ariaModal: true
+                });
+            }
+        },
+
         cancel () {
             this.$emit('cancel')
             this.login.email = ''
