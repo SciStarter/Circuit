@@ -119,7 +119,7 @@
           <template v-if="submitted==false">
           <h2>Request Partner Account <span class="close" @click="show_request = false">&times;</span></h2>
           <p>Please provide the following information:</p>
-          <form>
+          <form action="mailto:info@sciencenearme.org" enctype="text/plain">
             <b-field label="Your Organization">
               <b-input v-model="partner"></b-input>
             </b-field>
@@ -140,15 +140,34 @@
               <b-input v-model="partner"></b-input>
             </b-field>
             <b-field label="Contact Address">
-              <b-input v-model="address"></b-input>
-            </b-field>
+              </b-field>
+
+              <label style="display:block;margin-top:-10px;">Street Address</label>
+              <b-input v-model="address1"></b-input>
+
+              <div class="flex">
+                <div>
+                  <label style="display:block;">City</label>
+                  <b-input v-model="city"></b-input>
+                </div>
+                <div class="states">
+                  <label style="display:block;">State</label>
+                  <b-select v-model="state">
+                    <option
+                        v-for="s in states"
+                        :value="s"
+                        :key="s">{{s}}
+                    </option>
+                  </b-select>
+                </div>
+            </div>
             <b-field label="Tell Us a little about the types of opportunities you have.">
               <b-input maxlength="200" type="textarea" v-model="about"></b-input>
             </b-field>
             <b-field label="How many opportunities do you expect to enter on an average year?">
               <b-numberinput controls-position="compact" v-model="number"></b-numberinput>
             </b-field>
-            <action-button principal @click="submitted=true">Submit</action-button>
+            <action-button principal @click="submitted=true" type="submit">Submit</action-button>
           </form>
           </template>
           <div v-if="submitted">
@@ -183,10 +202,14 @@ export default {
         name: null,
         email: null,
         phone: null,
-        address: null,
+        address1: null,
+        city:null,
+        state:null,
         about: null,
         number:10,
-        access: null
+        access: null,
+  states: ['Alabama','Alaska','American Samoa','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','District of Columbia','Federated States of Micronesia','Florida','Georgia','Guam','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Marshall Islands','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Northern Mariana Islands','Ohio','Oklahoma','Oregon','Palau','Pennsylvania','Puerto Rico','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virgin Island','Virginia','Washington','West Virginia','Wisconsin','Wyoming']
+
       }
     }
 }
@@ -344,6 +367,17 @@ export default {
     .card {
       max-height:90vh;
       overflow:auto;
+      .flex {
+        margin-top:10px;
+        margin-bottom:1rem;
+        >div {
+          width:100%;
+        }
+          .states {
+              max-width:33%;
+              margin-left:20px;
+          }
+      }
         form button {
         margin-left:0;
       }
