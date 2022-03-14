@@ -315,9 +315,10 @@
         </div>
         <b-field message="164 character limit">
           <template #label>
-            Short description of opportunity<span class="required">*</span>
+            Short Summary (appears in search results)<span class="required">*</span>
           </template>
           <b-input v-model="value.short_desc" maxlength="164" has-counter type="textarea"></b-input>
+          <p class="help mb">Tell prospective participants what to expect from your opportunity in a short, friendly sentence.</p>
         </b-field>
         <b-field class="no-message">
           <template #label>
@@ -486,7 +487,7 @@
           <action-button v-if="state==2 || state==3"  @click="go_state(state-1)" gray>Back</action-button>
           <action-button v-if="state==1" @click="go_state(state+1)" primary :disabled="nextDisabled1">Next Step</action-button>
           <action-button v-if="state==2" @click="go_state(state+1)" primary :disabled="nextDisabled2">Next Step</action-button>
-          <action-button v-if="state<3" tertiary @click="save_and_my_opps">Save and Complete Later</action-button>
+          <action-button v-if="state<3" tertiary @click="save_and_view">Save and Complete Later</action-button>
           <action-button v-if="state==3" primary @click="save_and_publish">Save and Publish</action-button>
           <action-button v-if="state==3" tertiary @click="save_and_view">Save and Publish Later</action-button>
 
