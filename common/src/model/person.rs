@@ -594,6 +594,65 @@ impl Person {
             .collect()
     }
 
+    pub async fn find_matching<S: AsRef<str>>(
+        db: &Database,
+        pattern: S,
+        pagination: Pagination,
+    ) -> Result<(Vec<Person>, u32), Error> {
+        let (limit, offset) = match pagination {
+            Pagination::All => (None, None),
+            Pagination::One => (Some(1), None),
+            Pagination::Page { index, size } => {
+                (Some(size as i64), Some(index as i64 * size as i64))
+            }
+        };
+
+        let pattern = format!("%{}%", pattern.as_ref());
+
+        let total = sqlx::query!(
+            r#"
+SELECT COUNT(*) AS "total!"
+FROM c_person
+WHERE (interior ->> 'email' ILIKE $1)
+   OR (CONCAT(interior ->> 'first_name', ' ', interior ->> 'last_name') ILIKE $1);
+"#,
+            &pattern
+        )
+        .fetch_one(db)
+        .await?
+        .total;
+
+        let persons = sqlx::query!(
+            r#"
+SELECT id, exterior, interior
+FROM c_person
+WHERE (interior ->> 'email' ILIKE $3)
+   OR (CONCAT(interior ->> 'first_name', ' ', interior ->> 'last_name') ILIKE $3)
+ORDER BY (interior -> 'email')
+LIMIT $1 OFFSET $2;
+"#,
+            limit,
+            offset,
+            &pattern
+        )
+        .map(|rec| {
+            Ok::<Person, sqlx::Error>(Person {
+                id: Some(rec.id),
+                exterior: serde_json::from_value(rec.exterior)
+                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
+                interior: serde_json::from_value(rec.interior)
+                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
+            })
+        })
+        .fetch_all(db)
+        .await?
+        .into_iter()
+        .flatten()
+        .collect();
+
+        Ok((persons, total as u32))
+    }
+
     pub fn check_permission(&self, perm: &Permission) -> bool {
         Permission::check(&self.interior.permissions, perm)
     }

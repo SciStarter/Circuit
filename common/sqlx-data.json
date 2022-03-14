@@ -791,6 +791,40 @@
     },
     "query": "select id, exterior, interior from c_opportunity where id = $1 limit 1;\n"
   },
+  "7101a5bb43a1d4c208985f3edbeec8dfa3f03fc325ed9ada8a2061a32ab129dc": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Text"
+        ]
+      }
+    },
+    "query": "\nSELECT id, exterior, interior\nFROM c_person\nWHERE (interior ->> 'email' ILIKE $3)\n   OR (CONCAT(interior ->> 'first_name', ' ', interior ->> 'last_name') ILIKE $3)\nORDER BY (interior -> 'email')\nLIMIT $1 OFFSET $2;\n"
+  },
   "731e1957cf8705f40d16d13e85efb39ea753be689994ab6ee729c4a1e12072b8": {
     "describe": {
       "columns": [
@@ -1856,6 +1890,26 @@
       }
     },
     "query": "insert into c_participation (exterior, interior) values ($1, $2) returning id;\n"
+  },
+  "eb24e457e7514bef5cf8a33b1c211b9bb1ae9143d4fcbcd39acde827585ff3a5": {
+    "describe": {
+      "columns": [
+        {
+          "name": "total!",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\nSELECT COUNT(*) AS \"total!\"\nFROM c_person\nWHERE (interior ->> 'email' ILIKE $1)\n   OR (CONCAT(interior ->> 'first_name', ' ', interior ->> 'last_name') ILIKE $1);\n"
   },
   "ec6fdfbd3f1cf5dd4004d27742517ddae0575c7ca3c66ff34937cc1f040d5c71": {
     "describe": {

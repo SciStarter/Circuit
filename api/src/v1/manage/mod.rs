@@ -1,3 +1,6 @@
+use crate::ui::auth::{token_cookie, SESSION_HOURS};
+use crate::ui::{okay_with_cookie, UI_AUDIENCE};
+
 use super::{check_csrf, check_jwt, issue_jwt, random_string, redirect, set_csrf_cookie};
 use askama::Template;
 use common::model::Pagination;
@@ -28,9 +31,12 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .get(manage)
         .at("authorize", |r| r.get(authorize).post(authorize))
         .at("persons/", |r| {
-            r.get(persons)
-                .post(persons)
-                .at(":uid", |r| r.get(person).post(person))
+            r.get(persons).post(persons).at(":uid", |r| {
+                r.get(person)
+                    .post(person)
+                    .at("add", |r| r.post(add_person_to_partner))
+                    .at("masq", |r| r.post(masquerade))
+            })
         })
         .at("partners/", |r| {
             r.get(partners)
@@ -269,6 +275,7 @@ struct PersonsPage {
     pub persons: Vec<Person>,
     pub suggested_password: String,
     pub csrf: String,
+    pub q: String,
     pub total: u32,
     pub page_size: u32,
     pub cur_page: u32,
@@ -283,30 +290,51 @@ struct PersonsForm {
     password: String,
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(default)]
+struct PersonsQuery {
+    q: Option<String>,
+    pagination: Pagination,
+}
+
+impl Default for PersonsQuery {
+    fn default() -> Self {
+        PersonsQuery {
+            q: None,
+            pagination: Pagination::Page { index: 0, size: 50 },
+        }
+    }
+}
+
 async fn persons(mut req: tide::Request<Database>) -> tide::Result {
     let _admin = match authorized_admin(&req, &Permission::ManagePersons).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
     };
 
-    let pagination: Pagination = match req.query() {
-        Ok(pagination) => pagination,
-        Err(_) => Pagination::default(),
-    };
+    let query: PersonsQuery = req.query()?;
 
     match req.method() {
         Method::Get => {
             let db = req.state();
 
-            let total = Person::total(db).await?;
-            let (cur_page, last_page, page_size) = pagination.expand(total);
+            let (persons, total) = if let Some(q) = &query.q {
+                Person::find_matching(db, &q, query.pagination).await?
+            } else {
+                (
+                    Person::catalog(db, query.pagination).await?,
+                    Person::total(db).await?,
+                )
+            };
 
+            let (cur_page, last_page, page_size) = query.pagination.expand(total);
             let csrf = random_string();
             let password = random_string();
             let page = PersonsPage {
-                persons: Person::catalog(db, pagination).await?,
                 suggested_password: password.to_string(),
                 csrf: csrf.to_string(),
+                q: query.q.unwrap_or_default(),
+                persons,
                 total,
                 page_size,
                 cur_page,
@@ -343,6 +371,8 @@ async fn persons(mut req: tide::Request<Database>) -> tide::Result {
 struct PersonPage {
     pub person: Person,
     pub csrf: String,
+    pub path: String,
+    pub partners: Vec<PartnerReference>,
 }
 
 #[derive(Default, Serialize, Deserialize)]
@@ -378,7 +408,7 @@ fn set_permission(person: &mut Person, perm: Permission, state: bool) {
 }
 
 async fn person(mut req: tide::Request<Database>) -> tide::Result {
-    let _admin = match authorized_admin(&req, &Permission::ManagePersons).await {
+    let admin = match authorized_admin(&req, &Permission::ManagePersons).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
     };
@@ -391,8 +421,14 @@ async fn person(mut req: tide::Request<Database>) -> tide::Result {
             let csrf = random_string();
             let person = Person::load_by_uid(db, &uid).await?;
             let page = PersonPage {
-                person,
+                partners: if admin.check_permission(&Permission::ManagePartners) {
+                    Partner::catalog(db).await?
+                } else {
+                    Vec::new()
+                },
                 csrf: csrf.clone(),
+                path: req.url().path().to_string(),
+                person,
             };
             Ok(set_csrf_cookie(page.into(), &csrf))
         }
@@ -442,6 +478,49 @@ async fn person(mut req: tide::Request<Database>) -> tide::Result {
         }
         _ => unimplemented!(),
     }
+}
+
+#[derive(Debug, Deserialize)]
+struct AddToPartnerForm {
+    pub uid: Uuid,
+}
+
+async fn add_person_to_partner(mut req: tide::Request<Database>) -> tide::Result {
+    let _admin = match authorized_admin(&req, &Permission::ManagePartners).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let form: AddToPartnerForm = req.body_form().await?;
+    let mut partner = Partner::load_by_uid(req.state(), &form.uid).await?;
+    let person = Uuid::parse_str(req.param("uid")?)?;
+    partner.set_authorized(person);
+    partner.store(req.state()).await?;
+    Ok(format!("Added to partner {}", partner.exterior.name).into())
+}
+
+#[derive(Template, Default)]
+#[template(path = "manage/masquerade.html")]
+struct MasqueradePage {
+    pub jwt: String,
+}
+
+async fn masquerade(mut req: tide::Request<Database>) -> tide::Result {
+    let _admin = match authorized_admin(&req, &Permission::ManagePersons).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let uid = Uuid::parse_str(req.param("uid")?)?;
+    let jwt = issue_jwt(&uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
+
+    common::log("masquerade", &jwt);
+
+    let page = MasqueradePage { jwt: jwt.clone() };
+    let mut resp: Response = page.into();
+    resp.insert_cookie(token_cookie(jwt));
+
+    Ok(resp)
 }
 
 mod filters {

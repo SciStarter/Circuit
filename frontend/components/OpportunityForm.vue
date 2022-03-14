@@ -370,7 +370,7 @@
         <legend>Keywords and Key phrases</legend>
         <p class="help mb">Help your participants find your opportunity on Science Near Me. These help the search functionality!</p>
 
-        <b-field message="Separate with a comma, select from established keywords as you type, the most popular keywords below, or add your own">
+        <b-field message="Separate with a comma. The most popular keywords are below, or add your own">
           <template #label>
             Add keywords and key phrases<span class="required">*</span>
           </template>
@@ -922,11 +922,11 @@ export default {
                 if(!this.value.title) return false;
                 if(!this.value.organization_name) return false;
                 if(!this.location) return false;
-                if(this.location === 'online' && !this.value.partner_opp_url) return false;
-                if(this.location === 'both' && !this.value.partner_opp_url) return false;
+                if(this.location === 'online' && (!this.value.partner_opp_url || !this.value.partner_opp_url.startsWith('http'))) return false;
+                if(this.location === 'both' && (!this.value.partner_opp_url || !this.value.partner_opp_url.startsWith('http'))) return false;
                 if(this.location === 'physical' && !this.value.location_name) return false;
                 if(this.location === 'both' && !this.value.location_name) return false;
-                if(this.learn === 'link' && !this.value.organization_website) return false;
+                if(this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.startsWith('http'))) return false;
                 return true;
             case 2:
                 if(!this.value.short_desc) return false;
@@ -997,6 +997,7 @@ export default {
         },
 
         async save_and_view() {
+            this.value.withdrawn = true;
             if(await this.save()) {
                 this.$router.push({name: 'slug', params: {slug: this.value.slug}});
             }
@@ -1025,7 +1026,7 @@ export default {
         },
 
         async offset_on_day(date, timezone) {
-            let zone = await this.$axios.$get('/api/ui/timezone?name=' + timezone + '&date=' + this.date_part(date));
+            let zone = await this.$axios.$get('/api/ui/timezone?name=' + timezone + '&date=' + this.date_part(date), this.$store.state.auth);
             return zone.offset;
         },
 

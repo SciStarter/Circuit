@@ -75,7 +75,7 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
         None => None,
     };
 
-    opp.exterior.partner_opp_url = data.url;
+    opp.exterior.partner_opp_url = Some(data.url);
 
     opp.exterior.organization_name = "Terry Lee Wells Nevada Discovery Museum".to_string();
 

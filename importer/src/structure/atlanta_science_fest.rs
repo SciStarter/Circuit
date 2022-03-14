@@ -33,10 +33,12 @@ impl AtlantaScienceFest<2022> {
             })?)
             .map_err(|_| Error::Misc("Unable to parse created time field".to_string()))?,
         );
-        opp.exterior.partner_opp_url = event["fields"]["URL"]
-            .as_str()
-            .ok_or_else(|| Error::Structure("Event record is missing URL".to_string()))?
-            .to_string();
+        opp.exterior.partner_opp_url = Some(
+            event["fields"]["URL"]
+                .as_str()
+                .ok_or_else(|| Error::Structure("Event record is missing URL".to_string()))?
+                .to_string(),
+        );
         opp.exterior.organization_name = event["fields"]["Presenting Partner(s)"]
             .as_str()
             .unwrap_or_default()

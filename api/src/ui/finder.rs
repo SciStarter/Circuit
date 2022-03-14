@@ -6,6 +6,7 @@ use common::{
             Cost, Descriptor, EntityType, OpportunityQuery, OpportunityQueryOrdering,
             OpportunityQueryPhysical, Topic, VenueType,
         },
+        person::Permission,
         Opportunity, OpportunityExterior, Pagination, SelectOption,
     },
     Database,
@@ -263,7 +264,9 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
 
     if let Some(p) = person {
         if search.mine.unwrap_or(false) {
-            query.partner_member = Some(p.exterior.uid);
+            if !p.check_permission(&Permission::ManageOpportunities) {
+                query.partner_member = Some(p.exterior.uid);
+            }
         }
 
         if search.saved.unwrap_or(false) {
@@ -276,17 +279,23 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
 
         match (search.reviewing, search.withdrawn) {
             (Some(reviewing), None) => {
-                query.partner_member = Some(p.exterior.uid);
+                if !p.check_permission(&Permission::ManageOpportunities) {
+                    query.partner_member = Some(p.exterior.uid);
+                }
                 query.accepted = Some(!reviewing);
                 query.withdrawn = Some(false);
             }
             (None, Some(withdrawn)) => {
-                query.partner_member = Some(p.exterior.uid);
+                if !p.check_permission(&Permission::ManageOpportunities) {
+                    query.partner_member = Some(p.exterior.uid);
+                }
                 query.accepted = None;
                 query.withdrawn = Some(withdrawn);
             }
             (Some(reviewing), Some(withdrawn)) => {
-                query.partner_member = Some(p.exterior.uid);
+                if !p.check_permission(&Permission::ManageOpportunities) {
+                    query.partner_member = Some(p.exterior.uid);
+                }
                 query.accepted = Some(!reviewing);
                 query.withdrawn = Some(withdrawn);
             }

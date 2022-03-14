@@ -163,7 +163,7 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
                 Err(_) => None,
             };
 
-        opp.exterior.partner_opp_url = node.link;
+        opp.exterior.partner_opp_url = Some(node.link);
 
         if let Some(org) = node.linked_data.organizer {
             opp.exterior.organization_name = org.name;

@@ -12,15 +12,19 @@
       <div class="container">
         <a href="..">Back to management page</a>
         <h1 class="title">{{total}} Persons</h1>
+        <form method="get">
+          <input type="text" name="q" value="{{q}}">
+          <input type="submit" value="Search">
+        </form>
         <ul>
           {% for person in persons %}
           <li><a href="{{person.exterior.uid}}">{{person.interior.email}}</a></li>
           {% endfor %}
         </ul>
         <div>
-          {% if cur_page > 0 %}<a href="?page[index]={{cur_page - 1}}&page[size]={{page_size}}">previous</a>{% endif %}
+          {% if cur_page > 0 %}<a href="?q={{q}}&pagination[page][index]={{cur_page - 1}}&pagination[page][size]={{page_size}}">previous</a>{% endif %}
           {{cur_page + 1}} of {{last_page + 1}}
-          {% if cur_page < last_page %}<a href="?page[index]={{cur_page + 1}}&page[size]={{page_size}}">next</a>{% endif %}
+          {% if cur_page < last_page %}<a href="?q={{q}}&pagination[page][index]={{cur_page + 1}}&pagination[page][size]={{page_size}}">next</a>{% endif %}
         </div>
       </div>
       <div id="create" class="container">

@@ -93,13 +93,22 @@ export default {
             else if(pair[0] < now && pair[1] > now) {
                 return "Ongoing through " + pair[1].toLocaleString([], { month: 'long', day:'numeric', year:'numeric', hour: 'numeric', minute: '2-digit'});
             }
-            else {
+            else if(pair[0].getFullYear && pair[1].getFullYear){
                 if(pair[0].getFullYear() == pair[1].getFullYear() && pair[0].getMonth() == pair[1].getMonth() && pair[0].getDate() == pair[1].getDate()) {
                     return pair[0].toLocaleString([], { month: 'long', day:'numeric', year:'numeric', hour: 'numeric', minute: '2-digit'}) + ' through ' + pair[1].toLocaleString([], {hour: 'numeric', minute: '2-digit'});
                 }
                 else {
                     return pair[0].toLocaleString([], { month: 'long', day:'numeric', year:'numeric', hour: 'numeric', minute: '2-digit'});
                 }
+            }
+            else if(pair[0].getFullYear){
+                return pair[0].toLocaleString([], { month: 'long', day:'numeric', year:'numeric', hour: 'numeric', minute: '2-digit'});
+            }
+            else if(pair[1].getFullYear){
+                return pair[1].toLocaleString([], { month: 'long', day:'numeric', year:'numeric', hour: 'numeric', minute: '2-digit'});
+            }
+            else {
+                return "";
             }
         }
     }
