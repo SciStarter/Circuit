@@ -20,101 +20,107 @@
           <legend>Basic Information</legend>
           <div class="required">* required</div>
         </div>
-        <b-field message="64 character maximum">
+        <b-field :type="validation.title" message="64 character maximum">
           <template #label>
             Name of Opportunity<span class="required">*</span>
           </template>
           <b-input v-model="value.title" has-counter maxlength="64"></b-input>
         </b-field>
-        <b-field message="This is the organization hosting the event, project, or attraction. This might be your organization, a chapter, or similar.">
+        <b-field :type="validation.organization_name" message="This is the organization hosting the event, project, or attraction. This might be your organization, a chapter, or similar.">
           <template #label>
             Host Organization<span class="required">*</span>
           </template>
           <b-input v-model="value.organization_name"></b-input>
         </b-field>
-        <b-field :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '')">
+        <b-field :type="validation.name" :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '')">
           <template #label>
             Science Near Me partner<span class="required">*</span>
           </template>
           <b-input v-model="partner.name" disabled></b-input>
         </b-field>
 
-        <label class="label">Where is your opportunity?<span class="required">*</span></label>
+        <b-field :type="validation.location">
+          <template #label>
+            Where is your opportunity?<span class="required">*</span>
+          </template>
 
-        <label class="button-radio" :class="{'open':location=='online','unselected':location=='physical' || location=='both'}">
-          <input type="radio" v-model="location" name="location" value="online" />
-          <div class="icon-flex">
-            <div class="br-img">
-              <website-icon />
-            </div>
-            <div class="br-text">
-              <h1>Online Only</h1>
-              <p>An external link where people can participate.</p>
-            </div>
-          </div>
-          <transition name="slide">
-            <div v-if="location=='online'" class="add">
-              <b-field message="Must start with http:// or https://">
-                <template #label>
-                  External link To participate<span class="required">*</span>
-                </template>
-                <b-input type="url" v-model="value.partner_opp_url"></b-input>
-              </b-field>
-            </div>
-          </transition>
-        </label>
+          <div class="control validation-target" :class="{'is-danger': validation.location}">
+            <label class="button-radio" :class="{'open':location=='online','unselected':location=='physical' || location=='both'}">
+              <input type="radio" v-model="location" name="location" value="online" />
+              <div class="icon-flex">
+                <div class="br-img">
+                  <website-icon />
+                </div>
+                <div class="br-text">
+                  <h1>Online Only</h1>
+                  <p>An external link where people can participate.</p>
+                </div>
+              </div>
+              <transition name="slide">
+                <div v-if="location=='online'" class="add">
+                  <b-field :type="validation.partner_opp_url" message="Must start with http:// or https://">
+                    <template #label>
+                      External link To participate<span class="required">*</span>
+                    </template>
+                    <b-input type="url" v-model="value.partner_opp_url"></b-input>
+                  </b-field>
+                </div>
+              </transition>
+            </label>
 
-        <label class="button-radio" :class="{'open':location=='physical','unselected':location=='online' || location=='both'}">
-          <input type="radio" v-model="location" name="location" value="physical" />
-          <div class="icon-flex">
-            <div class="br-img">
-              <location-icon />
-            </div>
-            <div class="br-text">
-              <h1>Physical Location</h1>
-              <p>An address or area.</p>
-            </div>
-          </div>
-          <transition name="slide">
-            <div v-if="location=='physical'" class="add">
-              <b-field message="Begin typing and select location">
-                <template #label>
-                  Search for an address or location<span class="required">*</span>
-                </template>
-                <lookup-geometry v-model="value.location_name" @polygon="location_poly" @point="location_point" @license="location_license" />
-              </b-field>
-            </div>
-          </transition>
-        </label>
+            <label class="button-radio" :class="{'open':location=='physical','unselected':location=='online' || location=='both'}">
+              <input type="radio" v-model="location" name="location" value="physical" />
+              <div class="icon-flex">
+                <div class="br-img">
+                  <location-icon />
+                </div>
+                <div class="br-text">
+                  <h1>Physical Location</h1>
+                  <p>An address or area.</p>
+                </div>
+              </div>
+              <transition name="slide">
+                <div v-if="location=='physical'" class="add">
+                  <b-field :type="validation.location_name" message="Begin typing and select location">
+                    <template #label>
+                      Search for an address or location<span class="required">*</span>
+                    </template>
+                    <lookup-geometry v-model="value.location_name" @polygon="location_poly" @point="location_point" @license="location_license" />
+                  </b-field>
+                </div>
+              </transition>
+            </label>
 
-        <label class="button-radio" :class="{'open':location=='both','unselected':location=='online' || location=='physical'}">
-          <input type="radio" v-model="location" name="location" value="both" />
-          <div class="icon-flex">
-            <div class="br-img">
-              <both-icon />
-            </div>
-            <div class="br-text">
-              <h1>Physical Location &amp; Online</h1>
-              <p>An address or area and an external link where people can participate.</p>
-            </div>
+            <label class="button-radio" :class="{'open':location=='both','unselected':location=='online' || location=='physical'}">
+              <input type="radio" v-model="location" name="location" value="both" />
+              <div class="icon-flex">
+                <div class="br-img">
+                  <both-icon />
+                </div>
+                <div class="br-text">
+                  <h1>Physical Location &amp; Online</h1>
+                  <p>An address or area and an external link where people can participate.</p>
+                </div>
+              </div>
+              <transition name="slide">
+                <div v-if="location=='both'" class="add">
+                  <b-field :type="validation.location_name" message="Begin typing and select location">
+                    <template #label>
+                      Search for an address or location<span class="required">*</span>
+                    </template>
+                    <lookup-geometry v-model="value.location_name" @polygon="location_poly" @point="location_point" @license="location_license" />
+                  </b-field>
+                  <b-field :type="validation.partner_opp_url" message="Must start with http:// or https://">
+                    <template #label>
+                      External link To participate<span class="required">*</span>
+                    </template>
+                    <b-input type="url" v-model="value.partner_opp_url"></b-input>
+                  </b-field>
+                </div>
+              </transition>
+            </label>
           </div>
-          <transition name="slide">
-            <div v-if="location=='both'" class="add">
-              <b-field message="Begin typing and select location">
-                <template #label>
-                  Search for an address or location<span class="required">*</span>
-                </template>
-                <lookup-geometry v-model="value.location_name" @polygon="location_poly" @point="location_point" @license="location_license" />
-              </b-field>
-              <b-field message="Must start with http:// or https://">
-                <template #label>
-                  External link To participate<span class="required">*</span>
-                </template>
-                <b-input type="url" v-model="value.partner_opp_url"></b-input>
-              </b-field>
-            </div>
-          </transition>
-        </label>
+        </b-field>
 
         <label class="label push-down">When is your opportunity?<span class="required">*</span></label>
 
@@ -159,7 +165,7 @@
           </div>
           <transition name="slide">
             <div v-if="when=='time'" class="add">
-              <b-field>
+              <b-field :type="validation.timezone">
                 <template #label>
                   Select a time zone<span class="required">*</span>
                 </template>
@@ -171,7 +177,7 @@
               </b-field>
               <div v-if="time_periods.length == 0 || time_periods.length == 1" class="times-flex">
                 <div class="flex">
-                  <b-field>
+                  <b-field :type="validation.begin_datetime">
                     <template #label>
                       Starts on:<span class="required">*</span>
                     </template>
@@ -191,7 +197,7 @@
                       editable>
                     </b-timepicker>
                   </b-field>
-                  <b-field>
+                  <b-field :type="validation.end_datetime">
                     <template #label>
                       Ends on:
                     </template>
@@ -282,7 +288,7 @@
           </div>
           <transition name="slide">
             <div v-if="learn=='link'" class="add">
-              <b-field message="Must start with http:// or https://">
+              <b-field :type="validation.organization_website" message="Must start with http:// or https://">
                 <template #label>
                   External link to learn more<span class="required">*</span>
                 </template>
@@ -313,35 +319,38 @@
           <legend>Required Fields</legend>
           <div class="required">* required</div>
         </div>
-        <b-field message="164 character limit">
+        <b-field :type="validation.short_desc" message="164 character limit">
           <template #label>
             Short Summary (appears in search results)<span class="required">*</span>
           </template>
           <b-input v-model="value.short_desc" maxlength="164" has-counter type="textarea"></b-input>
           <p class="help mb">Tell prospective participants what to expect from your opportunity in a short, friendly sentence.</p>
         </b-field>
-        <b-field class="no-message">
+        <b-field :type="validation.description" class="no-message">
           <template #label>
             Description of opportunity<span class="required">*</span>
           </template>
           <b-input v-model="value.description" type="textarea" class="desc"></b-input>
         </b-field>
 
-        <b-field>
+        <b-field :type="validation.descriptors">
           <template #label>
             Select the activity types that fit your opportunity best<span class="required">*</span>
           </template>
-          <b-input :value="descriptors_filter" @input="descriptors_filter = $event.toLowerCase()" type="input" placeholder="Type to filter activity list" class="filter"/>
-          <div class="checkbox-wrap">
-            <template v-for="a in descriptors">
-              <b-field v-if="a[1].toLowerCase().indexOf(descriptors_filter) >= 0">
-                <b-checkbox v-model="value.opp_descriptor" :native-value="a[0]">{{a[1]}}</b-checkbox>
-              </b-field>
-            </template>
+
+          <div class="control validation-target" :class="{'is-danger': validation.opp_descriptor}">
+            <b-input :value="descriptors_filter" @input="descriptors_filter = $event.toLowerCase()" type="input" placeholder="Type to filter activity list" class="filter"/>
+            <div class="checkbox-wrap">
+              <template v-for="a in descriptors">
+                <b-field v-if="a[1].toLowerCase().indexOf(descriptors_filter) >= 0">
+                  <b-checkbox v-model="value.opp_descriptor" :native-value="a[0]">{{a[1]}}</b-checkbox>
+                </b-field>
+              </template>
+            </div>
           </div>
         </b-field>
 
-        <b-field class="mb">
+        <b-field :type="validation.cost" class="mb">
           <template #label>
             Associated Cost<span class="required">*</span>
           </template>
@@ -355,11 +364,11 @@
 
         <label class="label">Age required to participate<span class="required">*</span></label>
         <div class="flex">
-          <b-field label="Minimum Age">
+          <b-field :type="validation.min_age" label="Minimum Age">
             <b-checkbox v-model="has_minimum">There is a minimum age for participants</b-checkbox>
             <b-numberinput v-if="has_minimum" controls-position="compact" v-model="value.min_age"></b-numberinput>
           </b-field>
-          <b-field label="Maximum Age">
+          <b-field :type="validation.max_age" label="Maximum Age">
             <b-checkbox v-model="has_maximum">There is a maximum age for participants</b-checkbox>
             <b-numberinput v-if="has_maximum" controls-position="compact" v-model="value.max_age"></b-numberinput>
           </b-field>
@@ -370,7 +379,7 @@
         <legend>Keywords and Key phrases</legend>
         <p class="help mb">Help your participants find your opportunity on Science Near Me. These help the search functionality!</p>
 
-        <b-field message="Separate with a comma. The most popular keywords are below, or add your own">
+        <b-field :type="validation.tags" message="Separate with a comma. The most popular keywords are below, or add your own">
           <template #label>
             Add keywords and key phrases<span class="required">*</span>
           </template>
@@ -393,7 +402,7 @@
         <label class="label">Display Image</label>
         <div class="flex display-image-wrapper">
           <img v-if="value.image_url" :src="value.image_url" class="display-image"/>
-          <b-field label="Image URL" message="Must start with http:// or https://">
+          <b-field :type="validation.image_url" label="Image URL" message="Must start with http:// or https://">
             <b-input type="url" v-model="value.image_url" />
           </b-field>
         </div>
@@ -403,7 +412,7 @@
         <legend>Additional Information</legend>
         <p class="help mb">While not required, this information will tell prospective participants more about your opportunity and help them find your opportunity.</p>
 
-        <b-field label="Ticket Required" class="mb">
+        <b-field :type="validation.ticket_required" label="Ticket Required" class="mb">
           <b-radio v-model="value.ticket_required" :native-value="true">
             Yes
           </b-radio>
@@ -422,7 +431,7 @@
         <!--   </b-radio> -->
         <!-- </b-field> -->
 
-        <b-field label="Select the topics that fit your opportunity best">
+        <b-field :type="validation.topics" label="Select the topics that fit your opportunity best">
           <b-input :value="topics_filter" @input="topics_filter = $event.toLowerCase()" type="input" placeholder="Type to filter topic list" class="filter"/>
           <div class="checkbox-wrap">
             <template v-for="t in topics">
@@ -433,7 +442,7 @@
           </div>
         </b-field>
 
-        <b-field label="Select the venue type(s) that fit your opportunity best" class="inline-checks">
+        <b-field :type="validation.opp_venue" label="Select the venue type(s) that fit your opportunity best" class="inline-checks">
           <b-checkbox v-model="value.opp_venue" native-value="indoors">Indoors</b-checkbox>
           <b-checkbox v-model="value.opp_venue" native-value="outdoors">Outdoors</b-checkbox>
         </b-field>
@@ -443,7 +452,7 @@
         <legend>Social Media</legend>
         <p class="help mb">All of this information is optional. You can always add or edit later through your dashboard.</p>
 
-        <b-field message="Separate with a comma">
+        <b-field :type="validation.opp_hashtags" message="Separate with a comma">
           <template #label>
             Opportunity Hashtags
             <p class="help">When people use social media to talk about and share your opportunity, what hashtags would you like them to use? (e.g. #iowasciencefest21)</p>
@@ -490,18 +499,15 @@
           <action-button v-if="state<3" tertiary @click="save_and_view">Save and Complete Later</action-button>
           <action-button v-if="state==3" primary @click="save_and_publish">Save and Publish</action-button>
           <action-button v-if="state==3" tertiary @click="save_and_view">Save and Publish Later</action-button>
-
-
-          <template v-if="saveState=='saved'">
-            <div class="save-feedback"><div class="icon"><correct-icon /></div><span> saved</span></div>
-          </template>
-          <template v-else-if="saveState=='saving'">
-            <div class="save-feedback saving"><img src="~/assets/img/loading-buffering.gif" class="icon" /><span> saving</span></div>
-          </template>
-          <template v-else-if="saveState=='error'">
-            <div class="save-feedback error"><div class="icon"><cross-icon /></div><span> unable to save</span></div>
-          </template>
-
+        </template>
+        <template v-if="saveState=='saved'">
+          <div class="save-feedback"><div class="icon"><correct-icon /></div><span> saved</span></div>
+        </template>
+        <template v-else-if="saveState=='saving'">
+          <div class="save-feedback saving"><img src="~/assets/img/loading-buffering.gif" class="icon" /><span> saving</span></div>
+        </template>
+        <template v-else-if="saveState=='error'">
+          <div class="save-feedback error"><div class="icon"><cross-icon /></div><span> unable to save</span></div>
         </template>
       </div>
     </div><!-- .form-actions -->
@@ -651,7 +657,7 @@ export default {
             state: 1,
             nextDisabled1: false,
             nextDisabled2: false,
-            saveState: 'saved',
+            saveState: '',
             saveDisabled: false,
             when:null,
             learn:null,
@@ -664,6 +670,7 @@ export default {
             descriptors_filter: '',
             skip_updates: 0,
             timeout: 0,
+            validation: {},
         }
     },
 
@@ -887,11 +894,12 @@ export default {
 
         value: {
             handler() {
-                if(!this.editMode) {
-                    if(this.skip_updates > 0) {
-                        this.skip_updates -= 1;
-                    }
-                    else {
+                if(this.skip_updates > 0) {
+                    this.skip_updates -= 1;
+                }
+                else {
+                    this.saveState = '';
+                    if(!this.editMode) {
                         clearTimeout(this.timeout);
                         this.timeout = setTimeout(() => this.save(true), 5000);
                     }
@@ -916,33 +924,47 @@ export default {
             this.when = this.value.start_datetimes.length ? 'time' : 'ongoing';
         },
 
-        validate_state(state) {
-            switch(state) {
-            case 1:
-                if(!this.value.title) return false;
-                if(!this.value.organization_name) return false;
-                if(!this.location) return false;
-                if(this.location === 'online' && (!this.value.partner_opp_url || !this.value.partner_opp_url.startsWith('http'))) return false;
-                if(this.location === 'both' && (!this.value.partner_opp_url || !this.value.partner_opp_url.startsWith('http'))) return false;
-                if(this.location === 'physical' && !this.value.location_name) return false;
-                if(this.location === 'both' && !this.value.location_name) return false;
-                if(this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.startsWith('http'))) return false;
-                return true;
-            case 2:
-                if(!this.value.short_desc) return false;
-                if(!this.value.description) return false;
-                if(!this.value.tags.length) return false;
-                if(!this.value.opp_descriptor.length) return false;
-                return true;
-            case 3:
-                return true;
-            default:
-                return false;
+        invalid(name, invalid) {
+            if(invalid) {
+                this.$set(this.validation, name, 'is-danger');
             }
+            else {
+                this.$set(this.validation, name, undefined);
+            }
+
+            return invalid;
+        },
+
+        validate_state(state) {
+            let valid = true;
+
+            if(state == 0 || state == 1) {
+                if(this.invalid('title', !this.value.title)) valid = false;
+                if(this.invalid('organization_name', !this.value.organization_name)) valid = false;
+                if(this.invalid('location', !this.location)) valid = false;
+                if(this.invalid('partner_opp_url', this.location === 'online' && (!this.value.partner_opp_url || !this.value.partner_opp_url.startsWith('http')))) valid = false;
+                if(this.invalid('partner_opp_url', this.location === 'both' && (!this.value.partner_opp_url || !this.value.partner_opp_url.startsWith('http')))) valid = false;
+                if(this.invalid('location_name', this.location === 'physical' && !this.value.location_name)) valid = false;
+                if(this.invalid('location_name', this.location === 'both' && !this.value.location_name)) valid = false;
+                if(this.invalid('organization_website', this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.startsWith('http')))) valid = false;
+            }
+
+            if(state == 0 || state == 2) {
+                if(this.invalid('short_desc', !this.value.short_desc)) valid = false;
+                if(this.invalid('description', !this.value.description)) valid = false;
+                if(this.invalid('tags', !this.value.tags.length)) valid = false;
+                if(this.invalid('opp_descriptor', !this.value.opp_descriptor.length)) valid = false;
+            }
+
+            return valid;
         },
 
         go_state(new_state) {
-            if(this.validate_state(this.state)) {
+            if(new_state < this.state) {
+                window.scrollTo(0, 0);
+                this.state = new_state;
+            }
+            else if(this.validate_state(this.state)) {
                 window.scrollTo(0, 0);
                 this.state = new_state;
             }
@@ -957,6 +979,27 @@ export default {
         },
 
         async save(quiet) {
+            if(this.value.uid == "00000000-0000-0000-0000-000000000000") {
+                if(!this.validate_state(this.state) && this.validation.title) {
+                    if(!quiet) {
+                        this.$buefy.dialog.alert("We need at least an opportunity name before we can save.");
+                    }
+                    return;
+                }
+            }
+            else if(!this.validate_state(this.editMode ? 0 : this.state)) {
+                this.saveState = 'error';
+                if(!this.quiet) {
+                    this.$buefy.toast.open({
+                        duration: 5000,
+                        message: `Please fill in all of the required fields`,
+                        position: 'is-bottom',
+                        type: 'is-danger'
+                    });
+                }
+                return;
+            }
+
             this.saveState = 'saving';
             try {
                 if(this.value.uid == "00000000-0000-0000-0000-000000000000") {
@@ -997,7 +1040,6 @@ export default {
         },
 
         async save_and_view() {
-            this.value.withdrawn = true;
             if(await this.save()) {
                 this.$router.push({name: 'slug', params: {slug: this.value.slug}});
             }
@@ -1075,6 +1117,13 @@ export default {
 
 <style lang="scss">
 
+.validation-target {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    &.is-danger {
+        border: 1px solid #f14668;
+    }
+}
 
 .opp-form-wrapper {
     padding-bottom:80px;
