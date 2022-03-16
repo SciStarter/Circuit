@@ -62,7 +62,7 @@
                     <template #label>
                       External link To participate<span class="required">*</span>
                     </template>
-                    <b-input type="url" v-model="value.partner_opp_url"></b-input>
+                    <b-input type="url" :value="value.partner_opp_url" @input="value.partner_opp_url = $event.replace(/ /g, '')"></b-input>
                   </b-field>
                 </div>
               </transition>
@@ -114,7 +114,7 @@
                     <template #label>
                       External link To participate<span class="required">*</span>
                     </template>
-                    <b-input type="url" v-model="value.partner_opp_url"></b-input>
+                    <b-input type="url" :value="value.partner_opp_url" @input="value.partner_opp_url = $event.replace(/ /g, '')"></b-input>
                   </b-field>
                 </div>
               </transition>
@@ -203,6 +203,7 @@
                     </template>
                     <b-datepicker
                       v-model="end_datetime"
+                      :min-date="begin_datetime"
                       placeholder="Click to select..."
                       icon="calendar-today"
                       :icon-right="end_datetime ? 'close-circle' : ''"
@@ -224,10 +225,10 @@
                 <div class="flex">
                   <h2>Time Periods</h2>
                   <div class="push-right">
-                    <a class="action" @click="show_time_periods=true"><edit-icon /></a>
+                    <a class="action" @click="()=>{time_periods_dates = time_periods.map(pair => pair[0]); show_time_periods = true;}"><edit-icon /></a>
                   </div>
                 </div>
-                <p v-for="pair in time_periods">
+                <p v-for="pair in time_periods_display">
                   <span v-if="pair[0].getFullYear() == pair[1].getFullYear() && pair[0].getMonth() == pair[1].getMonth() && pair[0].getDate() == pair[1].getDate()">{{pair[0].toLocaleDateString()}} {{pair[0].toLocaleTimeString()}} - {{pair[1].toLocaleTimeString()}}</span>
                   <span v-else>{{pair[0].toLocaleString()}} - {{pair[1].toLocaleString()}}</span>
                 </p>
@@ -292,7 +293,7 @@
                 <template #label>
                   External link to learn more<span class="required">*</span>
                 </template>
-                <b-input v-model="value.organization_website"></b-input>
+                <b-input :value="value.organization_website" @input="value.organization_website = $event.replace(/ /g, '')"></b-input>
               </b-field>
             </div>
           </transition>
@@ -403,7 +404,7 @@
         <div class="flex display-image-wrapper">
           <img v-if="value.image_url" :src="value.image_url" class="display-image"/>
           <b-field :type="validation.image_url" label="Image URL" message="Must start with http:// or https://">
-            <b-input type="url" v-model="value.image_url" />
+            <b-input type="url" :value="value.image_url" @input="value.image_url = $event.replace(/ /g, '')" />
           </b-field>
         </div>
 
@@ -538,14 +539,14 @@
           <template #label>
             Select Dates<span class="required">*</span>
           </template>
-          <b-datepicker v-model="time_periods_dates" inline multiple></b-datepicker>
+          <b-datepicker :value="time_periods_dates" @input="time_periods_dates_set" inline multiple></b-datepicker>
         </b-field>
         <div id="time-periods">
           <label class="label">Add times to each date<span class="required">*</span></label>
           <div class="tp-list">
 
             <!-- date has no time set -->
-            <div v-for="(pair, idx) in time_periods" class="tp-item">
+            <div v-for="(pair, idx) in time_periods_local" class="tp-item">
               <div class="flex">
                 <h2>{{ pair[0].toLocaleDateString() }}</h2>
               </div>
@@ -571,7 +572,7 @@
         </div><!-- #time-periods -->
       </div>
       <div class="flex flex-center">
-        <action-button tertiary @click="()=>{show_time_periods=false}">cancel</action-button>
+        <action-button tertiary @click="()=>{show_time_periods = false; time_periods = [];}">cancel</action-button>
         <action-button primary @click="show_time_periods=false">save</action-button>
       </div>
     </div>
@@ -671,6 +672,7 @@ export default {
             skip_updates: 0,
             timeout: 0,
             validation: {},
+            time_periods_dates: [],
         }
     },
 
@@ -733,6 +735,33 @@ export default {
             }, null);
         },
 
+        time_periods_ISO() {
+            const starts = this.value.start_datetimes;
+            const ends = this.value.end_datetimes;
+
+            const pairs =  Array(Math.max(starts.length, ends.length))
+                  .fill()
+                  .map((_,i) => [starts[i], ends[i]]);
+
+            return pairs
+        },
+
+        time_periods_local() {
+            return this.time_periods_ISO.map(x => {
+                return [x[0] ? new Date(x[0].substring(0, 19)) : x[0], x[1] ? new Date(x[1].substring(0, 19)) : x[1]];
+            });
+        },
+
+        time_periods_display() {
+            let pairs = [...this.time_periods_ISO];
+
+            pairs.sort();
+
+            return pairs.map(x => {
+                return [x[0] ? new Date(x[0].substring(0, 19)) : x[0], x[1] ? new Date(x[1].substring(0, 19)) : x[1]];
+            });
+        },
+
         time_periods: {
             get() {
                 const starts = this.value.start_datetimes;
@@ -761,45 +790,11 @@ export default {
             },
         },
 
-        time_periods_dates: {
-            get() {
-                return this.time_periods.map(pair => pair[0]);
-            },
-
-            set(val) {
-                const current = this.time_periods;
-                const updated = [];
-
-                for(let pair of current) {
-                    let idx = val.indexOf(pair[0]);
-
-                    if(idx < 0) {
-                        continue;
-                    }
-                    else {
-                        val.splice(idx, 1);
-                        updated.push(pair);
-                    }
-                }
-
-                for(let dt of val) {
-                    const end = new Date(dt);
-                    end.setHours(23);
-                    end.setMinutes(59);
-                    end.setSeconds(59);
-                    end.setMilliseconds(999)
-                    updated.push([dt, end]);
-                }
-
-                this.time_periods = updated;
-            }
-        },
-
         begin_datetime: {
             get() {
                 const l = this.value.start_datetimes.length;
                 if(l > 0) {
-                    return new Date(this.value.start_datetimes[0]);
+                    return new Date(this.value.start_datetimes[0].substring(0, 19));
                 }
                 else {
                     return null;
@@ -823,7 +818,7 @@ export default {
             get() {
                 const l = this.value.end_datetimes.length;
                 if(l > 0) {
-                    return new Date(this.value.end_datetimes[l - 1]);
+                    return new Date(this.value.end_datetimes[l - 1].substring(0, 19));
                 }
                 else {
                     return null;
@@ -885,6 +880,24 @@ export default {
     },
 
     watch: {
+        "value.timezone": async function(val) {
+            let starts = [];
+            let ends = [];
+
+            for(let dt of this.value.start_datetimes) {
+                let offset = await this.offset_on_day(dt.substring(0, 10), val);
+                starts.push(dt.substring(0, 19) + offset);
+            }
+
+            for(let dt of this.value.end_datetimes) {
+                let offset = await this.offset_on_day(dt.substring(0, 10), val);
+                ends.push(dt.substring(0, 19) + offset);
+            }
+
+            this.value.start_datetimes = starts;
+            this.value.end_datetimes = ends;
+        },
+
         partner(val, old) {
             this.value.partner = val.uid;
             this.value.partner_name = val.name;
@@ -906,7 +919,7 @@ export default {
                 }
             },
             deep: true
-        }
+        },
     },
 
     methods: {
@@ -922,6 +935,35 @@ export default {
 
             this.learn = this.value.organization_website ? 'link' : 'none';
             this.when = this.value.start_datetimes.length ? 'time' : 'ongoing';
+            this.time_periods_dates = this.time_periods.map(pair => pair[0]);
+        },
+
+        time_periods_dates_set(val) {
+            const current = this.time_periods;
+            const updated = [];
+
+            for(let pair of current) {
+                let idx = val.indexOf(pair[0]);
+
+                if(idx < 0) {
+                    continue;
+                }
+                else {
+                    val.splice(idx, 1);
+                    updated.push(pair);
+                }
+            }
+
+            for(let dt of val) {
+                const end = new Date(dt);
+                end.setHours(23);
+                end.setMinutes(59);
+                end.setSeconds(59);
+                end.setMilliseconds(999)
+                updated.push([dt, end]);
+            }
+
+            this.time_periods = updated;
         },
 
         invalid(name, invalid) {
@@ -1046,12 +1088,18 @@ export default {
         },
 
         async time_periods_set(idx, cell, datetime) {
-            const val = [...this.time_periods];
-            val[idx][cell] = datetime;
-            this.time_periods = val;
+            // const val = [...this.time_periods];
+            // val[idx][cell] = datetime;
+            // this.time_periods = val;
+            if(cell == 0) {
+                this.value.start_datetimes.splice(idx, 1, await this.datetime_repr(datetime));
+            }
+            else if(cell == 1) {
+                this.value.end_datetimes.splice(idx, 1, await this.datetime_repr(datetime));
+            }
         },
 
-        async datetime_repr(datetime, default_time) {
+        async datetime_repr(datetime, default_time, override_timezone) {
             if(datetime === null || datetime === undefined) {
                 return null;
             }
@@ -1063,12 +1111,12 @@ export default {
             return this.build_datetime(
                 this.date_part(datetime),
                 this.time_part(datetime, default_time),
-                await this.offset_on_day(datetime, this.value.timezone),
+                await this.offset_on_day(datetime, override_timezone ? override_timezone : this.value.timezone),
             );
         },
 
         async offset_on_day(date, timezone) {
-            let zone = await this.$axios.$get('/api/ui/timezone?name=' + timezone + '&date=' + this.date_part(date), this.$store.state.auth);
+            let zone = await this.$axios.$get('/api/ui/timezone?name=' + timezone + '&date=' + (date.getFullYear ? this.date_part(date) : date), this.$store.state.auth);
             return zone.offset;
         },
 
