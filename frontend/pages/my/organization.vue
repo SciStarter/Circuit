@@ -6,7 +6,7 @@
     </b-select>
     <br>
   </p>
-  <h1 v-else>Your Organization</h1>
+  <h1 v-else>Your Partner Organization</h1>
 
   <ul class="nav-tabs">
     <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Organizational Settings</a></li>

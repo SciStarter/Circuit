@@ -66,7 +66,7 @@
               <p><span class="step">Step 3:</span> Within a week of connecting your opportunity data to Science Near Me using the API, you should receive an email from us confirming that we’ve received your opportunities and they are accurately showing up in our system and the site.</p>
             </dynamic-block>
           </div>
-          <a class="action-btn" @click="access='API';show_request=true;">Request a Partner Account</a>
+          <a class="action-btn" @click="request.access='API';show_form();">Request a Partner Account</a>
         </div>
         <div>
           <div>
@@ -80,7 +80,7 @@
               <p><span class="step">Step 3:</span> Within a week of installing the recommended plug-ins, you should receive an email from us confirming that we’ve received your opportunities and they are accurately showing up in our system and the site.</p>
             </dynamic-block>
           </div>
-          <a class="action-btn" @click="access='Wordpress';show_request=true;">Request a Partner Account</a>
+          <a class="action-btn" @click="request.access='Wordpress';show_form();">Request a Partner Account</a>
         </div>
         <div>
           <div>
@@ -94,7 +94,7 @@
               <p><span class="step">Step 3:</span> Select “Submit Opportunity” to add each opportunity. You’ll see your opportunities on Science Near Me immediately.</p>
             </dynamic-block>
           </div>
-          <a class="action-btn" @click="access='Form';show_request=true;">Request a Partner Account</a>
+          <a class="action-btn" @click="request.access='Form';show_form();">Request a Partner Account</a>
         </div>
       </div>
 
@@ -116,64 +116,58 @@
         aria-modal
         >
         <div class="card flex-col">
-          <template v-if="submitted==false">
-          <h2>Request Partner Account <span class="close" @click="show_request = false">&times;</span></h2>
-          <p>Please provide the following information:</p>
-          <form action="mailto:info@sciencenearme.org" enctype="text/plain">
-            <b-field label="Your Organization">
-              <b-input v-model="partner"></b-input>
-            </b-field>
-            <b-field label="Type of Access Requested">
-               <b-select placeholder="Select" v-model="access">
-                  <option value="API">API</option>
-                  <option value="Wordpress">Wordpress</option>
-                  <option value="Form">Form</option>
-               </b-select>
-           </b-field>
-            <b-field label="Contact Name">
-              <b-input v-model="name"></b-input>
-            </b-field>
-            <b-field label="Contact Email">
-              <b-input v-model="email"></b-input>
-            </b-field>
-            <b-field label="Contact Phone Number">
-              <b-input v-model="partner"></b-input>
-            </b-field>
-            <b-field label="Contact Address">
-              </b-field>
-
-              <label style="display:block;margin-top:-10px;">Street Address</label>
-              <b-input v-model="address1"></b-input>
-
-              <div class="flex">
-                <div>
-                  <label style="display:block;">City</label>
-                  <b-input v-model="city"></b-input>
-                </div>
-                <div class="states">
-                  <label style="display:block;">State</label>
-                  <b-select v-model="state">
-                    <option
-                        v-for="s in states"
-                        :value="s"
-                        :key="s">{{s}}
-                    </option>
-                  </b-select>
-                </div>
-            </div>
-            <b-field label="Tell Us a little about the types of opportunities you have.">
-              <b-input maxlength="200" type="textarea" v-model="about"></b-input>
-            </b-field>
-            <b-field label="How many opportunities do you expect to enter on an average year?">
-              <b-numberinput controls-position="compact" v-model="number"></b-numberinput>
-            </b-field>
-            <action-button principal @click="submitted=true" type="submit">Submit</action-button>
-          </form>
-          </template>
           <div v-if="submitted">
               <h2>Thank you for your request! <span class="close" @click="show_request = false">&times;</span></h2>
               <p>The Science Near Me team will contact you regarding your request within 72 hours.</p>
           </div>
+          <template v-else>
+            <h2>Request Partner Account <span class="close" @click="show_request = false">&times;</span></h2>
+            <p>Please provide the following information:</p>
+            <b-field label="Your Organization">
+              <b-input v-model="request.partner"></b-input>
+            </b-field>
+            <b-field label="Type of Access Requested">
+              <b-select placeholder="Select" v-model="request.access">
+                <option value="API">API</option>
+                <option value="Wordpress">Wordpress</option>
+                <option value="Form">Form</option>
+              </b-select>
+            </b-field>
+            <b-field label="Contact Name">
+              <b-input v-model="request.name"></b-input>
+            </b-field>
+            <b-field label="Contact Email">
+              <b-input v-model="request.email"></b-input>
+            </b-field>
+            <b-field label="Contact Phone Number">
+              <b-input v-model="request.phone"></b-input>
+            </b-field>
+            <b-field label="Contact Address">
+            </b-field>
+
+            <label style="display:block;margin-top:-10px;">Street Address</label>
+            <b-input v-model="request.address"></b-input>
+
+            <div class="flex">
+              <div>
+                <label style="display:block;">City</label>
+                <b-input v-model="request.city"></b-input>
+              </div>
+              <div class="states">
+                <label style="display:block;">State</label>
+                <b-select v-model="request.state">
+                  <option v-for="s in states" :value="s" :key="s">{{s}}</option>
+                </b-select>
+              </div>
+            </div>
+            <b-field label="Tell us about the types of opportunities you offer.">
+              <b-input type="textarea" v-model="request.about"></b-input>
+            </b-field>
+            <b-field label="How many opportunities do you expect to enter on an average year?">
+              <b-numberinput controls-position="compact" :min="1" v-model="request.number"></b-numberinput>
+            </b-field>
+            <action-button principal @click="submit" type="submit">Submit</action-button>
+          </template>
         </div>
       </b-modal>
 
@@ -194,24 +188,57 @@ export default {
         StepOne,
         StepTwo
     },
-    data(){
-      return {
-        show_request: false,
-        submitted:false,
-        partner: null,
-        name: null,
-        email: null,
-        phone: null,
-        address1: null,
-        city:null,
-        state:null,
-        about: null,
-        number:10,
-        access: null,
-  states: ['Alabama','Alaska','American Samoa','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','District of Columbia','Federated States of Micronesia','Florida','Georgia','Guam','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Marshall Islands','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Northern Mariana Islands','Ohio','Oklahoma','Oregon','Palau','Pennsylvania','Puerto Rico','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virgin Island','Virginia','Washington','West Virginia','Wisconsin','Wyoming']
 
-      }
-    }
+    data() {
+        return {
+            show_request: false,
+            submitted:false,
+            request: {
+                partner: "",
+                name: "",
+                email: "",
+                phone: "",
+                address: "",
+                city: "",
+                state: "",
+                about: "",
+                number: 10,
+                access: "",
+            },
+            states: ['Alabama','Alaska','American Samoa','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','District of Columbia','Federated States of Micronesia','Florida','Georgia','Guam','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Marshall Islands','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Northern Mariana Islands','Ohio','Oklahoma','Oregon','Palau','Pennsylvania','Puerto Rico','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virgin Island','Virginia','Washington','West Virginia','Wisconsin','Wyoming']
+        }
+    },
+
+    methods: {
+        show_form() {
+            if(this.$store.state.user.authenticated) {
+                this.show_request = true;
+            }
+            else {
+                this.$emit('login');
+                setTimeout(this.logged_in_yet, 3000);
+            }
+        },
+
+        logged_in_yet() {
+            if(this.$store.state.user.authenticated) {
+                this.show_request = true;
+            }
+            else {
+                setTimeout(this.logged_in_yet, 1000);
+            }
+        },
+
+        async submit() {
+            try {
+                await this.$axios.$post("/api/ui/organization/", this.request, this.$store.state.auth);
+                this.submitted = true;
+            }
+            catch(x) {
+                alert("Error while submitting request: " + x);
+            }
+        }
+    },
 }
 </script>
 
@@ -298,7 +325,7 @@ export default {
     height: 120px;
     padding:0;
   }
-  .step {
+  ::v-deep .step {
     font-weight:bold;
   }
   .action-btn {

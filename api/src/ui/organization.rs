@@ -6,7 +6,7 @@ use common::{
     },
     Database,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tide::{Status, StatusCode};
 use tide_fluent_routes::{
@@ -47,9 +47,76 @@ pub async fn organization_types(_req: tide::Request<Database>) -> tide::Result {
     )
 }
 
-pub async fn add_organization(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-add-organization", "");
-    todo!()
+#[derive(Serialize, Deserialize, Debug)]
+struct AddOrganizationForm {
+    partner: String,
+    access: String,
+    name: String,
+    email: String,
+    phone: String,
+    address: String,
+    city: String,
+    state: String,
+    about: String,
+    number: u32,
+}
+
+pub async fn add_organization(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req).await?.ok_or_else(|| {
+        tide::Error::from_str(tide::StatusCode::Forbidden, "Authorization required")
+    })?;
+
+    let form: AddOrganizationForm = req.body_json().await?;
+
+    common::emails::send(
+        "Science Near Me <info@sciencenearme.org>",
+        "Science Near Me <info@sciencenearme.org>",
+        format!("SNM Partner Request for {}", form.partner),
+        format!(
+            r#"<p><strong>{}</strong> has requested a partner account for <em>{}</em></p>
+
+<h1># Details</h1>
+
+<p>
+<strong>Request from:</strong> {}<br>
+<strong>Partner name:</strong> {}<br>
+<strong>Access mode:</strong> {}<br>
+<strong>Contact name:</strong> {}<br>
+<strong>Contact email:</strong> {}<br>
+<strong>Contact phone:</strong> {}<br>
+<strong>Address:</strong> {}<br>
+<strong>City:</strong> {}<br>
+<strong>State:</strong> {}<br>
+<strong>Annual opportunities:</strong> {}
+</p>
+
+<h1># About</h1>
+
+{}
+"#,
+            &person.interior.email,
+            &form.partner,
+            &person.interior.email,
+            &form.partner,
+            &form.access,
+            &form.name,
+            &form.phone,
+            &form.email,
+            &form.address,
+            &form.city,
+            &form.state,
+            &form.number,
+            &form.about
+        ),
+    )
+    .await;
+
+    common::log(
+        "ui-add-organization-request",
+        &json!({"person": person.exterior.uid, "subject": form.partner}),
+    );
+
+    okay_empty()
 }
 
 #[derive(serde::Deserialize, Debug)]
