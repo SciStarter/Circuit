@@ -159,36 +159,6 @@
     },
     "query": "select exists(select 1 from c_opportunity where lower($1::text) = lower(exterior ->> 'slug')) as \"exists\";\n"
   },
-  "2df17666d71246bf68b8ee4ef021d2c5a269995271d3f598a94d0df314fec0e4": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "uid",
-          "ordinal": 1,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "name",
-          "ordinal": 2,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        null,
-        null
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "select id, (exterior -> 'uid') as \"uid\", (exterior -> 'name') as \"name\" from c_partner;\n"
-  },
   "369aab45590c7324468f76defaaca4885ad0ca6a935d53eb7d056a4fd6871577": {
     "describe": {
       "columns": [
@@ -1076,39 +1046,6 @@
     },
     "query": "insert into c_involvement (exterior, interior) values ($1, $2) returning id;\n"
   },
-  "88ed187d0191f4cfb2854dda49d47e08bc42a0673fa4e8bb9c62ad89260364fb": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "exterior",
-          "ordinal": 1,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "interior",
-          "ordinal": 2,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Jsonb",
-          "Jsonb"
-        ]
-      }
-    },
-    "query": "select id, exterior, interior\nfrom c_partner\nwhere (exterior -> 'uid' != $2::jsonb) and (((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb)));\n"
-  },
   "929ffec7bf66135fe540d42efd846e0bafdfa4a8d7895d360b4794e81731a76f": {
     "describe": {
       "columns": [
@@ -1298,6 +1235,39 @@
       }
     },
     "query": "SELECT DISTINCT \"language\" FROM c_block ORDER BY \"language\";\n"
+  },
+  "a8929c4d1b2c19e90c515e0119fe9902b0a2b853d7f16ea452d4ea4627b9f519": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "select id, exterior, interior\nfrom c_partner\nwhere (exterior -> 'uid' != $2::jsonb) and (((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb)))\norder by exterior ->> 'name' asc;\n"
   },
   "aa562b84d2aa920e340736a0f965c3e5787b90a8c1eb931993a1822b1d6ea64d": {
     "describe": {
@@ -2071,6 +2041,36 @@
       }
     },
     "query": "select id, exterior, interior from c_person where id = $1 limit 1;\n"
+  },
+  "fa736a982a6c0b9bf950c50bcf0ade829bb31b572ed9c853459b0ca3e3e50232": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "uid",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "name",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        null,
+        null
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "select id, (exterior -> 'uid') as \"uid\", (exterior -> 'name') as \"name\"\nfrom c_partner\norder by exterior ->> 'name' asc;\n"
   },
   "face724cbf013b6ed241a6468cbdf58d8729772221e67b6aee66dc9ba237e3bf": {
     "describe": {
