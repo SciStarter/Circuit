@@ -130,7 +130,7 @@
               <b-select placeholder="Select" v-model="request.access">
                 <option value="API">API</option>
                 <option value="Wordpress">Wordpress</option>
-                <option value="Form">Form</option>
+                <option value="Form">Opportunity Form</option>
               </b-select>
             </b-field>
             <b-field label="Contact Name">
