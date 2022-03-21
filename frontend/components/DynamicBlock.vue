@@ -1,7 +1,10 @@
 <template>
 <component :is="generated_component" v-if="content" />
+<div v-else-if="lorem" class="dynamic-block">
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam fringilla libero non elit semper, eu imperdiet tellus venenatis. Aenean et diam a nulla egestas pellentesque eu ut mauris. Praesent lacinia, odio in mollis condimentum, diam massa placerat lorem, dictum maximus dolor magna nec ipsum. Vivamus vitae diam ac leo rhoncus varius. Donec dapibus augue eu pretium bibendum. Nunc ac dignissim libero, sed hendrerit nulla. Etiam nec rutrum magna, a euismod tortor. Donec eu urna feugiat, commodo nunc et, rhoncus tortor. Phasellus nec convallis risus. Nunc nec turpis quis neque egestas lacinia non in urna. Nulla dictum arcu nec turpis venenatis, at consectetur ligula accumsan. Etiam est neque, interdum id magna sit amet, bibendum vestibulum diam. Vivamus vel porttitor justo, quis consectetur ipsum. Phasellus ac finibus magna, non convallis tortor. Nullam turpis dolor, tempor sit amet imperdiet in, eleifend vitae augue.
+</div>
 <div v-else class="dynamic-block">
-  <slot>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam fringilla libero non elit semper, eu imperdiet tellus venenatis. Aenean et diam a nulla egestas pellentesque eu ut mauris. Praesent lacinia, odio in mollis condimentum, diam massa placerat lorem, dictum maximus dolor magna nec ipsum. Vivamus vitae diam ac leo rhoncus varius. Donec dapibus augue eu pretium bibendum. Nunc ac dignissim libero, sed hendrerit nulla. Etiam nec rutrum magna, a euismod tortor. Donec eu urna feugiat, commodo nunc et, rhoncus tortor. Phasellus nec convallis risus. Nunc nec turpis quis neque egestas lacinia non in urna. Nulla dictum arcu nec turpis venenatis, at consectetur ligula accumsan. Etiam est neque, interdum id magna sit amet, bibendum vestibulum diam. Vivamus vel porttitor justo, quis consectetur ipsum. Phasellus ac finibus magna, non convallis tortor. Nullam turpis dolor, tempor sit amet imperdiet in, eleifend vitae augue.</slot>
+  <slot></slot>
 </div>
 </template>
 
@@ -65,6 +68,12 @@ export default {
             type: Boolean,
             required: false,
             default: true,
+        },
+
+        lorem: {
+            type: Boolean,
+            required: false,
+            default: false,
         },
     },
 

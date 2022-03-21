@@ -215,7 +215,7 @@ export default {
                 this.show_request = true;
             }
             else {
-                this.$emit('login');
+                this.$emit('signup');
                 setTimeout(this.logged_in_yet, 3000);
             }
         },

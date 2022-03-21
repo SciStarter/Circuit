@@ -26,7 +26,7 @@
           </template>
           <b-input v-model="value.title" has-counter maxlength="64"></b-input>
         </b-field>
-        <b-field :type="validation.organization_name" message="This is the organization hosting the event, project, or attraction. This might be your organization, a chapter, or similar.">
+        <b-field :type="validation.organization_name" message="This is the organization hosting the event, project, or attraction. This might be your organization, a chapter, or similar. This is displayed in search results and opportunity pages.">
           <template #label>
             Host Organization<span class="required">*</span>
           </template>
