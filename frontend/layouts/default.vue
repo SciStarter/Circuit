@@ -85,6 +85,25 @@
                 </nuxt-link>
               </li>
               <li><span class="no-icon" /><a @click="logout">Log Out</a></li>
+
+              <li class="mobile-only">
+                <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
+              </li>
+              <li class="mobile-only">
+                <nuxt-link v-if="owner" to="/my/opportunities">
+                  <my-opportunities-icon /> Your Opportunities
+                </nuxt-link>
+              </li>
+              <li class="mobile-only">
+                <nuxt-link v-if="owner" to="/my/organization">
+                  <my-organization-icon /> Your Partner Organization
+                </nuxt-link>
+              </li>
+              <li class="mobile-only">
+                <nuxt-link v-if="owner" to="/my/submit-opportunity">
+                  <submit-opportunity-icon /> Add an Opportunity
+                </nuxt-link>
+              </li>
             </ul>
           </div>
           <div v-else class="not-authenticated">
@@ -101,14 +120,14 @@
 
       <section id="main">
         <div id="content">
-          <nuxt @login="show_login = true" @signup="show_signup = true" />
+          <nuxt @login="show_login=true;show_signup=false;" @signup="show_signup=true;show_login=false;" />
           <aside v-if="show_cookie" id="cookie-notice">
             <div>
               <h1>We Care About Your Privacy</h1>
               <p>
                 We and
 
-                <nuxt-link to="/about">
+                <nuxt-link to="/about#our-partners">
                   our partners
                 </nuxt-link>
 
@@ -265,20 +284,19 @@
 
       <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
         <div class="card">
-          <login-form @close="show_login=false" :next="$route.path" :next_query="$route.query">
+          <login-form @close="show_login=false" @signup="show_login=false;show_signup=true;" :next="$route.path" :next_query="$route.query" in-modal>
             <dynamic-block group="login-modal" item="standard" class="content" />
           </login-form>
         </div>
       </b-modal>
 
-      <b-modal v-model="show_signup" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
+      <b-modal v-model="show_signup" :width="640" aria-role="dialog" aria-label="Sign up" aria-modal>
         <div class="card">
-          <signup-form @close="show_signup=false" :next="$route.path" :next_query="$route.query">
+          <signup-form @close="show_signup=false" @login="show_signup=false;show_login=true;" :next="$route.path" :next_query="$route.query" in-modal>
             <dynamic-block group="signup-modal" item="standard" class="content" />
           </signup-form>
         </div>
       </b-modal>
-
 
     </div>
 </template>
@@ -744,6 +762,10 @@ header {
   padding-top: 52px;
 }
 
+.mobile-only .nav-separate {
+    color: #7cb4bf;
+    padding-left: 3px;
+}
 
 footer {
     background-color: $snm-color-background-dark;

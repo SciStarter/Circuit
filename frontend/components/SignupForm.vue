@@ -2,7 +2,10 @@
 <div class="signup-form">
   <slot />
   <div class="form-header">
-    <p>Already have an account? <a href="/login">Login here</a>.</p>
+    <p>Already have an account?
+      <a v-if="inModal" @click="$emit('login')">Login here</a>
+      <a v-else @click="$router.replace({name: 'login', query: $route.query})">Login here</a>.
+    </p>
     <p>Do you have a <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter" /> account? <a href="/login-scistarter">Log in with your SciStarter account</a>.<b-tooltip label="SciStarter is a citizen science database."  position="is-left">
         <b-button label="?" />
     </b-tooltip></p>
@@ -62,7 +65,7 @@
       <action-button :loading="working" type="is-primary" primary @click="sign_up">
         Sign up
       </action-button>
-      <b-button type="is-text" @click="cancel">
+      <b-button type="is-text" @click="inModal ? $emit('close') : $router.go(-1);">
         Cancel
       </b-button>
     </div>
@@ -85,6 +88,12 @@ export default {
             type: Object,
             required: false,
             default: () => ({}),
+        },
+
+        inModal: {
+            type: Boolean,
+            required: false,
+            default: false,
         },
     },
 
@@ -153,15 +162,6 @@ export default {
     },
 
     methods: {
-        cancel () {
-            this.$emit('cancel')
-            this.signup.email = ''
-            this.signup.password = ''
-            this.password_repeat = ''
-            this.signup.zip_code = ''
-            this.signup.phone = ''
-        },
-
         async sign_up () {
             if (!this.valid) {
                 return

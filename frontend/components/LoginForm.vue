@@ -3,22 +3,20 @@
     <slot />
     <div class="form-header">
       <p>
-        <nuxt-link to="/signup">
-          Create a Science Near Me account
-        </nuxt-link>
+        <a v-if="inModal" @click="$emit('signup')">Create a Science Near Me account</a>
+        <a v-else @click="$router.replace({name: 'signup', query: $route.query})">Create a Science Near Me account</a>.
       </p>
-      <p>
+      <div class="was-p">
         Do you have a
         <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter">
         account?
         <a @click="via_scistarter">
           Log in with your SciStarter account
-        </a>
-        .
+        </a>.
         <b-tooltip label="SciStarter is a citizen science database." position="is-left">
           <b-button label="?" />
         </b-tooltip>
-      </p>
+      </div>
     </div>
     <form @submit.prevent="0">
       <b-field label="Email" :type="validate_email.type" :message="validate_email.message" label-position="on-border">
@@ -34,9 +32,9 @@
         <action-button :loading="working" type="is-primary" primary @click="log_in">
           Log in
         </action-button>
-        <!-- <b-button type="is-text" @click="cancel">
-             Cancel
-             </b-button> -->
+        <b-button type="is-text" @click="inModal ? $emit('close') : $router.go(-1);">
+          Cancel
+        </b-button>
       </div>
     </form>
   </div>
@@ -57,6 +55,12 @@ export default {
             type: Object,
             required: false,
             default: () => ({}),
+        },
+
+        inModal: {
+            type: Boolean,
+            required: false,
+            default: false,
         },
     },
 
@@ -133,12 +137,6 @@ export default {
             }
         },
 
-        cancel () {
-            this.$emit('cancel')
-            this.login.email = ''
-            this.login.password = ''
-        },
-
         async log_in () {
             if (!this.valid) {
                 return
@@ -171,7 +169,7 @@ export default {
 }
 .form-header {
   text-align:center;
-  p {
+  div.was-p {
     margin: 0.6rem 0;
     padding: 0.6rem 0;
     &:first-child {

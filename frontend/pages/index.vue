@@ -290,8 +290,6 @@ export default {
             search_beginning: new Date().toISOString().slice(0, 10),
             search_ending: null,
             search_online: true,
-            show_login: false,
-            show_signup: false,
             load_here_and_now: false,
             show_location_modal: false
         };
