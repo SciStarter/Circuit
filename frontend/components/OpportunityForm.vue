@@ -136,13 +136,13 @@
             </div>
           </div>
           <transition name="slide">
-            <div v-if="when=='ongoing'" class="add" @click="show_end_date=true">
+            <div v-if="when=='ongoing'" class="add">
               <div class="set-info" v-if="end_datetime">
                 <div class="flex">
                   <h2>End Date</h2>
                   <div class="push-right">
                     <a class="action" @click="show_end_date=true"><edit-icon /></a>
-                    <a class="action" @click="end_date_time=null"><close-icon /></a>
+                    <a class="action" @click="end_datetime=null"><close-icon /></a>
                   </div>
                 </div>
                 <p>{{end_datetime.toLocaleDateString()}}</p>
