@@ -81,29 +81,29 @@
               </li>
               <li class="mobile-only">
                 <nuxt-link to="/my/profile">
-                  <profile-icon class="menu-icon" /> My Profile
+                  <profile-icon class="menu-icon" /> My Profile &amp; Settings
                 </nuxt-link>
               </li>
-              <li><span class="no-icon" /><a @click="logout">Log Out</a></li>
-
-              <li class="mobile-only">
+              <!-- <li class="mobile-only">
                 <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
-              </li>
+              </li> -->
               <li class="mobile-only">
                 <nuxt-link v-if="owner" to="/my/opportunities">
-                  <my-opportunities-icon /> Your Opportunities
+                  <my-opportunities-icon class="menu-icon" /> Your Opportunities
                 </nuxt-link>
               </li>
               <li class="mobile-only">
                 <nuxt-link v-if="owner" to="/my/organization">
-                  <my-organization-icon /> Your Partner Organization
+                  <my-organization-icon class="menu-icon" /> Your Partner Organization
                 </nuxt-link>
               </li>
               <li class="mobile-only">
                 <nuxt-link v-if="owner" to="/my/submit-opportunity">
-                  <submit-opportunity-icon /> Add an Opportunity
+                  <submit-opportunity-icon class="menu-icon" /> Add an Opportunity
                 </nuxt-link>
               </li>
+
+              <li><span class="no-icon" /><a @click="logout">Log Out</a></li>
             </ul>
           </div>
           <div v-else class="not-authenticated">
@@ -567,6 +567,9 @@ header {
         height: 1.2em;
         vertical-align: middle;
         margin: 0px 1rem;
+        path {
+          @include svg-fill;
+        }
     }
 
     .no-icon {
