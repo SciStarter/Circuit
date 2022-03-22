@@ -68,6 +68,8 @@ export default {
                 return;
             }
 
+            evt = evt.replace(", GBR", ", UK");
+
             this.num_loading += 1
 
             this.$axios.$post('/api/ui/finder/geom', { q: evt })

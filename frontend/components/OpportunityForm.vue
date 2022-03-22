@@ -177,11 +177,13 @@
               </b-field>
               <div v-if="time_periods.length == 0 || time_periods.length == 1" class="times-flex">
                 <div class="flex">
-                  <b-field :type="validation.begin_datetime">
+                  <b-field>
                     <template #label>
                       Starts on:<span class="required">*</span>
                     </template>
                     <b-datepicker
+                      class="validation-target"
+                      :class="{'is-danger': validation.begin_datetime}"
                       v-model="begin_datetime"
                       placeholder="Click to select..."
                       icon="calendar-today"
@@ -191,6 +193,8 @@
                       trap-focus>
                     </b-datepicker>
                     <b-timepicker
+                      class="validation-target"
+                      :class="{'is-danger': validation.begin_datetime}"
                       v-model="begin_datetime"
                       placeholder="Click to select..."
                       icon="clock"
@@ -229,8 +233,8 @@
                   </div>
                 </div>
                 <p v-for="pair in time_periods_display">
-                  <span v-if="pair[0].getFullYear() == pair[1].getFullYear() && pair[0].getMonth() == pair[1].getMonth() && pair[0].getDate() == pair[1].getDate()">{{pair[0].toLocaleDateString()}} {{pair[0].toLocaleTimeString()}} - {{pair[1].toLocaleTimeString()}}</span>
-                  <span v-else>{{pair[0].toLocaleString()}} - {{pair[1].toLocaleString()}}</span>
+                  <span v-if="pair[0] && pair[1] && pair[0].getFullYear() == pair[1].getFullYear() && pair[0].getMonth() == pair[1].getMonth() && pair[0].getDate() == pair[1].getDate()">{{pair[0].toLocaleDateString()}} {{pair[0].toLocaleTimeString()}} - {{pair[1].toLocaleTimeString()}}</span>
+                  <span v-else>{{pair[0] ? (pair[0].toLocaleString() + ' -') : 'ongoing through'}} {{pair[1].toLocaleString()}}</span>
                 </p>
               </div>
               <div v-else><action-button primary tight @click="show_time_periods=true"><div class="icon"><time-icon /></div> Add &amp; customize time periods</action-button></div>
@@ -371,7 +375,7 @@
           </b-field>
           <b-field :type="validation.max_age" label="Maximum Age">
             <b-checkbox v-model="has_maximum">There is a maximum age for participants</b-checkbox>
-            <b-numberinput v-if="has_maximum" controls-position="compact" v-model="value.max_age"></b-numberinput>
+            <b-numberinput v-if="has_maximum" controls-position="compact" v-model="value.max_age" :min="value.min_age"></b-numberinput>
           </b-field>
         </div>
 
@@ -402,7 +406,9 @@
 
         <label class="label">Display Image</label>
         <div class="flex display-image-wrapper">
-          <img v-if="value.image_url" :src="value.image_url" class="display-image"/>
+          <div>
+            <img v-if="value.image_url" :src="value.image_url" class="display-image">
+          </div>
           <b-field :type="validation.image_url" label="Image URL" message="Must start with http:// or https://">
             <b-input type="url" :value="value.image_url" @input="value.image_url = $event.replace(/ /g, '')" />
           </b-field>
@@ -548,7 +554,7 @@
             <!-- date has no time set -->
             <div v-for="(pair, idx) in time_periods_local" class="tp-item">
               <div class="flex">
-                <h2>{{ pair[0].toLocaleDateString() }}</h2>
+                <h2>{{ pair[0] ? pair[0].toLocaleDateString() : '' }}</h2>
               </div>
               <div class="flex">
                 <b-timepicker
@@ -572,7 +578,7 @@
         </div><!-- #time-periods -->
       </div>
       <div class="flex flex-center">
-        <action-button tertiary @click="()=>{show_time_periods = false; time_periods = [];}">cancel</action-button>
+        <action-button tertiary @click="()=>{show_time_periods = false; time_periods = [];}">clear</action-button>
         <action-button primary @click="show_time_periods=false">save</action-button>
       </div>
     </div>
@@ -989,6 +995,7 @@ export default {
                 if(this.invalid('location_name', this.location === 'physical' && !this.value.location_name)) valid = false;
                 if(this.invalid('location_name', this.location === 'both' && !this.value.location_name)) valid = false;
                 if(this.invalid('organization_website', this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.startsWith('http')))) valid = false;
+                if(this.invalid('begin_datetime', this.when === 'time' && this.time_periods.length < 1)) valid = false;
             }
 
             if(state == 0 || state == 2) {
@@ -1603,6 +1610,15 @@ legend {
       padding: 12px 12px!important;
     }
   }
+}
+
+.display-image-wrapper {
+    flex-direction: row-reverse;
+
+    >:first-child {
+        flex-grow: 1;
+        margin-left: 2rem;
+    }
 }
 
 @media (max-width:560px) {

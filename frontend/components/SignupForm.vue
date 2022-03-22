@@ -37,7 +37,7 @@
     </b-field>
     <b-field label-position="on-border">
       <template #label>
-        Zip/Postal Code <span class="has-required">*</span>
+        Zip/Postal Code
       </template>
       <b-input v-model="signup.zip_code" type="text" />
     </b-field>

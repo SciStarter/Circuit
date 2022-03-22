@@ -1,5 +1,5 @@
 <template>
-<div id="submit-opportunity">
+<div v-if="authenticated" id="submit-opportunity">
   <div class="flex">
     <h1 class="h2">Add an Opportunity
       <span v-if="choose_partner">
@@ -9,11 +9,16 @@
         </b-select>
       </span>
     </h1>
-    <a class="cancel">cancel</a>
+    <nuxt-link class="cancel" :to="{name: 'my-opportunities'}">cancel</nuxt-link>
   </div>
 
   <opportunity-form v-model="opp" :partner="selected_partner" :timezones="timezones" :descriptors="descriptors" :topics="topics"/>
-
+</div>
+<div v-else>
+  <h1 class="h2">Add an Opportunity</h1>
+  <p>
+    You need to be <nuxt-link :to="{name: 'login', query: {next: 'my-submit-opportunity'}}">logged in</nuxt-link> to an authorized account to access this page. If you have such an account, log in to proceed.
+  </p>
 </div>
 </template>
 
@@ -32,10 +37,7 @@ export default {
         const user = await context.store.dispatch('get_user');
 
         if(!user.authenticated) {
-            context.error({
-                statusCode: 401,
-                message: "Authentication required"
-            });
+            return { authenticated: false };
         }
 
         let timezones = [];
@@ -59,6 +61,7 @@ export default {
         }
 
         return {
+            authenticated: true,
             timezones,
             descriptors,
             topics,
