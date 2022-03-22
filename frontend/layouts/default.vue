@@ -107,12 +107,14 @@
             </ul>
           </div>
           <div v-else class="not-authenticated">
-            <action-button primary @click="show_login = true">
+            <nuxt-link class="action-button primary" :to="'/login?next='+$route.path">Login</nuxt-link>
+            <nuxt-link class="action-button primary" :to="'/signup?next='+$route.path">Create Account</nuxt-link>
+            <!-- <action-button primary @click="show_login = true">
               Login
             </action-button>
             <action-button primary @click="show_signup = true">
               Create Account
-            </action-button>
+            </action-button> -->
           </div>
         </aside>
       </div>
@@ -520,6 +522,12 @@ $user-menu-height: 2rem;
 
 #page {
     width: 100vw;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+}
+#main {
+  flex:1;
 }
 
 .full-only {
@@ -626,7 +634,28 @@ header {
             background-color: $snm-color-element-med;
             padding: .75rem 0;
 
-            button {
+            button, a {
+              position: relative;
+              font-family: $snm-font-content;
+              font-size: 0.85rem;
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              margin: 10px 0.5rem;
+              padding: 10px;
+              box-shadow: 0px 3px 6px $snm-color-shadow;
+              font-weight: bold;
+              color: var(--foreground);
+              background-color: var(--background);
+              flex-shrink: 0;
+              flex-grow: 0;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              padding: 0.75rem 1.5rem;
+              box-sizing: border-box;
+              height: rem(40px);
+              line-height: 1;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
@@ -639,6 +668,17 @@ header {
                 &:hover,&:active {
                     color: $snm-color-element-med;
                     background-color: $snm-color-element-light;
+                }
+
+                &.primary {
+                    --border: #{$snm-color-background-dark};
+                    --background: #{$snm-color-background-meddark};
+                    --foreground: #{$snm-color-element-light};
+
+                    &:hover,&:active {
+                        --background: #{$snm-color-background-dark};
+                    }
+
                 }
             }
         }
@@ -920,7 +960,7 @@ footer {
                 background-color: transparent;
                 padding: 0;
 
-                button {
+                button,a {
                     width: auto;
                     box-shadow: 0px 3px 6px $snm-color-shadow;
                     background-color: $snm-color-background-meddark;
