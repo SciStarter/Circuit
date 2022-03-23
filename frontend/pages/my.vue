@@ -18,6 +18,11 @@ export default {
             'Referrer-Policy': 'same-origin',
         };
     },
+
+    async asyncData() {
+        const user = await context.store.dispatch('get_user');
+        return {};
+    },
 }
 </script>
 

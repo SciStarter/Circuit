@@ -213,12 +213,14 @@ export default {
     },
 
     async asyncData(context) {
+        const user = await context.store.dispatch('get_user');
+
         let profile;
 
         try {
             profile = await context.$axios.$get('/api/ui/profile/', context.store.state.auth);
         }
-        catch(_) {
+        catch(err) {
             context.redirect({name: 'login', query: {next: 'my-profile'}});
             return;
         }

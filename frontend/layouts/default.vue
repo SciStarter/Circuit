@@ -107,8 +107,8 @@
             </ul>
           </div>
           <div v-else class="not-authenticated">
-            <nuxt-link class="action-button primary" :to="'/login?next='+$route.path">Login</nuxt-link>
-            <nuxt-link class="action-button primary" :to="'/signup?next='+$route.path">Create Account</nuxt-link>
+            <nuxt-link class="action-button primary" :to="{name: 'login', query: {next: $route.name, ...$route.query}}">Login</nuxt-link>
+            <nuxt-link class="action-button primary" :to="{name: 'signup', query: {next: $route.name, ...$route.query}}">Create Account</nuxt-link>
             <!-- <action-button primary @click="show_login = true">
               Login
             </action-button>

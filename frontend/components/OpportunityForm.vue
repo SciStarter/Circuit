@@ -1077,20 +1077,20 @@ export default {
 
         async save_and_my_opps() {
             if(await this.save()) {
-                this.$router.push({name: 'my-opportunities'});
+                this.$router.push(this.partner !== null ? {name: 'exchange-uid-opps', params: {uid: this.partner.uid}} : {name: 'my-opportunities'});
             }
         },
 
         async save_and_publish() {
             this.value.withdrawn = false;
             if(await this.save()) {
-                this.$router.push({name: 'slug', params: {slug: this.value.slug}});
+                this.$router.push(this.partner !== null ? {name: 'exchange-uid-slug', params: {uid: this.partner.uid, slug: this.value.slug}} : {name: 'slug', params: {slug: this.value.slug}});
             }
         },
 
         async save_and_view() {
             if(await this.save()) {
-                this.$router.push({name: 'slug', params: {slug: this.value.slug}});
+                this.$router.push(this.partner !== null ? {name: 'exchange-uid-slug', params: {uid: this.partner.uid, slug: this.value.slug}} : {name: 'slug', params: {slug: this.value.slug}});
             }
         },
 

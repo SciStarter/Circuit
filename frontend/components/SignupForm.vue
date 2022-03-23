@@ -4,9 +4,9 @@
   <div class="form-header">
     <p>Already have an account?
       <a v-if="inModal" @click="$emit('login')">Login here</a>
-      <a v-else @click="$router.replace({name: 'login', query: $route.query})">Login here</a>.
+      <a v-else @click="$router.replace(partner ? {name: 'exchange-uid-login', params: {uid: partner}, query: $route.query} : {name: 'login', query: $route.query})">Login here</a>.
     </p>
-    <p>Do you have a <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter" /> account? <a href="/login-scistarter">Log in with your SciStarter account</a>.<b-tooltip label="SciStarter is a citizen science database."  position="is-left">
+    <p v-if="!partner" >Do you have a <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter" /> account? <a href="/login-scistarter">Log in with your SciStarter account</a>.<b-tooltip label="SciStarter is a citizen science database."  position="is-left">
         <b-button label="?" />
     </b-tooltip></p>
   </div>
@@ -91,6 +91,12 @@ export default {
         },
 
         inModal: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+
+        partner: {
             type: Boolean,
             required: false,
             default: false,

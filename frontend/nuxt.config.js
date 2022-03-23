@@ -125,7 +125,7 @@ export default {
         "frame-src": ["'self'"], // Overridden by child-src if the browser supports CSP 3 (Safari doesn't yet)
         "child-src": ["'self'", "blob:"],
         "form-action": ["'self'"],
-        //"frame-ancestors": ["'none'"], // Need a way to override this for the widget page specifically
+        //"frame-ancestors": ["'none'"], // Need a way to override this for the widget and exchange pages specifically
         "plugin-types": ["'none'"],
         "base-uri": ["'self'"],
         "worker-src": ["'self'", "blob:"],

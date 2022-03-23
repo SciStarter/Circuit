@@ -2,7 +2,7 @@
 <div class="your-opportunities snm-container">
   <div class="flex-header">
     <h1>Your Opportunities</h1>
-    <action-button primary @click="$router.push({name: 'my-submit-opportunity'})" class="add-btn"><div class="icon"><add-icon /></div>Add a new opportunity</action-button>
+    <action-button primary @click="$router.push({name: 'exchange-uid-submit', params: {uid: partner.uid}})" class="add-btn"><div class="icon"><add-icon /></div>Add a new opportunity</action-button>
   </div>
 
   <div class="nav-tab-wrapper">
@@ -44,7 +44,7 @@
 
     <section id="results">
       <template v-if="live.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in live.matches" :key="opp.uid" :opportunity="opp" owner="live" trash @trash="trash_live(i)"/>
+        <opportunity-card v-for="(opp, i) in live.matches" :key="opp.uid" :opportunity="opp" :partner="partner" owner="live" trash @trash="trash_live(i)"/>
         <pagination :page-index="live.pagination.page_index" :last-page="live.pagination.last_page" @switch="load_live($event)" />
       </template>
       <template v-else>
@@ -85,7 +85,7 @@
     </div>
     <section id="results">
       <template v-if="draft.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in draft.matches" :key="opp.uid" :opportunity="opp" owner="draft" trash @trash="trash_draft(i)"/>
+        <opportunity-card v-for="(opp, i) in draft.matches" :key="opp.uid" :opportunity="opp" :partner="partner" owner="draft" trash @trash="trash_draft(i)"/>
         <pagination :page-index="draft.pagination.page_index" :last-page="draft.pagination.last_page" @switch="load_draft($event)" />
       </template>
       <template v-else>
@@ -125,7 +125,7 @@
     </div>
     <section id="results">
       <template v-if="expired.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in expired.matches" :key="opp.uid" :opportunity="opp" owner="past" />
+        <opportunity-card v-for="(opp, i) in expired.matches" :key="opp.uid" :opportunity="opp" :partner="partner" owner="past" />
         <pagination :page-index="expired.pagination.page_index" :last-page="expired.pagination.last_page" @switch="load_expired($event)" />
       </template>
       <template v-else>
@@ -161,23 +161,20 @@
 </template>
 
 <script>
-
 import AddIcon from '~/assets/img/submit-opportunity.svg?inline'
 
 export default {
-    name: "MyOpportunities",
+    name: "ExchangeOpportunities",
 
     components: {
         AddIcon
     },
 
-    httpHeaders() {
-        return {
-            'X-XSS-Protection': '1; mode=block',
-            'X-Frame-Options': 'DENY',
-            'X-Content-Type-Options': 'nosniff',
-            'Referrer-Policy': 'same-origin',
-        };
+    props: {
+        partner: {
+            type: Object,
+            required: true,
+        },
     },
 
     async asyncData(context) {
@@ -221,9 +218,9 @@ export default {
         };
 
         try {
-            live = await context.$axios.$get('/api/ui/finder/search?mine=true&current=true&sort=alphabetical', context.store.state.auth);
-            draft = await context.$axios.$get('/api/ui/finder/search?mine=true&current=false&withdrawn=true&sort=alphabetical', context.store.state.auth);
-            expired = await context.$axios.$get('/api/ui/finder/search?mine=true&current=false&withdrawn=false&sort=alphabetical', context.store.state.auth);
+            live = await context.$axios.$get('/api/ui/finder/search?mine=true&current=true&sort=alphabetical&partner=' + context.params.uid, context.store.state.auth);
+            draft = await context.$axios.$get('/api/ui/finder/search?mine=true&current=false&withdrawn=true&sort=alphabetical&partner=' + context.params.uid, context.store.state.auth);
+            expired = await context.$axios.$get('/api/ui/finder/search?mine=true&current=false&withdrawn=false&sort=alphabetical&partner=' + context.params.uid, context.store.state.auth);
         }
         catch(err) {
             context.error({

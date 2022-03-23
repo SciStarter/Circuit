@@ -21,6 +21,23 @@ export default {
         };
     },
 
+    async asyncData(context) {
+        const user = await context.store.dispatch('get_user');
+
+        if(user.authenticated) {
+            let query = context.route.query;
+            let next = query.next || "/";
+            delete query.next;
+
+            if(next.startsWith("/")) {
+                context.redirect({path: next, query: query});
+            }
+            else {
+                context.redirect({name: next, query: query});
+            }
+        }
+    },
+
     computed: {
         next_query() {
             let q = cloneDeep(this.$route.query);
