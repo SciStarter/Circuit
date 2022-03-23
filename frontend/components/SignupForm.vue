@@ -1,7 +1,7 @@
 <template>
 <div class="signup-form">
   <slot />
-  <div class="form-header">
+  <div class="form-header" v-if="!hideExtras">
     <p>Already have an account?
       <a v-if="inModal" @click="$emit('login')">Login here</a>
       <a v-else @click="$router.replace({name: 'login', query: $route.query})">Login here</a>.
@@ -91,6 +91,11 @@ export default {
         },
 
         inModal: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        hideExtras: {
             type: Boolean,
             required: false,
             default: false,
