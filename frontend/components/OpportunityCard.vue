@@ -55,11 +55,12 @@
       </div>
     </nuxt-link>
     <div class="owner-actions">
-          <action-button v-if="owner=='live' || owner=='draft'" tertiary @click="$router.push({name: 'my-opportunity-uid', params: {uid: opportunity.uid}})"><div class="icon"><edit-icon /></div>Edit</action-button>
+          <action-button v-if="owner=='live' || owner=='draft'" tertiary @click="$router.push({name: 'my-opportunity-uid', params: {uid: opportunity.uid}})" class="no-mobile-edit"><div class="icon"><edit-icon /></div>Edit</action-button>
           <b-dropdown aria-role="list" position="is-bottom-left">
             <template #trigger="{ active }">
                 <b-button class="more-btn"><div class="icon"><more-icon /></div></b-button>
             </template>
+            <b-dropdown-item aria-role="listitem" @click="$router.push({name: 'my-opportunity-uid', params: {uid: opportunity.uid}})" class="mobile-edit">Edit</b-dropdown-item>
             <b-dropdown-item aria-role="listitem" @click="view">View</b-dropdown-item>
             <!-- <b-dropdown-item aria-role="listitem">Duplicate</b-dropdown-item> -->
             <b-dropdown-item v-if="trash" aria-role="listitem" @click="$emit('trash', opportunity)">Trash</b-dropdown-item>
@@ -364,7 +365,6 @@ export default {
 
 @media (min-width: $fullsize-screen) {
 
-
     .primary {
         div {
             small, .oc-loader-p {
@@ -549,6 +549,24 @@ export default {
       position:relative;
       top:3px;
     }
+  }
+}
+
+@media (min-width:700px){
+
+}
+
+@media (max-width:699px){
+
+  button.action-button.no-mobile-edit {
+    display:none;
+  }
+  .mobile-edit {
+    display:block;
+  }
+
+  .owner .primary img, .primary .oc-loader-img {
+    display:none;
   }
 }
 
