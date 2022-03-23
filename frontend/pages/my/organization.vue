@@ -116,4 +116,28 @@ h1 {
     color: $snm-color-element-med;
     margin-bottom:2rem;
 }
+
+@media (max-width:1159px) {
+  .snm-container {
+    padding:1rem;
+  }
+}
+
+.nav-tab-wrapper {
+  width:100%;
+  overflow:auto;
+  .nav-tabs {
+    min-width: 500px
+  }
+}
+.nav-tab-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width:600px){
+  .flex.managers {
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}
 </style>

@@ -19,7 +19,7 @@ export default {
         };
     },
 
-    async asyncData() {
+    async asyncData(context) {
         const user = await context.store.dispatch('get_user');
         return {};
     },

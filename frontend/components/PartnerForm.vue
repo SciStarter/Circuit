@@ -1,10 +1,12 @@
 <template>
 <div class="organizations snm-container">
-  <ul class="nav-tabs">
-    <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Organizational Settings</a></li>
-    <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Page Managers</a></li>
-    <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Contact Info</a></li>
-  </ul>
+  <div class="nav-tab-wrapper">
+    <ul class="nav-tabs">
+      <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Organizational Settings</a></li>
+      <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Page Managers</a></li>
+      <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Contact Info</a></li>
+    </ul>
+  </div>
 
   <div v-if="state==1" class="tab-panel">
     <profile-item v-model="partner.name" label="Organization" @input="save" />
@@ -83,6 +85,89 @@
 
     </div>
   </b-modal>
+<!--   <ul class="nav-tabs"> -->
+<!--     <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Organizational Settings</a></li> -->
+<!--     <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Page Managers</a></li> -->
+<!--     <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Contact Info</a></li> -->
+<!--   </ul> -->
+
+<!--   <div v-if="state==1" class="tab-panel"> -->
+<!--     <profile-item v-model="partner.name" label="Organization" @input="save" /> -->
+<!--     <profile-item v-model="partner.organization_type" label="Organization Type" :choices="org_types" @input="save" /> -->
+<!--     <profile-item v-model="partner.under" label="Parent Organization" :auto="{url: '/api/ui/organization/exists', 'search_field': 'name', label: 'name', value: 'uid'}" :display="parent_org_name" @input="save" /> -->
+<!--     <profile-item v-model="partner.url" label="Link" @input="save" /> -->
+<!--     <profile-item v-model="partner.image_url" label="Logo Link" @input="save" class="no-border" /> -->
+<!--     <img v-if="partner.image_url" :src="partner.image_url" class="display-image"> -->
+<!--     <img v-else src="~/assets/img/no-image-thumb.jpg" class="display-image"> -->
+<!--   </div><\!-- state 1 -\-> -->
+
+<!--   <div v-if="state==2" class="tab-panel"> -->
+<!--     <div v-if="pending.length > 0" class="pending"> -->
+<!--       <h2>Pending Organization Page Managers</h2> -->
+<!--       <div v-for="(p, i) in pending" class="flex managers"> -->
+<!--         <div class="info"><span v-if="p.first_name && p.last_name">{{p.first_name}} {{p.last_name}}</span><span v-else>{{p.username}}</span></div> -->
+<!--         <div class="info"><a :href="'mailto:'+p.email">{{p.email}}</a></div> -->
+<!--         <div class="info">{{p.phone}}</div> -->
+<!--         <div class="actions"> -->
+<!--           <action-button primary @click="approve_pending(i)"><div class="icon"><check-icon /></div>Approve</action-button> -->
+<!--           <action-button tertiary icon-only @click="discard_pending(i)"><div class="icon"><trash-icon /></div></action-button> -->
+<!--         </div> -->
+<!--       </div> -->
+<!--     </div> -->
+
+<!--     <h2>Current Organization Page Managers</h2> -->
+<!--     <div v-for="(p, i) in managers" class="flex managers"> -->
+<!--       <div class="info"><span v-if="p.first_name && p.last_name">{{p.first_name}} {{p.last_name}}</span><span v-else>{{p.username}}</span></div> -->
+<!--       <div class="info"><a :href="'mailto:'+p.email">{{p.email}}</a></div> -->
+<!--       <div class="info">{{p.phone}}</div> -->
+<!--       <div class="actions"> -->
+<!--         <action-button v-if="p.uid != user.uid" tertiary icon-only @click="discard_authorized(i)"><div class="icon"><trash-icon /></div></action-button> -->
+<!--       </div> -->
+<!--     </div> -->
+<!--     <action-button primary @click="show_add=true">+ Add New Organization Manager(s)</action-button> -->
+
+
+
+<!--   </div><\!-- state 2 -\-> -->
+
+<!--   <div v-if="state==3" class="tab-panel"> -->
+<!--     <profile-item v-model="partner.manager.name" label="Name" @input="save" /> -->
+<!--     <profile-item v-model="partner.manager.email" label="Email" @input="save" /> -->
+<!--     <profile-item v-model="partner.manager.phone" label="Phone" @input="save" /> -->
+<!--     <profile-item v-model="partner.manager.mailing" label="Address" @input="save" /> -->
+<!--   </div><\!-- state 3 -\-> -->
+
+
+<!--   <div class="global-actions"> -->
+<!--     <action-button v-if="can_leave" tertiary red @click="leave_org">Leave organization</action-button> -->
+<!--   </div> -->
+
+<!--   <b-modal -->
+<!--     v-model="show_add" -->
+<!--     has-modal-card -->
+<!--     trap-focus -->
+<!--     :destroy-on-hide="false" -->
+<!--     aria-role="dialog" -->
+<!--     aria-label="Show tooltip" -->
+<!--     aria-modal -->
+<!--     class="form-modal" -->
+<!--     > -->
+<!--     <div class="card"> -->
+<!--       <h2>Add Organizational Managers <span class="close" @click="show_add = false">&times;</span></h2> -->
+<!--       <p>Organization managers will be able to edit organizational settings and opportunity records. Each email will receive an email link.</p> -->
+<!--       <p class="help">Add Emails of Additional Managers, One per Line</p> -->
+<!--       <b-field> -->
+<!--         <b-input v-model="emails" type="textarea" /> -->
+<!--       </b-field> -->
+
+
+<!--       <div> -->
+<!--         <action-button primary @click="invite">Send Invitations</action-button> -->
+<!--         <action-button tertiary @click="show_add = false">Cancel</action-button> -->
+<!--       </div> -->
+
+<!--     </div> -->
+  <!-- </b-modal> -->
 
 </div>
 </template>

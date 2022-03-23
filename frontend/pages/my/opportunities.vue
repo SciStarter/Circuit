@@ -16,8 +16,13 @@
 
   <div v-if="state==1">
     <div class="flex-header filter-actions">
-      <h2>Current, Live Opportunities</h2>
-      <div class="flex header-actions">
+      <div class="flex filter-area">
+        <h2>Current, Live Opportunities</h2>
+        <filter-icon class="filter" @click="show_filters_current = !show_filters_current" />
+      </div>
+
+      <transition name="slide">
+      <div class="flex header-actions" :class="{'show_filters':show_filters_current}">
         <b-field label="Search" label-position="inside" data-context="find-keywords">
           <b-input ref="search_keywords" v-model="live_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
         </b-field>
@@ -36,10 +41,11 @@
             icon="calendar-today"
             />
         </b-field>
-        <b-field>
+        <b-field class="mobile-fix">
           <b-button @click="load_live(0)">Search</b-button>
         </b-field>
       </div>
+    </transition>
     </div>
 
     <section id="results">
@@ -58,8 +64,11 @@
 
   <div v-if="state==2">
     <div class="flex-header filter-actions">
-      <h2>Draft &amp; Unpublished Opportunities</h2>
-      <div class="flex header-actions">
+      <div class="flex filter-area">
+        <h2>Draft &amp; Unpublished Opportunities</h2>
+        <filter-icon class="filter" @click="show_filters_draft = !show_filters_draft" />
+      </div>
+      <div class="flex header-actions" :class="{'show_filters':show_filters_draft}">
         <b-field label="Search" label-position="inside" data-context="find-keywords">
           <b-input ref="search_keywords" v-model="draft_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
         </b-field>
@@ -78,7 +87,7 @@
             icon="calendar-today"
             />
         </b-field>
-        <b-field>
+        <b-field class="mobile-fix">
           <b-button @click="load_draft(0)">Search</b-button>
         </b-field>
       </div>
@@ -98,8 +107,11 @@
 
   <div v-if="state==3">
     <div class="flex-header filter-actions">
-      <h2>Expired and Trashed Opportunities</h2>
-      <div class="flex header-actions">
+      <div class="flex filter-area">
+        <h2>Expired and Trashed Opportunities</h2>
+        <filter-icon class="filter" @click="show_filters_trash = !show_filters_trash" />
+      </div>
+      <div class="flex header-actions" :class="{'show_filters':show_filters_trash}">
         <b-field label="Search" label-position="inside" data-context="find-keywords">
           <b-input ref="search_keywords" v-model="expired_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
         </b-field>
@@ -118,7 +130,7 @@
             icon="calendar-today"
             />
         </b-field>
-        <b-field>
+        <b-field class="mobile-fix">
           <b-button @click="load_expired(0)">Search</b-button>
         </b-field>
       </div>
@@ -163,13 +175,16 @@
 <script>
 
 import AddIcon from '~/assets/img/submit-opportunity.svg?inline'
+import FilterIcon from '~/assets/img/filter.svg?inline'
 
 export default {
     name: "MyOpportunities",
 
     components: {
-        AddIcon
+        AddIcon,
+        FilterIcon
     },
+
 
     httpHeaders() {
         return {
@@ -252,6 +267,9 @@ export default {
         return {
             state:1,
             show_delete_confirm: false,
+            show_filters_current: false,
+            show_filters_draft: false,
+            show_filters_trash: false,
         }
     },
 
@@ -369,17 +387,57 @@ h1 {
   }
 }
 
+.filter {
+  display:none;
+}
+
 @media (max-width:600px) {
+  .filter-area {
+    width:100%;
+    justify-content:space-between;
+    h2 {
+      font-size:18px;
+    }
+  }
+  .filter {
+    display:block;
+    width:30px;
+    height:30px;
+    path {
+      fill: $snm-color-background-meddark
+    }
+  }
   .header-actions {
+    top:0;
+    left:0;
+    background-color:$snm-color-background-medlight;
+    padding:20px;
     flex-wrap: wrap;
+    justify-content:space-between;
+    display:none;
     > div:first-child {
       min-width:100%!important;
+    }
+    .field.is-floating-label, .field.is-floating-in-label{
+      margin:10px 0;
+      width:48%;
+      .datepicker {
+        width:100%;
+      }
+    }
+    .mobile-fix {
+      margin:auto;
+    }
+    &.show_filters {
+      display:flex;
     }
   }
   .add-btn {
     display:none!important;
   }
-
+  .no-results {
+    padding:20px;
+  }
 }
 
 .nav-tab-wrapper {
@@ -391,5 +449,36 @@ h1 {
 }
 .nav-tab-wrapper::-webkit-scrollbar {
   display: none;
+}
+.slide-enter-active {
+    -moz-transition-duration: 0.2s;
+    -webkit-transition-duration: 0.2s;
+    -o-transition-duration: 0.2s;
+    transition-duration: 0.2s;
+    -moz-transition-timing-function: ease-in;
+    -webkit-transition-timing-function: ease-in;
+    -o-transition-timing-function: ease-in;
+    transition-timing-function: ease-in;
+}
+
+.slide-leave-active {
+    -moz-transition-duration: 0.1s;
+    -webkit-transition-duration: 0.1s;
+    -o-transition-duration: 0.1s;
+    transition-duration: 0.1s;
+    -moz-transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+    -webkit-transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+    -o-transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+    transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+}
+
+.slide-enter-to, .slide-leave {
+    max-height: 100px;
+    overflow: hidden;
+}
+
+.slide-enter, .slide-leave-to {
+    overflow: hidden;
+    max-height: 0;
 }
 </style>
