@@ -225,16 +225,16 @@
 
         <ul>
           <li><h1>For Providers</h1></li>
-          <!-- <li> -->
-          <!--   <nuxt-link to="/add-opportunities"> -->
-          <!--     Add Your Opportunities to Science Near Me -->
-          <!--   </nuxt-link> -->
-          <!-- </li> -->
-          <!-- <li> -->
-          <!--   <external-link href="/api/docs/v1.html" content="footer-link"> -->
-          <!--     API Documentation -->
-          <!--   </external-link> -->
-          <!-- </li> -->
+          <li>
+            <nuxt-link to="/add-opportunities">
+              Add Your Opportunities to Science Near Me
+            </nuxt-link>
+          </li>
+          <li>
+            <external-link href="/api/docs/v1.html" content="footer-link">
+              API Documentation
+            </external-link>
+          </li>
           <li>
             <nuxt-link to="/display-opportunities">
               Display Science Near Me Opportunities on Your Website
