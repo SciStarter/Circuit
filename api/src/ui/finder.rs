@@ -13,6 +13,7 @@ use common::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tide::StatusCode;
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
@@ -180,11 +181,23 @@ struct GeomQuery {
 
 pub async fn geom(mut req: tide::Request<Database>) -> tide::Result {
     let search: GeomQuery = req.body_json().await?;
-    let query = geo::GeomQuery::new(search.q, 0.5);
+    let mut query = geo::GeomQuery::new(search.q, 0.5);
 
-    let result = query.lookup().await?;
+    while !query.q.is_empty() {
+        match query.lookup().await {
+            Ok(result) => return okay(&result),
+            Err(_) => {
+                let mut buf: Vec<_> = query.q.split(',').collect();
+                buf.pop();
+                query.q = buf.join(", ");
+            }
+        }
+    }
 
-    okay(&result)
+    Err(tide::Error::from_str(
+        StatusCode::BadRequest,
+        "Could not find geometry for the requested location name",
+    ))
 }
 
 #[derive(Deserialize)]
