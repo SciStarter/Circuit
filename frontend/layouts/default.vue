@@ -107,8 +107,8 @@
             </ul>
           </div>
           <div v-else class="not-authenticated">
-            <nuxt-link class="action-button primary" :to="'/login?next='+$route.path">Login</nuxt-link>
-            <nuxt-link class="action-button primary" :to="'/signup?next='+$route.path">Create Account</nuxt-link>
+            <nuxt-link class="action-button primary" :to="{name: 'login', query: {next: $route.name, ...$route.query}}">Login</nuxt-link>
+            <nuxt-link class="action-button primary" :to="{name: 'signup', query: {next: $route.name, ...$route.query}}">Create Account</nuxt-link>
             <!-- <action-button primary @click="show_login = true">
               Login
             </action-button>
@@ -225,16 +225,16 @@
 
         <ul>
           <li><h1>For Providers</h1></li>
-          <!-- <li> -->
-          <!--   <nuxt-link to="/add-opportunities"> -->
-          <!--     Add Your Opportunities to Science Near Me -->
-          <!--   </nuxt-link> -->
-          <!-- </li> -->
-          <!-- <li> -->
-          <!--   <external-link href="/api/docs/v1.html" content="footer-link"> -->
-          <!--     API Documentation -->
-          <!--   </external-link> -->
-          <!-- </li> -->
+          <li>
+            <nuxt-link to="/add-opportunities">
+              Add Your Opportunities to Science Near Me
+            </nuxt-link>
+          </li>
+          <li>
+            <external-link href="/api/docs/v1.html" content="footer-link">
+              API Documentation
+            </external-link>
+          </li>
           <li>
             <nuxt-link to="/display-opportunities">
               Display Science Near Me Opportunities on Your Website

@@ -46,7 +46,7 @@
   <!-- end widget -->
 
   <template v-else-if="owner">
-    <nuxt-link :to="'/' + opportunity.slug" class="primary">
+    <nuxt-link :to="(partner !== null ? '/exchange/' + partner.uid + '/' : '/') + opportunity.slug" class="primary">
       <img :src="image">
       <div>
         <h1>{{ opportunity.title }}</h1>
@@ -55,7 +55,7 @@
       </div>
     </nuxt-link>
     <div class="owner-actions">
-          <action-button v-if="owner=='live' || owner=='draft'" tertiary @click="$router.push({name: 'my-opportunity-uid', params: {uid: opportunity.uid}})" class="no-mobile-edit"><div class="icon"><edit-icon /></div>Edit</action-button>
+          <action-button v-if="owner=='live' || owner=='draft'" tertiary @click="$router.push({name: partner !== null ? 'exchange-uid-edit-opp' : 'my-opportunity-uid', params: partner !== null ? {uid: partner.uid, opp: opportunity.uid} : {uid: opportunity.uid}})" class="no-mobile-edit"><div class="icon"><edit-icon /></div>Edit</action-button>
           <b-dropdown aria-role="list" position="is-bottom-left">
             <template #trigger="{ active }">
                 <b-button class="more-btn"><div class="icon"><more-icon /></div></b-button>
@@ -73,7 +73,7 @@
   <button v-if="trash" class="trash" @click="$emit('trash', opportunity)">
     <trash-icon />
   </button>
-  <nuxt-link :to="'/' + opportunity.slug" class="primary">
+  <nuxt-link :to="(partner !== null ? '/exchange/' + partner.uid + '/' : '/') + opportunity.slug" class="primary">
     <img :src="image">
     <div>
       <h2>{{ subtitle }}</h2>
@@ -183,6 +183,11 @@ export default {
             required: false,
             default: undefined,
         },
+        partner: {
+            type: [Object, null],
+            required: false,
+            default: null,
+        },
     },
 
     computed: {
@@ -197,7 +202,7 @@ export default {
 
     methods: {
         view() {
-            window.open('/' + this.opportunity.slug, '_blank');
+            window.open((this.partner !== null ? '/exchange/' + this.partner.uid + '/' : '/') + this.opportunity.slug, '_blank');
         }
     },
 }

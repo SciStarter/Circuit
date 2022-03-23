@@ -4,9 +4,9 @@
     <div class="form-header" v-if="!hideExtras">
       <p>
         <a v-if="inModal" @click="$emit('signup')">Create a Science Near Me account</a>
-        <a v-else @click="$router.replace({name: 'signup', query: $route.query})">Create a Science Near Me account</a>.
+        <a v-else @click="$router.replace(partner ? {name: 'exchange-uid-signup', params: {uid: partner}, query: $route.query} : {name: 'signup', query: $route.query})">Create a Science Near Me account</a>.
       </p>
-      <div class="was-p">
+      <div class="was-p" v-if="!partner">
         Do you have a
         <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter">
         account?
@@ -58,6 +58,12 @@ export default {
         },
 
         inModal: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+
+        partner: {
             type: Boolean,
             required: false,
             default: false,

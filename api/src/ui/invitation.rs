@@ -1,3 +1,4 @@
+use askama::Template;
 use common::{
     jwt::issue_jwt,
     model::{invitation::*, Partner, Person},
@@ -16,11 +17,18 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes.at(":uid", |r| r.get(dispatch))
 }
 
+#[derive(Template, Default)]
+#[template(path = "invitation/password_reset.html")]
+struct ResetPage {
+    pub jwt: String,
+}
+
 async fn password_reset(req: &mut tide::Request<Database>, inv: Invitation) -> tide::Result {
     let person = Person::load_by_uid(req.state(), &inv.target()).await?;
 
     let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
-    let mut resp: Response = tide::Redirect::temporary("/my/profile?pwreset=true").into();
+    let page = ResetPage { jwt: jwt.clone() };
+    let mut resp: Response = page.into();
     resp.insert_cookie(token_cookie(jwt));
 
     if let Err((_, err)) = inv.consume(req.state()).await {

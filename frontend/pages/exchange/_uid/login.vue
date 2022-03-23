@@ -1,8 +1,9 @@
 <template>
   <div class="snm-wrapper">
     <div class="snm-container standalone-form">
-      <h1>Create an Account</h1>
-      <signup-form :next="$route.query.next" :query="next_query" @cancel="$router.back()" />
+      <h1>Log In</h1>
+
+      <login-form :next="$route.query.next" :query="next_query" :partner="$route.params.uid" @cancel="$router.back()" />
     </div>
   </div>
 </template>
@@ -13,8 +14,6 @@ import cloneDeep from 'lodash/cloneDeep'
 export default {
     httpHeaders() {
         return {
-            'X-XSS-Protection': '1; mode=block',
-            'X-Frame-Options': 'DENY',
             'X-Content-Type-Options': 'nosniff',
             'Referrer-Policy': 'same-origin',
         };
@@ -25,7 +24,7 @@ export default {
 
         if(user.authenticated) {
             let query = context.route.query;
-            let next = query.next || "/";
+            let next = query.next || "/exchange/" + context.params.uid;
             delete query.next;
 
             if(next.startsWith("/")) {
