@@ -8,11 +8,13 @@
   </p>
   <h1 v-else>Your Partner Organization</h1>
 
-  <ul class="nav-tabs">
-    <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Organizational Settings</a></li>
-    <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Page Managers</a></li>
-    <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Contact Info</a></li>
-  </ul>
+  <div class="nav-tab-wrapper">
+    <ul class="nav-tabs">
+      <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Organizational Settings</a></li>
+      <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Page Managers</a></li>
+      <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Contact Info</a></li>
+    </ul>
+  </div>
 
   <div v-if="state==1" class="tab-panel">
     <profile-item v-model="selected_partner.name" label="Organization" @input="save" />
@@ -369,6 +371,30 @@ export default {
       .display-image {
           margin-left:175px;
       }
+  }
+}
+
+@media (max-width:1159px) {
+  .snm-container {
+    padding:1rem;
+  }
+}
+
+.nav-tab-wrapper {
+  width:100%;
+  overflow:auto;
+  .nav-tabs {
+    min-width: 500px
+  }
+}
+.nav-tab-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width:600px){
+  .flex.managers {
+    flex-direction:column;
+    align-items:flex-start;
   }
 }
 </style>
