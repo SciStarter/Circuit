@@ -9,7 +9,14 @@
       Return to opportunity
     </action-button>
   </div>
-  <opportunity-form v-model="opp" :partner="partner" :timezones="timezones" :descriptors="descriptors" :topics="topics" edit-mode />
+  <opportunity-form
+    v-model="opp"
+    :partner="partner"
+    :timezones="timezones"
+    :descriptors="descriptors"
+    :topics="topics"
+    edit-mode
+    in-exchange />
 </div>
 </template>
 

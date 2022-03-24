@@ -5,7 +5,8 @@
   :partner="partner"
   :timezones="timezones"
   :descriptors="descriptors"
-  :topics="topics" />
+  :topics="topics"
+  in-exchange />
 <div v-else>
   Sorry, but you are not authorized to add opportunities to this Science Near Me partner.
 </div>
