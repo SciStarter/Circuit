@@ -1,7 +1,7 @@
 <template>
   <div class="login-form">
     <slot />
-    <div class="form-header">
+    <div class="form-header" v-if="!hideExtras">
       <p>
         <a v-if="inModal" @click="$emit('signup')">Create a Science Near Me account</a>
         <a v-else @click="$router.replace(partner ? {name: 'exchange-uid-signup', params: {uid: partner}, query: $route.query} : {name: 'signup', query: $route.query})">Create a Science Near Me account</a>.
@@ -68,6 +68,11 @@ export default {
             required: false,
             default: false,
         },
+        hideExtras: {
+          type: Boolean,
+          required: false,
+          default: false,
+        }
     },
 
     data() {

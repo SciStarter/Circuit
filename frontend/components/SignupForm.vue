@@ -1,7 +1,7 @@
 <template>
 <div class="signup-form">
   <slot />
-  <div class="form-header">
+  <div class="form-header" v-if="!hideExtras">
     <p>Already have an account?
       <a v-if="inModal" @click="$emit('login')">Login here</a>
       <a v-else @click="$router.replace(partner ? {name: 'exchange-uid-login', params: {uid: partner}, query: $route.query} : {name: 'login', query: $route.query})">Login here</a>.
@@ -95,8 +95,12 @@ export default {
             required: false,
             default: false,
         },
+<<<<<<< HEAD
+        hideExtras: {
+=======
 
         partner: {
+>>>>>>> f2ffd2e77ad35ff06ec5c1f25e5fdb023661cd3c
             type: Boolean,
             required: false,
             default: false,
