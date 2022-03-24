@@ -95,12 +95,14 @@ export default {
             required: false,
             default: false,
         },
-<<<<<<< HEAD
-        hideExtras: {
-=======
 
         partner: {
->>>>>>> f2ffd2e77ad35ff06ec5c1f25e5fdb023661cd3c
+            type: String,
+            required: false,
+            default: false,
+        },
+
+        hideExtras: {
             type: Boolean,
             required: false,
             default: false,

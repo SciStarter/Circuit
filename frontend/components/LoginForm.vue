@@ -64,14 +64,15 @@ export default {
         },
 
         partner: {
-            type: Boolean,
+            type: String,
             required: false,
             default: false,
         },
+
         hideExtras: {
-          type: Boolean,
-          required: false,
-          default: false,
+            type: Boolean,
+            required: false,
+            default: false,
         }
     },
 
