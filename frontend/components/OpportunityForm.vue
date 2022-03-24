@@ -185,6 +185,7 @@
                       class="validation-target"
                       :class="{'is-danger': validation.begin_datetime}"
                       v-model="begin_datetime"
+                      :max-date="end_datetime"
                       placeholder="Click to select..."
                       icon="calendar-today"
                       :icon-right="begin_datetime ? 'close-circle' : ''"
@@ -230,6 +231,7 @@
                   <h2>Time Periods</h2>
                   <div class="push-right">
                     <a class="action" @click="()=>{time_periods_dates = time_periods.map(pair => pair[0]); show_time_periods = true;}"><edit-icon /></a>
+                    <a class="action" @click="()=>{time_periods_dates = []; time_periods = [];}"><close-icon /></a>
                   </div>
                 </div>
                 <p v-for="pair in time_periods_display">
@@ -522,7 +524,7 @@
   </form>
 
 
-  <b-modal v-model="show_end_date" :width="640" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal">
+  <b-modal v-model="show_end_date" :width="640" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal" @close="end_datetime=null">
     <div class="card">
       <h1>Select an End Date<span class="close" @click="show_end_date = false">&times;</span></h1>
       <p>If your ongoing opportunity has an end date, select below.</p>
@@ -530,7 +532,7 @@
         <b-datepicker v-model="end_datetime" inline></b-datepicker>
       </div>
       <div class="flex flex-center">
-        <action-button tertiary @click="()=>{show_end_date=false;end_datetime=null;}">cancel</action-button>
+        <action-button tertiary @click="()=>{show_end_date=false;end_datetime=null;}">clear</action-button>
         <action-button primary @click="show_end_date=false">save</action-button>
       </div>
     </div>
@@ -578,7 +580,7 @@
         </div><!-- #time-periods -->
       </div>
       <div class="flex flex-center">
-        <action-button tertiary @click="()=>{show_time_periods = false; time_periods = [];}">clear</action-button>
+        <action-button tertiary @click="()=>{show_time_periods = false; time_periods_dates = []; time_periods = [];}">clear</action-button>
         <action-button primary @click="show_time_periods=false">save</action-button>
       </div>
     </div>

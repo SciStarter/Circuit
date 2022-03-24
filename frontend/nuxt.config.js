@@ -10,41 +10,6 @@ export default {
 
   loading: "~/components/LoadingSpinner.vue",
 
-  router: {
-    // Credit to Zach Cardoza for this hash scrolling fix
-    scrollBehavior: async (to, _, savedPosition) => {
-      if (savedPosition) {
-        return savedPosition;
-      }
-
-      const findEl = async (hash, x) => {
-        return document.querySelector(hash) ||
-          new Promise((resolve, _) => {
-            if (x > 50) {
-              return resolve();
-            }
-            setTimeout(() => {
-              resolve(findEl(hash, ++x || 1));
-            }, 100);
-          });
-      };
-
-      if (to.hash) {
-        const el = await findEl(to.hash);
-        if ("scrollBehavior" in document.documentElement.style) {
-          return window.scrollTo({
-            top: el.offsetTop - 100,
-            behavior: "smooth",
-          });
-        } else {
-          return window.scrollTo(0, el.offsetTop - 100);
-        }
-      }
-
-      return { x: 0, y: 0 };
-    },
-  },
-
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: "Science Near Me",
