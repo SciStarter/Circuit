@@ -153,7 +153,7 @@
                 Geolocation data, personalized content, audience
                 insights, product development and
 
-                <nuxt-link to="/informed-consent">
+                <nuxt-link to="/research-participant">
                   research participant studies.
                 </nuxt-link>
               </p>
