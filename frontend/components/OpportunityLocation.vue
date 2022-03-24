@@ -6,9 +6,9 @@
     <em>Multiple locations, including yours!</em>
   </p>
   <p v-else-if="!isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
-    <span v-if="opportunity.location_name">
-      <template v-if="shortstacked"><template v-if="opportunity.location_name">{{ opportunity.location_name }}, </template>{{ opportunity.address_state }}</template>
-      <template v-else>{{ opportunity.location_name }} {{ opportunity.address_state }}</template>
+    <span v-if="location_name">
+      <template v-if="shortstacked"><template v-if="location_name">{{ location_name }}, </template>{{ opportunity.address_state }}</template>
+      <template v-else>{{ location_name }} {{ opportunity.address_state }}</template>
     </span>
     <span v-else-if="(opportunity.address_city || opportunity.address_state)">
       <template v-if="opportunity.address_city">{{ opportunity.address_city }}, </template>{{ opportunity.address_state }}
@@ -19,13 +19,13 @@
     In a specific area
   </p>
   <ul v-else-if="isOpportunity && opportunity.location_point && opportunity.location_point.type === 'Point'">
-    <li v-if="opportunity.location_name">
-      {{ opportunity.location_name }} {{ opportunity.address_state }}
+    <li v-if="location_name">
+      {{ location_name }} {{ opportunity.address_state }}
     </li>
     <li v-else-if="short">
       {{ opportunity.address_city }}, {{ opportunity.address_state }}
     </li>
-    <li v-if="opportunity.address_street && (!short || !opportunity.location_name)">
+    <li v-if="opportunity.address_street && (!short || !location_name)">
       {{ opportunity.address_street }}
     </li>
     <li v-if="(opportunity.address_city || opportunity.address_state) && !short">
@@ -36,13 +36,13 @@
     </li>
   </ul>
   <ul v-else-if="opportunity.location_type == 'at'">
-    <li v-if="opportunity.location_name">
-      {{ opportunity.location_name }} {{ opportunity.address_state }}
+    <li v-if="location_name">
+      {{ location_name }} {{ opportunity.address_state }}
     </li>
     <li v-if="short">
       {{ opportunity.address_city }}, {{ opportunity.address_state }}
     </li>
-    <li v-if="opportunity.address_street && (!short || !opportunity.location_name)">
+    <li v-if="opportunity.address_street && (!short || !location_name)">
       {{ opportunity.address_street }}
     </li>
     <li v-if="(opportunity.address_city || opportunity.address_state) && !short">
@@ -57,6 +57,8 @@
 </template>
 
 <script>
+import {decode} from 'html-entities';
+
 export default {
     props: {
         opportunity: {
@@ -80,7 +82,13 @@ export default {
             required: false,
             default: false
         },
-    }
+    },
+
+    computed: {
+        location_name() {
+            return decode(this.opportunity.location_name);
+        }
+    },
 }
 </script>
 
