@@ -47,7 +47,7 @@ Install SQLX command line tool
 
 Clone the code repository
 
-    git clone git @github.com:SciStarter/Circuit.git
+    git clone git@github.com:SciStarter/Circuit.git
 
 That command assumes that you have write access to the repository, and
 your SSH public key on file with Github. You can alternatively use the
