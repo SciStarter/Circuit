@@ -153,7 +153,7 @@
                 Geolocation data, personalized content, audience
                 insights, product development and
 
-                <nuxt-link to="/informed-consent">
+                <nuxt-link to="/research-participant">
                   research participant studies.
                 </nuxt-link>
               </p>
@@ -231,14 +231,14 @@
             </nuxt-link>
           </li>
           <li>
-            <external-link href="/api/docs/v1.html" content="footer-link">
-              API Documentation
-            </external-link>
-          </li>
-          <li>
             <nuxt-link to="/display-opportunities">
               Display Science Near Me Opportunities on Your Website
             </nuxt-link>
+          </li>
+          <li>
+            <external-link href="/api/docs/v1.html" content="footer-link">
+              API Documentation
+            </external-link>
           </li>
         </ul>
 

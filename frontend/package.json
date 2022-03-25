@@ -30,6 +30,7 @@
         "geojson-extent": "^0.3.2",
         "glob-parent": ">=5.1.2",
         "haversine": "^1.1.1",
+        "html-entities": "^2.3.2",
         "humanize-duration": "^3.27.0",
         "lodash": "^4.17.21",
         "mapbox-gl": "^2.4.1",

@@ -121,6 +121,27 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
         }),
         period: 24 * hours,
     }));
+
+    importers.push(Box::new(Import {
+        source: source::EventsQLWithCustom::new("https://ecastonline.org/graphql"),
+        format: format::Json,
+        structure: structure::EventsQL(PartnerInfo {
+            partner: "74ba0027-887d-5dc4-928a-3a9beda27e4e".parse().unwrap(),
+            partner_name: "ECast".to_string(),
+            partner_website: Some("https://ecastonline.org/".to_string()),
+            partner_logo_url: Some(
+                "https://ecastonline.org/wp-content/uploads/2014/08/final-ecast_outline.png"
+                    .to_string(),
+            ),
+            domain: Domain::Policy,
+            descriptor: vec![Descriptor::Forum],
+            topics: vec![],
+            flags: vec![],
+            address: None,
+            timezone: Some(chrono_tz::US::Eastern),
+        }),
+        period: 24 * hours,
+    }));
 }
 
 pub fn setup() -> Vec<Box<dyn Importer>> {
