@@ -573,6 +573,7 @@ async fn checkpassword(_state: &mut State, args: Vec<String>) -> Result<(), DynE
 async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     if args.len() < 2 {
         println!("Expected test or template keyword");
+        return Ok(());
     }
 
     match args[1].as_str() {
@@ -608,6 +609,24 @@ async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
                     println!("{}", &person.interior.email);
                     common::emails::send(
                         &person.interior.email,
+                        "Science Near Me <info@sciencenearme.org>",
+                        &email.subject,
+                        &email.body,
+                    )
+                    .await;
+                }
+                println!("Sent");
+            } else if args.len() > 3 {
+                let slug = &args[2];
+
+                let email = common::emails::EmailMessage::load(&state.db, slug)
+                    .await
+                    .unwrap();
+
+                for address in args.iter().skip(3) {
+                    println!("{address}");
+                    common::emails::send(
+                        address,
                         "Science Near Me <info@sciencenearme.org>",
                         &email.subject,
                         &email.body,
