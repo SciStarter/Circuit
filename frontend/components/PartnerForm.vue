@@ -16,6 +16,10 @@
     <profile-item v-model="partner.image_url" label="Logo Link" @input="save" class="no-border" />
     <img v-if="partner.image_url" :src="partner.image_url" class="display-image">
     <img v-else src="~/assets/img/no-image-thumb.jpg" class="display-image">
+    <profile-item v-model="partner.background_color" color label="Background Color" @input="save" class="no-border" />
+    <profile-item v-model="partner.primary_color" color label="Primary Color" @input="save" class="no-border" />
+    <profile-item v-model="partner.secondary_color" color label="Secondary Color" @input="save" class="no-border" />
+    <profile-item v-model="partner.tertiary_color" color label="Tertiary Color" @input="save" class="no-border" />
   </div><!-- state 1 -->
 
   <div v-if="state==2" class="tab-panel">

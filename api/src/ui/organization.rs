@@ -26,6 +26,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at(":uid", |r| {
             r.get(get_organization)
                 .put(save_organization)
+                .at("public", |r| r.get(get_organization_public))
                 .at("invite", |r| r.post(invite_managers))
                 .at("pending-managers", |r| {
                     r.get(get_pending_managers)
@@ -190,6 +191,14 @@ pub async fn get_organization(mut req: tide::Request<Database>) -> tide::Result 
     let (_person, partner) = authorized_partner(&mut req).await?;
 
     okay(&partner.elide())
+}
+
+pub async fn get_organization_public(mut req: tide::Request<Database>) -> tide::Result {
+    let uid = Uuid::parse_str(req.param("uid")?).with_status(|| StatusCode::BadRequest)?;
+    let partner = Partner::load_by_uid(req.state(), &uid)
+        .await
+        .with_status(|| StatusCode::BadRequest)?;
+    okay(&partner.exterior)
 }
 
 pub async fn save_organization(mut req: tide::Request<Database>) -> tide::Result {

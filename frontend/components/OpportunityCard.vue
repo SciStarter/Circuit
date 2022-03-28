@@ -410,7 +410,7 @@ export default {
       }
       .secondary {
         display: flex;
-        background-color: #fff;
+        background-color: var(--background-color, #fff);
       }
 
     }
@@ -492,7 +492,7 @@ export default {
     .secondary {
       width:100%;
       padding:0 10px;
-      background-color:#fff;
+      background-color:var(--background-color, #fff);
       .info {
         width:100%;
         min-width:1px;

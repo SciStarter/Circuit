@@ -27,9 +27,15 @@
           {{ labelTrue }}
         </b-radio>
       </div>
+      <div v-else-if="color">
+        <b-colorpicker v-model="model" @change="model = $event.toString('hex')" :color-formatter="(color) => color.toString('hex')"/>
+      </div>
       <b-input v-else v-model="model" type="text" />
       <b-button @click="save">
         &check; Save
+      </b-button>
+      <b-button @click="clear">
+        Clear
       </b-button>
     </b-field>
     <div v-else-if="obscure" class="value">
@@ -44,6 +50,9 @@
     </div>
     <div v-else-if="choices !== null" class="value">
       {{ choice_label }}
+    </div>
+    <div v-else-if="color">
+      <div :style="{'width': '2rem', 'height': '2rem', 'background-color': value}"></div>
     </div>
     <div v-else class="value">
       {{ display ? display : value }}
@@ -116,6 +125,12 @@ export default {
             required: false,
             default: null,
         },
+
+        color: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
     },
 
     data() {
@@ -132,6 +147,9 @@ export default {
             get() {
                 if(this.overlay !== NoValue) {
                     return this.overlay;
+                }
+                else if(this.color && !this.value) {
+                    return "#ff00ff";
                 }
                 else {
                     return this.value;
@@ -181,7 +199,15 @@ export default {
 
             this.$emit('input', this.model);
 
-            this.overlay = null;
+            this.overlay = NoValue;
+        },
+
+        clear() {
+            this.editing = false;
+
+            this.$emit('input', null);
+
+            this.overlay = NoValue;
         },
     },
 }

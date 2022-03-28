@@ -1,5 +1,5 @@
 <template>
-<div id="page" :class="[$route.name,{'authenticated': authenticated, 'not-authenticated': !authenticated}]">
+<div id="page" :style="custom_props" :class="[$route.name,{'authenticated': authenticated, 'not-authenticated': !authenticated}]">
   <div class="beta-banner snm-wrapper">
     <div class="snm-container">
     <p><img src="~assets/img/atom.svg?data"><b>We're in beta!</b> If you find a bug or have feedback, you can email <a href="mailto:info@sciencenearme.org">info@sciencenearme.org</a>.</p>
@@ -377,6 +377,16 @@ export default {
     },
 
     computed: {
+        custom_props() {
+            return {
+                '--background-color': null,
+                '--primary-color': null,
+                '--secondary-color': null,
+                '--tertiary-color': null,
+                '--logo-url': null,
+            };
+        },
+
         user() {
             return this.$store.state.user;
         },
@@ -666,7 +676,7 @@ header {
                 box-shadow: 0px 3px 6px $snm-color-shadow;
                 margin:0;
                 background-color: $snm-color-background-meddark;
-                border: 1px solid #fff;
+                border: 1px solid var(--background-color, #fff);
 
                 &:hover,&:active {
                     color: $snm-color-element-med;
@@ -1290,7 +1300,6 @@ footer {
 }
 </style>
 
-<style lang="scss">
 .modal .card {
     margin: 1rem;
     padding: 1rem;
@@ -1350,7 +1359,7 @@ footer {
     align-items: center;
 
     .search-box-container {
-      background-color: #fff;
+      background-color: var(--background-color, #fff);
       padding: 1rem;
       border-radius: 6px;
     }

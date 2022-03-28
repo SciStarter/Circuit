@@ -27,6 +27,10 @@ pub struct PartnerExterior {
     pub url: Option<String>,
     pub image_url: Option<String>,
     pub description: String,
+    pub background_color: Option<String>,
+    pub primary_color: Option<String>,
+    pub secondary_color: Option<String>,
+    pub tertiary_color: Option<String>,
     pub under: Option<Uuid>,
 }
 
