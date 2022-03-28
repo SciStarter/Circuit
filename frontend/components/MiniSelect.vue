@@ -72,7 +72,7 @@ label {
     font-family: $snm-font-meta;
     font-weight: normal;
     letter-spacing: 0px;
-    color: $snm-color-element-dark;
+    color: var(--primary-color, $snm-color-element-dark);
     font-size: $snm-font-small;
     line-height: 19px;
 }
@@ -87,7 +87,7 @@ select {
     font-family: $snm-font-meta;
     font-weight: bold;
     letter-spacing: 0px;
-    color: $snm-color-element-dark;
+    color: var(--primary-color, $snm-color-element-dark);
     font-size: $snm-font-small;
     line-height: 19px;
     cursor: pointer;

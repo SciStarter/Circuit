@@ -219,7 +219,7 @@ export default {
         font-weight: normal;
         font-size: $snm-font-small;
         line-height: 22px;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
     }
 }
 
@@ -251,7 +251,7 @@ export default {
             flex-grow: 0;
             justify-content: center;
             align-items: center;
-            background-color: $snm-color-element-med;
+            background-color: var(--secondary-color, $snm-color-element-med);
             color: $snm-color-element-light;
             font-family: $snm-font-heading;
             font-weight: bold;
@@ -280,7 +280,7 @@ export default {
             font-weight: normal;
             font-size: $snm-font-smaller;
             line-height: 18px;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
         }
     }
 }
@@ -290,7 +290,7 @@ export default {
     margin:1rem 1rem 0;
   }
   .manage .search {
-    background-color: $snm-color-background-light;
+    background-color: var(--background-color, $snm-color-background-light);
     border: 1px solid $snm-color-border;
 
     .field.has-addons, .field.has-addons .control {
@@ -339,7 +339,7 @@ export default {
             align-items: stretch;
             border-left: 1px solid $snm-color-border;
             padding: 1rem;
-            background-color: $snm-color-background-light;
+            background-color: var(--background-color, $snm-color-background-light);
             min-width: 230px;
 
             .action-button {

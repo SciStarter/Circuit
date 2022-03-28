@@ -167,7 +167,7 @@ h1 {
     border-bottom: 1px solid $snm-color-border;
     border-top: 1px solid $snm-color-border;
     padding: 1rem;
-    background-color: $snm-color-background-light;
+    background-color: var(--background-color, $snm-color-background-light);
 
     .field {
       width: 100%;
@@ -183,15 +183,15 @@ h1 {
         font-size: $snm-font-smaller;
         line-height: 16px;
         letter-spacing: 0px;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
     }
 
     > button {
         display: flex;
         align-items: center;
-        color: $snm-color-element-med;
-        border: 1px solid $snm-color-element-med;
-        background-color: #fff;
+        color: var(--secondary-color, $snm-color-element-med);
+        border: 1px solid var(--secondary-color, $snm-color-element-med);
+        background-color: var(--background-color, #fff);
         border-radius: 10px;
         box-shadow: 0px 3px 6px $snm-color-shadow;
         height: 40px;

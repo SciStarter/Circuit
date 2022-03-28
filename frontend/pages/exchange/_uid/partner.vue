@@ -1,5 +1,6 @@
 <template>
 <div v-if="authorized">
+  <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}">Home</nuxt-link>
 <h1>Your ScienceNearMe Partner Organization</h1>
 
 <partner-form
@@ -9,6 +10,7 @@
   :pending="pending"/>
 </div>
 <div v-else>
+  <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}">Home</nuxt-link>
   Sorry, you're not authorized to edit this partner's data.
 </div>
 </template>
@@ -77,7 +79,7 @@ h1 {
     font-family: $snm-font-heading;
     font-size: 1.8rem;
     font-weight:bold;
-    color: $snm-color-element-med;
+    color: var(--secondary-color, $snm-color-element-med);
     margin-bottom:2rem;
 }
 </style>

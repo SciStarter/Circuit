@@ -11,7 +11,7 @@
   display: block;
   font-weight: bold;
   padding: 0.5rem 1rem;
-  color: $snm-color-element-med;
+  color: var(--secondary-color, $snm-color-element-med);
   text-decoration: underline;
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
@@ -34,7 +34,7 @@
 }
 .nav-tabs .tab-link.active,
 .nav-tabs .show .tab-link {
-  color: $snm-color-element-dark;
+  color: var(--primary-color, $snm-color-element-dark);
   text-decoration: none;
   background-color: #fff;
   border-color: #dee2e6 #dee2e6 #fff;

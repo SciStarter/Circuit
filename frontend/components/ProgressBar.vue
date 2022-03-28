@@ -108,11 +108,11 @@ div.progress-bar {
         font-family: $snm-font-heading;
         font-weight: bold;
         font-size: $snm-font-small;
-        color: $snm-color-element-med;
+        color: var(--secondary-color, $snm-color-element-med);
         margin-right: 2rem;
 
         &:first-child {
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
         }
 
         &.alert {
@@ -127,7 +127,7 @@ div.progress-bar {
         height: $snm-font-medium;
         background-color: $snm-color-border;
         border-left-style: solid;
-        border-left-color: $snm-color-element-med;
+        border-left-color: var(--secondary-color, $snm-color-element-med);
         border-left-width: var(--pixels);
     }
 }

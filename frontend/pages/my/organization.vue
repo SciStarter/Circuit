@@ -113,7 +113,7 @@ h1 {
     font-family: $snm-font-heading;
     font-size: 1.8rem;
     font-weight:bold;
-    color: $snm-color-element-med;
+    color: var(--secondary-color, $snm-color-element-med);
     margin-bottom:2rem;
 }
 

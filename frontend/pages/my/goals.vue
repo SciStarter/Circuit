@@ -320,8 +320,8 @@ export default {
 
             display: flex;
             align-items: center;
-            color: $snm-color-element-med;
-            border: 1px solid $snm-color-element-med;
+            color: var(--secondary-color, $snm-color-element-med);
+            border: 1px solid var(--secondary-color, $snm-color-element-med);
             border-radius: 10px;
             box-shadow: 0px 3px 6px $snm-color-shadow;
             height: 40px;
@@ -340,7 +340,7 @@ export default {
             font-weight: bold;
             font-size: $snm-font-larger;
             text-transform: capitalize;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
         }
 
         > strong {
@@ -348,14 +348,14 @@ export default {
             font-family: $snm-font-heading;
             font-weight: bold;
             font-size: $snm-font-small;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
 
             > em {
                 font-family: $snm-font-heading;
                 font-weight: bold;
                 font-size: $snm-font-small;
                 font-style: normal;
-                color: $snm-color-element-med;
+                color: var(--secondary-color, $snm-color-element-med);
             }
         }
 
@@ -390,7 +390,7 @@ export default {
                     font-weight: bold;
                     font-size: $snm-font-small;
                     text-decoration: underline;
-                    color: $snm-color-element-med;
+                    color: var(--secondary-color, $snm-color-element-med);
                     margin-left: 3rem;
                     position: relative;
                     counter-increment: index;
@@ -450,7 +450,7 @@ export default {
     p {
         font-family: $snm-font-content;
         font-size: $snm-font-small;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
     }
 }
 
@@ -492,7 +492,7 @@ export default {
         font-family: $snm-font-content;
         font-weight: bold;
         font-size: $snm-font-medium-small;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
     }
 
     .category {
@@ -500,13 +500,13 @@ export default {
         font-weight: bold;
         font-size: $snm-font-large;
         text-transform: uppercase;
-        color: $snm-color-element-med;
+        color: var(--secondary-color, $snm-color-element-med);
     }
 
     .explain {
         font-family: $snm-font-content;
         font-size: $snm-font-small;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
         text-align: center;
         margin-bottom: 2rem;
     }
@@ -515,7 +515,7 @@ export default {
         font-family: $snm-font-content;
         font-weight: bold;
         font-size: $snm-font-small;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
     }
 
     .share {

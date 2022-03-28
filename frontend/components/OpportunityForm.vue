@@ -1228,18 +1228,18 @@ export default {
             flex-shrink:0;
         }
         &.active{
-            color:$snm-color-element-med;
+            color:var(--secondary-color, $snm-color-element-med);
             font-weight:bold;
             text-decoration:none!important;
             > span {
-                background-color: $snm-color-element-med;
+                background-color: var(--secondary-color, $snm-color-element-med);
             }
         }
         &:hover {
-            color:$snm-color-element-med;
+            color:var(--secondary-color, $snm-color-element-med);
             text-decoration:underline;
             > span {
-                background-color: $snm-color-element-med;
+                background-color: var(--secondary-color, $snm-color-element-med);
             }
         }
     }
@@ -1304,7 +1304,7 @@ export default {
 }
 legend {
     text-transform: uppercase;
-    color: $snm-color-element-med;
+    color: var(--secondary-color, $snm-color-element-med);
     font-weight:bold;
     font-size:14px;
 }

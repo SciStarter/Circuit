@@ -1082,7 +1082,7 @@ export default {
     bottom: 17px;
     right: 17px;
     background-color: $snm-color-action;
-    color: $snm-color-element-dark;
+    color: var(--primary-color, $snm-color-element-dark);
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -1115,7 +1115,7 @@ export default {
     > a {
         display: flex;
         background-color: $snm-color-action;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
         border-bottom: 1px solid $snm-color-background;
         font-family: $snm-font-content;
         font-weight: bold;
@@ -1287,7 +1287,7 @@ img.opportunity-image {
         font-family: $snm-font-content;
         font-weight: bold;
         font-size: $snm-font-smaller;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
         line-height: 16px;
         letter-spacing: 0px;
     }
@@ -1322,7 +1322,7 @@ img.opportunity-image {
             font-size: $snm-font-small;
             line-height: 19px;
             letter-spacing: 0px;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
             padding: 5px 8px;
             border: 1px solid #efefef;
 
@@ -1409,7 +1409,7 @@ img.opportunity-image {
         display: block;
         font-family: $snm-font-content;
         font-weight: normal;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
         width: 100%;
         margin-bottom:1rem;
     }
@@ -1429,7 +1429,7 @@ img.opportunity-image {
 //     overflow: hidden;
 //     text-overflow: ellipsis;
 //     white-space: nowrap;
-//     background-color: $snm-color-element-med;
+//     background-color: var(--secondary-color, $snm-color-element-med);
 //     box-shadow: 0px 1px 7px $snm-color-shadow;
 //     color: $snm-color-element-ondark;
 //     padding: 1rem;
@@ -1444,7 +1444,7 @@ img.opportunity-image {
 //       width: 40px;
 //       height: 40px;
 //       background-color: #fff;
-//       color: $snm-color-element-med;
+//       color: var(--secondary-color, $snm-color-element-med);
 //       position: absolute;
 //       top: 50%;
 //       margin-top: -20px;
@@ -1571,7 +1571,8 @@ img.opportunity-image {
     a {
         display: block;
         padding: 8px;
-        border: 1px solid $snm-color-element-med;
+        border: 1px solid var(--secondary-color, $snm-color-element-med);
+        color: var(--secondary-color, $snm-color-element-med);
         border-radius: 10px;
         margin: 8px;
     }
@@ -1611,7 +1612,7 @@ img.opportunity-image {
 
      h2 {
         color: $snm-color-element-light;
-        background-color: $snm-color-element-med;
+        background-color: var(--secondary-color, $snm-color-element-med);
         font-family: $snm-font-heading;
         font-weight: bold;
         font-size: $snm-font-small;
@@ -1637,7 +1638,7 @@ img.opportunity-image {
                 font-weight: normal;
                 font-size: $snm-font-smallest;
                 line-height: 15px;
-                color: $snm-color-element-med;
+                color: var(--secondary-color, $snm-color-element-med);
             }
         }
 
@@ -1693,7 +1694,7 @@ img.opportunity-image {
         font-weight: normal;
         font-size: $snm-font-smaller;
         line-height: 16px;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
         padding: 1rem;
         border-bottom: 1px solid $snm-color-border;
 
@@ -1702,7 +1703,7 @@ img.opportunity-image {
             font-size: 1.1rem;
             font-weight: bold;
             line-height: 1.2;
-            color: $snm-color-element-med;
+            color: var(--secondary-color, $snm-color-element-med);
             text-decoration: underline;
         }
 
@@ -1868,7 +1869,7 @@ img.opportunity-image {
   }
   .related {
     > h2 {
-      color: $snm-color-element-dark;
+      color: var(--primary-color, $snm-color-element-dark);
       font-size: 1.3rem;
       background-color: transparent;
       padding:0;
@@ -1919,7 +1920,7 @@ img.opportunity-image {
 
 .opp-actions {
   padding:0;
-  background-color: #fff;
+  background-color: var(--background-color, #fff);
   position:sticky;
   top:45px;
   z-index:99;
@@ -1954,10 +1955,10 @@ button.action-button.round-btn, .find-out-more {
     transition: all 0.3s;
       svg {
         left:0;
-        fill: $snm-color-element-med;
+        fill: var(--secondary-color, $snm-color-element-med);
         transition: all 0.3s;
         path {
-          fill: $snm-color-element-med;
+          fill: var(--secondary-color, $snm-color-element-med);
           transition: all 0.3s;
         }
       }
@@ -1988,7 +1989,7 @@ button.action-button.round-btn, .find-out-more {
       background-color: $snm-color-heading-ondark;
     svg,path {
       stroke:transparent;
-      fill: $snm-color-element-dark !important;
+      fill: var(--primary-color, $snm-color-element-dark) !important;
     }
   }
   >span {
@@ -2003,7 +2004,7 @@ button.action-button.round-btn, .find-out-more {
   button.action-button.round-btn, .find-out-more {
     &:hover {
       > .icon {
-        background-color: $snm-color-element-med;
+        background-color: var(--secondary-color, $snm-color-element-med);
           svg {
             left:0;
             fill: #fff;
@@ -2019,7 +2020,7 @@ button.action-button.round-btn, .find-out-more {
       > .icon {
         background-color: #fff;
         svg,path {
-          fill: $snm-color-element-med!important;
+          fill: var(--secondary-color, $snm-color-element-med) !important;
         }
       }
     }
@@ -2122,7 +2123,7 @@ button.action-button.round-btn:hover {
     border-top: 1px solid $snm-color-border;
     border-bottom: 1px solid $snm-color-border;
     padding: 0.5rem 0;
-    background-color: #fff;
+    background-color: var(--background-color, #fff);
     position:sticky;
     top:0;
     z-index:99;

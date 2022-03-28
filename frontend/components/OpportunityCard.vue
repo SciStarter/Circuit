@@ -236,8 +236,8 @@ export default {
       justify-content: center;
       width: 40px;
       height: 40px;
-      color: $snm-color-element-med;
-      border: 1px solid $snm-color-element-med;
+      color: var(--secondary-color, $snm-color-element-med);
+      border: 1px solid var(--secondary-color, $snm-color-element-med);
       border-radius: 10px;
       box-shadow: 0px 3px 6px $snm-color-shadow;
       cursor: pointer;
@@ -278,13 +278,13 @@ export default {
             font-weight: bold;
             font-family: $snm-font-content;
             letter-spacing: 0px;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
             line-height: 16px;
         }
 
         h1, .oc-loader-h1 {
             text-decoration: underline;
-            color: $snm-color-element-med;
+            color: var(--secondary-color, $snm-color-element-med);
             font-family: $snm-font-heading;
             letter-spacing: 0px;
             font-size: $snm-font-small;
@@ -306,7 +306,7 @@ export default {
     font-size: rem(14px);
     padding: 0.5rem 1rem;
     flex: 1;
-    background-color: $snm-color-background-light;
+    background-color: var(--background-color, $snm-color-background-light);
 
     > div {
       margin-bottom: 0.5rem;
@@ -348,7 +348,7 @@ export default {
 @media (min-width: $tablet-screen) {
   #homepage .secondary {
     display: block;
-    background-color: $snm-color-background-light;
+    background-color: var(--background-color, $snm-color-background-light);
     padding: 1rem;
   }
 
@@ -376,7 +376,7 @@ export default {
                 display: block;
                 font-family: $snm-font-content;
                 font-size: $snm-font-smaller;
-                color: $snm-color-element-dark;
+                color: var(--primary-color, $snm-color-element-dark);
                 letter-spacing: 0.14px;
             }
 

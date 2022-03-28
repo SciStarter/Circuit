@@ -26,11 +26,11 @@ export default {
   margin: 0 auto;
 }
 a, a span {
-  color: $snm-color-element-med!important;
+  color: var(--secondary-color, $snm-color-element-med) !important;
   font-family: $snm-font-content!important;
 }
 a:hover, a:hover span {
-  color: $snm-color-element-dark!important;
+  color: var(--primary-color, $snm-color-element-dark) !important;
 }
 
 </style>

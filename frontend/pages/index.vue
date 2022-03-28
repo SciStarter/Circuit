@@ -431,11 +431,11 @@ export default {
     font-family: $snm-font-heading;
     font-weight: bold;
     font-size: $snm-font-medium-small;
-    color: $snm-color-element-dark;
+    color: var(--primary-color, $snm-color-element-dark);
     margin-left: 1rem;
   }
     #intent-filters {
-      background-color: $snm-color-background-light;
+      background-color: var(--background-color, $snm-color-background-light);
       padding-right: 0;
       padding-left: 0;
       margin-bottom: 2rem;
@@ -450,7 +450,7 @@ export default {
         font-family: $snm-font-heading;
         font-weight: bold;
         font-size: $snm-font-medium-small;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
     }
 
     .inline-sign {
@@ -506,7 +506,7 @@ export default {
             font-weight: bold;
             text-decoration: underline;
             font-size: 1rem;
-            color: $snm-color-element-med;
+            color: var(--secondary-color, $snm-color-element-med);
             margin: 0.5rem 1rem 0;
         }
 
@@ -541,7 +541,7 @@ export default {
             font-family: $snm-font-content;
             font-size: $snm-font-small;
             text-decoration: underline;
-            color: $snm-color-element-med;
+            color: var(--secondary-color, $snm-color-element-med);
         }
         .see-more {
           display: block;
@@ -557,7 +557,7 @@ export default {
         >div.dropdown::v-deep .dropdown-trigger button {
             width: 90vw;
             justify-content: space-between;
-            background-color: $snm-color-element-med;
+            background-color: var(--secondary-color, $snm-color-element-med);
 
             >span.icon {
                 font-size: 2rem;
@@ -607,7 +607,7 @@ export default {
             font-family: $snm-font-heading;
             font-weight: bold;
             font-size: $snm-font-large;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
         }
 
         >div {
@@ -626,7 +626,7 @@ export default {
             p {
                 font-family: $snm-font-content;
                 font-size: $snm-font-smaller;
-                color: $snm-color-element-dark;
+                color: var(--primary-color, $snm-color-element-dark);
             }
 
             >svg {

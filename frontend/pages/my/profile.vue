@@ -381,7 +381,7 @@ export default {
             font-family: $snm-font-heading;
             font-weight: bold;
             font-size: $snm-font-medium-small;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
             margin-top:2rem;
         }
 
@@ -404,7 +404,7 @@ export default {
             font-family: $snm-font-content;
             font-weight: normal;
             font-size: $snm-font-small;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
         }
     }
 
@@ -464,7 +464,7 @@ export default {
         display: block;
       }
         section.research-questions {
-            border-top: 3px solid $snm-color-element-med;
+            border-top: 3px solid var(--secondary-color, $snm-color-element-med);
             padding-top: 3rem;
         }
 

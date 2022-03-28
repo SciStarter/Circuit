@@ -313,7 +313,7 @@ export default {
     font-family: $snm-font-heading;
     font-size: 1.8rem;
     font-weight:bold;
-    color: $snm-color-element-med;
+    color: var(--secondary-color, $snm-color-element-med);
     margin-bottom:2rem;
   }
   .display-image {
@@ -343,7 +343,7 @@ export default {
   }
   h2 {
       text-transform: uppercase;
-      color: $snm-color-element-med;
+      color: var(--secondary-color, $snm-color-element-med);
       font-weight:bold;
       font-size:14px;
   }

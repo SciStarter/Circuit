@@ -392,7 +392,7 @@ export default {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background-color: $snm-color-element-med;
+            background-color: var(--secondary-color, $snm-color-element-med);
             border-radius: 10px;
             padding: 1rem 2rem 1rem 1rem;
             width: 100%;
@@ -449,7 +449,7 @@ export default {
                 font-family: $snm-font-content;
                 font-weight: bold;
                 font-size: $snm-font-small;
-                color: $snm-color-element-dark;
+                color: var(--primary-color, $snm-color-element-dark);
             }
         }
     }

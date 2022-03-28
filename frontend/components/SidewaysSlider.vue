@@ -111,7 +111,7 @@ export default {
         font-weight: bold;
         border: 0px;
         width: 3rem;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
         background-color: $snm-color-action;
         box-shadow: 0px 3px 6px $snm-color-shadow;
         border-radius: 4px;

@@ -746,7 +746,7 @@ export default {
             font-family: $snm-font-content;
             font-weight: normal;
             font-size: $snm-font-smaller;
-            color: $snm-color-element-sublabel;
+            color: var(--primary-color, $snm-color-element-sublabel);
         }
     }
 }
@@ -803,7 +803,7 @@ export default {
             font-family: $snm-font-heading;
             line-height: 28px;
             letter-spacing: 0px;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
             font-weight: bold;
         }
 
@@ -959,7 +959,7 @@ export default {
                 font-family: $snm-font-heading;
                 font-weight: bold;
                 font-size: $snm-font-large;
-                color: $snm-color-element-dark;
+                color: var(--primary-color, $snm-color-element-dark);
                 margin: 1.5rem 32px 0px;
             }
 
@@ -975,7 +975,7 @@ export default {
                     font-family: $snm-font-heading;
                     line-height: 28px;
                     letter-spacing: 0px;
-                    color: $snm-color-element-dark;
+                    color: var(--primary-color, $snm-color-element-dark);
                     font-weight: bold;
                 }
 

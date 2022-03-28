@@ -330,7 +330,7 @@ export default {
   margin-bottom:1rem;
 
   h2 {
-    color: $snm-color-element-med;
+    color: var(--secondary-color, $snm-color-element-med);
     font-size:1.4rem;
     font-weight:bold;
     font-family: $snm-font-heading;
@@ -344,7 +344,7 @@ h1 {
   font-family: $snm-font-heading;
   font-size: 1.8rem;
   font-weight:bold;
-  color: $snm-color-element-med;
+  color: var(--secondary-color, $snm-color-element-med);
   margin-bottom:0;
 }
 .header-actions > div {

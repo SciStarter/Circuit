@@ -232,14 +232,14 @@ div.profile-item {
             font-family: $snm-font-content;
             font-size: $snm-font-small;
             font-weight: normal;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
         }
 
         .value {
             font-family: $snm-font-content;
             font-size: $snm-font-medium-small;
             font-weight: bold;
-            color: $snm-color-element-dark;
+            color: var(--primary-color, $snm-color-element-dark);
         }
 
         .not-set {

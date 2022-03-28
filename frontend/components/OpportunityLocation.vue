@@ -100,7 +100,7 @@ ul {
 li {
     font-family: $snm-font-content;
     letter-spacing: 0px;
-    color: $snm-color-element-dark;
+    color: var(--primary-color, $snm-color-element-dark);
     font-size: $snm-font-smaller;
 }
 </style>

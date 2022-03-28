@@ -615,7 +615,7 @@ header {
         position: relative;
         top: -1px;
         white-space: nowrap;
-        color: $snm-color-element-dark;
+        color: var(--primary-color, $snm-color-element-dark);
         display: flex;
         align-items: center;
         flex-shrink: 0;
@@ -636,7 +636,7 @@ header {
         left: 0px;
         right: 0px;
         z-index: 20;
-        background-color: $snm-color-element-dark;
+        background-color: var(--primary-color, $snm-color-element-dark);
         text-align: left;
         box-shadow: 0px 3px 6px $snm-color-shadow;
         width: 100%;
@@ -644,7 +644,7 @@ header {
         .not-authenticated {
             display: flex;
             justify-content: space-evenly;
-            background-color: $snm-color-element-med;
+            background-color: var(--secondary-color, $snm-color-element-med);
             padding: .75rem 0;
 
             button, a {
@@ -679,7 +679,7 @@ header {
                 border: 1px solid var(--background-color, #fff);
 
                 &:hover,&:active {
-                    color: $snm-color-element-med;
+                    color: var(--secondary-color, $snm-color-element-med);
                     background-color: $snm-color-element-light;
                 }
 
@@ -981,7 +981,7 @@ footer {
                     margin-right: 1rem;
 
                     &:hover,&:active {
-                        color: $snm-color-element-med;
+                        color: var(--secondary-color, $snm-color-element-med);
                         background-color: $snm-color-element-light;
                     }
                 }
@@ -1019,7 +1019,7 @@ footer {
                         width: 1.5em;
                         height: 1.5em;
                         border-radius: 1em;
-                        color: $snm-color-element-dark;
+                        color: var(--primary-color, $snm-color-element-dark);
                         background-color: $snm-color-element-light;
                         transform: rotate(0);
                         transition: transform;
@@ -1103,13 +1103,13 @@ footer {
 
                 &.nav-separate {
                     margin-top: 2rem;
-                    border-top: 1px solid $snm-color-background-light;
+                    border-top: 1px solid var(--background-color, $snm-color-background-light);
                 }
             }
 
             a {
                 display: flex;
-                color: $snm-color-element-dark;
+                color: var(--primary-color, $snm-color-element-dark);
                 background-color: transparent;
                 align-items: center;
                 font-family: $snm-font-content;
