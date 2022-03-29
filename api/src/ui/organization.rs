@@ -59,6 +59,7 @@ struct AddOrganizationForm {
     state: String,
     about: String,
     number: u32,
+    website: String,
 }
 
 pub async fn add_organization(mut req: tide::Request<Database>) -> tide::Result {
@@ -87,6 +88,7 @@ pub async fn add_organization(mut req: tide::Request<Database>) -> tide::Result 
 <strong>Address:</strong> {}<br>
 <strong>City:</strong> {}<br>
 <strong>State:</strong> {}<br>
+<strong>Website:</strong> {}<br>
 <strong>Annual opportunities:</strong> {}
 </p>
 
@@ -105,6 +107,7 @@ pub async fn add_organization(mut req: tide::Request<Database>) -> tide::Result 
             &form.address,
             &form.city,
             &form.state,
+            &form.website,
             &form.number,
             &form.about
         ),
