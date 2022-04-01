@@ -9,9 +9,10 @@
     </button>
 
     <div v-if="partner !== null" class="exchange-nav" :class="{'show':toggle_mobile_nav}">
-      <nuxt-link :to="{name: 'exchange-uid-submit', params: {uid: partner.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
+      <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}" class="home" title="home"><home-icon /><span class="home-text">Home</span></nuxt-link>
       <nuxt-link :to="{name: 'exchange-uid-partner', params: {uid: partner.uid}}">Manage Organization</nuxt-link>
       <nuxt-link :to="{name: 'exchange-uid-opps', params: {uid: partner.uid}}">Manage Opportunities</nuxt-link>
+      <nuxt-link :to="{name: 'exchange-uid-submit', params: {uid: partner.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
     </div>
 
     <div class="exchange-logins">
@@ -56,11 +57,13 @@
 </template>
 
 <script>
+import HomeIcon from '~/assets/img/home.svg?inline'
 import SubmitOpportunityIcon from '~/assets/img/submit-opportunity.svg?inline'
 export default {
     name: "ExchangeIndex",
     components: {
-      SubmitOpportunityIcon
+      SubmitOpportunityIcon,
+      HomeIcon
     },
     props: {
         partner: {
@@ -106,46 +109,6 @@ export default {
 
 <style lang="scss" scoped>
 
-.exchange-actions {
-  display:flex;
-  justify-content:space-between;
-  background-color: #efefef;
-  padding:8px 20px;
-
-  .button {
-    color: #087a91;
-    svg {
-      vertical-align: middle;
-      position: relative;
-      top: -2px;
-      margin-right:10px;
-      path {
-        fill: #087a91;
-      }
-    }
-  }
-  a:not(.button):hover {
-    text-decoration:underline;
-  }
-}
-
-.exchange-logins {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-}
-.exchange-nav {
-  display: flex;
-  align-items: center;
-}
-.exchange-nav a {
-  margin-right:10px;
-  margin-left:10px;
-  &:first-child {
-    margin-left:0;
-  }
-}
-
 .partner-logo {
     width: 300px;
     height: 200px;
@@ -190,6 +153,64 @@ export default {
     max-width: 900px;
   }
 }
+
+/*********** NAVIGATION *****/
+.exchange-actions {
+  display:flex;
+  justify-content:space-between;
+  background-color: #efefef;
+  padding:8px 20px;
+
+  .button {
+    color: #087a91;
+    svg {
+      vertical-align: middle;
+      position: relative;
+      top: -2px;
+      margin-right:10px;
+      path {
+        fill: #087a91;
+      }
+    }
+  }
+  a:not(.button):hover {
+    text-decoration:underline;
+  }
+  .home {
+    width:20px;
+    svg {
+      width:20px;
+      height:20px;
+      path {
+        fill: #087a91!important;
+      }
+    }
+  }
+}
+
+
+.exchange-logins {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+.exchange-nav {
+  display: flex;
+  align-items: center;
+}
+.exchange-nav a {
+  margin-right:10px;
+  margin-left:10px;
+  &:first-child {
+    margin-left:0;
+  }
+}
+
+@media (min-width:701px){
+  .toggle-menu,.home-text {
+    display:none!important;
+  }
+}
 @media (max-width:700px){
   .exchange-nav {
     flex-direction:column;
@@ -213,6 +234,12 @@ export default {
         margin: 10px auto;
       }
     }
+    .home {
+      width:100%;
+      svg {
+        display:none;
+      }
+    }
   }
 
   .exchange-nav {
@@ -225,4 +252,5 @@ export default {
     border:0;
   }
 }
+
 </style>

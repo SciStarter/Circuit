@@ -9,9 +9,10 @@
     </button>
 
     <div v-if="partner !== null" class="exchange-nav" :class="{'show':toggle_mobile_nav}">
-      <nuxt-link :to="{name: 'exchange-uid-submit', params: {uid: partner.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
+      <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}" class="home" title="home"><home-icon /><span class="home-text">Home</span></nuxt-link>
       <nuxt-link :to="{name: 'exchange-uid-partner', params: {uid: partner.uid}}">Manage Organization</nuxt-link>
       <nuxt-link :to="{name: 'exchange-uid-opps', params: {uid: partner.uid}}">Manage Opportunities</nuxt-link>
+      <nuxt-link :to="{name: 'exchange-uid-submit', params: {uid: partner.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
     </div>
 
     <div class="exchange-logins">
@@ -26,7 +27,7 @@
 
   </div><!-- .exchange-actions -->
 
-
+<div class="exchange-wrapper">
 <div class="your-opportunities snm-container">
 
 
@@ -191,17 +192,20 @@
 
 </div>
 </div>
+</div>
 </template>
 
 <script>
 import AddIcon from '~/assets/img/submit-opportunity.svg?inline'
 import SubmitOpportunityIcon from '~/assets/img/submit-opportunity.svg?inline'
+import HomeIcon from '~/assets/img/home.svg?inline'
 export default {
     name: "ExchangeOpportunities",
 
     components: {
         AddIcon,
-        SubmitOpportunityIcon
+        SubmitOpportunityIcon,
+        HomeIcon
     },
 
     props: {
@@ -429,6 +433,13 @@ h1 {
   display: none;
 }
 
+@media (min-width:751px) AND (max-width:1310px){
+  .exchange-wrapper {
+    padding-left:1rem;
+    padding-right:1rem;
+  }
+}
+
 /*********** NAVIGATION *****/
 .exchange-actions {
   display:flex;
@@ -451,7 +462,18 @@ h1 {
   a:not(.button):hover {
     text-decoration:underline;
   }
+  .home {
+    width:20px;
+    svg {
+      width:20px;
+      height:20px;
+      path {
+        fill: #087a91!important;
+      }
+    }
+  }
 }
+
 
 .exchange-logins {
   margin-left: auto;
@@ -470,14 +492,11 @@ h1 {
   }
 }
 
-.exchange-search {
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  margin:20px 0;
-  padding:16px;
+@media (min-width:701px){
+  .toggle-menu,.home-text {
+    display:none!important;
+  }
 }
-
 @media (max-width:700px){
   .exchange-nav {
     flex-direction:column;
@@ -501,6 +520,12 @@ h1 {
         margin: 10px auto;
       }
     }
+    .home {
+      width:100%;
+      svg {
+        display:none;
+      }
+    }
   }
 
   .exchange-nav {
@@ -513,4 +538,5 @@ h1 {
     border:0;
   }
 }
+
 </style>
