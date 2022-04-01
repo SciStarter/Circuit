@@ -1,4 +1,5 @@
 <template>
+<div class="exchange-wrapper">
 <opportunity-form
   v-if="authorized"
   v-model="opp"
@@ -6,9 +7,12 @@
   :timezones="timezones"
   :descriptors="descriptors"
   :topics="topics"
-  in-exchange />
+  in-exchange 
+  />
+
 <div v-else>
   Sorry, but you are not authorized to add opportunities to this Science Near Me partner.
+</div>
 </div>
 </template>
 
@@ -66,5 +70,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
+.exchange-wrapper {
+  padding:1rem;
+}
+  .exchange .form-actions {
+    width:100%!important;
+  }
 </style>
