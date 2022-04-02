@@ -1,5 +1,5 @@
 <template>
-<div id="opportunity-form">
+<div id="opportunity-form" :class="{'exchange-submit':inExchange}">
 
   <div class="snm-container">
 
@@ -1259,6 +1259,13 @@ export default {
         max-width:1000px;
         margin:0 auto;
     }
+}
+
+.exchange-submit .form-actions,  {
+  width:100%;
+  .snm-container {
+    max-width:1280px;
+  }
 }
 
 @media (max-width:1199px){
