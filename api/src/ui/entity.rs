@@ -3,7 +3,7 @@ use common::{
     model::{
         involvement::{Involvement, Mode},
         opportunity::{Opportunity, OpportunityQuery, OpportunityQueryOrdering},
-        person::{LogEvent, LogIdentifier, Permission},
+        person::{LogEvent, LogIdentifier, Permission, PermitAction},
         Pagination,
     },
     Database, ToFixedOffset,
@@ -54,7 +54,7 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
 
     let authorized = if let Some(p) = person.as_ref() {
         p.check_permission(&Permission::ManageOpportunities)
-            || p.check_authorization(db, &opp).await?
+            || p.check_authorization(db, &opp, PermitAction::Edit).await?
     } else {
         false
     };

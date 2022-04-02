@@ -8,11 +8,13 @@
       <img v-else src="~assets/img/hamburger.svg?data">
     </button>
 
-    <div v-if="partner !== null" class="exchange-nav" :class="{'show':toggle_mobile_nav}">
-      <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}" class="home" title="home"><home-icon /><span class="home-text">Home</span></nuxt-link>
-      <nuxt-link :to="{name: 'exchange-uid-partner', params: {uid: partner.uid}}">Manage Organization</nuxt-link>
-      <nuxt-link :to="{name: 'exchange-uid-opps', params: {uid: partner.uid}}">Manage Opportunities</nuxt-link>
-      <nuxt-link :to="{name: 'exchange-uid-submit', params: {uid: partner.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
+    <div class="exchange-nav" :class="{'show':toggle_mobile_nav}">
+      <template v-if="partner !== null">
+        <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}" class="home" title="home"><home-icon /><span class="home-text">Home</span></nuxt-link>
+        <nuxt-link :to="{name: 'exchange-uid-partner', params: {uid: partner.uid}}">Manage Organization</nuxt-link>
+        <nuxt-link :to="{name: 'exchange-uid-opps', params: {uid: partner.uid}}">Manage Opportunities</nuxt-link>
+      </template>
+      <nuxt-link v-if="partner !== null || ($store.state.user.authenticated && exchange.open_submission)" :to="{name: 'exchange-uid-submit', params: {uid: exchange.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
     </div>
 
     <div class="exchange-logins">
@@ -35,7 +37,8 @@
   :partner="partner"
   :org_types="org_types"
   :managers="managers"
-  :pending="pending"/>
+  :pending="pending"
+  in-exchange/>
 </div>
 </div>
 <div v-else class="snm-container">
@@ -58,10 +61,16 @@ export default {
             type: Object,
             required: true,
         },
+
+        exchange: {
+            type: Object,
+            required: true,
+        }
     },
     data() {
         return {
-            toggle_mobile_nav: false
+            toggle_mobile_nav: false,
+            alert: false,
         };
     },
 

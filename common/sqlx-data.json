@@ -159,6 +159,27 @@
     },
     "query": "select exists(select 1 from c_opportunity where lower($1::text) = lower(exterior ->> 'slug')) as \"exists\";\n"
   },
+  "2be8c5f2c0df2bcff7ac543d4b018bee0279e5a1b92f76f0d65f141a271999ef": {
+    "describe": {
+      "columns": [
+        {
+          "name": "authorized!",
+          "ordinal": 0,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "\nSELECT EXISTS(\n    SELECT 1 FROM c_partner\n    WHERE (\n        (exterior -> 'open_submission') @> 'true'::jsonb OR\n        (interior -> 'prime') @> $1::jsonb OR\n        (interior -> 'authorized') @> $1::jsonb\n    )\n    AND (exterior -> 'uid') @> $2::jsonb\n) AS \"authorized!\"\n"
+  },
   "369aab45590c7324468f76defaaca4885ad0ca6a935d53eb7d056a4fd6871577": {
     "describe": {
       "columns": [

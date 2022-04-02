@@ -60,7 +60,7 @@
         <div v-else class="publish unpublished">
           This opportunity is hidden. <action-button primary tight red @click="withdrawn(false)"><div class="icon"><edit-alt-icon /></div>Publish</action-button>
         </div>
-        <action-button primary tight @click="$router.push({name: partner !== null ? 'exchange-uid-edit-opp' : 'my-opportunity-uid', params: partner !== null ? {uid: partner.uid, opp: entity.uid} : {uid: entity.uid}})"><div class="icon"><edit-alt-icon /></div>Edit Opportunity</action-button>
+        <action-button primary tight @click="$router.push({name: exchange !== null ? 'exchange-uid-edit-opp' : 'my-opportunity-uid', params: exchange !== null ? {uid: exchange.uid, opp: entity.uid} : {uid: entity.uid}})"><div class="icon"><edit-alt-icon /></div>Edit Opportunity</action-button>
     </div>
   </div>
 
@@ -69,8 +69,8 @@
       <div v-if="fromSearch">
           <a @click="$router.push({ name: 'find', query: $store.state.last_search })">&laquo; Back to Search</a>
       </div>
-      <div v-else-if="partner !== null" class="opp-breadcrumbs">
-        <nuxt-link :to="{name: 'exchange-uid', params: {uid: partner.uid}}">Home</nuxt-link> &nbsp;>&nbsp;
+      <div v-else-if="exchange !== null" class="opp-breadcrumbs">
+        <nuxt-link :to="{name: 'exchange-uid', params: {uid: exchange.uid}}">Home</nuxt-link> &nbsp;>&nbsp;
         {{ opportunity.title }}
       </div>
       <div v-else class="opp-breadcrumbs">
@@ -624,8 +624,8 @@ export default {
             default: false,
         },
 
-        partner: {
-            type: [Object, null],
+        exchange: {
+            type: Object,
             required: false,
             default: null,
         },

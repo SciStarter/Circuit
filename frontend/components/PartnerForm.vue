@@ -20,6 +20,7 @@
     <profile-item v-model="partner.primary_color" color label="Primary Color" @input="save" class="no-border" />
     <profile-item v-model="partner.secondary_color" color label="Secondary Color" @input="save" class="no-border" />
     <profile-item v-model="partner.tertiary_color" color label="Tertiary Color" @input="save" class="no-border" />
+    <profile-item v-if="inExchange" :value="!!partner.open_submission" @input="partner.open_submission=$event; save()" label-true="Anyone can submit opportunities for approval" label-false="Only organization members can add opportunities" label="Opportunity creation" class="no-border" />
   </div><!-- state 1 -->
 
   <div v-if="state==2" class="tab-panel">
@@ -207,6 +208,12 @@ export default {
         pending: {
             type: Array,
             required: true,
+        },
+
+        inExchange: {
+            type: Boolean,
+            required: false,
+            default: false,
         },
     },
 

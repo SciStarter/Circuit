@@ -1,5 +1,5 @@
 use super::{
-    opportunity::{Opportunity, OrganizationType},
+    opportunity::{Opportunity, OpportunityQuery, OrganizationType},
     person::Person,
     Error, PARTNER_NAMESPACE,
 };
@@ -32,6 +32,8 @@ pub struct PartnerExterior {
     pub secondary_color: Option<String>,
     pub tertiary_color: Option<String>,
     pub under: Option<Uuid>,
+    pub open_submission: Option<bool>,
+    pub default_query: Option<OpportunityQuery>,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]

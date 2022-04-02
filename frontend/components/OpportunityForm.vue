@@ -15,6 +15,17 @@
 
     <div class="opp-form-wrapper">
 
+      <b-field v-if="inExchange && partner.open_submission && ($store.state.user.uid == partner.prime || partner.authorized.indexOf($store.state.user.uid) >= 0)">
+        <template #label>
+          Opportunity review result
+        </template>
+        <b-select v-model="value.review_status">
+          <option value="draft">Draft - Not Ready For Review</option>
+          <option value="pending">Pending - Awaiting Review</option>
+          <option value="reject">Rejected - Will Not Publish</option>
+          <option value="publish">Accepted - Ready For Publication</option>
+        </b-select>
+      </b-field>
       <div v-if="state==1">
         <div class="legend-flex">
           <legend>Basic Information</legend>
@@ -1090,7 +1101,19 @@ export default {
 
         async save_and_publish() {
             this.value.withdrawn = false;
+
+            if(this.value.review_status == 'draft') {
+                this.value.review_status = 'pending';
+            }
+
             if(await this.save()) {
+                if(this.value.review_status == 'pending') {
+                    this.$buefy.dialog.alert({
+                        title: 'Pending Approval',
+                        message: "We've saved your opportunity. It will be published after it is approved, or you will be contacted if there are any questions.",
+                        confirmText: 'Got it'
+                    })
+                }
                 this.$router.push((this.partner !== null && this.inExchange) ? {name: 'exchange-uid-slug', params: {uid: this.partner.uid, slug: this.value.slug}} : {name: 'slug', params: {slug: this.value.slug}});
             }
         },

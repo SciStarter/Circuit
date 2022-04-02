@@ -30,7 +30,7 @@
 <opportunity-form
   v-if="authorized"
   v-model="opp"
-  :partner="partner"
+  :partner="exchange"
   :timezones="timezones"
   :descriptors="descriptors"
   :topics="topics"
@@ -55,8 +55,13 @@ export default {
     props: {
         partner: {
             type: Object,
+            required: false,
+        },
+
+        exchange: {
+            type: Object,
             required: true,
-        }
+        },
     },
     data() {
         return {
@@ -100,7 +105,7 @@ export default {
 
     computed: {
         authorized() {
-            return this.authenticated && this.partner;
+            return this.authenticated && (this.partner || this.exchange.open_submission);
         }
     }
 }

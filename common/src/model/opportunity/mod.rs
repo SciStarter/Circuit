@@ -30,6 +30,38 @@ pub static SLUGIFY_REPLACE: Lazy<Regex> =
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+pub enum ReviewStatus {
+    Draft,
+    Pending,
+    Reject,
+    Publish,
+    NotRequired,
+}
+
+impl ReviewStatus {
+    pub fn public(&self) -> bool {
+        match self {
+            ReviewStatus::Draft => false,
+            ReviewStatus::Pending => false,
+            ReviewStatus::Reject => false,
+            ReviewStatus::Publish => true,
+            ReviewStatus::NotRequired => true,
+        }
+    }
+
+    pub fn requires_manager(&self) -> bool {
+        match self {
+            ReviewStatus::Draft => false,
+            ReviewStatus::Pending => false,
+            ReviewStatus::Reject => true,
+            ReviewStatus::Publish => true,
+            ReviewStatus::NotRequired => true,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Recurrence {
     Once,
     Daily,
@@ -646,6 +678,8 @@ pub struct AnnotatedOpportunityExterior {
 pub struct OpportunityInterior {
     pub accepted: Option<bool>,
     pub withdrawn: bool,
+    pub submitted_by: Option<Uuid>,
+    pub review_status: ReviewStatus,
     pub contact_name: String,
     pub contact_email: String,
     pub contact_phone: String,
@@ -657,6 +691,8 @@ impl Default for OpportunityInterior {
         OpportunityInterior {
             accepted: Some(false), // editors have accepted it for publication
             withdrawn: false,      // partner has withdrawn it from publication
+            submitted_by: None,
+            review_status: ReviewStatus::NotRequired,
             contact_name: Default::default(),
             contact_email: Default::default(),
             contact_phone: Default::default(),
@@ -896,7 +932,7 @@ impl std::fmt::Display for OpportunityReference {
     }
 }
 
-#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum OpportunityQueryPhysical {
     InPersonOrOnline,
@@ -910,7 +946,7 @@ impl Default for OpportunityQueryPhysical {
     }
 }
 
-#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum OpportunityQueryOrdering {
     Alphabetical,
@@ -933,7 +969,7 @@ impl Default for OpportunityQueryOrdering {
 /// ```
 /// Opportunity::load_matching(db.acquire().await?, OpportunityQuery { title_contains: "hello".to_string(), ..Default::default() })
 /// ```
-#[derive(Default, Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 pub struct OpportunityQuery {
     pub accepted: Option<bool>,
     pub withdrawn: Option<bool>,
@@ -1048,10 +1084,15 @@ fn build_matching_query(
     }
 
     if let Some(val) = query.withdrawn {
-        clauses.push(format!(
-            "(${}::jsonb) @> (interior -> 'withdrawn')",
-            ParamValue::Bool(val).append(&mut params)
-        ));
+        if val {
+            clauses.push(
+                "(('true'::jsonb) @> (interior -> 'withdrawn') OR (interior ->> 'review_status') IN ('draft', 'pending'))".to_string(),
+            );
+        } else {
+            clauses.push(
+                "(('false'::jsonb) @> (interior -> 'withdrawn') AND (interior ->> 'review_status') NOT IN ('draft', 'pending'))".to_string(),
+            );
+        }
     }
 
     if let Some(val) = query.current {
@@ -1143,13 +1184,17 @@ fn build_matching_query(
         clauses.push(format!(
             r#"
 (
+  (interior -> 'submitted_by' @> ${}::jsonb)
+OR
+  (
     SELECT jsonb_agg("uid") FROM (
         SELECT (exterior -> 'uid') AS "uid" FROM c_partner
         WHERE (interior -> 'authorized') @> (${}::jsonb)
         OR (interior -> 'prime') @> (${}::jsonb)
     ) AS "authorized_partners"
-) @> (exterior -> 'partner')"#,
-            uuid_param, uuid_param,
+  ) @> (exterior -> 'partner')
+)"#,
+            uuid_param, uuid_param, uuid_param
         ));
     }
 

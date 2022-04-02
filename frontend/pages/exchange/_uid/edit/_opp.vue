@@ -35,6 +35,11 @@ export default {
             type: Object,
             required: true,
         },
+
+        exchange: {
+            type: Object,
+            required: true,
+        },
     },
 
     httpHeaders() {

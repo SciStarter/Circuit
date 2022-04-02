@@ -433,6 +433,12 @@ pub struct Person {
     pub interior: PersonInterior,
 }
 
+pub enum PermitAction {
+    Add,
+    Edit,
+    Manage,
+}
+
 impl Person {
     async fn save_log(db: Database, id: i32, event: LogEvent) -> Result<i32, Error> {
         Ok(sqlx::query_file!(
@@ -661,9 +667,33 @@ LIMIT $1 OFFSET $2;
         &self,
         db: &Database,
         opportunity: &Opportunity,
+        action: PermitAction,
     ) -> Result<bool, Error> {
-        Ok(sqlx::query!(
-            r#"
+        Ok(match action {
+            PermitAction::Add => {
+                sqlx::query!(
+                    r#"
+SELECT EXISTS(
+    SELECT 1 FROM c_partner
+    WHERE (
+        (exterior -> 'open_submission') @> 'true'::jsonb OR
+        (interior -> 'prime') @> $1::jsonb OR
+        (interior -> 'authorized') @> $1::jsonb
+    )
+    AND (exterior -> 'uid') @> $2::jsonb
+) AS "authorized!"
+"#,
+                    serde_json::to_value(self.exterior.uid)?,
+                    serde_json::to_value(opportunity.exterior.partner)?,
+                )
+                .fetch_one(db)
+                .await?
+                .authorized
+            }
+            PermitAction::Edit => {
+                opportunity.interior.submitted_by == Some(self.exterior.uid)
+                    || sqlx::query!(
+                        r#"
 SELECT EXISTS(
     SELECT 1 FROM c_partner
     WHERE (
@@ -673,12 +703,33 @@ SELECT EXISTS(
     AND (exterior -> 'uid') @> $2::jsonb
 ) AS "authorized!"
 "#,
-            serde_json::to_value(self.exterior.uid)?,
-            serde_json::to_value(opportunity.exterior.partner)?,
-        )
-        .fetch_one(db)
-        .await?
-        .authorized)
+                        serde_json::to_value(self.exterior.uid)?,
+                        serde_json::to_value(opportunity.exterior.partner)?,
+                    )
+                    .fetch_one(db)
+                    .await?
+                    .authorized
+            }
+            PermitAction::Manage => {
+                sqlx::query!(
+                    r#"
+SELECT EXISTS(
+    SELECT 1 FROM c_partner
+    WHERE (
+        (interior -> 'prime') @> $1::jsonb OR
+        (interior -> 'authorized') @> $1::jsonb
+    )
+    AND (exterior -> 'uid') @> $2::jsonb
+) AS "authorized!"
+"#,
+                    serde_json::to_value(self.exterior.uid)?,
+                    serde_json::to_value(opportunity.exterior.partner)?,
+                )
+                .fetch_one(db)
+                .await?
+                .authorized
+            }
+        })
     }
 
     pub fn set_password(&mut self, password: &str) {

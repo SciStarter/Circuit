@@ -1,5 +1,5 @@
 <template>
-<component :is="selected_component" :entity="entity" :user="user" :from-search="false" :partner="partner" @login="$router.push({name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}})" @signup="$router.push({name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}})" />
+<component :is="selected_component" :entity="entity" :user="user" :exchange="exchange" :from-search="false" :partner="partner" @login="$router.push({name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}})" @signup="$router.push({name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}})" />
 </template>
 
 <script>
@@ -15,6 +15,11 @@ export default {
 
     props: {
         partner: {
+            type: Object,
+            required: false,
+        },
+
+        exchange: {
             type: Object,
             required: true,
         },

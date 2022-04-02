@@ -46,12 +46,14 @@ async fn initialize(db: &Database) -> tide::Result {
                 organization_type: model::opportunity::OrganizationType::Unspecified,
                 url: None,
                 image_url: None,
+                description: "Partner entry representing internal operations".to_string(),
                 background_color: None,
                 primary_color: None,
                 secondary_color: None,
                 tertiary_color: None,
-                description: "Partner entry representing internal operations".to_string(),
                 under: None,
+                open_submission: Some(false),
+                default_query: None,
             },
             interior: model::partner::PartnerInterior {
                 manager: model::partner::Contact {

@@ -8,11 +8,13 @@
       <img v-else src="~assets/img/hamburger.svg?data">
     </button>
 
-    <div v-if="partner !== null" class="exchange-nav" :class="{'show':toggle_mobile_nav}">
-      <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}" class="home" title="home"><home-icon /><span class="home-text">Home</span></nuxt-link>
-      <nuxt-link :to="{name: 'exchange-uid-partner', params: {uid: partner.uid}}">Manage Organization</nuxt-link>
-      <nuxt-link :to="{name: 'exchange-uid-opps', params: {uid: partner.uid}}">Manage Opportunities</nuxt-link>
-      <nuxt-link :to="{name: 'exchange-uid-submit', params: {uid: partner.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
+    <div class="exchange-nav" :class="{'show':toggle_mobile_nav}">
+      <template v-if="partner !== null">
+        <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}" class="home" title="home"><home-icon /><span class="home-text">Home</span></nuxt-link>
+        <nuxt-link :to="{name: 'exchange-uid-partner', params: {uid: partner.uid}}">Manage Organization</nuxt-link>
+        <nuxt-link :to="{name: 'exchange-uid-opps', params: {uid: partner.uid}}">Manage Opportunities</nuxt-link>
+      </template>
+      <nuxt-link v-if="partner !== null || ($store.state.user.authenticated && exchange.open_submission)" :to="{name: 'exchange-uid-submit', params: {uid: exchange.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
     </div>
 
     <div class="exchange-logins">
@@ -77,7 +79,7 @@
 
     <section id="results">
       <template v-if="live.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in live.matches" :key="opp.uid" :opportunity="opp" :partner="partner" owner="live" trash @trash="trash_live(i)"/>
+        <opportunity-card v-for="(opp, i) in live.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" owner="live" trash @trash="trash_live(i)"/>
         <pagination :page-index="live.pagination.page_index" :last-page="live.pagination.last_page" @switch="load_live($event)" />
       </template>
       <template v-else>
@@ -118,7 +120,7 @@
     </div>
     <section id="results">
       <template v-if="draft.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in draft.matches" :key="opp.uid" :opportunity="opp" :partner="partner" owner="draft" trash @trash="trash_draft(i)"/>
+        <opportunity-card v-for="(opp, i) in draft.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" owner="draft" trash @trash="trash_draft(i)"/>
         <pagination :page-index="draft.pagination.page_index" :last-page="draft.pagination.last_page" @switch="load_draft($event)" />
       </template>
       <template v-else>
@@ -158,7 +160,7 @@
     </div>
     <section id="results">
       <template v-if="expired.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in expired.matches" :key="opp.uid" :opportunity="opp" :partner="partner" owner="past" />
+        <opportunity-card v-for="(opp, i) in expired.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" owner="past" />
         <pagination :page-index="expired.pagination.page_index" :last-page="expired.pagination.last_page" @switch="load_expired($event)" />
       </template>
       <template v-else>
@@ -210,6 +212,11 @@ export default {
 
     props: {
         partner: {
+            type: Object,
+            required: true,
+        },
+
+        exchange: {
             type: Object,
             required: true,
         },
@@ -292,6 +299,7 @@ export default {
         return {
             state:1,
             show_delete_confirm: false,
+            alert: false,
         }
     },
 
