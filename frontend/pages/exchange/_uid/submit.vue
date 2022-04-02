@@ -120,6 +120,9 @@ export default {
     justify-content:space-between;
     background-color: #efefef;
     padding:8px 20px;
+    position:sticky;
+    top:0;
+    z-index:999;
 
     .button {
       color: #087a91;
