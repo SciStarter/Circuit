@@ -295,6 +295,7 @@ export default {
             this.live.matches.splice(idx, 1);
             opp.accepted = false;
             await this.$axios.$put('/api/ui/entity/' + opp.slug, opp, this.$store.state.auth);
+            await this.load_live(this.live.pagination.page_index);
         },
 
         async trash_draft(idx) {
@@ -302,6 +303,7 @@ export default {
             this.draft.matches.splice(idx, 1);
             opp.accepted = false;
             await this.$axios.$put('/api/ui/entity/' + opp.slug, opp, this.$store.state.auth);
+            await this.load_draft(this.draft.pagination.page_index);
         },
 
         async load_live(page) {

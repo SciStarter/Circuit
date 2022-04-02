@@ -185,7 +185,6 @@
                       class="validation-target"
                       :class="{'is-danger': validation.begin_datetime}"
                       v-model="begin_datetime"
-                      :max-date="end_datetime"
                       placeholder="Click to select..."
                       icon="calendar-today"
                       :icon-right="begin_datetime ? 'close-circle' : ''"
@@ -208,7 +207,6 @@
                     </template>
                     <b-datepicker
                       v-model="end_datetime"
-                      :min-date="begin_datetime"
                       placeholder="Click to select..."
                       icon="calendar-today"
                       :icon-right="end_datetime ? 'close-circle' : ''"
@@ -1004,6 +1002,7 @@ export default {
                 if(this.invalid('location_name', this.location === 'both' && !this.value.location_name)) valid = false;
                 if(this.invalid('organization_website', this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.startsWith('http')))) valid = false;
                 if(this.invalid('begin_datetime', this.when === 'time' && this.time_periods.length < 1)) valid = false;
+                if(this.invalid('begin_datetime', this.when === 'time' && (this.time_periods[0][0] && this.time_periods[0][1] && this.time_periods[0][0] > this.time_periods[0][1]))) valid = false;
             }
 
             if(state == 0 || state == 2) {
