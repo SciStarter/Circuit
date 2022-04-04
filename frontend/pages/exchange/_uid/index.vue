@@ -12,8 +12,8 @@
       <template v-if="partner !== null">
         <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}" class="home" title="home"><home-icon /><span class="home-text">Home</span></nuxt-link>
         <nuxt-link :to="{name: 'exchange-uid-partner', params: {uid: partner.uid}}">Manage Organization</nuxt-link>
-        <nuxt-link :to="{name: 'exchange-uid-opps', params: {uid: partner.uid}}">Manage Opportunities</nuxt-link>
       </template>
+      <nuxt-link v-if="$store.state.user.authenticated" :to="{name: 'exchange-uid-opps', params: {uid: exchange.uid}}">Manage Opportunities</nuxt-link>
       <nuxt-link v-if="partner !== null || ($store.state.user.authenticated && exchange.open_submission)" :to="{name: 'exchange-uid-submit', params: {uid: exchange.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
     </div>
 
@@ -40,7 +40,7 @@
       <b-button @click="search({text: search_text, page: 0})">Search</b-button>
     </div>
     <div class="search-snm">
-      <b-checkbox @input="search({all: $event, page: 0})">Search all of of the Science Near Me network</b-checkbox>
+      <b-checkbox :value="!!$route.query.all" @input="search({all: $event, page: 0})">Search all of the Science Near Me network</b-checkbox>
     </div>
   </div>
 
@@ -67,24 +67,18 @@ export default {
       SubmitOpportunityIcon,
       HomeIcon
     },
+
     props: {
         partner: {
             type: Object,
             required: false,
+            default: null,
         },
 
         exchange: {
             type: Object,
-            required: false,
+            required: true,
         },
-    },
-
-    data() {
-        return {
-            search_text: this.$route.query.text || '',
-            toggle_mobile_nav: false,
-            alert: false,
-        };
     },
 
     async asyncData(context) {
@@ -105,13 +99,21 @@ export default {
         };
     },
 
+    data() {
+        return {
+            search_text: this.$route.query.text || '',
+            toggle_mobile_nav: false,
+            alert: false,
+        };
+    },
+
+    watchQuery: true,
+
     methods: {
         search(assign) {
             this.$router.push({name: 'exchange-uid', params: this.$route.params, query: {...this.$route.query, ...assign}});
         }
     },
-
-    watchQuery: true,
 }
 </script>
 

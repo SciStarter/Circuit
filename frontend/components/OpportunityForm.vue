@@ -15,17 +15,17 @@
 
     <div class="opp-form-wrapper">
 
-      <b-field v-if="inExchange && partner.open_submission && ($store.state.user.uid == partner.prime || partner.authorized.indexOf($store.state.user.uid) >= 0)">
-        <template #label>
-          Opportunity review result
-        </template>
-        <b-select v-model="value.review_status">
-          <option value="draft">Draft - Not Ready For Review</option>
-          <option value="pending">Pending - Awaiting Review</option>
-          <option value="reject">Rejected - Will Not Publish</option>
-          <option value="publish">Accepted - Ready For Publication</option>
-        </b-select>
-      </b-field>
+      <!-- <b-field v-if="inExchange && partner && partner.open_submission && partner.prime !== undefined && ($store.state.user.uid == partner.prime || partner.authorized.indexOf($store.state.user.uid) >= 0)"> -->
+      <!--   <template #label> -->
+      <!--     Opportunity review result -->
+      <!--   </template> -->
+      <!--   <b-select v-model="value.review_status"> -->
+      <!--     <option value="draft">Draft - Not Ready For Review</option> -->
+      <!--     <option value="pending">Pending - Awaiting Review</option> -->
+      <!--     <option value="reject">Rejected - Will Not Publish</option> -->
+      <!--     <option value="publish">Accepted - Ready For Publication</option> -->
+      <!--   </b-select> -->
+      <!-- </b-field> -->
       <div v-if="state==1">
         <div class="legend-flex">
           <legend>Basic Information</legend>

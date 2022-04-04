@@ -1,5 +1,7 @@
 <template>
-<nuxt-child :partner="partner" :exchange="exterior" :style="custom_props"/>
+<div :style="custom_props">
+    <nuxt-child :partner="partner" :exchange="exterior" />
+</div>
 </template>
 
 <script>

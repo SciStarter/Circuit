@@ -92,14 +92,14 @@ pub async fn add_opp(mut req: tide::Request<Database>) -> tide::Result {
             "Pending Approval on Science Near Me: {title}",
             r#"
 <p>The opportunity <strong>{title}</strong> on Science Near Me has been created or updated, and is pending approval for publication.</p>
-<p>Please evaluate the opportunity and <a href="https://sciencenearme.org/exchange/{partner_uid}/edit/{opp_uid}">edit, approve, or reject</a> it.</p>
+<p>Please evaluate the opportunity and <a href="https://sciencenearme.org/exchange/{partner_uid}/{opp_slug}">approve, reject, or send it back to draft</a> it.</p>
 "#,
         ).await;
 
         let msg = template.materialize(vec![
             ("title", &opp.exterior.title),
             ("partner_uid", &partner.exterior.uid.to_string()),
-            ("opp_uid", &opp.exterior.uid.to_string()),
+            ("opp_slug", &opp.exterior.slug),
         ]);
 
         for reviewer in partner

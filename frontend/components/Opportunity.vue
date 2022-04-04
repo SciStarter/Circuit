@@ -55,10 +55,14 @@
     <div class="nav-tabs"  id="owner-view">
         <div class="tab-link active"><div class="icon"><eye-icon /></div>Public View</div>
         <div v-if="published" class="publish published">
-          This opportunity is live. <action-button text2 @click="withdrawn(true)">Unpublish</action-button>
+          This opportunity is
+          <span v-if="entity.review_status === 'not_required' || entity.review_status === 'publish'">live. <action-button text2 @click="withdrawn(true)">Hide</action-button></span>
+          <span v-else-if="entity.review_status === 'reject'">rejected</span>
+          <span v-else-if="entity.review_status === 'draft'">in draft</span>
+          <span v-else>pending approval. <span v-if="entity.authorized === 'manage'"><action-button text2 @click="set_review_status('publish')">Publish</action-button> | <action-button text2 @click="set_review_status('reject')">Reject</action-button> | <action-button text2 @click="set_review_status('draft')">Return to draft</action-button></span></span>
         </div>
         <div v-else class="publish unpublished">
-          This opportunity is hidden. <action-button primary tight red @click="withdrawn(false)"><div class="icon"><edit-alt-icon /></div>Publish</action-button>
+          This opportunity is hidden. <action-button primary tight red @click="withdrawn(false)"><div class="icon"><edit-alt-icon /></div>Unhide it</action-button>
         </div>
         <action-button primary tight @click="$router.push({name: exchange !== null ? 'exchange-uid-edit-opp' : 'my-opportunity-uid', params: exchange !== null ? {uid: exchange.uid, opp: entity.uid} : {uid: entity.uid}})"><div class="icon"><edit-alt-icon /></div>Edit Opportunity</action-button>
     </div>
@@ -577,6 +581,8 @@ import EyeIcon from '~/assets/img/eye.svg?inline'
 import EditAltIcon from '~/assets/img/edit-alt.svg?inline'
 
 export default {
+    name: "Opportunity",
+
     components: {
         VueMarkdown,
 
@@ -875,6 +881,11 @@ export default {
     },
 
     methods: {
+        async set_review_status(status) {
+            await this.$axios.$put('/api/ui/entity/' + this.opportunity.slug + '/status', {status: status}, this.$store.state.auth);
+            this.entity.review_status = status;
+        },
+
         async withdrawn(val) {
             this.entity.withdrawn = val;
             await this.$axios.$put('/api/ui/entity/' + this.opportunity.slug, this.entity, this.$store.state.auth);

@@ -3,7 +3,7 @@
 
   <div class="exchange-actions">
 
-    <button  v-if="$store.state.user.authenticated" class="toggle-menu mobile-only" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu" @click="toggle_mobile_nav = !toggle_mobile_nav">
+    <button  v-if="$store.state.user.authenticated" class="toggle-menu mobile-only" title="Toggle menu" data-context="header-menu" @click="toggle_mobile_nav = !toggle_mobile_nav">
       <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
       <img v-else src="~assets/img/hamburger.svg?data">
     </button>
@@ -52,10 +52,12 @@ import SubmitOpportunityIcon from '~/assets/img/submit-opportunity.svg?inline'
 import HomeIcon from '~/assets/img/home.svg?inline'
 export default {
     name: "ExchangePartner",
+
     components: {
       SubmitOpportunityIcon,
       HomeIcon
     },
+
     props: {
         partner: {
             type: Object,
@@ -66,12 +68,6 @@ export default {
             type: Object,
             required: true,
         }
-    },
-    data() {
-        return {
-            toggle_mobile_nav: false,
-            alert: false,
-        };
     },
 
     async asyncData(context) {
@@ -112,6 +108,13 @@ export default {
             managers,
             pending,
         }
+    },
+
+    data() {
+        return {
+            toggle_mobile_nav: false,
+            alert: false,
+        };
     },
 
     computed: {

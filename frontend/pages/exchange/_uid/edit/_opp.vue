@@ -11,7 +11,7 @@
   </div>
   <opportunity-form
     v-model="opp"
-    :partner="partner"
+    :partner="exchange"
     :timezones="timezones"
     :descriptors="descriptors"
     :topics="topics"
@@ -33,7 +33,8 @@ export default {
     props: {
         partner: {
             type: Object,
-            required: true,
+            required: false,
+            default: null,
         },
 
         exchange: {

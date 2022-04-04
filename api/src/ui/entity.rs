@@ -2,7 +2,7 @@ use chrono::Utc;
 use common::{
     model::{
         involvement::{Involvement, Mode},
-        opportunity::{Opportunity, OpportunityQuery, OpportunityQueryOrdering},
+        opportunity::{Opportunity, OpportunityQuery, OpportunityQueryOrdering, ReviewStatus},
         person::{LogEvent, LogIdentifier, Permission, PermitAction},
         Pagination,
     },
@@ -39,6 +39,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
             .at("report-review", |r| r.post(report_review))
             .at("recommended", |r| r.get(recommended))
             .at("managers", |r| r.post(request_page_management))
+            .at("status", |r| r.put(set_review_status))
     })
 }
 
@@ -53,13 +54,23 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
         .with_status(|| StatusCode::NotFound)?;
 
     let authorized = if let Some(p) = person.as_ref() {
-        p.check_permission(&Permission::ManageOpportunities)
-            || p.check_authorization(db, &opp, PermitAction::Edit).await?
+        if p.check_permission(&Permission::ManageOpportunities)
+            || p.check_authorization(db, &opp, PermitAction::Manage)
+                .await?
+        {
+            PermitAction::Manage
+        } else if p.check_authorization(db, &opp, PermitAction::Edit).await? {
+            PermitAction::Edit
+        } else {
+            PermitAction::Nothing
+        }
     } else {
-        false
+        PermitAction::Nothing
     };
 
-    if authorized || (opp.interior.accepted.unwrap_or(false) && !opp.interior.withdrawn) {
+    if authorized != PermitAction::Nothing
+        || (opp.interior.accepted.unwrap_or(false) && !opp.interior.withdrawn)
+    {
         common::log(
             "viewed",
             &json!({
@@ -426,4 +437,39 @@ pub async fn register_interest(mut req: tide::Request<Database>) -> tide::Result
         .await?;
 
     okay_empty()
+}
+
+#[derive(Debug, Deserialize)]
+struct StatusForm {
+    status: ReviewStatus,
+}
+
+pub async fn set_review_status(mut req: tide::Request<Database>) -> tide::Result {
+    let person = match request_person(&mut req).await {
+        Ok(Some(p)) => p,
+        _ => {
+            return Err(tide::Error::from_str(
+                StatusCode::Unauthorized,
+                "Not authorized",
+            ))
+        }
+    };
+
+    let mut opp = Opportunity::load_by_slug(req.state(), req.param("slug")?).await?;
+    let form: StatusForm = req.body_json().await?;
+
+    if person.check_permission(&Permission::ManageOpportunities)
+        || person
+            .check_authorization(req.state(), &opp, PermitAction::Manage)
+            .await?
+    {
+        opp.interior.review_status = form.status;
+        opp.store(req.state()).await?;
+        okay_empty()
+    } else {
+        Err(tide::Error::from_str(
+            StatusCode::Forbidden,
+            "Not authorized",
+        ))
+    }
 }

@@ -60,7 +60,7 @@
             <template #trigger="{ active }">
                 <b-button class="more-btn"><div class="icon"><more-icon /></div></b-button>
             </template>
-            <b-dropdown-item aria-role="listitem" @click="$router.push({name: 'my-opportunity-uid', params: {uid: opportunity.uid}})" class="mobile-edit">Edit</b-dropdown-item>
+            <b-dropdown-item aria-role="listitem" @click="$router.push({name: exchange !== null ? 'exchange-uid-edit-opp': 'my-opportunity-uid', params: exchange !== null ? {uid: exchange.uid, opp: opportunity.uid} : {uid: opportunity.uid}})" class="mobile-edit">Edit</b-dropdown-item>
             <b-dropdown-item aria-role="listitem" @click="view">View</b-dropdown-item>
             <!-- <b-dropdown-item aria-role="listitem">Duplicate</b-dropdown-item> -->
             <b-dropdown-item v-if="trash" aria-role="listitem" @click="$emit('trash', opportunity)">Trash</b-dropdown-item>

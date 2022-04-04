@@ -433,10 +433,20 @@ pub struct Person {
     pub interior: PersonInterior,
 }
 
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum PermitAction {
+    #[serde(rename = "")]
+    Nothing,
     Add,
     Edit,
     Manage,
+}
+
+impl Default for PermitAction {
+    fn default() -> Self {
+        PermitAction::Nothing
+    }
 }
 
 impl Person {
@@ -670,6 +680,7 @@ LIMIT $1 OFFSET $2;
         action: PermitAction,
     ) -> Result<bool, Error> {
         Ok(match action {
+            PermitAction::Nothing => false,
             PermitAction::Add => {
                 sqlx::query!(
                     r#"

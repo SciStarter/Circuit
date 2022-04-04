@@ -2,15 +2,17 @@
   <div>
   <div class="exchange-actions">
 
-    <button  v-if="$store.state.user.authenticated" class="toggle-menu mobile-only" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu" @click="toggle_mobile_nav = !toggle_mobile_nav">
+    <button v-if="$store.state.user.authenticated" class="toggle-menu mobile-only" title="Toggle menu" data-context="header-menu" @click="toggle_mobile_nav = !toggle_mobile_nav">
       <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
       <img v-else src="~assets/img/hamburger.svg?data">
     </button>
 
-    <div v-if="partner !== null" class="exchange-nav" :class="{'show':toggle_mobile_nav}">
+    <div class="exchange-nav" :class="{'show':toggle_mobile_nav}">
       <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}" class="home" title="home"><home-icon /><span class="home-text">Home</span></nuxt-link>
-      <nuxt-link :to="{name: 'exchange-uid-partner', params: {uid: partner.uid}}">Manage Organization</nuxt-link>
-      <nuxt-link :to="{name: 'exchange-uid-opps', params: {uid: partner.uid}}">Manage Opportunities</nuxt-link>
+      <template v-if="partner !== null">
+        <nuxt-link :to="{name: 'exchange-uid-partner', params: {uid: partner.uid}}">Manage Organization</nuxt-link>
+        <nuxt-link :to="{name: 'exchange-uid-opps', params: {uid: partner.uid}}">Manage Opportunities</nuxt-link>
+      </template>
     </div>
 
     <div class="exchange-logins">
@@ -56,17 +58,13 @@ export default {
         partner: {
             type: Object,
             required: false,
+            default: null,
         },
 
         exchange: {
             type: Object,
             required: true,
         },
-    },
-    data() {
-        return {
-            toggle_mobile_nav: false
-        };
     },
 
     async asyncData(context) {
@@ -101,6 +99,13 @@ export default {
             topics,
             opp,
         }
+    },
+
+    data() {
+        return {
+            alert: false,
+            toggle_mobile_nav: false
+        };
     },
 
     computed: {

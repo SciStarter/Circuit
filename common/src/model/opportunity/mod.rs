@@ -1,5 +1,6 @@
 pub mod for_slug;
 
+use super::person::PermitAction;
 use super::Error;
 use crate::model::involvement;
 use crate::{geo, Database, ToFixedOffset};
@@ -36,6 +37,12 @@ pub enum ReviewStatus {
     Reject,
     Publish,
     NotRequired,
+}
+
+impl Default for ReviewStatus {
+    fn default() -> Self {
+        ReviewStatus::NotRequired
+    }
 }
 
 impl ReviewStatus {
@@ -670,7 +677,8 @@ pub struct AnnotatedOpportunityExterior {
     pub accepted: bool,
     pub withdrawn: bool,
     pub current: bool,
-    pub authorized: bool,
+    pub authorized: PermitAction,
+    pub review_status: ReviewStatus,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -1473,12 +1481,13 @@ impl OpportunityImportRecord {
 }
 
 impl Opportunity {
-    pub fn into_annotated_exterior(self, authorized: bool) -> AnnotatedOpportunityExterior {
+    pub fn into_annotated_exterior(self, authorized: PermitAction) -> AnnotatedOpportunityExterior {
         let current = self.current();
         AnnotatedOpportunityExterior {
             exterior: self.exterior,
             accepted: self.interior.accepted.unwrap_or(false),
             withdrawn: self.interior.withdrawn,
+            review_status: self.interior.review_status,
             current,
             authorized,
         }

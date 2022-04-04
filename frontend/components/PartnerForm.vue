@@ -4,7 +4,7 @@
     <ul class="nav-tabs">
       <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Organizational Settings</a></li>
       <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Page Managers</a></li>
-      <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Contact Info</a></li>
+      <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Org Contact Info</a></li>
     </ul>
   </div>
 
@@ -20,7 +20,7 @@
     <profile-item v-model="partner.primary_color" color label="Primary Color" @input="save" class="no-border" />
     <profile-item v-model="partner.secondary_color" color label="Secondary Color" @input="save" class="no-border" />
     <profile-item v-model="partner.tertiary_color" color label="Tertiary Color" @input="save" class="no-border" />
-    <profile-item v-if="inExchange" :value="!!partner.open_submission" @input="partner.open_submission=$event; save()" label-true="Anyone can submit opportunities for approval" label-false="Only organization members can add opportunities" label="Opportunity creation" class="no-border" />
+    <profile-item v-if="inExchange" :value="!!partner.open_submission" @input="partner.open_submission=$event; save()" label-true="The add opportunity button will be displayed to all logged in users. You will be notified when an opportunity is submitted, and only those reviewed and published by you will appear on your site and Science Near Me." label-false="Only your organization members can add opportunities." label="Opportunity creation" class="no-border" />
   </div><!-- state 1 -->
 
   <div v-if="state==2" class="tab-panel">
@@ -47,9 +47,8 @@
       </div>
     </div>
     <action-button primary @click="show_add=true">+ Add New Organization Manager(s)</action-button>
-
-
-
+    <br>
+    <action-button v-if="can_leave" tertiary red @click="leave_org" class="separated">Leave organization</action-button>
   </div><!-- state 2 -->
 
   <div v-if="state==3" class="tab-panel">
@@ -61,7 +60,6 @@
 
 
   <div class="global-actions">
-    <action-button v-if="can_leave" tertiary red @click="leave_org">Leave organization</action-button>
   </div>
 
   <b-modal
@@ -309,6 +307,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.separated {
+    margin-top: 10rem !important;
+}
+
 .organizations{
     position: relative;
 
