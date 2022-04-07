@@ -99,7 +99,7 @@ export default {
         partner: {
             type: String,
             required: false,
-            default: false,
+            default: null,
         },
 
         hideExtras: {
@@ -125,6 +125,7 @@ export default {
                 newsletter: true,
                 next: this.next || '/',
                 next_query: this.query,
+                exchange: this.partner,
             }
         }
     },

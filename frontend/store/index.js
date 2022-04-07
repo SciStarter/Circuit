@@ -269,15 +269,16 @@ export const actions = {
   async signup(
     { commit, dispatch, state },
     {
-      email,
-      username,
-      password,
-      zip_code,
-      phone,
-      agree,
-      newsletter,
-      next,
-      next_query,
+        email,
+        username,
+        password,
+        zip_code,
+        phone,
+        agree,
+        newsletter,
+        next,
+        next_query,
+        exchange,
     },
   ) {
     if (!agree) {
@@ -285,8 +286,9 @@ export const actions = {
     }
 
     const params = {
-      email,
-      password,
+        email,
+        password,
+        exchange,
     };
 
     if (username) {

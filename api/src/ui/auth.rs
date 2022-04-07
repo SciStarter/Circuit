@@ -18,6 +18,7 @@ pub use tide_fluent_routes::{
     RouteSegment,
 };
 use time::Duration;
+use uuid::Uuid;
 
 use crate::crypto::{KeyPair, Sealed};
 use crate::ui::{okay, okay_with_cookie};
@@ -264,6 +265,7 @@ struct SignupForm {
     zip_code: Option<String>,
     phone: Option<String>,
     newsletter: Option<bool>,
+    exchange: Option<Uuid>,
 }
 
 /// Create an account, if the validations pass.
@@ -296,6 +298,11 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
     person.interior.zip_code = form.zip_code;
     person.interior.phone = form.phone;
     person.interior.newsletter = form.newsletter.unwrap_or(false);
+
+    if let Some(uid) = form.exchange {
+        person.interior.join_channel = JoinChannel::Exchange(uid);
+    }
+
     person.store(db).await?;
 
     let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;

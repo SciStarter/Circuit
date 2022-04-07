@@ -338,6 +338,7 @@ pub struct PersonExterior {
 pub enum JoinChannel {
     Local,
     SciStarter,
+    Exchange(Uuid),
 }
 
 impl Default for JoinChannel {
