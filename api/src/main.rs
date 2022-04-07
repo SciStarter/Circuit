@@ -4,7 +4,6 @@ use common::{model, Database, INTERNAL_UID};
 use http_types::headers::HeaderValue;
 use sqlx::postgres::PgPoolOptions;
 use tide::{
-    listener::{ConcurrentListener, Listener},
     log,
     security::{CorsMiddleware, Origin},
 };
