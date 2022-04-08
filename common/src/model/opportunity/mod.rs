@@ -1094,11 +1094,11 @@ fn build_matching_query(
     if let Some(val) = query.withdrawn {
         if val {
             clauses.push(
-                "(('true'::jsonb) @> (interior -> 'withdrawn') OR (interior ->> 'review_status') IN ('draft', 'pending'))".to_string(),
+                "(('true'::jsonb) @> (interior -> 'withdrawn') OR coalesce(nullif(interior ->> 'review_status', ''), 'not_required') IN ('draft', 'pending'))".to_string(),
             );
         } else {
             clauses.push(
-                "(('false'::jsonb) @> (interior -> 'withdrawn') AND (interior ->> 'review_status') NOT IN ('draft', 'pending'))".to_string(),
+                "(('false'::jsonb) @> (interior -> 'withdrawn') AND coalesce(nullif(interior ->> 'review_status', ''), 'not_required') NOT IN ('draft', 'pending'))".to_string(),
             );
         }
     }
