@@ -179,16 +179,32 @@ struct GeomQuery {
     q: String,
 }
 
+enum End {
+    Front,
+    Back,
+}
+
 pub async fn geom(mut req: tide::Request<Database>) -> tide::Result {
     let search: GeomQuery = req.body_json().await?;
     let mut query = geo::GeomQuery::new(search.q, 0.5);
+
+    let mut end = End::Back;
 
     while !query.q.is_empty() {
         match query.lookup().await {
             Ok(result) => return okay(&result),
             Err(_) => {
                 let mut buf: Vec<_> = query.q.split(',').collect();
-                buf.pop();
+                end = match end {
+                    End::Front => {
+                        buf = buf.into_iter().skip(1).collect();
+                        End::Back
+                    }
+                    End::Back => {
+                        buf.pop();
+                        End::Front
+                    }
+                };
                 query.q = buf.join(", ");
             }
         }
