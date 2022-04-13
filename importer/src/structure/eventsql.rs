@@ -104,6 +104,7 @@ struct DataNode {
     guid: String,
     date_gmt: String,
     duration: Option<u32>,
+    start_date: Option<String>,
     end_date: Option<String>,
     modified_gmt: String,
     link: String,
@@ -217,11 +218,23 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
                 })
                 .collect();
         } else {
-            opp.exterior.start_datetimes =
-                match DateTime::parse_from_rfc3339(&format!("{}Z", &node.date_gmt)) {
-                    Ok(dt) => vec![dt],
-                    Err(_) => vec![],
-                };
+            if let Some(start_date) = &node.start_date {
+                if let Some(tz) = &partner.timezone {
+                    opp.exterior.start_datetimes = match tz.datetime_from_str(&start_date, "%F %T")
+                    {
+                        Ok(dt) => vec![dt.to_fixed_offset()],
+                        Err(_) => vec![],
+                    }
+                } else {
+                    if let Some(pair) = start_date.split_once(' ') {
+                        opp.exterior.start_datetimes =
+                            match format!("{}T{}Z", pair.0, pair.1).parse() {
+                                Ok(dt) => vec![dt],
+                                Err(_) => vec![],
+                            };
+                    }
+                }
+            }
 
             if let Some(end_date) = &node.end_date {
                 if let Some(tz) = &partner.timezone {
@@ -229,7 +242,7 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
                         Ok(dt) => vec![dt.to_fixed_offset()],
                         Err(_) => vec![],
                     }
-                } else if let Some(end_date) = &node.end_date {
+                } else {
                     if let Some(pair) = end_date.split_once(' ') {
                         opp.exterior.end_datetimes = match format!("{}T{}Z", pair.0, pair.1).parse()
                         {

@@ -131,6 +131,7 @@ const QUERY: &'static str = r#"{
           cost
           currencySymbol
           endDate
+          startDate
           link
           dateGmt
           duration
