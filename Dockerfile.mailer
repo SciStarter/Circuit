@@ -1,9 +1,8 @@
 FROM rust:1-bullseye as builder
-ADD common/ /usr/src/common/
-ADD mailer/ /usr/src/mailer/
-WORKDIR /usr/src/mailer/
+ADD backend/ /usr/src/backend/
+WORKDIR /usr/src/backend/
 RUN mv vendor.cargo .cargo
-RUN cargo install --path . --features container
+RUN cargo install --path mailer --features container
 
 FROM debian:bullseye
 EXPOSE 9100

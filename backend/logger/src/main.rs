@@ -4,7 +4,7 @@ use async_std::{
 };
 
 use chrono::{DateTime, Datelike, Duration, FixedOffset, Timelike, Utc};
-use rusty_s3::{Bucket, Credentials, S3Action};
+use rusty_s3::{Bucket, Credentials, S3Action, UrlStyle};
 use surf::http::Method;
 use tide::Request;
 
@@ -64,7 +64,7 @@ async fn writer(source: Receiver<String>, endpoint: String, access_key: String, 
 
     let bucket = Bucket::new(
         url::Url::parse(&endpoint).unwrap(),
-        true,
+        UrlStyle::Path,
         "".to_string(),
         "".to_string(),
     )

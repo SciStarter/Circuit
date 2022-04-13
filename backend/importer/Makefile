@@ -1,4 +1,4 @@
-REPO:="scistarter/circuit-soon"
+REPO:="scistarter/circuit-importer"
 RELEASE:=0.1
 PATCH=`cat PATCH`
 
@@ -11,8 +11,8 @@ imageid:
 bump:
 	echo $$(( $(PATCH) + 1 )) > PATCH
 
-image: bump ../Dockerfile.api
-	docker build -f ../Dockerfile.soon -t "$(REPO):$(RELEASE).$(PATCH)" ..
+image: bump ../../Dockerfile.importer
+	docker build -f ../../Dockerfile.importer -t "$(REPO):$(RELEASE).$(PATCH)" ../..
 
 upload: image
 	docker push "$(REPO):$(RELEASE).$(PATCH)"

@@ -7,11 +7,6 @@ rust-version = "1.58"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[profile.release]
-strip = true
-## This setting is only needed when generating a flamegraph
-#debug = true
-
 [features]
 container = []
 

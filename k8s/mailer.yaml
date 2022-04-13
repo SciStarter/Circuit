@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-mailer
-        image: scistarter/circuit-mailer:0.1.14
+        image: scistarter/circuit-mailer:0.1.15
         ports:
         - containerPort: 9100
         env:
@@ -46,5 +46,3 @@ spec:
   ports:
     - protocol: TCP
       port: 9100
-
-

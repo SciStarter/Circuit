@@ -1,0 +1,18 @@
+[package]
+name = "logger"
+version = "0.1.0"
+authors = ["Daniel Arbuckle <daniel@arbuckle-everything.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+container = []
+
+[dependencies]
+async-std = { version = "1.10.0", features = ["attributes"] }
+chrono = "0.4.19"
+rusty-s3 = "0.2.1"
+surf = { version = "2.3.2", features = ["h1-client-rustls"], default-features = false }
+tide = "0.16.0"
+url = "2.2.2"

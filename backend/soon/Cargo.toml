@@ -1,22 +1,12 @@
 [package]
-name = "mailer"
+name = "soon"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[profile.release]
-strip = true
-
-[features]
-container = []
-
 [dependencies]
 async-std = { version = "1.10.0", features = ["attributes"] }
-chrono = "0.4.19"
-form_urlencoded = "1.0.1"
-html2text = "0.2.1"
 serde = { version = "1.0.136", features = ["derive"] }
-surf = { version = "2.3.2", features = ["h1-client-rustls"], default-features = false }
+sqlx = { version = "0.5.11", features = ["runtime-async-std-rustls", "postgres", "macros", "chrono", "tls", "offline"] }
 tide = "0.16.0"
-url = "2.2.2"
