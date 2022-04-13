@@ -1,36 +1,19 @@
 {
   "db": "PostgreSQL",
-  "09c9b4727bcbaf9197825b368d711e1f856965450bbb03729e7263bb62c3b67c": {
+  "0cbc185fa2d1b0db90b3b89fc1c7c06891825b5257c9c5c020a4cd3fa702c66a": {
     "describe": {
-      "columns": [
-        {
-          "name": "slug?",
-          "ordinal": 0,
-          "type_info": "Text"
-        },
-        {
-          "name": "subject",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "body",
-          "ordinal": 2,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
+      "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
+          "Text",
+          "Text",
+          "Text",
           "Text"
         ]
       }
     },
-    "query": "\nSELECT slug AS \"slug?\", subject, body FROM c_email_message WHERE slug = $1\n"
+    "query": "\nINSERT INTO c_email_message (slug, subject, body, notes)\nVALUES ($1, $2, $3, $4)\nON CONFLICT (slug) DO\nUPDATE SET subject = $2, body = $3, notes = $4"
   },
   "113ab265c817affe2e5042ec46586946e57e3aef8339c8baae503d4884410d0c": {
     "describe": {
@@ -52,6 +35,44 @@
       }
     },
     "query": "insert into c_person (exterior, interior) values ($1, $2) returning id;\n"
+  },
+  "13c5a964942fdea0b29c48432d10ccff6756f1d36582ba2ab9d041a5c2c844c6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "slug?",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "subject",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "body",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "notes",
+          "ordinal": 3,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\nSELECT slug AS \"slug?\", subject, body, notes FROM c_email_message WHERE slug = $1\n"
   },
   "16274e812e6865e37e4b4f3cea7a6cb0af3410c99e8090cffdfcee78dd082de9": {
     "describe": {
@@ -1393,20 +1414,6 @@
       }
     },
     "query": "select count(*) likes\nfrom c_opportunity_like L inner join c_opportunity O on L.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1 and L.person = $2;\n"
-  },
-  "bf6dc2d70f9e4e744741fa6809011a2aa6e97dddc355baa4aab24ab29ffa91d6": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "\nINSERT INTO c_email_message (slug, subject, body)\nVALUES ($1, $2, $3)\nON CONFLICT (slug) DO\nUPDATE SET subject = $2, body = $3"
   },
   "c0425047604adf0d688a217b964e5787c81262a6d2f5c32654d53c6bf148c4ca": {
     "describe": {

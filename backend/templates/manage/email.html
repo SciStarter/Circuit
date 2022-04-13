@@ -1,13 +1,15 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/api/docs/bulma.css">
-    <title>Emails : {{slug}}</title>
-    <script src="https://cdn.tiny.cloud/1/24mjuektfkv1ynidjxtt61dnvj8flo2yxxcpb35r4gwwqfrp/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
-    <script>
-      tinymce.init({
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/api/docs/bulma.css">
+  <title>Emails : {{slug}}</title>
+  <script src="https://cdn.tiny.cloud/1/24mjuektfkv1ynidjxtt61dnvj8flo2yxxcpb35r4gwwqfrp/tinymce/5/tinymce.min.js"
+    referrerpolicy="origin"></script>
+  <script>
+    tinymce.init({
       selector: '#body',
       plugins: 'code image link',
       menubar: 'file edit view format insert',
@@ -16,35 +18,50 @@
       content_style: "@import url('https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,700;1,400&family=Fira+Sans:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap');",
       relative_urls: false,
       remove_script_host: false
-      });
-    </script>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,700;1,400&family=Fira+Sans:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap');
-    </style>
-  </head>
-  <body>
-    <section class="section">
-      <div class="container">
-        <a href=".">Back to emails</a>
-        <h1 class="title">Emails : {{slug}}</h1>
-        <form method="post">
-          <div class="field">
-            <label for="subject" class="label"><h3>Subject</h3></label>
-            <div class="control">
-              <input id="subject" type="text" name="subject" value="{{subject}}" class="input">
-            </div>
-          </div>
+    });
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,700;1,400&family=Fira+Sans:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;1,400&display=swap');
+  </style>
+</head>
 
-          <div class="field">
-            <label for="body" class="label"><h3>Body</h3></label>
-            <div class="control">
-              <textarea id="body" name="body" style="min-height: 50vh">{{body}}</textarea>
-            </div>
+<body>
+  <section class="section">
+    <div class="container">
+      <a href=".">Back to emails</a>
+      <h1 class="title">Emails : {{slug}}</h1>
+      <form method="post">
+        <div class="field">
+          <label for="subject" class="label">
+            <h3>Subject</h3>
+          </label>
+          <div class="control">
+            <input id="subject" type="text" name="subject" value="{{subject}}" class="input">
           </div>
+        </div>
 
-          <input class="button is-primary is-large" type="submit" value="Save">
-        </form>
-      </div>
-    </section>
-  </body>
+        <div class="field">
+          <label for="body" class="label">
+            <h3>Body</h3>
+          </label>
+          <div class="control">
+            <textarea id="body" name="body" style="min-height: 50vh">{{body}}</textarea>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="notes" class="label">
+            <h3>Notes</h3>
+          </label>
+          <div class="control">
+            <textarea id="notes" name="notes" style="min-height: 50vh">{{notes}}</textarea>
+          </div>
+        </div>
+
+        <input class="button is-primary is-large" type="submit" value="Save">
+      </form>
+    </div>
+  </section>
+</body>
+
 </html>

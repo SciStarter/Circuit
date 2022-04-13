@@ -55,12 +55,14 @@ struct EmailPage {
     slug: String,
     subject: String,
     body: String,
+    notes: String,
 }
 
 #[derive(Deserialize)]
 struct EmailForm {
     subject: String,
     body: String,
+    notes: String,
 }
 
 async fn email(mut req: tide::Request<Database>) -> tide::Result {
@@ -80,6 +82,7 @@ async fn email(mut req: tide::Request<Database>) -> tide::Result {
         let form: EmailForm = req.body_form().await?;
         message.subject = form.subject;
         message.body = form.body;
+        message.notes = form.notes;
         message
             .store(req.state())
             .await
@@ -90,6 +93,7 @@ async fn email(mut req: tide::Request<Database>) -> tide::Result {
             slug: message.slug().unwrap(),
             subject: message.subject,
             body: message.body,
+            notes: message.notes,
         }
         .into())
     }

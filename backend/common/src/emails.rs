@@ -19,6 +19,7 @@ pub struct EmailMessage {
     slug: Option<String>,
     pub subject: String,
     pub body: String,
+    pub notes: String,
 }
 
 impl EmailMessage {
@@ -44,6 +45,7 @@ SELECT "slug" from "c_email_message" ORDER BY "slug" ASC
             slug: Some(slug.as_ref().to_string()),
             subject: subject.as_ref().to_string(),
             body: body.as_ref().to_string(),
+            notes: String::new(),
         }
     }
 
@@ -51,7 +53,7 @@ SELECT "slug" from "c_email_message" ORDER BY "slug" ASC
         Ok(sqlx::query_as!(
             EmailMessage,
             r#"
-SELECT slug AS "slug?", subject, body FROM c_email_message WHERE slug = $1
+SELECT slug AS "slug?", subject, body, notes FROM c_email_message WHERE slug = $1
 "#,
             slug.as_ref()
         )
@@ -71,6 +73,7 @@ SELECT slug AS "slug?", subject, body FROM c_email_message WHERE slug = $1
                 slug: None,
                 subject: subject.as_ref().to_string(),
                 body: body.as_ref().to_string(),
+                notes: String::new(),
             },
         }
     }
@@ -79,13 +82,14 @@ SELECT slug AS "slug?", subject, body FROM c_email_message WHERE slug = $1
         if let Some(slug) = &self.slug {
             sqlx::query!(
                 r"
-INSERT INTO c_email_message (slug, subject, body)
-VALUES ($1, $2, $3)
+INSERT INTO c_email_message (slug, subject, body, notes)
+VALUES ($1, $2, $3, $4)
 ON CONFLICT (slug) DO
-UPDATE SET subject = $2, body = $3",
+UPDATE SET subject = $2, body = $3, notes = $4",
                 slug,
                 &self.subject,
-                &self.body
+                &self.body,
+                &self.notes,
             )
             .execute(db)
             .await?;
@@ -114,6 +118,7 @@ UPDATE SET subject = $2, body = $3",
             slug: None,
             subject: ac.replace_all(&self.subject, &replacements),
             body: ac.replace_all(&self.body, &replacements),
+            notes: self.notes.clone(),
         }
     }
 
