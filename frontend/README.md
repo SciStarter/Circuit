@@ -10,11 +10,8 @@ contained in the ../api folder.
 To run a full local instance, we need to:
 
 1. set up and run PostgreSQL
-
 2. set up and run the API server
-
 3. set the ```LOCAL_API_URL``` environment variable to http://127.0.0.1:8000
-
 4. run the Nuxt server using ```yarn dev```
 
 ### PostgreSQL database
@@ -27,12 +24,11 @@ The short version is this:
   [PostGIS](https://postgis.net/install/) using whatever mechanism
   you’re comfortable with. Linux package managers and Docker are both
   convenient options.
-
 * Make sure the credentials are set up so that a local process can
   have read/write access to an empty database on that PostgreSQL
   server.
-
 * Make sure the PostgreSQL server is running.
+
 
 ### Install Rust
 
@@ -58,9 +54,8 @@ To run migrations, we need to first install the SQLX command line tool:
 That tool only needs to be installed once, although the same command
 can be used to update it if a new version is released.
 
-Once sqlx-cli is installed, we can run the actual migrations:
+Once sqlx-cli is installed, we can open a command line in the backend/common folder and run the actual migrations:
 
-    cd ../backend/common
     sqlx migrate run
 
 ### API server
