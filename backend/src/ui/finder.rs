@@ -255,6 +255,8 @@ struct SearchQuery {
     pub current: Option<bool>,
     pub withdrawn: Option<bool>,
     pub sample: Option<bool>,
+    pub kids_only: Option<bool>,
+    pub adults_only: Option<bool>,
 }
 
 pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
@@ -277,6 +279,8 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     query.ending = search.ending;
     query.min_age = search.min_age;
     query.max_age = search.max_age;
+    query.kids_only = search.kids_only;
+    query.adults_only = search.adults_only;
     query.descriptors = search.descriptors;
     query.cost = search.cost;
     query.topics = search.topics;

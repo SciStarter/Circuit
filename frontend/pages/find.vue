@@ -52,7 +52,15 @@
 
       <fieldset>
         <label>Age</label>
-        <b-field label="Minimum Age" data-context="find-minimum-age">
+        <p>
+          <b-checkbox v-model="kids_only" :native-value="true" :disabled="loading">
+            Kids Friendly Only
+          </b-checkbox>
+          <b-checkbox v-model="adults_only" :native-value="true" :disabled="loading">
+            21+ Only
+          </b-checkbox>
+        </p>
+        <b-field label="Participant Age Range Minimum" data-context="find-minimum-age">
           <b-checkbox v-model="min_age_active" :disabled="loading" />
           <b-slider v-model="min_age" :disabled="!min_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
             <!-- <b-slider-tick :value="12">
@@ -76,7 +84,7 @@
           </b-slider>
           <input v-model="min_age" type="text" :disabled="!min_age_active || loading" class="slider-direct">
         </b-field>
-        <b-field label="Maximum Age" data-context="find-maximum-age">
+        <b-field label="Participant Age Range Maximum" data-context="find-maximum-age">
           <b-checkbox v-model="max_age_active" :disabled="loading" />
           <b-slider v-model="max_age" :disabled="!max_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
             <!-- <b-slider-tick :value="12">
@@ -306,7 +314,9 @@ export default {
             'participated',
             'reviewing',
             'withdrawn',
-            'over'
+            'over',
+            'kids_only',
+            'adults_only',
         ]);
 
         if(!Object.keys(query).length) {
@@ -400,6 +410,26 @@ export default {
                 if(this.max_age_active) {
                     this.set_query_interactive('max_age', value);
                 }
+            }
+        },
+
+        kids_only: {
+            get() {
+                return this.get_query('kids_only', false);
+            },
+
+            set(value) {
+                this.set_query_interactive('kids_only', value);
+            }
+        },
+
+        adults_only: {
+            get() {
+                return this.get_query('adults_only', false);
+            },
+
+            set(value) {
+                this.set_query_interactive('adults_only', value);
             }
         },
 

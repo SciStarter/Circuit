@@ -994,6 +994,8 @@ pub struct OpportunityQuery {
     pub ending: Option<DateTime<FixedOffset>>,
     pub min_age: Option<i16>,
     pub max_age: Option<i16>,
+    pub kids_only: Option<bool>,
+    pub adults_only: Option<bool>,
     pub descriptors: Option<Vec<Descriptor>>,
     pub cost: Option<Cost>,
     pub venue_type: Option<VenueType>,
@@ -1251,6 +1253,14 @@ OR
             "(exterior -> 'min_age')::integer <= ${}",
             ParamValue::RawInt(*max_age as i32).append(&mut params)
         ))
+    }
+
+    if query.kids_only.unwrap_or(false) {
+        clauses.push("(exterior -> 'max_age')::integer <= 18".to_string())
+    }
+
+    if query.adults_only.unwrap_or(false) {
+        clauses.push("(exterior -> 'min_age')::integer >= 21".to_string())
     }
 
     if let Some(cost) = &query.cost {
