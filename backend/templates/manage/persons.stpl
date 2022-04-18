@@ -18,7 +18,7 @@
         </form>
         <ul>
           <% for person in persons { %>
-          <li><a href="<%= person.exterior.uid %>"><%= person.interior.email %></a></li>
+          <li><a href="<%= person.exterior.uid.to_string() %>"><%= person.interior.email %></a></li>
           <% } %>
         </ul>
         <div>
@@ -46,7 +46,7 @@
           <div class="field">
             <label class="label">Password</label>
             <div class="control">
-              <input class="input" type="text" name="password" value="<%= suggested_password}}">
+              <input class="input" type="text" name="password" value="<%= suggested_password %>">
             </div>
           </div>
           <input type="submit" value="Add">

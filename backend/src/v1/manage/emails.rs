@@ -1,8 +1,8 @@
-use askama::Template;
 use common::emails::EmailMessage;
 use common::model::person::Permission;
 use common::Database;
-use http_types::Method;
+use http_types::{Method, StatusCode};
+use sailfish::TemplateOnce;
 use serde::Deserialize;
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
@@ -11,7 +11,7 @@ use tide_fluent_routes::{
 
 use crate::v1::redirect;
 
-use super::authorized_admin;
+use super::{authorized_admin, IntoResponse};
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
@@ -20,8 +20,8 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at(":slug", |r| r.get(email).post(email))
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/emails.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/emails.stpl")]
 struct EmailsPage {
     slugs: Vec<String>,
 }
@@ -46,11 +46,11 @@ async fn emails(mut req: tide::Request<Database>) -> tide::Result {
 
     let slugs = EmailMessage::list_messages(db).await?;
 
-    Ok(EmailsPage { slugs }.into())
+    Ok(EmailsPage { slugs }.into_response(StatusCode::Ok)?)
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/email.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/email.stpl")]
 struct EmailPage {
     slug: String,
     subject: String,
@@ -95,6 +95,6 @@ async fn email(mut req: tide::Request<Database>) -> tide::Result {
             body: message.body,
             notes: message.notes,
         }
-        .into())
+        .into_response(StatusCode::Ok)?)
     }
 }

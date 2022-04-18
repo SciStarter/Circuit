@@ -12,12 +12,12 @@
       <div class="container">
         <a href=".">Back to person list</a>
         <h1 class="title">Person : <%= person.interior.email %></h1>
-        <% if !partners.is_empty() %>
+        <% if !partners.is_empty() { %>
         <div class="mb-1">
           <form method="post" action="<%= path %>/add" target="add-to-partner">
             <select name="uid">
               <% for partner in partners { %>
-              <option value="<%= partner.uid %>"><%= partner.name %></option>
+              <option value="<%= partner.uid.to_string() %>"><%= partner.name %></option>
               <% } %>
             </select>
             <input type="submit" value="Add to partner">

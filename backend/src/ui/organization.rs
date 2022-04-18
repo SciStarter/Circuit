@@ -196,7 +196,7 @@ pub async fn get_organization(mut req: tide::Request<Database>) -> tide::Result 
     okay(&partner.elide())
 }
 
-pub async fn get_organization_public(mut req: tide::Request<Database>) -> tide::Result {
+pub async fn get_organization_public(req: tide::Request<Database>) -> tide::Result {
     let uid = Uuid::parse_str(req.param("uid")?).with_status(|| StatusCode::BadRequest)?;
     let partner = Partner::load_by_uid(req.state(), &uid)
         .await

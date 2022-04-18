@@ -17,7 +17,7 @@
           <select name="partner">
             <option value="">Partner</option>
             <% for option in partners { %>
-              <option value="<%= option.uid %>"<% if option.uid == partner { %> selected<% } %>><%= option.name %></option>
+              <option value="<%= option.uid | disp %>"<% if option.uid == partner { %> selected<% } %>><%= option.name %></option>
             <% } %>
           </select>
           <select name="accepted">
@@ -46,7 +46,7 @@
           <% for opp in matches { %>
             <tr>
               <td>
-                <a href="<%= opp.exterior.uid %>"><%= opp.exterior.title %></a>
+                <a href="<%= opp.exterior.uid | disp %>"><%= opp.exterior.title %></a>
               </td>
               <td>
                 <% if let Some(true) = opp.interior.accepted { %><span style="color: #007C03">✓</span><% } %>

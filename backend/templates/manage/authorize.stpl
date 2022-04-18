@@ -16,7 +16,7 @@
             <% } %>
         </p>
         <form method="post">
-          <input type="hidden" name="csrf" value="<% match csrf %><% when Some with (csrf) %><%= csrf %><% else %>csrf-missing<% endmatch %>">
+          <input type="hidden" name="csrf" value="<% if let Some(csrf) = csrf { %><%= csrf %><% } else { %>csrf-missing<% } %>">
           <% if let Some(next) = next { %>
           <input type="hidden" name="next" value="<%= next %>">
           <% } %>

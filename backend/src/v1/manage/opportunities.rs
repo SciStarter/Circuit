@@ -1,4 +1,4 @@
-use askama::Template;
+use super::IntoResponse;
 use chrono::{DateTime, FixedOffset};
 use common::{
     model::{
@@ -13,7 +13,8 @@ use common::{
     },
     Database, INTERNAL_UID,
 };
-use http_types::Method;
+use http_types::{Method, StatusCode};
+use sailfish::TemplateOnce;
 use serde::Deserialize;
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
@@ -30,8 +31,8 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at(":uid", |r| r.get(opportunity).post(opportunity))
 }
 
-#[derive(Template)]
-#[template(path = "manage/opportunities.html")]
+#[derive(TemplateOnce)]
+#[template(path = "manage/opportunities.stpl")]
 struct OpportunitiesPage {
     pub accepted: Option<bool>,
     pub withdrawn: Option<bool>,
@@ -88,27 +89,25 @@ async fn search(req: tide::Request<Database>) -> tide::Result {
         matches,
         num_matches,
     }
-    .into())
+    .into_response(StatusCode::Ok)?)
 }
 
 mod filters {
-    pub fn mapping(
-        mapping: &std::collections::HashMap<String, String>,
-    ) -> ::askama::Result<String> {
+    pub fn _mapping(mapping: &std::collections::HashMap<String, String>) -> String {
         if mapping.is_empty() {
-            return Ok("<em>No data entered</em>".to_string());
+            return "<em>No data entered</em>".to_string();
         }
 
         let parts: Vec<String> = mapping
             .iter()
             .map(|(k, v)| format!("{}: {}", k, v))
             .collect();
-        Ok(parts.join(", "))
+        parts.join(", ")
     }
 }
 
-#[derive(Template)]
-#[template(path = "manage/opportunity.html")]
+#[derive(TemplateOnce)]
+#[template(path = "manage/opportunity.stpl")]
 struct OpportunityPage {
     message: String,
     opportunity: Opportunity,
@@ -347,7 +346,7 @@ async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
                 all_partners: Partner::catalog(db).await?,
                 opportunity,
             }
-            .into());
+            .into_response(StatusCode::Ok)?);
         }
 
         return Ok(redirect(req.url().path()));
@@ -361,7 +360,7 @@ async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
         opportunity,
     };
 
-    Ok(form.into())
+    Ok(form.into_response(StatusCode::Ok)?)
 }
 
 async fn add_opportunity(mut req: tide::Request<Database>) -> tide::Result {

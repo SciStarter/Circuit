@@ -1,9 +1,10 @@
-use askama::Template;
 use common::{
     jwt::issue_jwt,
     model::{invitation::*, Partner, Person},
     Database,
 };
+use http_types::{mime, StatusCode};
+use sailfish::TemplateOnce;
 use tide::Response;
 use tide_fluent_routes::prelude::*;
 use uuid::Uuid;
@@ -17,8 +18,8 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes.at(":uid", |r| r.get(dispatch))
 }
 
-#[derive(Template, Default)]
-#[template(path = "invitation/password_reset.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "invitation/password_reset.stpl")]
 struct ResetPage {
     pub jwt: String,
 }
@@ -28,7 +29,10 @@ async fn password_reset(req: &mut tide::Request<Database>, inv: Invitation) -> t
 
     let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
     let page = ResetPage { jwt: jwt.clone() };
-    let mut resp: Response = page.into();
+    let mut resp = Response::builder(StatusCode::Ok)
+        .content_type(mime::HTML)
+        .body(page.render_once()?)
+        .build();
     resp.insert_cookie(token_cookie(jwt));
 
     if let Err((_, err)) = inv.consume(req.state()).await {

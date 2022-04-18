@@ -1,12 +1,13 @@
 use crate::ui::auth::{token_cookie, SESSION_HOURS};
-use crate::ui::{okay_with_cookie, UI_AUDIENCE};
+use crate::ui::UI_AUDIENCE;
 
 use super::{check_csrf, check_jwt, issue_jwt, random_string, redirect, set_csrf_cookie};
-use askama::Template;
 use common::model::Pagination;
 use common::model::{partner::PartnerReference, person::Permission, Partner, Person};
 use common::Database;
+use http_types::mime;
 use once_cell::sync::Lazy;
+use sailfish::TemplateOnce;
 use tide::{http::Cookie, prelude::*};
 use tide::{Response, StatusCode};
 use tide_fluent_routes::prelude::*;
@@ -17,6 +18,29 @@ pub mod emails;
 pub mod opportunities;
 
 const BASE: &'static str = "/api/v1/manage/";
+
+pub trait IntoResponse: TemplateOnce {
+    fn into_response<S>(self, status: S) -> tide::Result<tide::Response>
+    where
+        S: TryInto<StatusCode>,
+        <S as TryInto<StatusCode>>::Error: std::fmt::Debug;
+}
+
+impl<T> IntoResponse for T
+where
+    T: TemplateOnce,
+{
+    fn into_response<S>(self, status: S) -> tide::Result<tide::Response>
+    where
+        S: TryInto<StatusCode>,
+        <S as TryInto<StatusCode>>::Error: std::fmt::Debug,
+    {
+        Ok(tide::Response::builder(status)
+            .content_type(mime::HTML)
+            .body(self.render_once()?)
+            .build())
+    }
+}
 
 #[cfg(not(debug_assertions))]
 const MANAGE_COOKIE: &'static str = "__Host-manage";
@@ -49,8 +73,8 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("health/", |r| r.get(health))
 }
 
-#[derive(Template)]
-#[template(path = "manage/manage.html")]
+#[derive(TemplateOnce)]
+#[template(path = "manage/manage.stpl")]
 struct ManagePage {
     pub admin: Person,
 }
@@ -63,11 +87,11 @@ async fn manage(req: tide::Request<Database>) -> tide::Result {
 
     let page = ManagePage { admin };
 
-    Ok(page.into())
+    Ok(page.into_response(StatusCode::Ok)?)
 }
 
-#[derive(Template, Default, Serialize, Deserialize, Debug)]
-#[template(path = "manage/authorize.html")]
+#[derive(TemplateOnce, Default, Serialize, Deserialize, Debug)]
+#[template(path = "manage/authorize.stpl")]
 struct AuthorizeForm {
     next: Option<String>,
     error: Option<String>,
@@ -82,7 +106,8 @@ async fn authorize(mut req: tide::Request<Database>) -> tide::Result {
             let csrf = random_string();
             let mut form: AuthorizeForm = req.query()?;
             form.csrf = Some(csrf.clone());
-            Ok(set_csrf_cookie(form.into(), &csrf))
+            form.password = Some(String::new());
+            Ok(set_csrf_cookie(form.into_response(StatusCode::Ok)?, &csrf))
         }
         Method::Post => {
             let mut form: AuthorizeForm = req.body_form().await?;
@@ -123,27 +148,27 @@ async fn authorize(mut req: tide::Request<Database>) -> tide::Result {
                     return Ok(resp);
                 } else {
                     form.error = Some("invalid username or password".to_string());
-                    return Ok(form.into());
+                    return Ok(form.into_response(StatusCode::Ok)?);
                 }
             } else {
                 form.error = Some("email and password are required".to_string());
-                return Ok(form.into());
+                return Ok(form.into_response(StatusCode::Ok)?);
             }
         }
         _ => unimplemented!(),
     }
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/partners.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/partners.stpl")]
 struct PartnersPage {
     pub partners: Vec<PartnerReference>,
     pub suggested_secret: String,
     pub csrf: String,
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/partners_created.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/partners_created.stpl")]
 struct PartnersCreatedPage {
     pub name: String,
     pub uid: String,
@@ -178,7 +203,7 @@ async fn partners(mut req: tide::Request<Database>) -> tide::Result {
                 suggested_secret: secret.to_string(),
                 csrf: csrf.to_string(),
             };
-            Ok(set_csrf_cookie(page.into(), &csrf))
+            Ok(set_csrf_cookie(page.into_response(StatusCode::Ok)?, &csrf))
         }
         Method::Post => {
             let form: PartnersForm = req.body_form().await?;
@@ -204,14 +229,14 @@ async fn partners(mut req: tide::Request<Database>) -> tide::Result {
                 uid: partner.exterior.uid.to_string(),
                 secret: form.secret,
             };
-            Ok(page.into())
+            Ok(page.into_response(StatusCode::Ok)?)
         }
         _ => unimplemented!(),
     }
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/partner.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/partner.stpl")]
 struct PartnerPage {
     partner: Partner,
 }
@@ -230,7 +255,7 @@ async fn partner(req: tide::Request<Database>) -> tide::Result {
 
     let page = PartnerPage { partner };
 
-    Ok(page.into())
+    Ok(page.into_response(StatusCode::Ok)?)
 }
 
 async fn authorized_admin(
@@ -269,8 +294,8 @@ async fn authorized_admin(
     Ok(person)
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/persons.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/persons.stpl")]
 struct PersonsPage {
     pub persons: Vec<Person>,
     pub suggested_password: String,
@@ -340,7 +365,7 @@ async fn persons(mut req: tide::Request<Database>) -> tide::Result {
                 cur_page,
                 last_page,
             };
-            Ok(set_csrf_cookie(page.into(), &csrf))
+            Ok(set_csrf_cookie(page.into_response(StatusCode::Ok)?, &csrf))
         }
         Method::Post => {
             let form: PersonsForm = req.body_form().await?;
@@ -366,8 +391,8 @@ async fn persons(mut req: tide::Request<Database>) -> tide::Result {
     }
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/person.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/person.stpl")]
 struct PersonPage {
     pub person: Person,
     pub csrf: String,
@@ -430,7 +455,7 @@ async fn person(mut req: tide::Request<Database>) -> tide::Result {
                 path: req.url().path().to_string(),
                 person,
             };
-            Ok(set_csrf_cookie(page.into(), &csrf))
+            Ok(set_csrf_cookie(page.into_response(StatusCode::Ok)?, &csrf))
         }
         Method::Post => {
             let form: PersonForm = req.body_form().await?;
@@ -499,13 +524,13 @@ async fn add_person_to_partner(mut req: tide::Request<Database>) -> tide::Result
     Ok(format!("Added to partner {}", partner.exterior.name).into())
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/masquerade.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/masquerade.stpl")]
 struct MasqueradePage {
     pub jwt: String,
 }
 
-async fn masquerade(mut req: tide::Request<Database>) -> tide::Result {
+async fn masquerade(req: tide::Request<Database>) -> tide::Result {
     let _admin = match authorized_admin(&req, &Permission::ManagePersons).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
@@ -517,7 +542,7 @@ async fn masquerade(mut req: tide::Request<Database>) -> tide::Result {
     common::log("masquerade", &jwt);
 
     let page = MasqueradePage { jwt: jwt.clone() };
-    let mut resp: Response = page.into();
+    let mut resp: Response = page.into_response(StatusCode::Ok)?;
     resp.insert_cookie(token_cookie(jwt));
 
     Ok(resp)
@@ -540,7 +565,7 @@ mod filters {
         }
     }
 
-    pub fn health<V: Value>(ratio: V) -> ::askama::Result<String> {
+    pub fn health<V: Value>(ratio: V) -> String {
         let ratio = ratio.as_f32();
         let color = if ratio < 0.5 {
             format!("#FF{:02X}00", (ratio * 512.0) as u8)
@@ -548,16 +573,16 @@ mod filters {
             format!("#{:02X}FF00", ((1.0 - ratio) * 512.0) as u8)
         };
 
-        Ok(format!(
+        format!(
             r#"<div style="text-align: center; background-color: {}"><span style="color: #fff; font-weight: bold; mix-blend-mode: exclusion">{:.1}%</span></div>"#,
             &color,
             ratio * 100.0
-        ))
+        )
     }
 }
 
-#[derive(Template)]
-#[template(path = "manage/health.html")]
+#[derive(TemplateOnce)]
+#[template(path = "manage/health.stpl")]
 struct HealthPage {
     pub accepted: Option<bool>,
     pub withdrawn: Option<bool>,
@@ -1073,5 +1098,5 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
                 / num_matches
         },
     }
-    .into())
+    .into_response(StatusCode::Ok)?)
 }

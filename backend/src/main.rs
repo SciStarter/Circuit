@@ -1,5 +1,3 @@
-#![forbid(unsafe_code)]
-
 use common::{model, Database, INTERNAL_UID};
 use http_types::headers::HeaderValue;
 use sqlx::postgres::PgPoolOptions;

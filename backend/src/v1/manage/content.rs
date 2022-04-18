@@ -1,7 +1,7 @@
-use askama::Template;
 use common::model::{block::Block, person::Permission};
 use common::Database;
-use http_types::Method;
+use http_types::{Method, StatusCode};
+use sailfish::TemplateOnce;
 use serde::Deserialize;
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
@@ -10,7 +10,7 @@ use tide_fluent_routes::{
 
 use crate::v1::redirect;
 
-use super::authorized_admin;
+use super::{authorized_admin, IntoResponse};
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes.get(content).post(content).at(":language/", |r| {
@@ -24,8 +24,8 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     })
 }
 
-#[derive(Template)]
-#[template(path = "manage/content.html")]
+#[derive(TemplateOnce)]
+#[template(path = "manage/content.stpl")]
 struct ContentPage {
     languages: Vec<(String, String)>,
     all_languages: Vec<(String, String)>,
@@ -66,11 +66,11 @@ async fn content(mut req: tide::Request<Database>) -> tide::Result {
             .collect(),
     };
 
-    Ok(page.into())
+    Ok(page.into_response(StatusCode::Ok)?)
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/content_language.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/content_language.stpl")]
 struct ContentLanguagePage {
     language_name: String,
     groups: Vec<String>,
@@ -105,11 +105,11 @@ async fn content_language(mut req: tide::Request<Database>) -> tide::Result {
         language_name,
         groups,
     }
-    .into())
+    .into_response(StatusCode::Ok)?)
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/content_group.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/content_group.stpl")]
 struct ContentGroupPage {
     language_name: String,
     group: String,
@@ -147,11 +147,11 @@ async fn content_group(mut req: tide::Request<Database>) -> tide::Result {
         group,
         items,
     }
-    .into())
+    .into_response(StatusCode::Ok)?)
 }
 
-#[derive(Template, Default)]
-#[template(path = "manage/content_item.html")]
+#[derive(TemplateOnce, Default)]
+#[template(path = "manage/content_item.stpl")]
 struct ContentItemPage {
     language_name: String,
     group: String,
@@ -215,6 +215,6 @@ async fn content_item(mut req: tide::Request<Database>) -> tide::Result {
             label: block.label,
             content: block.content,
         }
-        .into())
+        .into_response(StatusCode::Ok)?)
     }
 }
