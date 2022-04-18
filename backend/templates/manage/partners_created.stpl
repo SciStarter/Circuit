@@ -11,9 +11,9 @@
       <div class="container">
         <a href="">Back to partners</a>
         <h1 class="title">Partner Created</h1>
-        <div><h3>Partner name:</h3> <pre>{{name}}</pre></div>
-        <div><h3>Partner UID:</h3> <pre>{{uid}}</pre></div>
-        <div><h3>Partner Secret:</h3> <pre>{{secret}}</pre></div>
+        <div><h3>Partner name:</h3> <pre><%= name %></pre></div>
+        <div><h3>Partner UID:</h3> <pre><%= uid %></pre></div>
+        <div><h3>Partner Secret:</h3> <pre><%= secret %></pre></div>
 
         <p>
           <strong>Be sure the partner knows their UID and secret before leaving

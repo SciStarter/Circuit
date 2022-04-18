@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/api/docs/bulma.css">
+    <title>Log in</title>
+  </head>
+  <body>
+    <section class="section">
+      <div class="container">
+        <h1 class="title">Log in</h1>
+        <p>
+            <% if let Some(error) = error { %>
+            <%= error %>
+            <% } %>
+        </p>
+        <form method="post">
+          <input type="hidden" name="csrf" value="<% match csrf %><% when Some with (csrf) %><%= csrf %><% else %>csrf-missing<% endmatch %>">
+          <% if let Some(next) = next { %>
+          <input type="hidden" name="next" value="<%= next %>">
+          <% } %>
+          <div><input type="email" name="email" <% if let Some(email) = email { %>value="<%= email %>" <% } %>placeholder="me@example.com"></div>
+          <div><input type="password" name="password"></div>
+          <input class="button is-primary is-large" type="submit" value="Log in">
+        </form>
+      </div>
+    </section>
+  </body>
+</html>

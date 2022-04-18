@@ -5,60 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/api/docs/bulma.css">
     <link rel="stylesheet" href="/api/docs/manage.css">
-    <title>Person : {{person.interior.email}}</title>
+    <title>Person : <%= person.interior.email %></title>
   </head>
   <body>
     <section class="section">
       <div class="container">
         <a href=".">Back to person list</a>
-        <h1 class="title">Person : {{person.interior.email}}</h1>
-        {% if !partners.is_empty() %}
+        <h1 class="title">Person : <%= person.interior.email %></h1>
+        <% if !partners.is_empty() %>
         <div class="mb-1">
-          <form method="post" action="{{path}}/add" target="add-to-partner">
+          <form method="post" action="<%= path %>/add" target="add-to-partner">
             <select name="uid">
-              {% for partner in partners %}
-              <option value="{{partner.uid}}">{{partner.name}}</option>
-              {% endfor %}
+              <% for partner in partners { %>
+              <option value="<%= partner.uid %>"><%= partner.name %></option>
+              <% } %>
             </select>
             <input type="submit" value="Add to partner">
           </form>
         </div>
-        {% endif %}
+        <% } %>
         <div class="mb-4">
-          <form method="post" action="{{path}}/masq" target="masquerade">
-            <input type="submit" value="Masquerade as {{person.interior.email}}">
+          <form method="post" action="<%= path %>/masq" target="masquerade">
+            <input type="submit" value="Masquerade as <%= person.interior.email %>">
           </form>
         </div>
         <form method="post">
-          <input type="hidden" name="csrf" value="{{csrf}}">
+          <input type="hidden" name="csrf" value="<%= csrf %>">
           <div class="field">
             <label class="label">Username</label>
             <div class="control">
-              <input class="input" type="text" name="username" value="{{person.exterior.username.clone().unwrap_or_default()}}">
+              <input class="input" type="text" name="username" value="<%= person.exterior.username.clone().unwrap_or_default() %>">
             </div>
           </div>
           <div class="field">
             <label class="label">Email</label>
             <div class="control">
-              <input class="input" type="text" name="email" value="{{person.interior.email}}">
+              <input class="input" type="text" name="email" value="<%= person.interior.email %>">
             </div>
           </div>
           <div class="field">
             <div class="control">
               <label class="checkbox">
-                <input type="checkbox" value="true" name="manage_content"{% if person.check_permission(Permission::ManageContent.as_ref()) %} checked{% endif %}>
+                <input type="checkbox" value="true" name="manage_content"<% if person.check_permission(Permission::ManageContent.as_ref()) { %> checked<% } %>>
                 Manage Content
               </label>
               <label class="checkbox">
-                <input type="checkbox" value="true" name="manage_partners"{% if person.check_permission(Permission::ManagePartners.as_ref()) %} checked{% endif %}>
+                <input type="checkbox" value="true" name="manage_partners"<% if person.check_permission(Permission::ManagePartners.as_ref()) { %> checked<% } %>>
                 Manage Partners
               </label>
               <label class="checkbox">
-                <input type="checkbox" value="true" name="manage_persons"{% if person.check_permission(Permission::ManagePersons.as_ref()) %} checked{% endif %}>
+                <input type="checkbox" value="true" name="manage_persons"<% if person.check_permission(Permission::ManagePersons.as_ref()) { %> checked<% } %>>
                 Manage Persons
               </label>
               <label class="checkbox">
-                <input type="checkbox" value="true" name="manage_opportunitues"{% if person.check_permission(Permission::ManageOpportunities.as_ref()) %} checked{% endif %}>
+                <input type="checkbox" value="true" name="manage_opportunitues"<% if person.check_permission(Permission::ManageOpportunities.as_ref()) { %> checked<% } %>>
                 Manage Opportunities
               </label>
             </div>

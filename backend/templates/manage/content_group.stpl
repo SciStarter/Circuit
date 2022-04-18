@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/api/docs/bulma.css">
-    <title>Emails</title>
+    <title><%= language_name %> : <%= group %> Content Items</title>
   </head>
   <body>
     <section class="section">
       <div class="container">
-        <a href="..">Back to management dashboard</a>
-        <h1 class="title">Emails</h1>
+        <a href="..">Back to <%= language_name %></a>
+        <h1 class="title"><%= language_name %> : <%= group %> Content Items</h1>
         <ul style="list-style: none">
-          {% for slug in slugs %}
-          <li><a href="{{slug}}">{{slug}}</a></li>
-          {% endfor %}
+          <% for item in items { %>
+          <li><a href="<%= item %>"><%= item %></a></li>
+          <% } %>
         </ul>
 
-        <h1>Add Email</h1>
+        <h1>Add Block</h1>
         <form method="post">
-          <input name="slug" type="text" placeholder="slug">
+          <input name="item" type="text" placeholder="Block id">
           <input class="button is-small" type="submit" value="Add">
         </form>
       </div>

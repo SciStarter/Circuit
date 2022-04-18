@@ -13,29 +13,29 @@
         <a href="#create">Create</a>
         <h1 class="title">Opportunities &amp; Pages</h1>
         <form method="get">
-          <input type="text" name="title" value="{{title}}" placeholder="name">
+          <input type="text" name="title" value="<%= title %>" placeholder="name">
           <select name="partner">
             <option value="">Partner</option>
-            {% for option in partners %}
-            <option value="{{option.uid}}"{% if option.uid == partner %} selected{% endif %}>{{option.name}}</option>
-            {% endfor %}
+            <% for option in partners { %>
+              <option value="<%= option.uid %>"<% if option.uid == partner { %> selected<% } %>><%= option.name %></option>
+            <% } %>
           </select>
           <select name="accepted">
             <option value="">Accepted or Not</option>
-            <option value="true"{% match accepted %}{% when Some with (true) %} selected{% else %}{% endmatch %}>Accepted</option>
-            <option value="false"{% match accepted %}{% when Some with (false) %} selected{% else %}{% endmatch %}>Not Accepted</option>
+            <option value="true"<% if let Some(true) = accepted { %> selected<% } %>>Accepted</option>
+            <option value="false"<% if let Some(false) = accepted { %> selected<% } %>>Not Accepted</option>
           </select>
           <select name="withdrawn">
             <option value="">Withdrawn or Not</option>
-            <option value="true"{% match withdrawn %}{% when Some with (true) %} selected{% else %}{% endmatch %}>Withdrawn</option>
-            <option value="false"{% match withdrawn %}{% when Some with (false) %} selected{% else %}{% endmatch %}>Not Withdrawn</option>
+            <option value="true"<% if let Some(true) = withdrawn { %> selected<% } %>>Withdrawn</option>
+            <option value="false"<% if let Some(false) = withdrawn { %> selected<% } %>>Not Withdrawn</option>
           </select>
           <select name="current">
-            <option value="true"{% match current %}{% when Some with (true) %} selected{% else %}{% endmatch %}>Current</option>
-            <option value="false"{% match current %}{% when Some with (false) %} selected{% else %}{% endmatch %}>Past</option>
+            <option value="true"<% if let Some(true) = current { %> selected<% } %>>Current</option>
+            <option value="false"<% if let Some(false) = current { %> selected<% } %>>Past</option>
           </select>
           <input type="submit" value="Search">
-          <span>({{ num_matches }} matching opportunities)</span>
+          <span>(<%= num_matches %> matching opportunities)</span>
         </form>
         <table>
           <tr>
@@ -43,19 +43,19 @@
             <th>Accepted</th>
             <th>Withdrawn</th>
           </tr>
-          {% for opp in matches %}
-          <tr>
-            <td>
-              <a href="{{opp.exterior.uid}}">{{opp.exterior.title}}</a>
-            </td>
-            <td>
-              {% match opp.interior.accepted %}{% when Some with (true) %}<span style="color: #007C03">✓</span>{% else %}{% endmatch %}
-            </td>
-            <td>
-              {% if opp.interior.withdrawn %}<span style="color: #650071">✓</span>{% endif %}
-            </td>
-          </tr>
-          {% endfor %}
+          <% for opp in matches { %>
+            <tr>
+              <td>
+                <a href="<%= opp.exterior.uid %>"><%= opp.exterior.title %></a>
+              </td>
+              <td>
+                <% if let Some(true) = opp.interior.accepted { %><span style="color: #007C03">✓</span><% } %>
+              </td>
+              <td>
+                <% if opp.interior.withdrawn { %><span style="color: #650071">✓</span><% } %>
+              </td>
+            </tr>
+            <% } %>
         </table>
       </div>
       <div id="create" class="container">
@@ -81,9 +81,9 @@
             <div class="control">
               <div class="select">
                 <select class="input" name="entity_type">
-                  {% for opt in common::model::opportunity::EntityType::all_options() %}
-                  <option value="{{opt.0}}">{{opt.1}}</option>
-                  {% endfor %}
+                  <% for opt in common::model::opportunity::EntityType::all_options() { %>
+                    <option value="<%= opt.0 %>"><%= opt.1 %></option>
+                  <% } %>
                 </select>
               </div>
             </div>
