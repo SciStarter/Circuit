@@ -172,6 +172,7 @@ export default {
                 .then(({ places }) => {
                     if (places.length > 0) {
                         places[0].near = evt;
+                        places[0].proximity = evt ? 80467 : 0;
                         this.change(places[0])
                     }
                 })
