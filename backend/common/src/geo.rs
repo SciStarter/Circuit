@@ -1,6 +1,8 @@
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
+use crate::Database;
+
 static OPENCAGE_API_KEY: Lazy<String> =
     Lazy::new(|| std::env::var("OPENCAGE_API_KEY").unwrap_or_else(|_| String::new()));
 
@@ -10,6 +12,8 @@ pub enum Error {
     Surf(Query, String),
     #[error("serializing query {0:?} failed: {1}")]
     SurfGeom(GeomQuery, String),
+    #[error("Zipcode lookup error")]
+    ZipDB(#[from] sqlx::Error),
     #[error("result structure incompatible: {0}")]
     Structure(String),
 }
@@ -132,7 +136,26 @@ impl GeomQuery {
         }
     }
 
-    pub async fn lookup(&self) -> Result<GeomResult, Error> {
+    pub async fn lookup(&self, db: &Database) -> Result<GeomResult, Error> {
+        if let Some(result) = sqlx::query_as!(
+            GeomResult,
+            r#"
+SELECT
+  'public-domain' AS "licence!",
+  ST_Y(ST_Centroid(geom))::text AS "lon!",
+  ST_X(ST_Centroid(geom))::text AS "lat!",
+  'boundary' AS "class!",
+  ST_AsGeoJSON(ST_Simplify(geom, 0.5, true))::jsonb AS "geojson"
+FROM "zip_code_tabulation_area"
+WHERE "zcta5ce20" like $1;"#,
+            self.q,
+        )
+        .fetch_optional(db)
+        .await?
+        {
+            return Ok(result);
+        }
+
         let results: Vec<GeomResult> = surf::get("https://nominatim.openstreetmap.org/search")
             .header("User-Agent", "ScienceNearMe.org")
             .query(self)

@@ -771,6 +771,50 @@
     },
     "query": "select *\nfrom\n  (\n    ( -- Count each \"I did this\" in the timeframe as one\n      select\n        (I.exterior ->> 'opportunity')::uuid as \"opportunity!\",\n        (I.exterior ->> 'latest')::timestamptz as \"when!\"\n      from c_involvement I\n      where\n        (I.interior ->> 'participant') = $1::text\n      and\n        (I.exterior -> 'mode') = '30'::jsonb\n      and\n        (I.exterior ->> 'latest') >= $2::text\n      and\n        (I.exterior ->> 'latest') <= $3::text\n    )\n  union\n    ( -- Count each partner-reported contribution in the timeframe as one\n      select\n        (P.exterior ->> 'opportunity')::uuid as \"opportunity!\",\n        (P.exterior ->> 'when')::timestamptz as \"when!\"\n      from c_participation P\n      where\n        (P.interior ->> 'participant') = $1::text\n      and\n        (P.exterior ->> 'when') >= $2::text\n      and\n        (P.exterior ->> 'when') <= $3::text\n    )\n  ) as \"merged\"\norder by \"when!\" asc\n;\n"
   },
+  "6f9a7a763882bc027ee4fb28f0fdc404a9c5994466564bd1b138dbdb77456b9c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "licence!",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "lon!",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "lat!",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "class!",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "geojson",
+          "ordinal": 4,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\nSELECT\n  'public-domain' AS \"licence!\",\n  ST_Y(ST_Centroid(geom))::text AS \"lon!\",\n  ST_X(ST_Centroid(geom))::text AS \"lat!\",\n  'boundary' AS \"class!\",\n  ST_AsGeoJSON(ST_Simplify(geom, 0.5, true))::jsonb AS \"geojson\"\nFROM \"zip_code_tabulation_area\"\nWHERE \"zcta5ce20\" like $1;"
+  },
   "6ff3efed7a7e1ae0be5f36b8c802bbbf4991f826f62254d1ace3051d6d4995aa": {
     "describe": {
       "columns": [

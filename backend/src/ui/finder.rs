@@ -191,7 +191,7 @@ pub async fn geom(mut req: tide::Request<Database>) -> tide::Result {
     let mut end = End::Back;
 
     while !query.q.is_empty() {
-        match query.lookup().await {
+        match query.lookup(req.state()).await {
             Ok(result) => return okay(&result),
             Err(_) => {
                 let mut buf: Vec<_> = query.q.split(',').collect();
