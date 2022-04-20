@@ -152,16 +152,16 @@
             </div>
           </div>
 
-          <div class="info weblink" v-if="opportunity.partner_opp_url">
+          <div class="info weblink" v-if="opportunity.partner_opp_url || opportunity.organization_website">
             <link-icon />
             <external-link
-              :href="opportunity.partner_opp_url"
+              :href="opportunity.partner_opp_url || opportunity.organization_website"
               title="Find out more"
               campaign="opp-page"
               content="find-out-more"
               @before="register_interest"
               >
-              {{opportunity.partner_opp_url}}
+              {{opportunity.partner_opp_url || opportunity.organization_website}}
             </external-link>
           </div>
           <div class="info keywords">

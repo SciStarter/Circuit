@@ -71,7 +71,7 @@
                 <div v-if="location=='online'" class="add">
                   <b-field :type="validation.partner_opp_url" message="Must start with http:// or https://">
                     <template #label>
-                      External link To participate<span class="required">*</span>
+                      External link to participate<span class="required">*</span>
                     </template>
                     <b-input type="url" :value="value.partner_opp_url" @input="value.partner_opp_url = $event.replace(/ /g, '')"></b-input>
                   </b-field>
@@ -123,7 +123,7 @@
                   </b-field>
                   <b-field :type="validation.partner_opp_url" message="Must start with http:// or https://">
                     <template #label>
-                      External link To participate<span class="required">*</span>
+                      External link to participate<span class="required">*</span>
                     </template>
                     <b-input type="url" :value="value.partner_opp_url" @input="value.partner_opp_url = $event.replace(/ /g, '')"></b-input>
                   </b-field>
