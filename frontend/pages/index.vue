@@ -322,7 +322,7 @@ export default {
             search_online: true,
             load_here_and_now: false,
             show_location_modal: false,
-            show_create_account_promo: true
+            show_create_account_promo: false
         };
     },
 
