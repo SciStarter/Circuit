@@ -1205,7 +1205,7 @@ img.opportunity-image {
 
 .modal {
     .card {
-
+      padding:16px;
         h2 {
             font-family: $snm-font-heading;
             font-weight: bold;

@@ -1298,7 +1298,7 @@ footer {
     padding-left: 280px;
   }
 }
-</style>
+
 
 .modal .card {
     margin: 1rem;

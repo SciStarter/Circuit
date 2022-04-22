@@ -15,6 +15,34 @@
     @include-online="search_online=$event"
     />
 
+    <div v-if="show_create_account_promo">
+      <div class="snm-wrapper">
+        <div id="ca-promo" class="snm-container">
+          <h2>Welcome Back!</h2>
+          <h3>Consider creating an account to take advantage of all our features!</h3>
+          <div class="flex">
+            <div>
+              <benefits-recommendations />
+              <strong>Get Customized Recommendations</strong>
+            </div>
+            <div>
+              <benefits-save />
+              <strong>Save Opportunities</strong>
+            </div>
+            <div>
+              <benefits-research />
+              <strong>Help Science Research</strong>
+            </div>
+          </div>
+          <div class="ca-promo-btn">
+            <action-button principal arrow @click="$parent.$emit('signup')">
+              Create an Account Now
+            </action-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   <div id="intent-filters" class="snm-wrapper">
     <div class="snm-container">
       <h1>What would you like to do <near-icon class="inline-sign" /> {{ city }}?</h1>
@@ -38,6 +66,7 @@
       <atom-icon id="helium" />
     </div>
   </div>
+
   <div id="here-now" class="snm-wrapper">
     <div class="snm-container">
       <h2>Here &amp; Now near {{ city }}</h2>
@@ -121,9 +150,10 @@
       </div>
     </div>
 
-    <action-button principal arrow @click="$parent.$emit('signup')">
-      Create an Account Now
-    </action-button>
+      <action-button principal arrow @click="$parent.$emit('signup')">
+        Create an Account Now
+      </action-button>
+
   </div>
 </div>
 
@@ -291,7 +321,8 @@ export default {
             search_ending: null,
             search_online: true,
             load_here_and_now: false,
-            show_location_modal: false
+            show_location_modal: false,
+            show_create_account_promo: true
         };
     },
 
@@ -877,5 +908,51 @@ export default {
   display: block;
   font-size:14px;
   font-style:italic;
+}
+
+#ca-promo {
+  h2 {
+    margin-left:0;
+  }
+
+  h3 {
+    margin-bottom:1rem;
+  }
+  max-width:800px;
+  margin:0 auto;
+  .flex {
+    justify-content:space-between;
+  > div {
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    width:33.33%;
+  }
+    svg {
+      display: block;
+    }
+    strong {
+      text-align:center;
+    }
+  }
+}
+.ca-promo-btn {
+  display:flex;
+  justify-content:center;
+}
+
+@media (max-width:600px){
+  #ca-promo {
+    .flex {
+      svg {
+        width:60px;
+        height:60px;
+      }
+      strong {
+        font-size:10px;
+      }
+    }
+  }
 }
 </style>
