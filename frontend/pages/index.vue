@@ -432,6 +432,11 @@ export default {
     async mounted() {
         this.search_place = await this.$store.dispatch("get_here");
         this.load_here_and_now = true;
+
+        let visits = parseInt(window.localStorage.getItem('visits')) || 0;
+        this.show_create_account_promo = (visits == 1) && !this.$store.state.user.authenticated;
+        visits += 1;
+        window.localStorage.setItem('visits', '' + visits);
     },
 
     methods: {
