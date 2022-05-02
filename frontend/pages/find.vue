@@ -144,7 +144,7 @@
       </fieldset>
       <fieldset data-context="find-physical">
         <label>
-          Physical Requirements
+          Format
           <b-tooltip multilined>
             <b-icon icon="help-circle" />
             <template #content>
