@@ -3,7 +3,8 @@
   <div class="snm-container base-typography snm-container-first">
     <div class="head">
       <h1>Display Science Near Me Opportunities on Your Website</h1>
-      <p>Select a widget to display Science Near Me projects or the Science Near Me finder below and add to your website!</p>
+      <p>Select a widget to display up to 10 Science Near Me opportunities and/or the Science Near Me Opportunity Finder on your website!</p>
+      <p>For customizable and more comprehensive options, see <q>Science Near Me Exchange</q>.</p>
     </div>
 
     <div class="flex">
