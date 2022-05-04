@@ -92,6 +92,10 @@ export default {
             query.page = 0;
         }
 
+        if(query.beginning === undefined) {
+            query.beginning = new Date().toISOString();
+        }
+
         let opps = await context.$axios.$get('/api/ui/finder/search', { params: query });
 
         return {
@@ -111,7 +115,13 @@ export default {
 
     methods: {
         search(assign) {
-            this.$router.push({name: 'exchange-uid', params: this.$route.params, query: {...this.$route.query, ...assign}});
+            let q = {...this.$route.query, ...assign};
+
+            if(q.beginning === undefined) {
+                q.beginning = new Date().toISOString();
+            }
+
+            this.$router.push({name: 'exchange-uid', params: this.$route.params, query: q});
         }
     },
 }
