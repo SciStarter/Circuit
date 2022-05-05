@@ -45,14 +45,8 @@
   </div>
 
   <div class="exchange-results">
-    <opportunity-card v-for="opp in opportunities.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" previous-page="find" />
-
-    <Pagination
-      v-if="opportunities.matches.length > 0"
-      :page-index="opportunities.pagination.page_index"
-      :last-page="opportunities.pagination.last_page"
-      @switch="search({page: $event})" />
-
+    <opportunity-calendar v-if="calendar" :opportunities="opportunities" @next="alert('how to do next')" />
+    <opportunity-list v-else :opportunities="opportunities" @switch="search({page: $event})" />
   </div>
 </div><!-- .exchange-wrapper -->
 </div>
@@ -100,6 +94,7 @@ export default {
 
         return {
             opportunities: opps,
+            calendar: (query.calendar !== undefined),
         };
     },
 
@@ -168,7 +163,7 @@ export default {
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  > article {
+  > .opportunity-list::v-deep > article {
     width:100%!important;
     max-width: 900px;
   }
