@@ -1,18 +1,12 @@
 <template>
-<div class="opportunity-list">
+<div class="opportunity-calendar">
   <opportunity-card v-for="opp in opportunities.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" previous-page="find" />
-
-  <Pagination
-    v-if="opportunities.matches.length > 0"
-    :page-index="opportunities.pagination.page_index"
-    :last-page="opportunities.pagination.last_page"
-    @switch="$emit($event)" />
 </div>
 </template>
 
 <script>
 export default {
-    name: "OpportunityList",
+    name: "OpportunityCalendar",
 
     props: {
         opportunities: {
@@ -28,3 +22,9 @@ export default {
     },
 };
 </script>
+
+<style lang="scss" scoped>
+.opportunity-calendar {
+    max-width: 900px;
+}
+</style>

@@ -45,8 +45,15 @@
   </div>
 
   <div class="exchange-results">
-    <opportunity-calendar v-if="calendar" :opportunities="opportunities" @next="alert('how to do next')" />
-    <opportunity-list v-else :opportunities="opportunities" @switch="search({page: $event})" />
+    <b-tabs v-if="calendar" v-model="opp_view">
+      <b-tab-item label="Calendar">
+        <opportunity-calendar :opportunities="month" :exchange="exchange" @next="alert('how to do next')" />
+      </b-tab-item>
+      <b-tab-item label="Opportunities">
+        <opportunity-list :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
+      </b-tab-item>
+    </b-tabs>
+    <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
   </div>
 </div><!-- .exchange-wrapper -->
 </div>
@@ -78,6 +85,8 @@ export default {
     async asyncData(context) {
         let query = {...context.query};
 
+        let calendar = (query.calendar !== undefined);
+
         if(!query.all) {
             query.partner = context.params.uid;
         }
@@ -92,9 +101,17 @@ export default {
 
         let opps = await context.$axios.$get('/api/ui/finder/search', { params: query });
 
+        let month = null;
+
+        if(calendar) {
+            let now = new Date();
+            month = await context.$axios.$get('/api/ui/finder/search', { params: {...query, year: now.getFullYear(), month: now.getMonth() + 1 } });
+        }
+
         return {
             opportunities: opps,
-            calendar: (query.calendar !== undefined),
+            calendar,
+            month,
         };
     },
 
@@ -103,6 +120,7 @@ export default {
             search_text: this.$route.query.text || '',
             toggle_mobile_nav: false,
             alert: false,
+            opp_view: 0,
         };
     },
 
@@ -163,7 +181,7 @@ export default {
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  > .opportunity-list::v-deep > article {
+  ::v-deep .opportunity-list > article {
     width:100%!important;
     max-width: 900px;
   }

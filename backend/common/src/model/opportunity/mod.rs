@@ -1010,6 +1010,7 @@ pub struct OpportunityQuery {
     pub sample: Option<f32>,
     pub exclude: Option<Vec<Uuid>>,
     pub current: Option<bool>,
+    pub calendar: Option<(u32, u8)>,
 }
 
 #[derive(Debug)]
@@ -1075,7 +1076,7 @@ impl ParamValue {
 fn build_matching_query(
     fields: &[&str],
     query: &OpportunityQuery,
-    ordering: OpportunityQueryOrdering,
+    mut ordering: OpportunityQueryOrdering,
     pagination: Pagination,
 ) -> Result<(String, Vec<ParamValue>), Error> {
     let mut clauses = Vec::new();
@@ -1105,11 +1106,39 @@ fn build_matching_query(
         }
     }
 
-    if let Some(val) = query.current {
+    if let Some((year, month)) = query.calendar {
+        let (next_year, next_month) = if month > 11 {
+            (year + 1, 1)
+        } else {
+            (year, month + 1)
+        };
+
+        let begin = format!("{year:04}-{month:02}-01T00:00:00Z");
+        let end = format!("{next_year:04}-{next_month:02}-01T00:00:00Z");
+
+        let begin_param = ParamValue::RawString(begin).append(&mut params);
+        let end_param = ParamValue::RawString(end).append(&mut params);
+
         clauses.push(format!(
-            r#""current" = ${}"#,
-            ParamValue::RawBool(val).append(&mut params)
-        ));
+            r#"(
+                (
+                 EXISTS (SELECT value FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz AND value::timestamptz < ${}::timestamptz)
+                 AND
+                 EXISTS (SELECT value FROM jsonb_array_elements_text(exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz AND value::timestamptz < ${}::timestamptz)
+                )
+                OR
+                (
+                 coalesce(nullif(exterior ->> 'end_recurrence', ''), '0001-01-01')::timestamptz > ${}::timestamptz                 
+                )
+               )"#,
+            begin_param, end_param, begin_param, end_param, begin_param));
+    } else {
+        if let Some(val) = query.current {
+            clauses.push(format!(
+                r#""current" = ${}"#,
+                ParamValue::RawBool(val).append(&mut params)
+            ));
+        }
     }
 
     if let Some(person) = query.involved {
@@ -1421,6 +1450,10 @@ OR
             query_string.push_str(" AND ");
         }
         query_string.push_str(&clause);
+    }
+
+    if let (Some(_), OpportunityQueryOrdering::Closest) = (query.calendar, ordering) {
+        ordering = OpportunityQueryOrdering::Soonest;
     }
 
     match ordering {

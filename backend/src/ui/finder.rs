@@ -257,6 +257,8 @@ struct SearchQuery {
     pub sample: Option<bool>,
     pub kids_only: Option<bool>,
     pub adults_only: Option<bool>,
+    pub year: Option<u32>,
+    pub month: Option<u8>,
 }
 
 pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
@@ -288,6 +290,11 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     query.host = search.host;
     query.partner = search.partner;
     query.current = Some(search.current.unwrap_or(true));
+
+    query.calendar = match (search.year, search.month) {
+        (Some(y), Some(m)) => Some((y, m)),
+        _ => None,
+    };
 
     query.sample = if search.sample.unwrap_or(false) {
         Some(0.25)
