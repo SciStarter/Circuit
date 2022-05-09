@@ -1,5 +1,5 @@
 use super::{
-    opportunity::{Opportunity, OpportunityQuery, OrganizationType},
+    opportunity::{Domain, Opportunity, OpportunityQuery, OrganizationType},
     person::Person,
     Error, PARTNER_NAMESPACE,
 };
@@ -24,6 +24,7 @@ pub struct PartnerExterior {
     pub uid: Uuid,
     pub name: String,
     pub organization_type: OrganizationType,
+    pub pes_domain: Domain,
     pub url: Option<String>,
     pub image_url: Option<String>,
     pub description: String,
