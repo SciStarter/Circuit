@@ -83,5 +83,17 @@ export default {
             return this.$store.state.user;
         },
     },
+
+    mounted() {
+        this.$gtm.push({
+            event: 'view_entity',
+            uid: this.entity.uid,
+            title: this.entity.title,
+            partner: this.entity.partner,
+            partner_name: this.entity.partner_name,
+            activity_types: this.entity.opp_descriptor,
+            domain: this.entity.pes_domain,
+        });
+    },
 }
 </script>
