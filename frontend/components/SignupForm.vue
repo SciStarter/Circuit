@@ -189,7 +189,7 @@ export default {
             if (user.authenticated) {
                 this.$emit('close')
             } else {
-                this.$buefy.dialog.alert('An account with that email already exists, or you did not agree to the terms.')
+                this.$buefy.dialog.alert(user.message || 'An account with that email already exists, or you did not agree to the terms.')
             }
         }
     }
