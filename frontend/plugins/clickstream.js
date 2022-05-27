@@ -38,3 +38,10 @@ document.body.addEventListener("click", async function (event) {
 
   await window.$nuxt.$axios.$post("/api/ui/activity/click", params);
 });
+
+window.$nuxt.$axios.$post("/api/ui/activity/click", {
+    session: window.localStorage.getItem("session") || "",
+    on_page: window.location.pathname + window.location.search + window.location.hash,
+    element_type: 'ENTRANCE',
+    title: event.target.title,
+});
