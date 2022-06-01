@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Circuit API v1",
-        "version": "1.5.0",
+        "version": "1.5.1",
         "description": ""
     },
     "servers": [
@@ -353,6 +353,7 @@
                         "enum": [
                             "citizen_science",
                             "live_science",
+                            "museum_or_science_center",
                             "maker",
                             "policy",
                             "out_of_school_time_program",

@@ -295,6 +295,7 @@ impl Default for VenueType {
 pub enum Domain {
     CitizenScience,
     LiveScience,
+    MuseumOrScienceCenter,
     Maker,
     Policy,
     OutOfSchoolTimeProgram,

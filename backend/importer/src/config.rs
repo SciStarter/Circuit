@@ -40,7 +40,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             partner_logo_url: Some(
                 "https://nvdm.org/wp-content/themes/discoverypress-site/assets/svgs/discovery-logo.svg".to_string(),
             ),
-            domain: Domain::LiveScience,
+            domain: Domain::MuseumOrScienceCenter,
             descriptor: vec![Descriptor::Community],
             topics: vec![],
             flags: vec![PartnerFlag::Cost],
@@ -105,7 +105,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             partner_logo_url: Some(
                 "https://mods.org/wp-content/uploads/2014/11/main_logo.png".to_string(),
             ),
-            domain: Domain::LiveScience,
+            domain: Domain::MuseumOrScienceCenter,
             descriptor: vec![],
             topics: vec![],
             flags: vec![],
@@ -143,6 +143,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
         period: 24 * hours,
     }));
 
+    // Disabled because they're using an exchange instead
     // importers.push(Box::new(Import {
     //     source: source::EventsQLWithCustom::new("https://stemcouncil.alabama.gov/graphql"),
     //     format: format::Json,
