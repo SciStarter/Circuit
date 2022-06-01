@@ -11,7 +11,7 @@ spec:
       - beta.sciencenearme.org
       - www.sciencenearme.org
       - sciencenearme.org
-    secretName: cert-beta
+    secretName: sciencenearme-org-tls
   rules:
   - host: beta.sciencenearme.org
     http:
@@ -106,3 +106,17 @@ spec:
     - http01:
         ingress:
           class:  nginx
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sciencenearme-org
+spec:
+  secretName: sciencenearme-org-tls
+  issuerRef:
+    name: letsencrypt
+  commonName: sciencenearme.org
+  dnsNames:
+  - sciencenearme.org
+  - www.sciencenearme.org
+  - beta.sciencenearme.org

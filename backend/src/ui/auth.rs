@@ -113,7 +113,7 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
         Err(_) => {
             return Err(tide::Error::from_str(
                 403,
-                "email or password not recognized",
+                r#"Error: Wrong username or password. <a href="/login">Forgot password?</a>"#,
             ));
         }
     };
@@ -131,7 +131,7 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
     } else {
         Err(tide::Error::from_str(
             403,
-            "email or password not recognized",
+            r#"Error: Wrong username or password. <a href="/login">Forgot password?</a>"#,
         ))
     }
 }
@@ -159,7 +159,7 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
         if person.interior.join_channel != JoinChannel::SciStarter {
             return Ok(
                 tide::Response::builder(StatusCode::Forbidden)
-                    .body("Can not log in to that account through SciStarter, because a Science Near Me account was already created using the same email address. Try <a href=\"/login\">logging in directly</a> using your email address.")
+                    .body(r#"Oops! Looks like you already have a Science Near Me account with that email address. Please log in with your Science Near Me credentials <a href="/login">here</a>."#)
                     .build()
             );
         }
@@ -278,7 +278,7 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
         Ok(parsed) => parsed,
         Err(_) => {
             return Ok(Response::builder(StatusCode::BadRequest)
-                .body("email and password are required")
+                .body("Email and password are required")
                 .build())
         }
     };
@@ -286,8 +286,14 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
     let db = req.state();
 
     if Person::exists_by_email(db, &form.email).await? {
+        let other = Person::load_by_email(db, &form.email).await?;
+
         return Ok(Response::builder(StatusCode::Forbidden)
-            .body("That email is already in use")
+            .body(if other.interior.join_channel == JoinChannel::SciStarter {
+                r#"Oops! Looks like you already have a SciStarter account with that email address. Please log in with your SciStarter credentials <a href="/login-scistarter">here</a>."#
+            } else {
+                r#"Error: Wrong username or password. <a href="/login">Forgot password?</a>"#
+            })
             .build());
     }
 

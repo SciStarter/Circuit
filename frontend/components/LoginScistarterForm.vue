@@ -104,7 +104,7 @@ export default {
             if (user.authenticated) {
                 this.$emit('close')
             } else {
-                this.$buefy.dialog.alert(user.message)
+                this.$buefy.dialog.alert(user.message || "<p>Hmmm. Looks like that email address is already associated with a Science Near Me account. <a href=\"/login\">Login here instead</a>.<p> <p>If you’d prefer to use your SciStarter email and password to log in, please email us at info@sciencenearme.org and we’ll make that happen.</p> <p>(" + user.message + ")</p>")
             }
         }
     }

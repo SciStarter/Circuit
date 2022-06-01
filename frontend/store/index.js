@@ -228,12 +228,11 @@ export const actions = {
         password,
       });
     } catch (error) {
-      console.warn(error);
       return {
         authenticated: false,
         message: error.response
           ? error.response.data
-          : "invalid email or password",
+          : undefined,
       };
     }
 
@@ -312,8 +311,7 @@ export const actions = {
     try {
       user = await this.$axios.$post("/api/ui/auth/signup", params);
     } catch (error) {
-      console.error(error);
-      return { authenticated: false };
+        return { authenticated: false, message: error.response ? error.response.data : undefined };
     }
 
     if (process.client) {

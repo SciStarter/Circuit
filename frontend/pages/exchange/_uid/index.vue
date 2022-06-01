@@ -45,14 +45,15 @@
   </div>
 
   <div class="exchange-results">
-    <opportunity-card v-for="opp in opportunities.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" previous-page="find" />
-
-    <Pagination
-      v-if="opportunities.matches.length > 0"
-      :page-index="opportunities.pagination.page_index"
-      :last-page="opportunities.pagination.last_page"
-      @switch="search({page: $event})" />
-
+    <b-tabs v-if="calendar" v-model="opp_view">
+      <b-tab-item label="Calendar">
+        <opportunity-calendar :opportunities="month" :exchange="exchange" @next="month_add(1);search({year: search_year, month: search_month})" />
+      </b-tab-item>
+      <b-tab-item label="Opportunities">
+        <opportunity-list :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
+      </b-tab-item>
+    </b-tabs>
+    <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
   </div>
 </div><!-- .exchange-wrapper -->
 </div>
@@ -84,6 +85,8 @@ export default {
     async asyncData(context) {
         let query = {...context.query};
 
+        let calendar = (query.calendar !== undefined);
+
         if(!query.all) {
             query.partner = context.params.uid;
         }
@@ -98,8 +101,21 @@ export default {
 
         let opps = await context.$axios.$get('/api/ui/finder/search', { params: query });
 
+        let now = new Date();
+        let search_year = now.getFullYear();
+        let search_month = now.getMonth() + 1;
+        let month = null;
+
+        if(calendar) {
+            month = await context.$axios.$get('/api/ui/finder/search', { params: {...query, year: search_year, month: search_month } });
+        }
+
         return {
             opportunities: opps,
+            calendar,
+            month,
+            search_year,
+            search_month,
         };
     },
 
@@ -108,12 +124,29 @@ export default {
             search_text: this.$route.query.text || '',
             toggle_mobile_nav: false,
             alert: false,
+            opp_view: 0,
         };
     },
 
     watchQuery: true,
 
     methods: {
+        month_add(offset) {
+            let sum = this.search_month + offset - 1;
+
+            let zmonth = sum  % 12;
+
+            // Compensate for JavaScript's incorrect modulo operation
+            while(zmonth < 0) {
+                zmonth += 12;
+            }
+
+            let yoffset = Math.floor(sum / 12);
+
+            this.search_year += yoffset;
+            this.search_month = zmonth + 1;
+        },
+
         search(assign) {
             let q = {...this.$route.query, ...assign};
 
@@ -168,7 +201,11 @@ export default {
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  > article {
+  ::v-deep .opportunity-list > article {
+    width:100%!important;
+    max-width: 900px;
+  }
+  ::v-deep .opportunity-calendar > article {
     width:100%!important;
     max-width: 900px;
   }
