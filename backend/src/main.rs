@@ -41,6 +41,7 @@ async fn initialize(db: &Database) -> tide::Result {
                 uid: INTERNAL_UID.clone(),
                 name: "Internal".to_string(),
                 organization_type: model::opportunity::OrganizationType::Unspecified,
+                pes_domain: model::opportunity::Domain::Unspecified,
                 url: None,
                 image_url: None,
                 description: "Partner entry representing internal operations".to_string(),
