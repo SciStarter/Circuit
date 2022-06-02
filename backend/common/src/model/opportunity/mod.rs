@@ -980,6 +980,8 @@ impl Default for OpportunityQueryOrdering {
 /// ```
 #[derive(Default, Serialize, Deserialize, Debug)]
 pub struct OpportunityQuery {
+    pub uid: Option<Uuid>,
+    pub slug: Option<String>,
     pub accepted: Option<bool>,
     pub withdrawn: Option<bool>,
     pub entity_type: Option<Vec<EntityType>>,
@@ -1087,6 +1089,20 @@ fn build_matching_query(
     // https://postgis.net/docs/ST_DWithin.html
     // https://postgis.net/docs/ST_Distance.html
     // https://postgis.net/docs/ST_Intersects.html
+
+    if let Some(uid) = query.uid {
+        clauses.push(format!(
+            "(${}::jsonb) @> (exterior -> 'uid')",
+            ParamValue::Uuid(uid).append(&mut params)
+        ));
+    }
+
+    if let Some(slug) = &query.slug {
+        clauses.push(format!(
+            "${} = (exterior ->> 'slug')",
+            ParamValue::RawString(slug.to_string()).append(&mut params)
+        ));
+    }
 
     if let Some(val) = query.accepted {
         clauses.push(format!(
