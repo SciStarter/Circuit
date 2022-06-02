@@ -32,17 +32,141 @@
 
   <!-- <div class="partner-logo"></div> -->
 
-
 <div class="exchange-wrapper">
-  <div class="exchange-search">
-    <div class="ex-search">
-      <b-input v-model="search_text"/>
-      <b-button @click="search({text: search_text, page: 0})">Search</b-button>
+  <div class="exchange-search  general-filters">
+      <div class="ex-search basic-filter-backdrop">
+        <form @submit.prevent="search">
+        <div class="gf-fields">
+          <b-field label="Search" label-position="inside" data-context="find-keywords">
+            <b-input ref="search_keywords" v-model="search_text" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+          </b-field>
+          <lookup-place v-model="place_proxy" @valid="set_valid" label-position="inside" data-context="find-lookup-place" />
+          <div class="centered-row">
+            <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
+              <b-datepicker
+                v-model="beginning_proxy"
+                editable
+                icon="calendar-today"
+                />
+            </b-field>
+            <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
+              <b-datepicker
+                v-model="ending_proxy"
+                editable
+                position="is-bottom-left"
+                icon="calendar-today"
+                />
+            </b-field>
+          </div>
+          <action-button id="quick-search-btn" :disabled="!location_valid" principal large type="submit" @click="search({text: search_text, page: 0})">
+            <search-icon />
+          </action-button>
+        </div>
+      </form>
+
+      </div>
+
     </div>
-    <div class="search-snm">
-      <b-checkbox :value="!!$route.query.all" @input="search({all: $event, page: 0})">Search all of the Science Near Me network</b-checkbox>
+
+    <div class="exchange-filters">
+        <div v-if="filter==false" class="filter-btn">
+          <a @click="filter = true"><filter-icon /> show filters</a>
+        </div>
+        <div v-else>
+          <div class="filter-btn">
+            <a @click="filter = false"><filter-icon /> hide filters</a>
+          </div>
+
+          <div class="filters">
+            <fieldset>
+              <label class="b">Age</label>
+              <p>
+                <b-checkbox v-model="kids_only" :native-value="true" :disabled="loading">
+                  Kids Friendly Only
+                </b-checkbox>
+                <b-checkbox v-model="adults_only" :native-value="true" :disabled="loading">
+                  21+ Only
+                </b-checkbox>
+              </p>
+              <b-field label="Participant Age Range Minimum" data-context="find-minimum-age">
+                <b-checkbox v-model="min_age_active" :disabled="loading" />
+                <b-slider v-model="min_age" :disabled="!min_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
+                  <!-- <b-slider-tick :value="12">
+                    12
+                  </b-slider-tick> -->
+                  <b-slider-tick :value="20">
+                    20
+                  </b-slider-tick>
+                  <b-slider-tick :value="40">
+                    40
+                  </b-slider-tick>
+                  <b-slider-tick :value="60">
+                    60
+                  </b-slider-tick>
+                  <b-slider-tick :value="80">
+                    80
+                  </b-slider-tick>
+                  <b-slider-tick :value="100">
+                    100
+                  </b-slider-tick>
+                </b-slider>
+                <input v-model="min_age" type="text" :disabled="!min_age_active || loading" class="slider-direct">
+              </b-field>
+              <b-field label="Participant Age Range Maximum" data-context="find-maximum-age">
+                <b-checkbox v-model="max_age_active" :disabled="loading" />
+                <b-slider v-model="max_age" :disabled="!max_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
+                  <!-- <b-slider-tick :value="12">
+                    12
+                  </b-slider-tick> -->
+                  <b-slider-tick :value="20">
+                    20
+                  </b-slider-tick>
+                  <b-slider-tick :value="40">
+                    40
+                  </b-slider-tick>
+                  <b-slider-tick :value="60">
+                    60
+                  </b-slider-tick>
+                  <b-slider-tick :value="80">
+                    80
+                  </b-slider-tick>
+                  <b-slider-tick :value="100">
+                    100
+                  </b-slider-tick>
+                </b-slider>
+                <input v-model="max_age" type="text" class="slider-direct" :disabled="!max_age_active">
+              </b-field>
+            </fieldset>
+            <fieldset data-context="find-physical">
+              <label>
+                <span  class="b">Format</span>
+                <b-tooltip multilined>
+                  <b-icon icon="help-circle" />
+                  <template #content>
+                    <p><Strong>In-Person:</strong> probably has face-to-face interactions, possibly some travel</p>
+                    <p><strong>On-Demand:</strong> probably done independently at your leisure, possibly over the internet</p>
+                  </template>
+                </b-tooltip>
+              </label>
+              <b-field id="filter-physical" >
+                <b-radio-button native-value="in-person-or-online" :disabled="loading" data-context="find-sort-in-person-or-online" @input="set_query_interactive('page', 0)">
+                  <span class="radio-label">Everything</span>
+                </b-radio-button>
+                <b-radio-button native-value="in-person" :disabled="loading" data-context="find-sort-in-person" @input="set_query_interactive('page', 0)">
+                  <span class="radio-label">In-Person</span>
+                </b-radio-button>
+                <b-radio-button native-value="online" :disabled="loading" data-context="find-sort-online" @input="set_query_interactive('page', 0)">
+                  <span class="radio-label">On-Demand</span>
+                </b-radio-button>
+              </b-field>
+            </fieldset>
+          </div>
+
+
+        </div>
     </div>
-  </div>
+
+
 
   <div class="exchange-results">
     <b-tabs v-if="calendar" v-model="opp_view">
@@ -56,17 +180,24 @@
     <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
   </div>
 </div><!-- .exchange-wrapper -->
+<div class="exchange-power"><div>powered by <a href="http://sciencenearme.org" target="_blank">Science Near Me</a></div></div>
 </div>
 </template>
 
 <script>
 import HomeIcon from '~/assets/img/home.svg?inline'
 import SubmitOpportunityIcon from '~/assets/img/submit-opportunity.svg?inline'
+import LookupPlace from '~/components/LookupPlace'
+import SearchIcon from '~/assets/img/search.svg?inline'
+import FilterIcon from '~/assets/img/filter2.svg?inline'
 export default {
     name: "ExchangeIndex",
     components: {
       SubmitOpportunityIcon,
-      HomeIcon
+      HomeIcon,
+      SearchIcon,
+      LookupPlace,
+      FilterIcon
     },
 
     props: {
@@ -125,6 +256,7 @@ export default {
             toggle_mobile_nav: false,
             alert: false,
             opp_view: 0,
+            filter: false,
         };
     },
 
@@ -162,6 +294,21 @@ export default {
 
 <style lang="scss" scoped>
 
+.exchange {
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  .exchange-wrapper {
+    flex-grow:1;
+  }
+}
+
+.exchange-power {
+  display:flex;
+  justify-content:center;
+  padding: 5px 20px;
+}
+
 .partner-logo {
     width: 300px;
     height: 200px;
@@ -174,7 +321,6 @@ export default {
   flex-direction:column;
   align-items:center;
   margin:20px 0;
-  padding:16px;
 }
 .ex-search {
   display:flex;
@@ -183,7 +329,6 @@ export default {
   .control {
     max-width:800px;
     flex-grow:1;
-    margin-right:16px;
   }
 }
 .search-snm {
@@ -208,6 +353,49 @@ export default {
   ::v-deep .opportunity-calendar > article {
     width:100%!important;
     max-width: 900px;
+  }
+}
+
+.exchange-filters {
+  width:100%;
+  max-width:900px;
+  margin:0 auto;
+  padding: 0 16px;
+  margin-bottom: 10px;
+
+  .filter-btn {
+    display:flex;
+    justify-content:flex-end;
+  }
+
+  svg {
+    width:14px;
+    height:14px;
+    position:relative;
+    top:2px;
+    margin-right:3px;
+  }
+  .filters {
+    padding:24px;
+    background-color:#efefef;
+    border-radius:6px;
+
+    p {
+      margin-bottom:16px;
+    }
+
+    .b {
+      font-weight:bold;
+      line-height:30px;
+    }
+
+    fieldset:first-child {
+      margin-bottom:20px;
+    }
+    .b-slider {
+      max-width:300px;
+      margin-right:10px;
+    }
   }
 }
 
@@ -312,5 +500,148 @@ export default {
     border:0;
   }
 }
+
+/*** search ***/
+
+
+.general-filters {
+    display: block;
+    overflow: visible;
+    // padding: 0.75rem 0.75rem 0px;
+
+    .centered-row {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    input[type="date"] {
+        padding: 1.2rem 1rem 0.5rem 1rem;
+        border-radius: 5px;
+        border: 1px solid #B4B4B4;
+    }
+}
+
+#quick-search-btn {
+  width: 50px;
+  padding: .2rem;
+  height: 48px;
+  svg {
+    left:0;
+  }
+}
+
+
+
+@media (min-width: $fullsize-screen) {
+
+    .general-filters {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        grid-row: 1;
+        grid-column: 1 / -1;
+        text-align: center;
+        max-width:900px;
+        margin:20px auto;
+
+        .datepicker {
+          max-width: 140px;
+          min-width: 140px;
+        }
+
+        .basic-filter-backdrop form {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            width: 100%;
+
+
+
+             > div {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+
+                div:first-child, div:nth-child(2) {
+                  flex-grow: 1;
+                }
+
+                >* {
+                    margin-top: 1rem;
+                    color: $snm-color-element-light;
+                }
+
+
+
+                &:first-child>* {
+                    position: relative;
+                    top: -0.1rem;
+                    margin: 0px 0.5rem;
+                    height: 3rem;
+                }
+
+                .centered-row {
+                    display: flex;
+                    margin: 0px;
+
+                    >* {
+                        margin: 0px 0.5rem;
+                    }
+                }
+
+                >.action-button {
+                    position: relative;
+                    top: 1px;
+                }
+            }
+        }
+
+        .quick-links {
+            display: flex;
+            justify-content: space-evenly;
+            margin: 2rem 1rem 3rem 1rem;
+            width: 100%;
+
+            a {
+                font-family: $snm-font-content;
+                font-weight: bold;
+                font-size: $snm-font-small;
+                color: var(--primary-color, $snm-color-element-dark);
+            }
+        }
+    }
+
+}
+
+@media (max-width: 1099px) {
+  .authenticated {
+    #homepage {
+      .gf-fields {
+        flex-wrap: wrap;
+      }
+      .gf-fields > * {
+        max-width: 50%;
+        margin-bottom:1rem;
+      }
+    }
+  }
+}
+
+@media (max-width:959px){
+  #find {
+    .gf-fields {
+      padding:1rem;
+    }
+    .date {
+      max-width: 48%;
+    }
+  }
+}
+
 
 </style>
