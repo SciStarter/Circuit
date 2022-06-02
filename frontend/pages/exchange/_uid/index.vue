@@ -509,11 +509,11 @@ export default {
     overflow: visible;
     // padding: 0.75rem 0.75rem 0px;
 
-    .centered-row {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-    }
+    // .centered-row {
+    //     display: flex;
+    //     flex-direction: row;
+    //     justify-content: space-between;
+    // }
 
     input[type="date"] {
         padding: 1.2rem 1rem 0.5rem 1rem;
@@ -533,7 +533,7 @@ export default {
 
 
 
-@media (min-width: $fullsize-screen) {
+@media (min-width: 768px) {
 
     .general-filters {
         display: flex;
@@ -615,6 +615,11 @@ export default {
             }
         }
     }
+    .opportunity-list {
+      width:100%;
+      max-width:900px;
+      padding: 0 20px;
+    }
 
 }
 
@@ -632,14 +637,46 @@ export default {
   }
 }
 
-@media (max-width:959px){
-  #find {
-    .gf-fields {
-      padding:1rem;
+// @media (max-width:959px){
+//   #find {
+//     .gf-fields {
+//       padding:1rem;
+//     }
+//     .date {
+//       max-width: 48%;
+//     }
+//   }
+// }
+
+@media (max-width:767px) {
+  .ex-search {
+    padding:0 20px;
+    form {
+      width:100%;
     }
+  }
+  .gf-fields {
+    display: flex;
+    flex-direction:column;
+
     .date {
-      max-width: 48%;
-    }
+          width: 48%;
+        }
+         .centered-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+  }
+
+  #quick-search-btn {
+    margin:auto;
+  }
+  .field.lookup-place {
+    margin-top:0;
+  }
+  .opportunity-list {
+    width:100%;
   }
 }
 
