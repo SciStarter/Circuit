@@ -30,7 +30,7 @@ impl Query {
     pub fn new(query: String, annotations: bool) -> Query {
         Query {
             key: OPENCAGE_API_KEY.as_str(),
-            q: query,
+            q: query.trim().to_string(),
             no_annotations: if annotations { 0 } else { 1 },
             limit: 1,
         }
@@ -128,7 +128,7 @@ impl GeomQuery {
         Q: AsRef<str>,
     {
         GeomQuery {
-            q: q.as_ref().to_string(),
+            q: q.as_ref().trim().to_string(),
             format: "json".to_string(),
             polygon_geojson: 1,
             polygon_threshold: threshold,

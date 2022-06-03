@@ -1,13 +1,15 @@
 use async_std::prelude::{Stream, StreamExt};
 use clap::Parser;
-use common::model::Partner;
+use common::{geo::GeomQuery, model::Partner};
 use counter::Counter;
 use http_types::Method;
 use serde::Deserialize;
+use serde_json::json;
 use shellfish::{async_fn, Command, Shell};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::Row;
 use std::io::Write;
+use uuid::Uuid;
 
 use common::{
     model::{
@@ -113,7 +115,7 @@ fn operations(
     Ok(operators)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 enum Table {
     Ambiguous,
     Opportunity,
@@ -307,18 +309,16 @@ fn reset_opportunity(state: &mut State) -> Result<(), DynError> {
 }
 
 fn narrow_opportunity(
-    _state: &mut State,
+    state: &mut State,
     args: impl Iterator<Item = String>,
 ) -> Result<(), DynError> {
     for op in operations(args, "=")? {
         match op {
-            Operator::Equal {
-                attribute: _,
-                value: _,
-            } => {
-                //println!("{} = {}", &attribute, &value);
-                todo!();
-            }
+            Operator::Equal { attribute, value } => match attribute.as_ref() {
+                "uid" => state.opportunity_query.uid = Some(Uuid::parse_str(&value)?),
+                "slug" => state.opportunity_query.slug = Some(value),
+                _ => println!("UNHANDLED ATTRIBUTE {} = {}", &attribute, &value),
+            },
         }
     }
 
@@ -380,7 +380,7 @@ async fn update_opportunities<F: Fn(&mut Opportunity) -> Result<(), DynError>>(
             };
             println!("Updated {}", (index + 1) * size);
         } else {
-            panic!("pagination is not an instance of the Page variant");
+            panic!("Unexpected pagination variant");
         }
     }
 
@@ -407,6 +407,116 @@ async fn withdraw_opportunities(state: &mut State, withdrawn: bool) -> Result<()
         Ok(())
     })
     .await
+}
+
+async fn get_geo_opportunities(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
+    if state.table != Table::Opportunity {
+        println!("Invalid table type");
+        return Ok(());
+    }
+
+    update_opportunities(state, |opp: &mut _| {
+        println!(
+            "{}\n{:?}\n{:?}\n",
+            opp.exterior.title, opp.exterior.location_point, opp.exterior.location_polygon
+        );
+        Ok(())
+    })
+    .await
+}
+
+async fn refresh_geo_opportunities(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
+    if state.table != Table::Opportunity {
+        println!("Invalid table type");
+        return Ok(());
+    }
+
+    let mut pagination = Pagination::Page {
+        index: 0,
+        size: 100,
+    };
+
+    loop {
+        let opps = Opportunity::load_matching(
+            &state.db,
+            &state.opportunity_query,
+            OpportunityQueryOrdering::Native,
+            pagination,
+        )
+        .await?;
+
+        if opps.is_empty() {
+            break;
+        }
+
+        for mut opp in opps {
+            let addr = format!(
+                "{} {} {} {}",
+                opp.exterior.address_street,
+                opp.exterior.address_city,
+                opp.exterior.address_state,
+                opp.exterior.address_zip
+            )
+            .trim()
+            .to_string();
+
+            if addr.is_empty() {
+                println!("Skipping empty address");
+                continue;
+            }
+
+            println!("Looking for {} using geo::GeomQuery", &addr);
+
+            let q = GeomQuery::new(addr.clone(), 0.5);
+
+            let mut success = false;
+
+            if let Ok(geo) = q.lookup(&state.db).await {
+                if !geo.lon.is_empty() && !geo.lat.is_empty() {
+                    let lon: f64 = geo.lon.parse()?;
+                    let lat: f64 = geo.lat.parse()?;
+                    opp.exterior.location_point = Some(json!({
+                        "type": "Point",
+                        "coordinates": [lon, lat]
+                    }));
+                    opp.exterior.location_polygon = geo.geojson;
+                    opp.store(&state.db).await?;
+                    success = true;
+                }
+            }
+
+            if success {
+                continue;
+            }
+
+            println!("Looking for {} using geo::Query", &addr);
+
+            let q = common::geo::Query::new(addr, true);
+
+            if let Some(geo) = q.lookup_one().await {
+                opp.exterior.location_point = Some(json!({
+                    "type": "Point",
+                    "coordinates": [geo.geometry.longitude, geo.geometry.latitude]
+                }));
+                opp.store(&state.db).await?;
+            }
+        }
+
+        if let Pagination::Page { index, size } = pagination {
+            pagination = Pagination::Page {
+                index: index + 1,
+                size,
+            };
+
+            println!("Processed {}", (index + 1) * size);
+        } else {
+            panic!("Unexpected pagination");
+        }
+    }
+
+    println!("Update finished.");
+
+    Ok(())
 }
 
 fn table(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
@@ -873,6 +983,22 @@ async fn run_shell(state: State) -> Result<(), DynError> {
         Command::new_async(
             "print unsubscribe CSV".into(),
             async_fn!(State, unsubscribes),
+        ),
+    );
+
+    shell.commands.insert(
+        "getgeo".into(),
+        Command::new_async(
+            "Get geo data from an opportunity".into(),
+            async_fn!(State, get_geo_opportunities),
+        ),
+    );
+
+    shell.commands.insert(
+        "refreshgeo".into(),
+        Command::new_async(
+            "Update geo data for an opportunity based on address".into(),
+            async_fn!(State, refresh_geo_opportunities),
         ),
     );
 
