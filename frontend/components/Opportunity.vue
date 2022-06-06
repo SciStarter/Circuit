@@ -155,6 +155,7 @@
           <div class="info weblink" v-if="opportunity.partner_opp_url || opportunity.organization_website">
             <link-icon />
             <external-link
+              new-tab
               :href="opportunity.partner_opp_url || opportunity.organization_website"
               title="Find out more"
               campaign="opp-page"
@@ -211,6 +212,7 @@
 
           <div class="opp-action-btn stronger" v-if="opportunity.partner_opp_url">
             <external-link
+              new-tab
               :href="opportunity.partner_opp_url"
               title="Find out more"
               campaign="opp-page"
