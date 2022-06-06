@@ -35,12 +35,12 @@
 <div class="exchange-wrapper">
   <div class="exchange-search  general-filters">
       <div class="ex-search basic-filter-backdrop">
-        <form @submit.prevent="search">
+        <form>
         <div class="gf-fields">
           <b-field label="Search" label-position="inside" data-context="find-keywords">
             <b-input ref="search_keywords" v-model="search_text" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
           </b-field>
-          <lookup-place v-model="place_proxy" @valid="set_valid" label-position="inside" data-context="find-lookup-place" />
+          <lookup-place v-model="search_place" label-position="inside" data-context="find-lookup-place" />
           <div class="centered-row">
             <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
               <b-datepicker
@@ -58,7 +58,26 @@
                 />
             </b-field>
           </div>
-          <action-button id="quick-search-btn" :disabled="!location_valid" principal large type="submit" @click="search({text: search_text, page: 0})">
+          <action-button
+            id="quick-search-btn"
+            principal
+            large
+            type="button"
+            @click="search({
+                    text: search_text,
+                    longitude: search_place.longitude,
+                    latitude: search_place.latitude,
+                    proximity: search_place.proximity,
+                    beginning: beginning ? beginning : undefined,
+                    ending: ending ? ending : undefined,
+                    kids_only: kids_only,
+                    adults_only: adults_only,
+                    physical: physical,
+                    min_age: min_age,
+                    max_age: max_age,
+                    near: search_place.near,
+                    page: 0
+                    })">
             <search-icon />
           </action-button>
         </div>
@@ -114,7 +133,7 @@
               </b-field>
               <b-field label="Participant Age Range Maximum" data-context="find-maximum-age">
                 <b-checkbox v-model="max_age_active" :disabled="loading" />
-                <b-slider v-model="max_age" :disabled="!max_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
+                <b-slider v-model="max_age" :disabled="!max_age_active || loading" :min="0" :max="121" :step="1" size="is-medium" rounded>
                   <!-- <b-slider-tick :value="12">
                     12
                   </b-slider-tick> -->
@@ -149,13 +168,13 @@
                 </b-tooltip>
               </label>
               <b-field id="filter-physical" >
-                <b-radio-button native-value="in-person-or-online" :disabled="loading" data-context="find-sort-in-person-or-online" @input="set_query_interactive('page', 0)">
+                <b-radio-button v-model="physical" native-value="in-person-or-online" :disabled="loading" data-context="find-sort-in-person-or-online">
                   <span class="radio-label">Everything</span>
                 </b-radio-button>
-                <b-radio-button native-value="in-person" :disabled="loading" data-context="find-sort-in-person" @input="set_query_interactive('page', 0)">
+                <b-radio-button v-model="physical" native-value="in-person" :disabled="loading" data-context="find-sort-in-person">
                   <span class="radio-label">In-Person</span>
                 </b-radio-button>
-                <b-radio-button native-value="online" :disabled="loading" data-context="find-sort-online" @input="set_query_interactive('page', 0)">
+                <b-radio-button v-model="physical" native-value="online" :disabled="loading" data-context="find-sort-online">
                   <span class="radio-label">On-Demand</span>
                 </b-radio-button>
               </b-field>
@@ -193,11 +212,11 @@ import FilterIcon from '~/assets/img/filter2.svg?inline'
 export default {
     name: "ExchangeIndex",
     components: {
-      SubmitOpportunityIcon,
-      HomeIcon,
-      SearchIcon,
-      LookupPlace,
-      FilterIcon
+        SubmitOpportunityIcon,
+        HomeIcon,
+        SearchIcon,
+        LookupPlace,
+        FilterIcon
     },
 
     props: {
@@ -230,6 +249,16 @@ export default {
             query.beginning = new Date().toISOString();
         }
 
+        let search_text = query.text || '';
+        let search_place = {near: query.near || 0, longitude: query.longitude || 0, latitude: query.latitude || 0, proximity: query.proximity || 0};
+        let beginning = query.beginning;
+        let ending = query.ending;
+        let min_age = parseInt(query.min_age) || 0;
+        let max_age = parseInt(query.max_age) || 121;
+        let adults_only = !!query.adults_only && query.adults_only != 'false';
+        let kids_only = !!query.kids_only && query.kids_only != 'false';
+        let physical = query.physical || 'in-person-or-online';
+
         let opps = await context.$axios.$get('/api/ui/finder/search', { params: query });
 
         let now = new Date();
@@ -247,20 +276,75 @@ export default {
             month,
             search_year,
             search_month,
+            search_text,
+            search_place,
+            beginning,
+            ending,
+            min_age,
+            max_age,
+            adults_only,
+            kids_only,
+            physical,
         };
     },
 
     data() {
         return {
-            search_text: this.$route.query.text || '',
             toggle_mobile_nav: false,
             alert: false,
             opp_view: 0,
             filter: false,
+            loading: false,
         };
     },
 
+    computed: {
+        beginning_proxy: {
+            get() {
+                return this.beginning ? new Date(this.beginning) : null;
+            },
+
+            set(val) {
+                this.beginning = val.toISOString();
+            }
+        },
+
+        ending_proxy: {
+            get() {
+                return this.ending ? new Date(this.ending) : null;
+            },
+
+            set(val) {
+                this.ending = val.toISOString();
+            }
+        },
+
+        min_age_active: {
+            get() {
+                return this.min_age !== undefined && this.min_age > 0;
+            },
+
+            set(value) {
+                this.min_age = value ? 1 : 0;
+            }
+        },
+
+        max_age_active: {
+            get() {
+                return this.max_age !== undefined && this.max_age < 121;
+            },
+
+            set(value) {
+                this.max_age = value ? 120 : 121;
+            }
+        },
+    },
+
     watchQuery: true,
+
+    async mounted() {
+        this.search_place = await this.$store.dispatch("get_here");
+    },
 
     methods: {
         month_add(offset) {
@@ -284,6 +368,14 @@ export default {
 
             if(q.beginning === undefined) {
                 q.beginning = new Date().toISOString();
+            }
+
+            if(q.min_age < 1 || q.min_age >= 121) {
+                delete q.min_age;
+            }
+
+            if(q.max_age < 1 || q.max_age >= 121) {
+                delete q.max_age;
             }
 
             this.$router.push({name: 'exchange-uid', params: this.$route.params, query: q});
