@@ -24,24 +24,12 @@ window.onNuxtReady(async () => {
   // Needed for either version
   if (user.authenticated) {
     window.localStorage.setItem("token", user.token);
-    if (window.isSecureContext) {
-      const hashed = btoa(
-        String.fromCharCode.apply(
-          null,
-          new Uint8Array(
-            await crypto.subtle.digest(
-              "SHA-256",
-              new ArrayBuffer(user.token + Math.random().toString().slice(2)),
-            ),
-          ),
-        ),
-      );
-      window.localStorage.setItem("session", hashed);
-    } else {
-      window.localStorage.setItem("session", issue_tag());
-    }
+    window.localStorage.setItem("session", user.uid);
   } else {
     window.localStorage.removeItem("token");
     window.localStorage.setItem("session", issue_tag());
   }
+
+  window.dataLayer.unshift({user_id: window.localStorage.getItem("session")});
+  window.$nuxt.$gtm.init("GTM-PNHMH6L");
 });

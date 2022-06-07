@@ -482,7 +482,6 @@ export default {
     },
 
     async mounted() {
-        this.$gtm.push({"user_id": window.localStorage.getItem("session")});
         await this.$store.dispatch('sync_local_to_server');
         if(!window.localStorage.getItem("cookie-consent")) {
             this.show_cookie = true;

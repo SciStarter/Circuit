@@ -153,10 +153,6 @@ export default {
     ],
   },
 
-  gtm: {
-    id: "GTM-PNHMH6L",
-  },
-
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
     extractCSS: (process.env.NODE_ENV === "development") ? false : true,
