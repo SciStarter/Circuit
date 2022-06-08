@@ -30,6 +30,7 @@ window.onNuxtReady(async () => {
     window.localStorage.setItem("session", issue_tag());
   }
 
+  window.dataLayer = window.dataLayer || [];
   window.dataLayer.unshift({user_id: window.localStorage.getItem("session")});
   window.$nuxt.$gtm.init("GTM-PNHMH6L");
 });

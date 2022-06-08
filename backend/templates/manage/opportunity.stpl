@@ -460,14 +460,7 @@
                 <input class="input" type="text" name="opp_hashtags" value="<%= opportunity.exterior.opp_hashtags.join(", ") %>">
               </div>
             </div>
-            <%#
-            <div class="field">
-            <label class="label">Opportunity Social Handles</label>
-            <div class="control">
-            <p><%= opportunity.exterior.opp_social_handles|mapping|safe %></p>
-            </div>
-            </div>
-            %>
+
             <div class="field">
               <label class="label">Opportunity Is Online</label>
               <div class="control">

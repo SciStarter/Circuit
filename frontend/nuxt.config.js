@@ -69,6 +69,8 @@ export default {
           "https://sciencenearme.org/",
           "www.googletagmanager.com",
           "www.google-analytics.com",
+          "secure.quantserve.com",
+          "rules.quantcount.com",
         ],
         "style-src": [
           "'self'",
@@ -76,7 +78,7 @@ export default {
           "fonts.googleapis.com",
           "cdn.jsdelivr.net",
         ],
-          "img-src": ["'self'", "https:", "data:", "blob:", "region1.google-analytics.com", "region1.analytics.google.com"],
+        "img-src": ["'self'", "https:", "data:", "blob:", "region1.google-analytics.com", "region1.analytics.google.com"],
         "connect-src": [
           "'self'",
           "data:",
@@ -86,8 +88,8 @@ export default {
           "https://events.mapbox.com",
           "www.google-analytics.com",
           "https://geocode.arcgis.com",
-            "region1.google-analytics.com",
-            "region1.analytics.google.com",
+          "region1.google-analytics.com",
+          "region1.analytics.google.com",
         ],
         "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net"],
         "object-src": ["'self'"],
