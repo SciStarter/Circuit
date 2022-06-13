@@ -94,6 +94,17 @@ export default {
             activity_types: this.entity.opp_descriptor,
             domain: this.entity.pes_domain,
         });
+
+        let prior = window.localStorage.getItem('last-opportunity');
+        let postor = this.entity.uid;
+
+        if(!!postor) {
+            if(!!prior) {
+                this.$axios.$post('/api/ui/activity/transit', {prior, postor}, this.$store.state.auth);
+            }
+
+            window.localStorage.setItem('last-opportunity', postor);
+        }
     },
 }
 </script>
