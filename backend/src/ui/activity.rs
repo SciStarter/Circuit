@@ -6,6 +6,9 @@ use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
 };
+use uuid::Uuid;
+
+use super::request_person;
 
 static CLICK_ENDPOINT: Lazy<String> = Lazy::new(|| {
     format!(
@@ -24,8 +27,36 @@ static CLICK_ENDPOINT: Lazy<String> = Lazy::new(|| {
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .at("click", |r| r.post(record_click))
+        .at("transit", |r| r.post(record_transit))
         .at("external", |r| r.post(record_external))
         .at("widget", |r| r.post(record_widget))
+}
+
+#[derive(Debug, Deserialize)]
+struct TransitInfo {
+    prior: Uuid,
+    postor: Uuid,
+}
+
+pub async fn record_transit(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req)
+        .await?
+        .and_then(|x| Some(x.exterior.uid));
+
+    let info: TransitInfo = req.body_json().await?;
+
+    let db = req.state();
+
+    sqlx::query!(
+        r#"insert into c_transit ("prior", "postor", "actor") values ($1, $2, $3)"#,
+        info.prior,
+        info.postor,
+        person
+    )
+    .execute(db)
+    .await?;
+
+    Ok(Response::builder(StatusCode::NoContent).build())
 }
 
 /// Update the clickstream with a single on-site click instance. No-op
