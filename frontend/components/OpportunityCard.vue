@@ -391,7 +391,7 @@ export default {
         flex-wrap: wrap;
 
         .info {
-            width: 20vw;
+            width: 30vw;
             min-width: 13rem;
 
             .opportunity-notice {
