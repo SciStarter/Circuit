@@ -22,7 +22,7 @@
         <a @click="$store.dispatch('logout')">Logout</a>
       </div>
       <div v-else class="e">
-        <template v-if="partner !== null || ($store.state.user.authenticated && exchange.open_submission)">
+        <template v-if="exchange.open_submission">
           <nuxt-link :to="{name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}}">Login</nuxt-link> or
           <nuxt-link :to="{name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}}">Signup</nuxt-link> to add an opportunity
         </template>
