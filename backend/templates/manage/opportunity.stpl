@@ -144,7 +144,6 @@
             <%# consider adding .wysiwyg textareas to edit the page blocks inline %>
 
             <a href="/<%= opportunity.exterior.slug %>" target="_preview">view page in tab</a>
-            <%# <iframe style="width: 80vw; height: 50vh" src="/<%= opportunity.exterior.slug %>"></iframe> %>
 
             <input type="hidden" name="partner_name" value="<%= opportunity.exterior.partner_name %>">
             <input type="hidden" name="tags" value="<%= opportunity.exterior.tags.iter().cloned().collect::<Vec<_>>().join(", ") %>">
