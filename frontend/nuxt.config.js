@@ -78,7 +78,7 @@ export default {
           "fonts.googleapis.com",
           "cdn.jsdelivr.net",
         ],
-        "img-src": ["'self'", "https:", "data:", "blob:", "region1.google-analytics.com", "region1.analytics.google.com"],
+        "img-src": ["'self'", "https:", "data:", "blob:", "region1.google-analytics.com", "region1.analytics.google.com", "pixel.quantserve.com"],
         "connect-src": [
           "'self'",
           "data:",
