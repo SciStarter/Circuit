@@ -26,7 +26,7 @@
         <b-input v-model="login.password" type="password" required />
       </b-field>
       <div class="forgot">
-           <a @click="forgot">forgot password?</a>
+        <a @click="forgot">Send a one-time login link to my email</a>
       </div>
       <div class="flex flex-justify-sb">
         <action-button :loading="working" type="is-primary" primary @click="log_in">
@@ -133,12 +133,12 @@ export default {
 
             try {
                 await this.$axios.$post('/api/ui/auth/reset', {email: result});
-                this.$buefy.dialog.alert('Confirmation message sent');
+                this.$buefy.dialog.alert('Login message sent');
             }
             catch(err) {
                 this.$buefy.dialog.alert({
                     title: "Error",
-                    message: "Password reset failed",
+                    message: "One time login request failed",
                     type: 'is-danger',
                     hasIcon: true,
                     icon: 'times-circle',

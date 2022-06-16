@@ -61,10 +61,10 @@ pub async fn reset(mut req: tide::Request<Database>) -> tide::Result {
     let template = common::emails::EmailMessage::load_or_default(
         req.state(),
         "password-reset",
-        "Science Near Me password reset confirmation",
-        r#"<p>This is to confirm your request to reset your Science Near Me password.</p>
-<p>If you did not make such a request, you can safely ignore this email. Nothing will change.</p>
-<p>To confirm the request and change your password, just <a href="https://sciencenearme.org/api/ui/invitation/{invitation}">click here</a> and choose a new password.</p>
+        "Science Near Me one-time login",
+        r#"<p>This is to confirm your request for a one-time login on Science Near Me.</p>
+<p>If you did not make such a request, you can safely ignore this email. Nothing will change and whoever made the request will not be given access.</p>
+<p>To confirm the request and log in, just <a href="https://sciencenearme.org/api/ui/invitation/{invitation}">click here</a>. If you wish to change your Science Near Me password, you'll have that option after logging in.</p>
 <p>Regards,
 ~the Science Near Me team</p>
 "#,
