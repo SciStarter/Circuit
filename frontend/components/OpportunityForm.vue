@@ -1114,7 +1114,9 @@ export default {
                         confirmText: 'Got it'
                     })
                 }
-                this.$router.push((this.partner !== null && this.inExchange) ? {name: 'exchange-uid-slug', params: {uid: this.partner.uid, slug: this.value.slug}} : {name: 'slug', params: {slug: this.value.slug}});
+                else {
+                    this.$router.push((this.partner !== null && this.inExchange) ? {name: 'exchange-uid-slug', params: {uid: this.partner.uid, slug: this.value.slug}} : {name: 'slug', params: {slug: this.value.slug}});
+                }
             }
         },
 

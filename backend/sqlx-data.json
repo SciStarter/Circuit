@@ -1509,6 +1509,38 @@
     },
     "query": "select count(*) likes\nfrom c_opportunity_like L inner join c_opportunity O on L.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1 and L.person = $2;\n"
   },
+  "b97509b1d3ee44f0afd7fc8664bb753b5f7598cf4031bab7bf637bfc5dc02d2d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id?",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "SELECT \"id\" AS \"id?\", \"exterior\", \"interior\" FROM \"c_person\" WHERE \"interior\" -> 'permissions' @> $1"
+  },
   "c0425047604adf0d688a217b964e5787c81262a6d2f5c32654d53c6bf148c4ca": {
     "describe": {
       "columns": [
