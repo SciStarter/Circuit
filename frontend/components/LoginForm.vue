@@ -3,6 +3,7 @@
     <slot />
     <div class="form-header" v-if="!hideExtras">
       <p>
+        Or
         <a v-if="inModal" @click="$emit('signup')">Create a Science Near Me account</a>
         <a v-else @click="$router.replace(partner ? {name: 'exchange-uid-signup', params: {uid: partner}, query: $route.query} : {name: 'signup', query: $route.query})">Create a Science Near Me account</a>.
       </p>
