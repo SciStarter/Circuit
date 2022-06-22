@@ -248,6 +248,19 @@ pub async fn save_opportunity(
 
     notify_pending_approval(&req, &partner, &opp).await?;
 
+    common::emails::send(
+        std::env::var("SUPERUSER_EMAIL")?,
+        "info@sciencenearme.org",
+        "Submission status",
+        &format!(
+            "{:?}\n\n{:?}\n\n{:?}",
+            &original.interior.review_status,
+            &opp.interior.review_status,
+            &opp.interior.submitted_by
+        ),
+    )
+    .await;
+
     if let ReviewStatus::Pending = original.interior.review_status {
         if let ReviewStatus::Publish = opp.interior.review_status {
             if let Some(person_uid) = opp.interior.submitted_by {
@@ -259,7 +272,7 @@ pub async fn save_opportunity(
                     "Published on Science Near Me: {title}",
                     r#"
 <p>The opportunity <strong>{title}</strong> has been published on {partner_name} and Science Near Me.</p>
-<p>You can view the opportunity on {partner_name}'s web site or at <a href="https://sciencenearme.org/{opp_slug}">.</p>
+<p>You can view the opportunity on {partner_name}'s web site or at <a href="https://sciencenearme.org/{opp_slug}">Science Near Me</a>.</p>
 "#,
                 ).await;
 
