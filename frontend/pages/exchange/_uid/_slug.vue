@@ -1,5 +1,9 @@
 <template>
-<component :is="selected_component" :entity="entity" :user="user" :exchange="exchange" :from-search="false" :partner="partner" @login="$router.push({name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}})" @signup="$router.push({name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}})" />
+<div v-if="authorization_required">
+  This page requires you to <a @click="$router.push({name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}})">log in</a>
+  to an authorized account in order to view it, or perhaps it doesn't exist at all.
+</div>
+<component v-else :is="selected_component" :entity="entity" :user="user" :exchange="exchange" :from-search="false" :partner="partner" @login="$router.push({name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}})" @signup="$router.push({name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}})" />
 </template>
 
 <script>
@@ -32,16 +36,9 @@ export default {
             const entity = await $axios.$get('/api/ui/entity/' + params.slug, store.state.auth ? store.state.auth : undefined);
             const layout = entity.entity_type.page ? entity.entity_type.page.layout : entity.entity_type;
 
-            return { entity, layout };
+            return { entity, layout, 'authorization_required': false };
         } catch(x) {
-            console.warn(x);
-
-            error({
-                statusCode: 404,
-                message: "Not Found"
-            });
-
-            return {};
+            return {'authorization_required': true};
         }
     },
 
