@@ -2,7 +2,24 @@
 <div class="snm-wrapper">
   <div class="snm-container base-typography snm-container-first">
     <div class="head">
-      <h1>Display Science Near Me Opportunities on Your Website</h1>
+      <h1>Add a Science Near Me Exchange to Your Website</h1>
+      <p>
+        Customize the SNM Opportunity Finder and Search Results to
+        display opportunities on your site in a responsive iframe,
+        aligned with your community's location and interests! Include
+        an optional "Add Opportunity" feature to add your
+        opportunities and/or invite local organizers to add their
+        programs and events to SNM and your site without leaving your
+        site. Access on-demand analytics and download all
+        opportunities added through your site anytime!
+      </p>
+      <p>
+        To set up an Exchange on your site, <a href="mailto:info@sciencenearme.org?subject=Exchange Info Request">contact us</a> for more information.
+      </p>
+    </div>
+
+    <div>
+      <h1>Display a Science Near Me Widget on Your Website</h1>
       <p>Select a widget to display up to 10 Science Near Me opportunities and/or the Science Near Me Opportunity Finder on your website!</p>
       <p>For customizable and more comprehensive options, see <q>Science Near Me Exchange</q>.</p>
     </div>
