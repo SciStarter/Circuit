@@ -101,7 +101,7 @@
       <div class="exchange">
         <dynamic-block group="add-opportunities" item="exchange">
           <h3>Do you lead a network where you would like partners to add opportunities through your site?</h3>
-          <p>Learn about options for creating an “exchange” version of our opportunity form that you can host directly on your site. <a href="mailto:info@sciencenearme.org?subject=Exchange Info Request">Contact us</a> for more information.</p>
+          <p>Learn about options for creating an “exchange” version of our opportunity form that you can host directly on your site <a href="/add-opportunities">here</a>. <a href="mailto:info@sciencenearme.org?subject=Exchange Info Request">Contact us</a> for more information.</p>
         </dynamic-block>
       </div>
 

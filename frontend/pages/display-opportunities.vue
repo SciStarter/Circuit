@@ -3,10 +3,28 @@
   <div class="snm-container base-typography snm-container-first">
     <div class="head">
       <h1>Display Science Near Me Opportunities on Your Website</h1>
-      <p>Select a widget to display up to 10 Science Near Me opportunities and/or the Science Near Me Opportunity Finder on your website!</p>
-      <p>For customizable and more comprehensive options, see <q>Science Near Me Exchange</q>.</p>
+      <p>There are two ways to display STEM engagement opportunities on your website:</p>
+
+      <div class="flex promo-wrap">
+          <div class="promo">
+              <h2>Science Near Me Exchange <span class="tag">recommended</span></h2>
+              <p>Customize the SNM Opportunity Finder and Search Results to display opportunities in an iFrame, aligned with your community's location and interests! Include an optional "Add Opportunity" feature to add your opportunities and/or invite local organizers to add their programs and events to SNM and your site without leaving your site. Access on-demand analytics and download all opportunities added through your site anytime!</p>
+          </div>
+          <div class="promo">
+              <h2>Science Near Me Widget</h2>
+              <p>Display up to 10 SNM Opportunities on your website through our simple plug and play tool. Follow the instructions below.</p>
+          </div>
+      </div>
     </div>
 
+  <div class="nav-tab-wrapper">
+    <ul class="nav-tabs">
+       <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Get the Exchange</a></li>
+        <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Get the Widget</a></li> 
+    </ul>
+  </div>
+
+<div v-if="state==1">
     <div class="flex">
       <div class="flex1">
         <section>
@@ -199,6 +217,26 @@
       </div>
     </div>
   </div>
+
+  <div v-if="state==2" class="about-exchange">
+    <p>If you have many existing opportunities you'd like to display on SNM and your Exchange, please select one of the options to share your opportunities on our<a href="/add-opportunities">add opportuities page</a>. That way all those opportunities will appear on SNM and on your Exchange, in addition to any others available to your community from SNM! You'll still have the option to use the Add Opportunity Form on your site to add future opportunities.</p>
+    <h2 class="h3" style="margin-top:20px">Request an Exchange</h2>
+    <ol>
+      <li>Create a Science Near Me account, if you haven't done so already</li>
+      <li>Send an email request to <a href="mailto:info@sciencenearme.org">info@sciencenearme.org</a>
+        <p>Please include:</p>
+        <ul>
+          <li>The email address associated with your Science Near Me account</li>
+          <li>The name of your organization</li>
+          <li>Your organization's contact info (address, phone)</li>
+          <li>The URL or website on which you plan to host the exchange.</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+
+  </div>
 </div>
 </template>
 
@@ -221,6 +259,7 @@ export default {
             place_loading: false,
             widgetType: 'project',
             header: 'header',
+            state:2,
             max:1,
             projectSize: 'short-thin',
             customize: 'no',
@@ -471,6 +510,33 @@ section {
     }
 }
 
+.promo-wrap {
+  flex-direction: column;
+  .promo {
+    border:1px solid $snm-color-border;
+    padding:16px;
+    margin-bottom:2rem;
+    border-radius: 6px;
+    h2 {
+      background-color: $snm-color-background-medlight;
+      padding:8px 16px;
+      margin: -16px -16px 16px -16px;
+    }
+    p {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.head {
+  h1 {
+    margin-bottom: .2rem;
+  }
+  p {
+    margin-bottom: 2rem;
+  }
+}
+
 @media (min-width:768px) {
 
     .flex {
@@ -487,6 +553,46 @@ section {
         position:sticky;
         top:20px;
     }
+    .authenticated .flex2 {
+      top:90px;
+    }
+    .promo-wrap {
+      flex-direction: row;
+      justify-content: space-between;
+      .promo {
+        width:48%;
+      }
+    }
 }
+
+.base-typography .head {
+  border:0;
+  padding-bottom: 0;;
+}
+
+.about-exchange {
+  ol {
+    list-style-position: inside;
+    
+    li {
+      margin-bottom: 16px;
+      p {
+        margin:16px 0;
+      }
+    }
+  }
+  ul {
+    list-style-type: disc;
+    margin-left: 2rem;;
+  }
+}
+
+.promo .tag {
+  font-size:12px;
+  background-color:$snm-color-action;
+  color: #fff;
+  vertical-align: middle;
+}
+
 
 </style>
