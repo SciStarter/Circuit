@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Circuit API v1",
-        "version": "1.5.1",
+        "version": "1.5.2",
         "description": ""
     },
     "servers": [
@@ -199,6 +199,7 @@
                             "maker_organization",
                             "company",
                             "govt_agency",
+                            "maker_space",
                             "unspecified"
                         ],
                         "default": "unspecified",

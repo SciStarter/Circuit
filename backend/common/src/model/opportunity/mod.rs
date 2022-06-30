@@ -129,6 +129,7 @@ pub enum OrganizationType {
     MakerOrganization,
     Company,
     GovtAgency,
+    MakerSpace,
     #[serde(other)]
     Unspecified,
 }
