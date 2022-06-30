@@ -63,7 +63,7 @@
               <p>If you have your opportunities stored in a database, connecting to our API is the optimal option to maintain ongoing sharing of data with Science Near Me. Every change you make in your database will show up automatically in Science Near Me.</p>
               <p><span class="step">Step 1:</span> Request a partner account using the API option.</p>
               <p><span class="step">Step 2:</span> Refer to our <a href="/api/docs/v1.html">API documentation</a> to connect your opportunity data to Science Near Me using an API.</p>
-              <p><span class="step">Step 3:</span> Within a week of connecting your opportunity data to Science Near Me using the API, you should receive an email from us confirming that we’ve received your opportunities and they are accurately showing up in our system and the site.</p>
+              <p><span class="step">Step 3:</span> Within a week of connecting your opportunity data to Science Near Me using the API, you should receive an email from us confirming that we've received your opportunities and they are accurately showing up in our system and the site.</p>
             </dynamic-block>
           </div>
           <a class="action-btn" @click="request.access='API';show_form();">Request a Partner Account</a>

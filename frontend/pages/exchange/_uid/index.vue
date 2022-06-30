@@ -778,5 +778,24 @@ export default {
   }
 }
 
+@media (max-width:400px) {
+  ::v-deep .filters .field.has-addons  {
+    flex-wrap: wrap;
+    .b-slider {
+      max-width: calc(100% - 55px);
+    }
+    .slider-direct {
+      width: 100px;
+      margin-top:6px;
+      margin-left:55px;
+    }
+  }
+}
+
+::v-deep  #filter-physical .field.has-addons{
+  flex-wrap:nowrap;
+  flex-direction: column;
+}
+
 
 </style>
