@@ -934,6 +934,25 @@ SELECT EXISTS(
             .await?)
     }
 
+    pub async fn all_by_permission(
+        db: &Database,
+        perm: &Permission,
+    ) -> Result<Vec<Result<Person, Error>>, Error> {
+        Ok(sqlx::query!(
+            r#"SELECT "id" AS "id?", "exterior", "interior" FROM "c_person" WHERE "interior" -> 'permissions' @> $1"#,
+            serde_json::to_value(perm)?
+        )
+        .map(|row| {
+            Ok(Person {
+                id: row.id,
+                exterior: serde_json::from_value(row.exterior)?,
+                interior: serde_json::from_value(row.interior)?,
+            })
+        })
+        .fetch_all(db)
+        .await?)
+    }
+
     pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
         self.validate()?;
 

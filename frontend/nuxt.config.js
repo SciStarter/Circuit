@@ -78,7 +78,16 @@ export default {
           "fonts.googleapis.com",
           "cdn.jsdelivr.net",
         ],
-        "img-src": ["'self'", "https:", "data:", "blob:", "region1.google-analytics.com", "region1.analytics.google.com", "pixel.quantserve.com"],
+        "img-src": [
+          "'self'",
+          "https:",
+          "data:",
+          "blob:",
+          "region1.google-analytics.com",
+          "region1.analytics.google.com",
+          "pixel.quantserve.com",
+          "circuit-media.s3.amazonaws.com"
+        ],
         "connect-src": [
           "'self'",
           "data:",
@@ -91,9 +100,9 @@ export default {
           "region1.google-analytics.com",
           "region1.analytics.google.com",
         ],
-        "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net"],
-        "object-src": ["'self'"],
-        "media-src": ["'self'"],
+        "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net", "circuit-media.s3.amazonaws.com"],
+        "object-src": ["'self'", "circuit-media.s3.amazonaws.com"],
+        "media-src": ["'self'", "circuit-media.s3.amazonaws.com"],
         "frame-src": ["'self'"], // Overridden by child-src if the browser supports CSP 3 (Safari doesn't yet)
         "child-src": ["'self'", "blob:"],
         "form-action": ["'self'"],
