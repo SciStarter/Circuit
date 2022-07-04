@@ -12,7 +12,7 @@ pub mod model;
 pub mod time;
 pub mod timezones;
 
-pub use time::ToFixedOffset;
+pub use crate::time::ToFixedOffset;
 
 pub type Database = Pool<Postgres>;
 

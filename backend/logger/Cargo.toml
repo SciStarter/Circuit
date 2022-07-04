@@ -12,7 +12,7 @@ container = []
 [dependencies]
 async-std = { version = "1.10.0", features = ["attributes"] }
 chrono = "0.4.19"
-rusty-s3 = "0.2.1"
+rusty-s3 = "0.3.1"
 surf = { version = "2.3.2", features = ["h1-client-rustls"], default-features = false }
 tide = "0.16.0"
 url = "2.2.2"
