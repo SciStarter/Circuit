@@ -29,20 +29,15 @@ use super::{Pagination, PARTNER_NAMESPACE};
 pub static SLUGIFY_REPLACE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"[^\pL\pN-]+").expect("Unable to compile SLUGIFY_REPLACE regex"));
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 pub enum ReviewStatus {
     Draft,
     Pending,
     Reject,
     Publish,
+    #[default]
     NotRequired,
-}
-
-impl Default for ReviewStatus {
-    fn default() -> Self {
-        ReviewStatus::NotRequired
-    }
 }
 
 impl ReviewStatus {
@@ -67,18 +62,13 @@ impl ReviewStatus {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Recurrence {
+    #[default]
     Once,
     Daily,
     Weekly,
-}
-
-impl Default for Recurrence {
-    fn default() -> Self {
-        Recurrence::Once
-    }
 }
 
 impl Recurrence {
@@ -109,7 +99,9 @@ pub struct Reviews {
     pub reviews: Vec<Review>,
 }
 
-#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
+#[derive(
+    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum OrganizationType {
     MuseumOrScienceCenter,
@@ -131,6 +123,7 @@ pub enum OrganizationType {
     GovtAgency,
     MakerSpace,
     #[serde(other)]
+    #[default]
     Unspecified,
 }
 
@@ -154,25 +147,16 @@ impl super::SelectOption for OrganizationType {
     }
 }
 
-impl Default for OrganizationType {
-    fn default() -> Self {
-        OrganizationType::Unspecified
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, PartialEq, Eq, Clone)]
+#[derive(
+    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, PartialEq, Eq, Clone,
+)]
 #[serde(rename_all = "snake_case")]
 // Don't forget to update impl super::SelectOption for EntityType and impl OpportunityForm to add options for new layout
 // How can this be centralized so we don't have to repeat?
 pub enum PageLayout {
+    #[default]
     JustContent,
     AddOpportunities,
-}
-
-impl Default for PageLayout {
-    fn default() -> Self {
-        PageLayout::JustContent
-    }
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
@@ -180,13 +164,14 @@ pub struct PageOptions {
     pub layout: PageLayout,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum EntityType {
     Unspecified,
     Attraction,
     Page(PageOptions),
     #[serde(other)]
+    #[default]
     Opportunity,
 }
 
@@ -242,13 +227,9 @@ impl super::SelectOption for EntityType {
     }
 }
 
-impl Default for EntityType {
-    fn default() -> Self {
-        EntityType::Opportunity
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
+#[derive(
+    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum VenueType {
     Indoors,
@@ -262,6 +243,7 @@ pub enum VenueType {
     Bar,
     CollegeUniversity,
     #[serde(other)]
+    #[default]
     Unspecified,
 }
 
@@ -285,13 +267,9 @@ impl super::SelectOption for VenueType {
     }
 }
 
-impl Default for VenueType {
-    fn default() -> Self {
-        VenueType::Unspecified
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
+#[derive(
+    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum Domain {
     CitizenScience,
@@ -301,7 +279,9 @@ pub enum Domain {
     Policy,
     OutOfSchoolTimeProgram,
     FormalEducation,
+    ScienceCommunications,
     #[serde(other)]
+    #[default]
     Unspecified,
 }
 
@@ -322,12 +302,6 @@ impl super::SelectOption for Domain {
             name,
             *self,
         )
-    }
-}
-
-impl Default for Domain {
-    fn default() -> Self {
-        Domain::Unspecified
     }
 }
 
@@ -509,9 +483,12 @@ pub struct OpenDays {
     pub sunday: Option<OpenHours>,
 }
 
-#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
+#[derive(
+    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum Cost {
+    #[default]
     Free,
     Cost,
     #[serde(other)]
@@ -538,17 +515,14 @@ impl super::SelectOption for Cost {
     }
 }
 
-impl Default for Cost {
-    fn default() -> Self {
-        Cost::Free
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
+#[derive(
+    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum LocationType {
     #[serde(alias = "ANY")]
     #[serde(alias = "Any")]
+    #[default]
     Any,
     #[serde(alias = "AT")]
     #[serde(alias = "At")]
@@ -579,12 +553,6 @@ impl super::SelectOption for LocationType {
             name,
             *self,
         )
-    }
-}
-
-impl Default for LocationType {
-    fn default() -> Self {
-        LocationType::Any
     }
 }
 
@@ -942,34 +910,24 @@ impl std::fmt::Display for OpportunityReference {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Serialize, Default, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum OpportunityQueryPhysical {
+    #[default]
     InPersonOrOnline,
     InPerson,
     Online,
 }
 
-impl Default for OpportunityQueryPhysical {
-    fn default() -> Self {
-        OpportunityQueryPhysical::InPersonOrOnline
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Serialize, Default, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum OpportunityQueryOrdering {
+    #[default]
     Alphabetical,
     Closest,
     Soonest,
     Any,
     Native,
-}
-
-impl Default for OpportunityQueryOrdering {
-    fn default() -> Self {
-        OpportunityQueryOrdering::Alphabetical
-    }
 }
 
 /// Each field represents one of the database fields by which

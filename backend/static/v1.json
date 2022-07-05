@@ -359,6 +359,7 @@
                             "policy",
                             "out_of_school_time_program",
                             "formal_education",
+                            "science_communications",
                             "unspecified"
                         ],
                         "default": "unspecified",

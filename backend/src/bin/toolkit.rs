@@ -5,7 +5,7 @@ use counter::Counter;
 use http_types::Method;
 use serde::Deserialize;
 use serde_json::json;
-use shellfish::{async_fn, Command, Shell};
+use shellfish::{async_fn, handler::default, Command, Shell};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::Row;
 use std::io::Write;
@@ -123,8 +123,9 @@ enum Table {
     Partner,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 enum PersonQuery {
+    #[default]
     Any,
     _Email(String),
 }
@@ -149,14 +150,9 @@ impl PersonQuery {
     }
 }
 
-impl Default for PersonQuery {
-    fn default() -> Self {
-        PersonQuery::Any
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Default)]
 enum PartnerQuery {
+    #[default]
     Any,
 }
 
@@ -176,12 +172,6 @@ impl PartnerQuery {
                 })
                 .fetch(db)),
         }
-    }
-}
-
-impl Default for PartnerQuery {
-    fn default() -> Self {
-        PartnerQuery::Any
     }
 }
 

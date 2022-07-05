@@ -153,7 +153,7 @@ pub struct ExpandedParticipation {
     pub when: DateTime<FixedOffset>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Gender {
     Male,
@@ -165,16 +165,11 @@ pub enum Gender {
     Other,
 
     #[serde(other)]
+    #[default]
     Unspecified,
 }
 
-impl Default for Gender {
-    fn default() -> Self {
-        Gender::Unspecified
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Ethnicity {
     Asian,
@@ -188,16 +183,11 @@ pub enum Ethnicity {
     Other,
 
     #[serde(other)]
+    #[default]
     Unspecified,
 }
 
-impl Default for Ethnicity {
-    fn default() -> Self {
-        Ethnicity::Unspecified
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum EducationLevel {
     GradeSchool,
@@ -208,16 +198,11 @@ pub enum EducationLevel {
     Doctorate,
 
     #[serde(other)]
+    #[default]
     Unspecified,
 }
 
-impl Default for EducationLevel {
-    fn default() -> Self {
-        EducationLevel::Unspecified
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum IncomeLevel {
     Poor,
@@ -232,13 +217,8 @@ pub enum IncomeLevel {
     HundredPlus,
 
     #[serde(other)]
+    #[default]
     Unspecified,
-}
-
-impl Default for IncomeLevel {
-    fn default() -> Self {
-        IncomeLevel::Unspecified
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
@@ -334,17 +314,12 @@ pub struct PersonExterior {
     pub image_url: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub enum JoinChannel {
+    #[default]
     Local,
     SciStarter,
     Exchange(Uuid),
-}
-
-impl Default for JoinChannel {
-    fn default() -> Self {
-        JoinChannel::Local
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -434,20 +409,15 @@ pub struct Person {
     pub interior: PersonInterior,
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum PermitAction {
     #[serde(rename = "")]
+    #[default]
     Nothing,
     Add,
     Edit,
     Manage,
-}
-
-impl Default for PermitAction {
-    fn default() -> Self {
-        PermitAction::Nothing
-    }
 }
 
 impl Person {
