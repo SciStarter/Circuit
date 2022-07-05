@@ -4,6 +4,7 @@ local
 node_modules
 yarn.lock
 circuit.env
+common/target
 frontend/PATCH
 backend/PATCH
 backend/*/PATCH
