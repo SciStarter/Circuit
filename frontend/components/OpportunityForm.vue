@@ -349,6 +349,41 @@
           <b-input v-model="value.description" type="textarea" class="desc"></b-input>
         </b-field>
 
+        <b-field :type="validation.domains">
+          <template #label>
+            Select the public engagement of science domain that fits your opportunity best<span class="required">*</span>
+          </template>
+
+          <div class="control validation-target" :class="{'is-danger': validation.opp_domain}">
+            <div class="checkbox-wrap-domains">
+              <b-radio v-model="value.opp_domain" native-value="citizen_science">
+                Citizen Science
+              </b-radio>
+              <b-radio v-model="value.opp_domain" native-value="live_science">
+                Live Science
+              </b-radio>
+              <b-radio v-model="value.opp_domain" native-value="museum_or_science_center">
+                Museum or Science Center
+              </b-radio>
+              <b-radio v-model="value.opp_domain" native-value="maker">
+                Maker
+              </b-radio>
+              <b-radio v-model="value.opp_domain" native-value="policy">
+                Science Policy
+              </b-radio>
+              <b-radio v-model="value.opp_domain" native-value="out_of_school_time_program">
+                Out of School Time Program
+              </b-radio>
+              <b-radio v-model="value.opp_domain" native-value="formal_education">
+                Formal Education
+              </b-radio>
+              <b-radio v-model="value.opp_domain" native-value="science_communications">
+                Science Communications
+              </b-radio>
+            </div>
+          </div>
+        </b-field>
+
         <b-field :type="validation.descriptors">
           <template #label>
             Select the activity types that fit your opportunity best<span class="required">*</span>
@@ -1694,6 +1729,19 @@ legend {
   }
 }
 
+.checkbox-wrap-domains {
+  display: flex;
+  flex-wrap: wrap;
+  > label {
+    margin-bottom:12px;
+    width:25%;
+  }
+}
 
+@media (max-width:600px) {
+.checkbox-wrap-domains > label {
+  width:100%;
+}
+}
 
 </style>
