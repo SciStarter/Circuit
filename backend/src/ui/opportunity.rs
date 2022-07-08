@@ -251,19 +251,6 @@ pub async fn save_opportunity(
 
     notify_pending_approval(&req, &partner, &opp).await?;
 
-    common::emails::send(
-        std::env::var("SUPERUSER_EMAIL")?,
-        "info@sciencenearme.org",
-        "Submission status",
-        &format!(
-            "{:?}\n\n{:?}\n\n{:?}",
-            &original.interior.review_status,
-            &opp.interior.review_status,
-            &opp.interior.submitted_by
-        ),
-    )
-    .await;
-
     if let ReviewStatus::Pending = original.interior.review_status {
         if let ReviewStatus::Publish = opp.interior.review_status {
             if let Some(person_uid) = opp.interior.submitted_by {
