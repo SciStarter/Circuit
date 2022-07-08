@@ -335,6 +335,7 @@
           <legend>Required Fields</legend>
           <div class="required">* required</div>
         </div>
+
         <b-field :type="validation.short_desc" message="164 character limit">
           <template #label>
             Short Summary (appears in search results)<span class="required">*</span>
@@ -342,12 +343,26 @@
           <b-input v-model="value.short_desc" maxlength="164" has-counter type="textarea"></b-input>
           <p class="help mb">Tell prospective participants what to expect from your opportunity in a short, friendly sentence.</p>
         </b-field>
+
         <b-field :type="validation.description" class="no-message">
           <template #label>
             Description of opportunity<span class="required">*</span>
           </template>
           <b-input v-model="value.description" type="textarea" class="desc"></b-input>
         </b-field>
+
+        <legend>Display Image</legend>
+        <p class="help mb">This is the image that will show when people see your opportunity’s record. If no image URL is provided, participants will see a default image.</p>
+
+        <label class="label">Display Image URL<span class="required">*</span></label>
+        <div class="flex display-image-wrapper" :class="{'is-danger': validation.image_url}">
+          <div>
+            <img v-if="value.image_url" :src="value.image_url" class="display-image">
+          </div>
+          <b-field :type="validation.image_url" label="Image URL" message="Must start with http:// or https://">
+            <b-input type="url" :value="value.image_url" @input="value.image_url = $event.replace(/ /g, '')" />
+          </b-field>
+        </div>
 
         <b-field :type="validation.pes_domain">
           <template #label>
@@ -384,7 +399,7 @@
           </div>
         </b-field>
 
-        <b-field :type="validation.descriptors">
+        <b-field>
           <template #label>
             Select the activity types that fit your opportunity best<span class="required">*</span>
           </template>
@@ -425,6 +440,28 @@
           </b-field>
         </div>
 
+        <b-field :type="validation.opp_venue" class="inline-checks">
+          <template #label>
+            Select the venue type(s) that fit your opportunity best<span class="required">*</span>
+          </template>
+          <b-checkbox v-model="value.opp_venue" native-value="indoors">Indoors</b-checkbox>
+          <b-checkbox v-model="value.opp_venue" native-value="outdoors">Outdoors</b-checkbox>
+        </b-field>
+
+        <b-field :type="validation.opp_topics">
+          <template #label>
+            Select the topics that fit your opportunity best<span class="required">*</span>
+          </template>
+          <b-input :value="topics_filter" @input="topics_filter = $event.toLowerCase()" type="input" placeholder="Type to filter topic list" class="filter"/>
+          <div class="checkbox-wrap">
+            <template v-for="t in topics">
+              <b-field v-if="t[1].toLowerCase().indexOf(topics_filter) >= 0">
+                <b-checkbox v-model="value.opp_topics" :native-value="t[0]">{{t[1]}}</b-checkbox>
+              </b-field>
+            </template>
+          </div>
+        </b-field>
+
         <hr />
 
         <legend>Keywords and Key phrases</legend>
@@ -447,21 +484,6 @@
       </div><!-- state 2 -->
 
       <div v-if="state==3">
-        <legend>Display Image</legend>
-        <p class="help mb">This is the image that will show when people see your opportunity’s record. If no image URL is provided, participants will see a default image.</p>
-
-        <label class="label">Display Image</label>
-        <div class="flex display-image-wrapper">
-          <div>
-            <img v-if="value.image_url" :src="value.image_url" class="display-image">
-          </div>
-          <b-field :type="validation.image_url" label="Image URL" message="Must start with http:// or https://">
-            <b-input type="url" :value="value.image_url" @input="value.image_url = $event.replace(/ /g, '')" />
-          </b-field>
-        </div>
-
-        <hr />
-
         <legend>Additional Information</legend>
         <p class="help mb">While not required, this information will tell prospective participants more about your opportunity and help them find your opportunity.</p>
 
@@ -483,24 +505,6 @@
         <!--     No -->
         <!--   </b-radio> -->
         <!-- </b-field> -->
-
-        <b-field :type="validation.topics" label="Select the topics that fit your opportunity best">
-          <b-input :value="topics_filter" @input="topics_filter = $event.toLowerCase()" type="input" placeholder="Type to filter topic list" class="filter"/>
-          <div class="checkbox-wrap">
-            <template v-for="t in topics">
-              <b-field v-if="t[1].toLowerCase().indexOf(topics_filter) >= 0">
-                <b-checkbox v-model="value.opp_topics" :native-value="t[0]">{{t[1]}}</b-checkbox>
-              </b-field>
-            </template>
-          </div>
-        </b-field>
-
-        <b-field :type="validation.opp_venue" label="Select the venue type(s) that fit your opportunity best" class="inline-checks">
-          <b-checkbox v-model="value.opp_venue" native-value="indoors">Indoors</b-checkbox>
-          <b-checkbox v-model="value.opp_venue" native-value="outdoors">Outdoors</b-checkbox>
-        </b-field>
-
-        <hr />
 
         <legend>Social Media</legend>
         <p class="help mb">All of this information is optional. You can always add or edit later through your dashboard.</p>
@@ -1054,9 +1058,12 @@ export default {
             if(state == 0 || state == 2) {
                 if(this.invalid('short_desc', !this.value.short_desc)) valid = false;
                 if(this.invalid('description', !this.value.description)) valid = false;
-                if(this.invalid('tags', !this.value.tags.length)) valid = false;
-                if(this.invalid('opp_descriptor', !this.value.opp_descriptor.length)) valid = false;
+                if(this.invalid('image_url', !this.value.image_url)) valid = false;
                 if(this.invalid('pes_domain', !this.value.pes_domain || this.value.pes_domain === 'unspecified')) valid = false;
+                if(this.invalid('opp_descriptor', !this.value.opp_descriptor.length)) valid = false;
+                if(this.invalid('opp_venue', !this.value.opp_venue.length)) valid = false;
+                if(this.invalid('opp_topics', !this.value.opp_topics.length)) valid = false;
+                if(this.invalid('tags', !this.value.tags.length)) valid = false;
             }
 
             return valid;
