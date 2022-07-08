@@ -349,35 +349,35 @@
           <b-input v-model="value.description" type="textarea" class="desc"></b-input>
         </b-field>
 
-        <b-field :type="validation.domains">
+        <b-field :type="validation.pes_domain">
           <template #label>
             Select the public engagement of science domain that fits your opportunity best<span class="required">*</span>
           </template>
 
-          <div class="control validation-target" :class="{'is-danger': validation.opp_domain}">
+          <div class="control validation-target" :class="{'is-danger': validation.pes_domain}">
             <div class="checkbox-wrap-domains">
-              <b-radio v-model="value.opp_domain" native-value="citizen_science">
+              <b-radio v-model="value.pes_domain" native-value="citizen_science">
                 Citizen Science
               </b-radio>
-              <b-radio v-model="value.opp_domain" native-value="live_science">
+              <b-radio v-model="value.pes_domain" native-value="live_science">
                 Live Science
               </b-radio>
-              <b-radio v-model="value.opp_domain" native-value="museum_or_science_center">
+              <b-radio v-model="value.pes_domain" native-value="museum_or_science_center">
                 Museum or Science Center
               </b-radio>
-              <b-radio v-model="value.opp_domain" native-value="maker">
+              <b-radio v-model="value.pes_domain" native-value="maker">
                 Maker
               </b-radio>
-              <b-radio v-model="value.opp_domain" native-value="policy">
+              <b-radio v-model="value.pes_domain" native-value="policy">
                 Science Policy
               </b-radio>
-              <b-radio v-model="value.opp_domain" native-value="out_of_school_time_program">
+              <b-radio v-model="value.pes_domain" native-value="out_of_school_time_program">
                 Out of School Time Program
               </b-radio>
-              <b-radio v-model="value.opp_domain" native-value="formal_education">
+              <b-radio v-model="value.pes_domain" native-value="formal_education">
                 Formal Education
               </b-radio>
-              <b-radio v-model="value.opp_domain" native-value="science_communications">
+              <b-radio v-model="value.pes_domain" native-value="science_communications">
                 Science Communications
               </b-radio>
             </div>
@@ -1056,6 +1056,7 @@ export default {
                 if(this.invalid('description', !this.value.description)) valid = false;
                 if(this.invalid('tags', !this.value.tags.length)) valid = false;
                 if(this.invalid('opp_descriptor', !this.value.opp_descriptor.length)) valid = false;
+                if(this.invalid('pes_domain', !this.value.pes_domain || this.value.pes_domain === 'unspecified')) valid = false;
             }
 
             return valid;

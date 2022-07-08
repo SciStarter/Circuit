@@ -17,8 +17,12 @@ use uuid::Uuid;
 
 use super::{okay, request_person};
 
-static STAFF_REVIEWS: Lazy<[Uuid; 1]> =
-    Lazy::new(|| [Uuid::parse_str("b9224b48-dcc3-5153-9c31-7b53ff24a380").unwrap()]);
+static STAFF_REVIEWS: Lazy<[Uuid; 1]> = Lazy::new(|| {
+    [
+        // Alabama STEM Council
+        Uuid::parse_str("b9224b48-dcc3-5153-9c31-7b53ff24a380").unwrap(),
+    ]
+});
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
@@ -56,8 +60,7 @@ async fn notify_pending_approval(
             ("opp_slug", &opp.exterior.slug),
         ]);
 
-        // TEMPORARY: The true here overrides the planned behavior and sends all notifications to SNM staff.
-        if true || STAFF_REVIEWS.iter().any(|x| *x == partner.exterior.uid) {
+        if STAFF_REVIEWS.iter().any(|x| *x == partner.exterior.uid) {
             for reviewer in Person::all_by_permission(req.state(), &Permission::ManageOpportunities)
                 .await?
                 .into_iter()
