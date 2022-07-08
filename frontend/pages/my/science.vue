@@ -275,7 +275,7 @@ export default {
         border-bottom: 1px solid $snm-color-border;
         padding: 17px;
 
-        ::v-deep label {
+        :deep(label) {
             font-family: $snm-font-meta;
             font-weight: normal;
             font-size: $snm-font-smaller;

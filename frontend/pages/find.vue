@@ -772,7 +772,7 @@ export default {
             font-size: $snm-font-small;
         }
 
-        ::v-deep label.label {
+        :deep(label.label) {
             font-family: $snm-font-content;
             font-weight: normal;
             font-size: $snm-font-smaller;
@@ -853,7 +853,7 @@ export default {
     display: none;
 }
 
-::v-deep label.b-radio.radio.button {
+:deep(label.b-radio.radio.button) {
     // border-color: $snm-color-action-border;
     border-color: #d5d5d5;
     border-radius: 10px;
@@ -956,7 +956,7 @@ export default {
         display: inline-block;
     }
 
-    ::v-deep label.b-radio.radio.button {
+    :deep(label.b-radio.radio.button) {
         // border-color: $snm-color-action-border;
         border-color: #d5d5d5;
         border-radius: 10px;

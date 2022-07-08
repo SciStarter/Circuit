@@ -177,7 +177,7 @@ h1 {
       }
     }
 
-    ::v-deep label {
+    :deep(label) {
         font-family: $snm-font-content;
         font-weight: normal;
         font-size: $snm-font-smaller;
