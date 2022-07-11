@@ -336,12 +336,13 @@
           <div class="required">* required</div>
         </div>
 
-        <b-field :type="validation.short_desc" message="164 character limit">
+        <b-field :type="validation.short_desc" class="stack">
           <template #label>
             Short Summary (appears in search results)<span class="required">*</span>
+            <p class="help">Tell prospective participants what to expect from your opportunity in a short, friendly sentence. 164 character limit.</p>
           </template>
           <b-input v-model="value.short_desc" maxlength="164" has-counter type="textarea"></b-input>
-          <p class="help mb">Tell prospective participants what to expect from your opportunity in a short, friendly sentence.</p>
+          
         </b-field>
 
         <b-field :type="validation.description" class="no-message">
@@ -429,7 +430,7 @@
         </b-field>
 
         <label class="label">Age required to participate<span class="required">*</span></label>
-        <div class="flex">
+        <div class="flex mb">
           <b-field :type="validation.min_age" label="Minimum Age">
             <b-checkbox v-model="has_minimum">There is a minimum age for participants</b-checkbox>
             <b-numberinput v-if="has_minimum" controls-position="compact" v-model="value.min_age"></b-numberinput>
@@ -448,7 +449,7 @@
           <b-checkbox v-model="value.opp_venue" native-value="outdoors">Outdoors</b-checkbox>
         </b-field>
 
-        <b-field :type="validation.opp_topics">
+        <b-field :type="validation.opp_topics" class="stack">
           <template #label>
             Select the topics that fit your opportunity best<span class="required">*</span>
           </template>
@@ -461,6 +462,28 @@
             </template>
           </div>
         </b-field>
+
+         <b-field :type="validation.ticket_required" label="Ticket Required" class="mb">
+         <template #label>
+            Ticket Required<span class="required">*</span>
+          </template>
+          <b-radio v-model="value.ticket_required" :native-value="true">
+            Yes
+          </b-radio>
+          <b-radio v-model="value.ticket_required" :native-value="false">
+            No
+          </b-radio>
+        </b-field>
+
+        <!-- RSVP isn't in our data model yet -->
+        <!-- <b-field label="RSVP Required" class="mb"> -->
+        <!--   <b-radio v-model="rsvp" native-value="yes"> -->
+        <!--     Yes -->
+        <!--   </b-radio> -->
+        <!--   <b-radio v-model="rsvp" native-value="no"> -->
+        <!--     No -->
+        <!--   </b-radio> -->
+        <!-- </b-field> -->
 
         <hr />
 
@@ -484,27 +507,10 @@
       </div><!-- state 2 -->
 
       <div v-if="state==3">
-        <legend>Additional Information</legend>
-        <p class="help mb">While not required, this information will tell prospective participants more about your opportunity and help them find your opportunity.</p>
+       <!-- <legend>Additional Information</legend>
+        <p class="help mb">While not required, this information will tell prospective participants more about your opportunity and help them find your opportunity.</p>-->
 
-        <b-field :type="validation.ticket_required" label="Ticket Required" class="mb">
-          <b-radio v-model="value.ticket_required" :native-value="true">
-            Yes
-          </b-radio>
-          <b-radio v-model="value.ticket_required" :native-value="false">
-            No
-          </b-radio>
-        </b-field>
-
-        <!-- RSVP isn't in our data model yet -->
-        <!-- <b-field label="RSVP Required" class="mb"> -->
-        <!--   <b-radio v-model="rsvp" native-value="yes"> -->
-        <!--     Yes -->
-        <!--   </b-radio> -->
-        <!--   <b-radio v-model="rsvp" native-value="no"> -->
-        <!--     No -->
-        <!--   </b-radio> -->
-        <!-- </b-field> -->
+       
 
         <legend>Social Media</legend>
         <p class="help mb">All of this information is optional. You can always add or edit later through your dashboard.</p>
@@ -1280,6 +1286,7 @@ export default {
         pointer-events:none;
         display:flex;
         line-height:1;
+        align-items: center;
         > span {
             background-color: #868686;
             color: #fff;
@@ -1696,6 +1703,7 @@ legend {
 
 .display-image-wrapper {
     flex-direction: row-reverse;
+    margin-bottom:2rem;
 
     >:first-child {
         flex-grow: 1;
@@ -1750,6 +1758,18 @@ legend {
 .checkbox-wrap-domains > label {
   width:100%;
 }
+}
+
+.stack .field.field.has-addons {
+  flex-direction: column!important;
+}
+
+.field.has-addons {
+  display: block;
+}
+
+.field.inline-checks {
+  margin-bottom: 2rem;
 }
 
 </style>
