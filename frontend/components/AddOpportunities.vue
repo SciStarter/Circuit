@@ -329,7 +329,7 @@ export default {
     height: 120px;
     padding:0;
   }
-  ::v-deep .step {
+  :deep(.step) {
     font-weight:bold;
   }
   .action-btn {

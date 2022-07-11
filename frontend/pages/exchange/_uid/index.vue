@@ -444,11 +444,11 @@ export default {
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  ::v-deep .opportunity-list > article {
+  :deep(.opportunity-list > article) {
     width:100%!important;
     max-width: 900px;
   }
-  ::v-deep .opportunity-calendar > article {
+  :deep(.opportunity-calendar > article) {
     width:100%!important;
     max-width: 900px;
   }
@@ -779,7 +779,7 @@ export default {
 }
 
 @media (max-width:400px) {
-  ::v-deep .filters .field.has-addons  {
+  :deep(.filters .field.has-addons) {
     flex-wrap: wrap;
     .b-slider {
       max-width: calc(100% - 55px);
@@ -792,7 +792,7 @@ export default {
   }
 }
 
-::v-deep  #filter-physical .field.has-addons{
+:deep(#filter-physical .field.has-addons) {
   flex-wrap:nowrap;
   flex-direction: column;
 }
