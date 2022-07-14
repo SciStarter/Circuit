@@ -43,41 +43,41 @@ async fn notify_pending_approval(
     partner: &Partner,
     opp: &Opportunity,
 ) -> Result<(), tide::Error> {
-    if let ReviewStatus::Pending = opp.interior.review_status {
-        let template = common::emails::EmailMessage::load_or_default(
+    let template = common::emails::EmailMessage::load_or_default(
             req.state(),
             "opportunity-pending-approval",
             "Pending Approval on Science Near Me: {title}",
             r#"
-<p>The opportunity <strong>{title}</strong> on Science Near Me has been created or updated, and is pending approval for publication.</p>
+<p>The {org_name} opportunity <strong>{title}</strong> on {partner_name} / Science Near Me has been created or updated, and is pending approval for publication.</p>
 <p>Please evaluate the opportunity and <a href="https://sciencenearme.org/exchange/{partner_uid}/{opp_slug}">approve, reject, or send it back to draft</a> it.</p>
 "#,
         ).await;
 
-        let msg = template.materialize(vec![
-            ("title", &opp.exterior.title),
-            ("partner_uid", &partner.exterior.uid.to_string()),
-            ("opp_slug", &opp.exterior.slug),
-        ]);
+    let msg = template.materialize(vec![
+        ("title", &opp.exterior.title),
+        ("partner_name", &partner.exterior.name),
+        ("partner_uid", &partner.exterior.uid.to_string()),
+        ("org_name", &opp.exterior.organization_name),
+        ("opp_slug", &opp.exterior.slug),
+    ]);
 
-        if STAFF_REVIEWS.iter().any(|x| *x == partner.exterior.uid) {
-            for reviewer in Person::all_by_permission(req.state(), &Permission::ManageOpportunities)
-                .await?
-                .into_iter()
-            {
-                if let Ok(person) = reviewer {
-                    common::emails::send_message(person.interior.email, &msg).await;
-                }
+    if STAFF_REVIEWS.iter().any(|x| *x == partner.exterior.uid) {
+        for reviewer in Person::all_by_permission(req.state(), &Permission::ManageOpportunities)
+            .await?
+            .into_iter()
+        {
+            if let Ok(person) = reviewer {
+                common::emails::send_message(person.interior.email, &msg).await;
             }
-        } else {
-            for reviewer in partner
-                .load_authorized_persons(req.state())
-                .await?
-                .into_iter()
-            {
-                if let Ok(person) = reviewer {
-                    common::emails::send_message(person.interior.email, &msg).await;
-                }
+        }
+    } else {
+        for reviewer in partner
+            .load_authorized_persons(req.state())
+            .await?
+            .into_iter()
+        {
+            if let Ok(person) = reviewer {
+                common::emails::send_message(person.interior.email, &msg).await;
             }
         }
     }
@@ -140,7 +140,9 @@ pub async fn add_opp(mut req: tide::Request<Database>) -> tide::Result {
             .await?;
     }
 
-    notify_pending_approval(&req, &partner, &opp).await?;
+    if let ReviewStatus::Pending = opp.interior.review_status {
+        notify_pending_approval(&req, &partner, &opp).await?;
+    }
 
     okay(&opp)
 }
@@ -249,7 +251,11 @@ pub async fn save_opportunity(
             .await?;
     }
 
-    notify_pending_approval(&req, &partner, &opp).await?;
+    if let ReviewStatus::Draft = original.interior.review_status {
+        if let ReviewStatus::Pending = opp.interior.review_status {
+            notify_pending_approval(&req, &partner, &opp).await?;
+        }
+    }
 
     if let ReviewStatus::Pending = original.interior.review_status {
         if let ReviewStatus::Publish = opp.interior.review_status {
