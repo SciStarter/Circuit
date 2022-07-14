@@ -28,7 +28,7 @@
         </b-radio>
       </div>
       <div v-else-if="color">
-        <b-colorpicker v-model="model" @change="model = $event.toString('hex')" :color-formatter="(color) => color.toString('hex')"/>
+        <b-colorpicker :value="model" @input="model = $event.toString('hex')" :color-formatter="(color) => color.toString('hex')"/>
       </div>
       <b-input v-else v-model="model" type="text" />
       <b-button @click="save">
