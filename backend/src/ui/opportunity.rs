@@ -20,7 +20,7 @@ use super::{okay, request_person};
 static STAFF_REVIEWS: Lazy<[Uuid; 1]> = Lazy::new(|| {
     [
         // Alabama STEM Council
-        Uuid::parse_str("b9224b48-dcc3-5153-9c31-7b53ff24a380").unwrap(),
+        //Uuid::parse_str("b9224b48-dcc3-5153-9c31-7b53ff24a380").unwrap(),
     ]
 });
 
