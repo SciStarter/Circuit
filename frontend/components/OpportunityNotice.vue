@@ -80,7 +80,7 @@ export default {
                                .filter(dt => dt > now);
 
             if(future.length > 0) {
-                future.sort((a, b) => {
+                future.sort(function(a, b) {
                     if(a < b) {
                         return -1;
                     }
