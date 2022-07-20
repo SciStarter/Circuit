@@ -80,7 +80,15 @@ export default {
                                .filter(dt => dt > now);
 
             if(future.length > 0) {
-                future.sort();
+                future.sort((a, b) => {
+                    if(a < b) {
+                        return -1;
+                    }
+                    if(a > b) {
+                        return 1;
+                    }
+                    return 0;
+                });
 
                 const until = (future[0] - now) / (60 * 60 * 1000);
 
