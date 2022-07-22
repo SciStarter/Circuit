@@ -6,7 +6,7 @@
     v-if="opportunities.matches.length > 0"
     :page-index="opportunities.pagination.page_index"
     :last-page="opportunities.pagination.last_page"
-    @switch="$emit($event)" />
+    @switch="$emit('switch', $event)" />
 </div>
 </template>
 
