@@ -1,5 +1,9 @@
 <template>
-<component :is="selected_component" :entity="entity" :user="user" :from-search="fromSearch" @login="$parent.$emit('login')" @signup="$parent.$emit('signup')" />
+<div v-if="authorization_required">
+  This page requires you to <a @click="$router.push({name: 'login', query: {next: $route.path}})">log in</a>
+  to an authorized account in order to view it, or perhaps it doesn't exist at all.
+</div>
+<component v-else :is="selected_component" :entity="entity" :user="user" :from-search="fromSearch" @login="$parent.$emit('login')" @signup="$parent.$emit('signup')" />
 </template>
 
 <script>
@@ -41,7 +45,7 @@ export default {
             const entity = await $axios.$get('/api/ui/entity/' + params.slug, store.state.auth ? store.state.auth : undefined);
             const layout = entity.entity_type.page ? entity.entity_type.page.layout : entity.entity_type;
 
-            return { entity, layout };
+            return { entity, layout, 'authorization_required': (entity.authorized !== 'manage') && (!entity.accepted || entity.withdrawn || entity.review_status === 'draft' || entity.review_status === 'pending' || entity.review_status === 'reject') };
         } catch(x) {
             console.warn(x);
 

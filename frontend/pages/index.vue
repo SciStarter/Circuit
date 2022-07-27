@@ -590,7 +590,7 @@ export default {
         border-top: 3px solid $snm-color-background-meddark;
 
 
-        >div.dropdown::v-deep .dropdown-trigger button {
+        >div.dropdown:deep(.dropdown-trigger button) {
             width: 90vw;
             justify-content: space-between;
             background-color: var(--secondary-color, $snm-color-element-med);
