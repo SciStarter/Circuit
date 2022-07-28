@@ -1067,14 +1067,22 @@ export default {
 .mobile-search-recap {
   font-size: 13px;
   padding: 0.5rem 1rem;
-  background-color: #efefef;
+  background-color: $snm-color-background-meddark;
   line-height:1.4;
   display: flex;
   justify-content:space-between;
+  margin: 16px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2);
+  color:#fff;
   .bold {
     font-size:16px;
     font-weight:bold;
     line-height: 1.25;
+  }
+  #filter-trigger {
+    color:#fff;
+    background-color: transparent;
   }
 }
 .no-results {

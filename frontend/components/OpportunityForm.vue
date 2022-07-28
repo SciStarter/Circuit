@@ -359,8 +359,12 @@
         <div class="flex display-image-wrapper" :class="{'is-danger': validation.image_url}">
           <div>
             <img v-if="value.image_url" :src="value.image_url" class="display-image">
+            <img v-else src="~/assets/img/no-image.jpg" class="display-image"></img>
           </div>
           <b-field :type="validation.image_url" label="Image URL" message="Must start with http:// or https://">
+            <small>What is the optimal image size <b-tooltip label="600px x 400px. Remember that when displayed as a thumbail it will be cropped to a square from the center." multilined>
+          <b-button label="?" />
+        </b-tooltip></small>
             <b-input type="url" :value="value.image_url" @input="value.image_url = $event.replace(/ /g, '')" />
           </b-field>
         </div>
@@ -1251,7 +1255,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 
 .validation-target {
     border: 1px solid transparent;
@@ -1655,12 +1659,12 @@ legend {
     height: auto;
     margin: 0 1rem 1rem 0;
     border: 1px solid #d9d9d9;
-    max-width: 200px;
     border-radius: 6px;
     -o-object-fit: contain;
     object-fit: contain;
-    max-height: 180px;
-    min-width:300px;
+    max-height: 2000px;
+    min-width:200px;
+    max-width:300px;
   }
   .inline-checks .field {
     flex-wrap:wrap;
@@ -1771,5 +1775,15 @@ legend {
 .field.inline-checks {
   margin-bottom: 2rem;
 }
+
+.tooltip-trigger button {
+    height: 1rem;
+    width: 1rem;
+    border-radius: 100%;
+    padding: 0.5rem;
+    font-size: 14px;
+    margin-left: 6px;
+    background-color: $snm-color-action;
+  }
 
 </style>
