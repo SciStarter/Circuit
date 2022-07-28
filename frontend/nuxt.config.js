@@ -168,6 +168,13 @@ export default {
   build: {
     extractCSS: (process.env.NODE_ENV === "development") ? false : true,
 
+    transpile: [
+        'd3',
+        'internmap',
+        'delaunator',
+        'robust-predicates',
+    ],
+
     babel: {
       plugins: [
         ["@babel/plugin-proposal-private-property-in-object", { loose: true }],
