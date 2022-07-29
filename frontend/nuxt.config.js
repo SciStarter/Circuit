@@ -173,6 +173,8 @@ export default {
         'internmap',
         'delaunator',
         'robust-predicates',
+	'isoformat',
+	'@observablehq/plot',
     ],
 
     babel: {

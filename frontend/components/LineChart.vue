@@ -1,0 +1,117 @@
+<template>
+<div ref="display"></div>
+</template>
+
+<script>
+import * as d3 from 'd3'
+import * as Plot from "@observablehq/plot";
+
+export default {
+    name: "LineChart",
+
+    props: {
+        rows: {
+            type: Array,
+            required: true,
+            default: [],
+        },
+
+        xaxis: {
+            type: [String, Function],
+            required: true,
+            default: "",
+        },
+
+        yaxes: {
+            type: [String, Function, Array],
+            required: true,
+            default: [],
+        },
+
+        colors: {
+            type: [Array],
+            required: false,
+            default: [],
+        },
+        
+    },
+
+    data() {
+        return {
+            chart: null,
+        }
+    },
+
+    watch: {
+        rows() {
+            if(this.chart === null) {
+                return;
+            }
+
+            this.set_chart()
+        },
+
+        lines(new_lines) {
+            if(this.chart === null) {
+                return;
+            }
+
+            this.set_chart()
+        }
+    },
+
+    mounted() {
+        this.set_chart();
+    },
+
+    methods: {
+        set_chart() {
+            let xaxis = this.getter(this.xaxis);
+            let yaxes = this.getters(this.yaxes);
+            let colors = this.colors;
+
+            if(colors.length < yaxes.length) {
+                colors = yaxes.map(f => `rgb(${128 + Math.random() * 64}, ${128 + Math.random() * 64}, ${128 + Math.random() * 64})`);
+            }
+
+            let chart = Plot.plot({
+                marks: yaxes.map((ya, i) => Plot.line(this.rows, {
+                    x: xaxis,
+                    y: ya,
+                    stroke: colors[i],
+                    curve: "catmull-rom",
+                })),
+            });
+
+            this.chart = chart;
+
+            this.$refs.display.replaceChildren(chart);
+        },
+
+        getter(x) {
+            if(typeof(x) === 'function') {
+                return x;
+            }
+            else {
+                return d => d[x];
+            }
+        },
+
+        getters(x) {
+            if(Array.isArray(x)) {
+                return x.map(sx => this.getter(sx));
+            }
+            else {
+                return [this.getter(x)];
+            }
+        }
+    },
+}
+</script>
+
+<style lang="scss" scoped>
+div {
+    width: 100%;
+    height: 100%;
+}
+</style>
