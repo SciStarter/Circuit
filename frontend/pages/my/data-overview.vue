@@ -60,11 +60,36 @@
     </div>
 
     <line-chart
-      :rows="report[org].engagement.data.rows"
+      :rows="report[org].engagement.data.chart"
       :xaxis="d => new Date(d.date)"
       :yaxes="['Views', 'Unique', 'Clicks to Website']"
       :colors="['#268699', '#BFDCE2', '#FABF40']"
       />
+
+    <table>
+      <thead>
+        <tr>
+          <th>Top Performing Opportunities</th>
+          <th>Total Views
+            <a v-if="engagement_top_order == 'total_views_desc'" @click="engagement_top_order = 'total_views_asc'">&bigvee;</a>
+            <a v-else-if="engagement_top_order == 'total_views_asc'" @click="engagement_top_order = 'total_views_desc'">&bigwedge;</a>
+            <a v-else @click="engagement_top_order = 'total_views_desc'">&bigcirc;</a>
+          </th>
+          <th>Clicks to Website
+            <a v-if="engagement_top_order == 'clicks_desc'" @click="engagement_top_order = 'clicks_asc'">&bigvee;</a>
+            <a v-else-if="engagement_top_order == 'clicks_asc'" @click="engagement_top_order = 'clicks_desc'">&bigwedge;</a>
+            <a v-else @click="engagement_top_order = 'clicks_desc'">&bigcirc;</a>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="row in engagement_top_sorted">
+          <td>{{row['name']}}</td>
+          <td>{{row['Views']}}</td>
+          <td>{{row['Clicks to Website']}}</td>
+        </tr>
+      </tbody>
+    </table>
 
   </div>
 
@@ -117,10 +142,18 @@ export default {
                             "time_period": "This Month",
                             "columns": ["Views" , "Unique", "Clicks to Website"],
                             "totals": {"Views": 36, "Unique": 21, "Clicks to Website": 12},
-                            "rows": [
+                            "chart": [
                                 {"date": "2022-07-29", "Views": 15, "Unique": 8, "Clicks to Website": 4},
                                 {"date": "2022-07-28", "Views": 8, "Unique": 2, "Clicks to Website": 7},
                                 {"date": "2022-07-27", "Views": 13, "Unique": 11, "Clicks to Website": 1},
+                            ],
+                            "table": [
+                                {"name": "Test Opp 1", "slug": "test-opp-1", "Views": 432, "Unique": 234, "Clicks to Website": 119},
+                                {"name": "Test Opp 2", "slug": "test-opp-2", "Views": 321, "Unique": 78, "Clicks to Website": 210},
+                                {"name": "Test Opp 3", "slug": "test-opp-3", "Views": 210, "Unique": 112, "Clicks to Website": 87},
+                                {"name": "Test Opp 4", "slug": "test-opp-4", "Views": 122, "Unique": 34, "Clicks to Website": 12},
+                                {"name": "Test Opp 5", "slug": "test-opp-5", "Views": 97, "Unique": 12, "Clicks to Website": 4},
+                                {"name": "Test Opp 6", "slug": "test-opp-6", "Views": 15, "Unique": 2, "Clicks to Website": 1},
                             ],
                         },
                     },
@@ -133,6 +166,7 @@ export default {
         return {
             state: 'engagement',
             org: "Demo Org",
+            engagement_top_order: 'total_views_desc',
         }
     },
 
@@ -148,6 +182,37 @@ export default {
         updated_local() {
             return new Date(this.report[this.org].updated).toLocaleDateString();
         },
+
+        engagement_top_sorted() {
+            function cmp(a, b) {
+                if(a > b) {
+                    return 1;
+                }
+                else if(a < b) {
+                    return -1;
+                }
+                else {
+                    return 0;
+                }
+            }
+
+            switch(this.engagement_top_order) {
+                case "total_views_desc":
+                return this.report[this.org].engagement.data.table.slice().sort((a, b) => -cmp(a['Views'], b['Views']));
+                case "total_views_asc":
+                return this.report[this.org].engagement.data.table.slice().sort((a, b) => cmp(a['Views'], b['Views']));
+                case "unique_views_desc":
+                return this.report[this.org].engagement.data.table.slice().sort((a, b) => -cmp(a['Unique'], b['Unique']));
+                case "unique_views_asc":
+                return this.report[this.org].engagement.data.table.slice().sort((a, b) => cmp(a['Unique'], b['Unique']));
+                case "clicks_desc":
+                return this.report[this.org].engagement.data.table.slice().sort((a, b) => -cmp(a['Clicks to Website'], b['Clicks to Website']));
+                case "clicks_asc":
+                return this.report[this.org].engagement.data.table.slice().sort((a, b) => cmp(a['Clicks to Website'], b['Clicks to Website']));
+                default:
+                return this.report[this.org].engagement.data.table;
+            }
+        }
     },
 
     methods: {
