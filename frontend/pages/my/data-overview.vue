@@ -85,8 +85,8 @@
       <tbody>
         <tr v-for="row in engagement_top_sorted">
           <td>{{row['name']}}</td>
-          <td>{{row['Views']}}</td>
-          <td>{{row['Clicks to Website']}}</td>
+          <td><comparison-bar :value="row['Views']" :max="report[org].engagement.data.max['Views']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Clicks to Website']" :max="report[org].engagement.data.max['Clicks to Website']" color="#FABF40" /></td>
         </tr>
       </tbody>
     </table>
@@ -142,6 +142,7 @@ export default {
                             "time_period": "This Month",
                             "columns": ["Views" , "Unique", "Clicks to Website"],
                             "totals": {"Views": 36, "Unique": 21, "Clicks to Website": 12},
+                            "max": {"Views": 432, "Unique": 234, "Clicks to Website": 210},
                             "chart": [
                                 {"date": "2022-07-29", "Views": 15, "Unique": 8, "Clicks to Website": 4},
                                 {"date": "2022-07-28", "Views": 8, "Unique": 2, "Clicks to Website": 7},
@@ -155,6 +156,13 @@ export default {
                                 {"name": "Test Opp 5", "slug": "test-opp-5", "Views": 97, "Unique": 12, "Clicks to Website": 4},
                                 {"name": "Test Opp 6", "slug": "test-opp-6", "Views": 15, "Unique": 2, "Clicks to Website": 1},
                             ],
+                        },
+                    },
+
+                    "audience": {
+                        "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
+                        "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
+                        "data": {
                         },
                     },
                 },
