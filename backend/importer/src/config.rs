@@ -143,6 +143,34 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
         period: 24 * hours,
     }));
 
+    importers.push(Box::new(Import {
+        source: source::EventsQLWithCustom::new("https://www.mi-sci.org/graphql"),
+        format: format::Json,
+        structure: structure::EventsQL(PartnerInfo {
+            partner: "020aa009-8225-5fd3-95e9-42c29067f4c8".parse().unwrap(),
+            partner_name: "Michigan Science Center".to_string(),
+            partner_website: Some("https://mi-sci.org/".to_string()),
+            partner_logo_url: Some(
+                "https://www.mi-sci.org/wp-content/uploads/2020/06/website-logo-color-with-shadow.png"
+                    .to_string(),
+            ),
+            domain: Domain::MuseumOrScienceCenter,
+            descriptor: vec![Descriptor::LiveScience],
+            topics: vec![],
+            flags: vec![],
+            address: Some(PartnerAddress {
+                name: "Michigan Science Center".into(),
+                street: "5020 John R. Street".into(),
+                city: "Detroit".into(),
+                state: "MI".into(),
+                zip: "48202".into(),
+                country: "USA".into()
+            }),
+            timezone: Some(chrono_tz::US::Eastern),
+        }),
+        period: 24 * hours,
+    }));
+
     // Disabled because they're using an exchange instead
     // importers.push(Box::new(Import {
     //     source: source::EventsQLWithCustom::new("https://stemcouncil.alabama.gov/graphql"),
