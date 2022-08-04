@@ -351,6 +351,8 @@ pub struct PersonInterior {
     pub private: bool,
     pub newsletter: bool,
     pub allow_emails: bool,
+    pub recent_point: Option<serde_json::Value>,
+    pub last_used_people_recruiter: Option<DateTime<Utc>>,
 }
 
 impl Default for PersonInterior {
@@ -382,6 +384,8 @@ impl Default for PersonInterior {
             private: false,
             newsletter: false,
             allow_emails: true,
+            recent_point: Default::default(),
+            last_used_people_recruiter: Default::default(),
         }
     }
 }
