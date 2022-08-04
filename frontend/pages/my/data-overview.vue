@@ -95,6 +95,8 @@
 
   <div v-else-if="state=='audience'">
     <h2>Audience</h2>
+
+    <choropleth-states :value="{'Texas': 57, 'California': 32, 'Oregon': 12}"/>
   </div>
 
   <div v-else-if="state=='traffic'">

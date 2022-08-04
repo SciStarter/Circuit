@@ -23,6 +23,7 @@
         "@nuxtjs/gtm": "^2.4.0",
         "@nuxtjs/proxy": "^2.1.0",
         "@observablehq/plot": "^0.5.2",
+        "@turf/turf": "^6.5.0",
         "bulma": "^0.9.3",
         "cookie-universal-nuxt": "^2.1.5",
         "copy-to-clipboard": "^3.3.1",
