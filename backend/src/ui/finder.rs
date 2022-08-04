@@ -115,6 +115,19 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
         });
     }
 
+    if let GeoLookup::Near = search.lookup {
+        if (search.place.latitude != 0.0 || search.place.longitude != 0.0)
+            && search.place.near.is_empty()
+        {
+            if let Some(mut person) = request_person(&mut req).await? {
+                person.interior.recent_point = Some(
+                    json!({"type": "Point", "geometry": [search.place.longitude, search.place.latitude]}),
+                );
+                person.store(req.state()).await?;
+            }
+        }
+    }
+
     let proximity = search.place.proximity;
 
     let query = geo::Query::new(
