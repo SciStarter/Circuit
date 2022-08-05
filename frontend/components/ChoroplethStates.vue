@@ -18,6 +18,12 @@ export default {
             required: true,
             default: () => ({}),
         },
+
+        attr: {
+            type: String,
+            required: false,
+            default: "",
+        },
     },
     
     data() {
@@ -28,10 +34,21 @@ export default {
     
     computed: {
         states() {
+            const attr = this.attr;
             let states = structuredClone(STATES);
             
             states.features = states.features.map(f => {
-                f.properties.participants = this.value[f.properties.name] || 0;
+                let val = this.value[f.properties.name];
+
+                if(val !== undefined) {
+                    val = val[attr] || val;
+                }
+                else {
+                    val = 0;
+                }
+
+                f.properties.participants = val;
+
                 return f;
             });
             

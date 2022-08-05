@@ -120,6 +120,7 @@ export default {
   plugins: [
     { src: "~/plugins/refresh_user.js", mode: "client" },
     { src: "~/plugins/clickstream.js", mode: "client" },
+    { src: "~/plugins/save_blob.js", mode: "client" },
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

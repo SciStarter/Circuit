@@ -55,7 +55,7 @@
         </b-select>
       </div>
       <div class="extra">
-        <a>export csv</a>
+        <a @click="save_engagement_csv">export csv</a>
       </div>
     </div>
 
@@ -96,7 +96,31 @@
   <div v-else-if="state=='audience'">
     <h2>Audience</h2>
 
-    <choropleth-states :value="{'Texas': 57, 'California': 32, 'Oregon': 12}"/>
+    <div class="notification">
+      <label>Demographics Coming Soon!</label>
+      We are working on getting demographic data at the opportunity level. Right now you can view <nuxt-link to="/">site-wide demographic data</nuxt-link>.
+    </div>
+
+    <div class="filters">
+      <div class="stack">
+        <label>Opportunity Status</label>
+        <b-select :value="report[org].audience.data.opportunity_status" @input="console.log('TBD download from server')">
+          <option v-for="status in report[org].audience.opportunity_statuses" :key="status" :value="status">
+            {{status}}
+          </option>
+        </b-select>
+      </div>
+      <div class="stack">
+        <label>Time Period</label>
+        <b-select :value="report[org].audience.data.time_period" @input="console.log('TBD download from server')">
+          <option v-for="period in report[org].audience.time_periods" :key="period" :value="period">
+            {{period}}
+          </option>
+        </b-select>
+      </div>
+    </div>
+
+    <choropleth-states :value="report[org].audience.data.states" attr="Unique Users"/>
   </div>
 
   <div v-else-if="state=='traffic'">
@@ -165,6 +189,13 @@ export default {
                         "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
                         "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
                         "data": {
+                            "opportunity_status": "Live and Closed",
+                            "time_period": "This Month",
+                            "states": {
+                                'Texas': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
+                                'California': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
+                                'Oregon': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                            },
                         },
                     },
                 },
@@ -226,7 +257,30 @@ export default {
     },
 
     methods: {
+        save_engagement_csv() {
+            let structured = this.report[this.org].engagement.data.chart;
 
+            if(!structured || !structured.length || structured.length <= 0) {
+                this.$buefy.dialog.alert({
+                    title: 'Error',
+                    message: "The selected data set is empty, there's nothing to download.",
+                    type: 'is-danger',
+                    hasIcon: true,
+                    icon: 'times-circle',
+                    iconPack: 'fa',
+                    ariaRole: 'alertdialog',
+                    ariaModal: true
+                });
+
+                return;
+            }
+
+            this.$save_table_csv(
+                this.org,
+                ['date', ...this.report[this.org].engagement.data.columns],
+                structured
+            );
+        },
     },
 }
 </script>
@@ -261,6 +315,22 @@ aside {
     display: block;
     text-align: right;
     color: #ccc;
+}
+
+.notification {
+    background-color: #FFF2D6;
+    border: 1px solid #FABF40;
+    box-shadow: 0px 3px 6px #FAFAFA;
+    border-radius: 6px;
+    padding: 1rem;
+
+    >label {
+        display: block;
+        text-align: left;
+        font: normal normal bold 16px/19px Roboto;
+        letter-spacing: 0px;
+        color: #1D1D1D;
+    }
 }
 
 .stack {
