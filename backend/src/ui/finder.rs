@@ -258,6 +258,7 @@ struct SearchQuery {
     pub venue_type: Option<VenueType>,
     pub host: Option<String>,
     pub partner: Option<Uuid>,
+    pub prefer_partner: Option<Uuid>,
     pub mine: Option<bool>,
     pub sort: Option<OpportunityQueryOrdering>,
     pub page: Option<u32>,
@@ -302,6 +303,7 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     query.venue_type = search.venue_type;
     query.host = search.host;
     query.partner = search.partner;
+    query.prefer_partner = search.prefer_partner;
     query.current = Some(search.current.unwrap_or(true));
 
     query.calendar = match (search.year, search.month) {

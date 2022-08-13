@@ -247,6 +247,10 @@ export default {
             query.partner = context.params.uid;
         }
 
+        if(!query.impartial) {
+            query.prefer_partner = context.params.uid;
+        }
+
         if(query.page === undefined) {
             query.page = 0;
         }
