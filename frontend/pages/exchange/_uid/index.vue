@@ -196,7 +196,7 @@
   <div class="exchange-results">
     <b-tabs v-if="calendar" v-model="opp_view">
       <b-tab-item label="Calendar">
-        <opportunity-calendar :opportunities="month" :exchange="exchange" @next="month_add(1);search({year: search_year, month: search_month})" />
+        <opportunity-calendar :opportunities="month" :exchange="exchange" :has-previous="has_calendar_previous" @prev="month_add(-1);update_calendar()" @next="month_add(1);update_calendar()" />
       </b-tab-item>
       <b-tab-item label="Opportunities">
         <opportunity-list :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
@@ -276,6 +276,9 @@ export default {
         let search_month = now.getMonth() + 1;
         let month = null;
 
+        let base_year = search_year;
+        let base_month = search_month;
+
         if(calendar) {
             month = await context.$axios.$get('/api/ui/finder/search', { params: {...query, year: search_year, month: search_month } });
         }
@@ -286,6 +289,8 @@ export default {
             month,
             search_year,
             search_month,
+            base_year,
+            base_month,
             search_text,
             search_place,
             beginning,
@@ -309,6 +314,10 @@ export default {
     },
 
     computed: {
+        has_calendar_previous() {
+            return this.search_year > this.base_year || (this.search_year == this.base_year && this.search_month > this.base_month);
+        },
+
         beginning_proxy: {
             get() {
                 return this.beginning ? new Date(this.beginning) : null;
@@ -371,6 +380,10 @@ export default {
 
             this.search_year += yoffset;
             this.search_month = zmonth + 1;
+        },
+
+        async update_calendar() {
+            this.month = await this.$axios.$get('/api/ui/finder/search', { params: {...this.$route.query, year: this.search_year, month: this.search_month } });
         },
 
         search(assign) {
