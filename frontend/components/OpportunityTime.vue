@@ -1,6 +1,6 @@
 <template>
 <ul class="opportunity-time">
-  <li v-for="pair in upcoming" :key="pair[0].toISOString()">
+  <li v-for="pair in upcoming_soonest" :key="pair[0].toISOString()">
     {{ display(pair) }}
   </li>
 </ul>
@@ -74,6 +74,10 @@ export default {
                 return [[EARLIEST, LATEST]];
             }
         },
+
+        upcoming_soonest() {
+            return this.upcoming.slice(0, 5)
+        }
     },
 
     mounted() {
