@@ -1,7 +1,7 @@
 <template>
 <div class="exchange exchange-index">
 
-  <div class="exchange-actions">
+  <div class="exchange-actions" v-if="$store.state.user.authenticated">
 
     <button  v-if="$store.state.user.authenticated" class="toggle-menu mobile-only" title="Toggle menu" data-context="header-menu" @click="toggle_mobile_nav = !toggle_mobile_nav">
       <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
@@ -17,21 +17,12 @@
       <nuxt-link v-if="partner !== null || ($store.state.user.authenticated && exchange.open_submission)" :to="{name: 'exchange-uid-submit', params: {uid: exchange.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
     </div>
 
-    <div class="exchange-logins">
+     <div class="exchange-logins">
       <div v-if="$store.state.user.authenticated">
         <a @click="$store.dispatch('logout')">Logout</a>
       </div>
-      <div v-else class="e">
-        <template v-if="exchange.open_submission">
-          <nuxt-link :to="{name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}}">Login</nuxt-link> or
-          <nuxt-link :to="{name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}}">Signup</nuxt-link> to add an opportunity
-        </template>
-        <template v-else>
-          <nuxt-link :to="{name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}}">Login</nuxt-link> |
-          <nuxt-link :to="{name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}}">Signup</nuxt-link>
-        </template>
-      </div>
     </div>
+
 
   </div><!-- .exchange-actions -->
 
@@ -205,6 +196,23 @@
     <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
   </div>
 </div><!-- .exchange-wrapper -->
+
+   <div class="exchange-logins exl-bottom">
+      <div v-if="$store.state.user.authenticated">
+        <a @click="$store.dispatch('logout')">Logout</a>
+      </div>
+      <div v-else class="e">
+        <template v-if="exchange.open_submission">
+          <nuxt-link :to="{name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}}">Login</nuxt-link> or
+          <nuxt-link :to="{name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}}">Signup</nuxt-link> to add an opportunity
+        </template>
+        <template v-else>
+          <nuxt-link :to="{name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}}">Login</nuxt-link> |
+          <nuxt-link :to="{name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}}">Signup</nuxt-link>
+        </template>
+      </div>
+    </div>
+
 <div class="exchange-power"><div>powered by <a href="http://sciencenearme.org" target="_blank">Science Near Me</a></div></div>
 </div>
 </template>
@@ -556,6 +564,9 @@ export default {
   margin-left: auto;
   display: flex;
   align-items: center;
+  &.exl-bottom {
+    margin-right: auto;
+  }
 }
 .exchange-nav {
   display: flex;
