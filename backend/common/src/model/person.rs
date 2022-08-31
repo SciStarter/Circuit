@@ -4,10 +4,13 @@ use crate::{Database, ToFixedOffset};
 use async_std::task::{self, JoinHandle};
 use chrono::{DateTime, FixedOffset, TimeZone, Utc};
 use futures::Stream;
+use once_cell::sync::OnceCell;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sqlx::prelude::*;
 use uuid::Uuid;
+
+pub const ANONYMOUS: OnceCell<Person> = OnceCell::new();
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
