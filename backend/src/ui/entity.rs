@@ -81,7 +81,12 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
             person
                 .log(db, LogEvent::View(LogIdentifier::Uid(opp.exterior.uid)))
                 .await?;
+        } else if let Some(anonymous) = common::model::person::ANONYMOUS.get() {
+            anonymous
+                .log(db, LogEvent::View(LogIdentifier::Uid(opp.exterior.uid)))
+                .await?;
         }
+
         okay(&opp.into_annotated_exterior(authorized))
     } else {
         Err(tide::Error::from_str(StatusCode::NotFound, "not found"))
