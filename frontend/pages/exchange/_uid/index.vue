@@ -1,13 +1,13 @@
 <template>
 <div class="exchange exchange-index">
-
+  
   <div class="exchange-actions" v-if="$store.state.user.authenticated">
-
+    
     <button  v-if="$store.state.user.authenticated" class="toggle-menu mobile-only" title="Toggle menu" data-context="header-menu" @click="toggle_mobile_nav = !toggle_mobile_nav">
       <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
       <img v-else src="~assets/img/hamburger.svg?data">
     </button>
-
+    
     <div class="exchange-nav" :class="{'show':toggle_mobile_nav}">
       <template v-if="partner !== null">
         <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}" class="home" title="home"><home-icon /><span class="home-text">Home</span></nuxt-link>
@@ -16,204 +16,204 @@
       <nuxt-link v-if="$store.state.user.authenticated" :to="{name: 'exchange-uid-opps', params: {uid: exchange.uid}}">Manage Opportunities</nuxt-link>
       <nuxt-link v-if="partner !== null || ($store.state.user.authenticated && exchange.open_submission)" :to="{name: 'exchange-uid-submit', params: {uid: exchange.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
     </div>
-
-     <div class="exchange-logins">
+    
+    <div class="exchange-logins">
       <div v-if="$store.state.user.authenticated">
         <a @click="$store.dispatch('logout')">Logout</a>
       </div>
     </div>
-
-
+    
+    
   </div><!-- .exchange-actions -->
-
-
+  
+  
   <!-- <div class="partner-logo"></div> -->
-
-<div class="exchange-wrapper">
-  <div class="exchange-search  general-filters">
+  
+  <div class="exchange-wrapper">
+    <div class="exchange-search  general-filters">
       <div class="ex-search basic-filter-backdrop">
         <form>
-        <div class="gf-fields">
-          <b-field label="Search" label-position="inside" data-context="find-keywords">
-            <b-input ref="search_keywords" v-model="search_text" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
-          </b-field>
-          <lookup-place v-model="search_place" label-position="inside" data-context="find-lookup-place" />
-          <div class="centered-row">
-            <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
-              <b-datepicker
-                v-model="beginning_proxy"
-                editable
-                icon="calendar-today"
-                />
+          <div class="gf-fields">
+            <b-field label="Search" label-position="inside" data-context="find-keywords">
+              <b-input ref="search_keywords" v-model="search_text" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
             </b-field>
-            <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
-              <b-datepicker
-                v-model="ending_proxy"
-                editable
-                position="is-bottom-left"
-                icon="calendar-today"
-                />
-            </b-field>
+            <lookup-place v-model="search_place" label-position="inside" data-context="find-lookup-place" />
+            <div class="centered-row">
+              <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
+                <b-datepicker
+                  v-model="beginning_proxy"
+                  editable
+                  icon="calendar-today"
+                  />
+              </b-field>
+              <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
+                <b-datepicker
+                  v-model="ending_proxy"
+                  editable
+                  position="is-bottom-left"
+                  icon="calendar-today"
+                  />
+              </b-field>
+            </div>
+            <action-button
+              id="quick-search-btn"
+              principal
+              large
+              type="button"
+              @click="search({
+                      text: search_text,
+                      longitude: search_place.longitude,
+                      latitude: search_place.latitude,
+                      proximity: search_place.proximity,
+                      beginning: beginning ? beginning : undefined,
+                      ending: ending ? ending : undefined,
+                      kids_only: kids_only,
+                      adults_only: adults_only,
+                      physical: physical,
+                      min_age: min_age,
+                      max_age: max_age,
+                      near: search_place.near,
+                      page: 0
+                      })">
+              <search-icon />
+            </action-button>
           </div>
-          <action-button
-            id="quick-search-btn"
-            principal
-            large
-            type="button"
-            @click="search({
-                    text: search_text,
-                    longitude: search_place.longitude,
-                    latitude: search_place.latitude,
-                    proximity: search_place.proximity,
-                    beginning: beginning ? beginning : undefined,
-                    ending: ending ? ending : undefined,
-                    kids_only: kids_only,
-                    adults_only: adults_only,
-                    physical: physical,
-                    min_age: min_age,
-                    max_age: max_age,
-                    near: search_place.near,
-                    page: 0
-                    })">
-            <search-icon />
-          </action-button>
-        </div>
-      </form>
-
+        </form>
+        
       </div>
-
+      
     </div>
-
+    
     <div class="exchange-filters">
-        <div v-if="filter==false" class="filter-btn">
-          <a @click="filter = true"><filter-icon /> show filters</a>
+      <div v-if="filter==false" class="filter-btn">
+        <a @click="filter = true"><filter-icon /> show filters</a>
+      </div>
+      <div v-else>
+        <div class="filter-btn">
+          <a @click="filter = false"><filter-icon /> hide filters</a>
         </div>
-        <div v-else>
-          <div class="filter-btn">
-            <a @click="filter = false"><filter-icon /> hide filters</a>
-          </div>
-
-          <div class="filters">
-            <fieldset>
-              <label class="b">Age</label>
-              <p>
-                <b-checkbox v-model="kids_only" :native-value="true" :disabled="loading">
-                  Kids Friendly Only
-                </b-checkbox>
-                <b-checkbox v-model="adults_only" :native-value="true" :disabled="loading">
-                  21+ Only
-                </b-checkbox>
-              </p>
-              <b-field label="Participant Age Range Minimum" data-context="find-minimum-age">
-                <b-checkbox v-model="min_age_active" :disabled="loading" />
-                <b-slider v-model="min_age" :disabled="!min_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
-                  <!-- <b-slider-tick :value="12">
-                    12
-                  </b-slider-tick> -->
-                  <b-slider-tick :value="20">
-                    20
-                  </b-slider-tick>
-                  <b-slider-tick :value="40">
-                    40
-                  </b-slider-tick>
-                  <b-slider-tick :value="60">
-                    60
-                  </b-slider-tick>
-                  <b-slider-tick :value="80">
-                    80
-                  </b-slider-tick>
-                  <b-slider-tick :value="100">
-                    100
-                  </b-slider-tick>
-                </b-slider>
-                <input v-model="min_age" type="text" :disabled="!min_age_active || loading" class="slider-direct">
-              </b-field>
-              <b-field label="Participant Age Range Maximum" data-context="find-maximum-age">
-                <b-checkbox v-model="max_age_active" :disabled="loading" />
-                <b-slider v-model="max_age" :disabled="!max_age_active || loading" :min="0" :max="121" :step="1" size="is-medium" rounded>
-                  <!-- <b-slider-tick :value="12">
-                    12
-                  </b-slider-tick> -->
-                  <b-slider-tick :value="20">
-                    20
-                  </b-slider-tick>
-                  <b-slider-tick :value="40">
-                    40
-                  </b-slider-tick>
-                  <b-slider-tick :value="60">
-                    60
-                  </b-slider-tick>
-                  <b-slider-tick :value="80">
-                    80
-                  </b-slider-tick>
-                  <b-slider-tick :value="100">
-                    100
-                  </b-slider-tick>
-                </b-slider>
-                <input v-model="max_age" type="text" class="slider-direct" :disabled="!max_age_active">
-              </b-field>
-            </fieldset>
-            <fieldset data-context="find-physical">
-              <label>
-                <span  class="b">Format</span>
-                <b-tooltip multilined>
-                  <b-icon icon="help-circle" />
-                  <template #content>
-                    <p><Strong>In-Person:</strong> probably has face-to-face interactions, possibly some travel</p>
-                    <p><strong>On-Demand:</strong> probably done independently at your leisure, possibly over the internet</p>
-                  </template>
-                </b-tooltip>
-              </label>
-              <b-field id="filter-physical" >
-                <b-radio-button v-model="physical" native-value="in-person-or-online" :disabled="loading" data-context="find-sort-in-person-or-online">
-                  <span class="radio-label">Everything</span>
-                </b-radio-button>
-                <b-radio-button v-model="physical" native-value="in-person" :disabled="loading" data-context="find-sort-in-person">
-                  <span class="radio-label">In-Person</span>
-                </b-radio-button>
-                <b-radio-button v-model="physical" native-value="online" :disabled="loading" data-context="find-sort-online">
-                  <span class="radio-label">On-Demand</span>
-                </b-radio-button>
-              </b-field>
-            </fieldset>
-          </div>
-
-
+        
+        <div class="filters">
+          <fieldset>
+            <label class="b">Age</label>
+            <p>
+              <b-checkbox v-model="kids_only" :native-value="true" :disabled="loading">
+                Kids Friendly Only
+              </b-checkbox>
+              <b-checkbox v-model="adults_only" :native-value="true" :disabled="loading">
+                21+ Only
+              </b-checkbox>
+            </p>
+            <b-field label="Participant Age Range Minimum" data-context="find-minimum-age">
+              <b-checkbox v-model="min_age_active" :disabled="loading" />
+              <b-slider v-model="min_age" :disabled="!min_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
+                <!-- <b-slider-tick :value="12">
+                     12
+                     </b-slider-tick> -->
+                <b-slider-tick :value="20">
+                  20
+                </b-slider-tick>
+                <b-slider-tick :value="40">
+                  40
+                </b-slider-tick>
+                <b-slider-tick :value="60">
+                  60
+                </b-slider-tick>
+                <b-slider-tick :value="80">
+                  80
+                </b-slider-tick>
+                <b-slider-tick :value="100">
+                  100
+                </b-slider-tick>
+              </b-slider>
+              <input v-model="min_age" type="text" :disabled="!min_age_active || loading" class="slider-direct">
+            </b-field>
+            <b-field label="Participant Age Range Maximum" data-context="find-maximum-age">
+              <b-checkbox v-model="max_age_active" :disabled="loading" />
+              <b-slider v-model="max_age" :disabled="!max_age_active || loading" :min="0" :max="121" :step="1" size="is-medium" rounded>
+                <!-- <b-slider-tick :value="12">
+                     12
+                     </b-slider-tick> -->
+                <b-slider-tick :value="20">
+                  20
+                </b-slider-tick>
+                <b-slider-tick :value="40">
+                  40
+                </b-slider-tick>
+                <b-slider-tick :value="60">
+                  60
+                </b-slider-tick>
+                <b-slider-tick :value="80">
+                  80
+                </b-slider-tick>
+                <b-slider-tick :value="100">
+                  100
+                </b-slider-tick>
+              </b-slider>
+              <input v-model="max_age" type="text" class="slider-direct" :disabled="!max_age_active">
+            </b-field>
+          </fieldset>
+          <fieldset data-context="find-physical">
+            <label>
+              <span  class="b">Format</span>
+              <b-tooltip multilined>
+                <b-icon icon="help-circle" />
+                <template #content>
+                  <p><Strong>In-Person:</strong> probably has face-to-face interactions, possibly some travel</p>
+                  <p><strong>On-Demand:</strong> probably done independently at your leisure, possibly over the internet</p>
+                </template>
+              </b-tooltip>
+            </label>
+            <b-field id="filter-physical" >
+              <b-radio-button v-model="physical" native-value="in-person-or-online" :disabled="loading" data-context="find-sort-in-person-or-online">
+                <span class="radio-label">Everything</span>
+              </b-radio-button>
+              <b-radio-button v-model="physical" native-value="in-person" :disabled="loading" data-context="find-sort-in-person">
+                <span class="radio-label">In-Person</span>
+              </b-radio-button>
+              <b-radio-button v-model="physical" native-value="online" :disabled="loading" data-context="find-sort-online">
+                <span class="radio-label">On-Demand</span>
+              </b-radio-button>
+            </b-field>
+          </fieldset>
         </div>
+        
+        
+      </div>
     </div>
-
-
-
-  <div class="exchange-results">
-    <b-tabs v-if="calendar" v-model="opp_view">
-      <b-tab-item label="Calendar">
-        <opportunity-calendar :opportunities="month" :exchange="exchange" :has-previous="has_calendar_previous" @prev="month_add(-1);update_calendar()" @next="month_add(1);update_calendar()" />
-      </b-tab-item>
-      <b-tab-item label="Opportunities">
-        <opportunity-list :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
-      </b-tab-item>
-    </b-tabs>
-    <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
+    
+    
+    
+    <div class="exchange-results">
+      <b-tabs v-if="calendar" v-model="opp_view">
+        <b-tab-item label="Calendar">
+          <opportunity-calendar :opportunities="month" :exchange="exchange" :has-previous="has_calendar_previous" @prev="month_add(-1);update_calendar()" @next="month_add(1);update_calendar()" />
+        </b-tab-item>
+        <b-tab-item label="Opportunities">
+          <opportunity-list :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
+        </b-tab-item>
+      </b-tabs>
+      <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
+    </div>
+  </div><!-- .exchange-wrapper -->
+  
+  <div class="exchange-logins exl-bottom">
+    <div v-if="$store.state.user.authenticated">
+      <a @click="$store.dispatch('logout')">Logout</a>
+    </div>
+    <div v-else class="e">
+      <template v-if="exchange.open_submission">
+        <nuxt-link :to="{name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}}">Login</nuxt-link> or
+        <nuxt-link :to="{name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}}">Signup</nuxt-link> to add an opportunity
+      </template>
+      <!-- <template v-else> -->
+      <!--   <nuxt-link :to="{name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}}">Login</nuxt-link> | -->
+      <!--   <nuxt-link :to="{name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}}">Signup</nuxt-link> -->
+      <!-- </template> -->
+    </div>
   </div>
-</div><!-- .exchange-wrapper -->
-
-   <div class="exchange-logins exl-bottom">
-      <div v-if="$store.state.user.authenticated">
-        <a @click="$store.dispatch('logout')">Logout</a>
-      </div>
-      <div v-else class="e">
-        <template v-if="exchange.open_submission">
-          <nuxt-link :to="{name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}}">Login</nuxt-link> or
-          <nuxt-link :to="{name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}}">Signup</nuxt-link> to add an opportunity
-        </template>
-        <template v-else>
-          <nuxt-link :to="{name: 'exchange-uid-login', params: {uid: $route.params.uid}, query: {next: $route.path}}">Login</nuxt-link> |
-          <nuxt-link :to="{name: 'exchange-uid-signup', params: {uid: $route.params.uid}, query: {next: $route.path}}">Signup</nuxt-link>
-        </template>
-      </div>
-    </div>
-
-<div class="exchange-power"><div>powered by <a href="http://sciencenearme.org" target="_blank">Science Near Me</a></div></div>
+  
+  <div class="exchange-power"><div>powered by <a href="http://sciencenearme.org" target="_blank">Science Near Me</a></div></div>
 </div>
 </template>
 
@@ -232,41 +232,41 @@ export default {
         LookupPlace,
         FilterIcon
     },
-
+    
     props: {
         partner: {
             type: Object,
             required: false,
             default: null,
         },
-
+        
         exchange: {
             type: Object,
             required: true,
         },
     },
-
+    
     async asyncData(context) {
         let query = {...context.query};
-
+        
         let calendar = (query.calendar !== undefined);
-
+        
         if(!query.all) {
             query.partner = context.params.uid;
         }
-
+        
         if(!query.impartial) {
             query.prefer_partner = context.params.uid;
         }
-
+        
         if(query.page === undefined) {
             query.page = 0;
         }
-
+        
         if(query.beginning === undefined) {
             query.beginning = new Date().toISOString();
         }
-
+        
         let search_text = query.text || '';
         let search_place = {near: query.near || 0, longitude: query.longitude || 0, latitude: query.latitude || 0, proximity: query.proximity || 0};
         let beginning = query.beginning;
@@ -276,21 +276,21 @@ export default {
         let adults_only = !!query.adults_only && query.adults_only != 'false';
         let kids_only = !!query.kids_only && query.kids_only != 'false';
         let physical = query.physical || 'in-person-or-online';
-
+        
         let opps = await context.$axios.$get('/api/ui/finder/search', { params: query });
-
+        
         let now = new Date();
         let search_year = now.getFullYear();
         let search_month = now.getMonth() + 1;
         let month = null;
-
+        
         let base_year = search_year;
         let base_month = search_month;
-
+        
         if(calendar) {
             month = await context.$axios.$get('/api/ui/finder/search', { params: {...query, year: search_year, month: search_month } });
         }
-
+        
         return {
             opportunities: opps,
             calendar,
@@ -310,7 +310,7 @@ export default {
             physical,
         };
     },
-
+    
     data() {
         return {
             toggle_mobile_nav: false,
@@ -320,83 +320,83 @@ export default {
             loading: false,
         };
     },
-
+    
     computed: {
         has_calendar_previous() {
             return this.search_year > this.base_year || (this.search_year == this.base_year && this.search_month > this.base_month);
         },
-
+        
         beginning_proxy: {
             get() {
                 return this.beginning ? new Date(this.beginning) : null;
             },
-
+            
             set(val) {
                 this.beginning = val.toISOString();
             }
         },
-
+        
         ending_proxy: {
             get() {
                 return this.ending ? new Date(this.ending) : null;
             },
-
+            
             set(val) {
                 this.ending = val.toISOString();
             }
         },
-
+        
         min_age_active: {
             get() {
                 return this.min_age !== undefined && this.min_age > 0;
             },
-
+            
             set(value) {
                 this.min_age = value ? 1 : 0;
             }
         },
-
+        
         max_age_active: {
             get() {
                 return this.max_age !== undefined && this.max_age < 121;
             },
-
+            
             set(value) {
                 this.max_age = value ? 120 : 121;
             }
         },
     },
-
+    
     watchQuery: true,
-
+    
     async mounted() {
         this.search_place = await this.$store.dispatch("get_here");
     },
-
+    
     methods: {
         month_add(offset) {
             let sum = this.search_month + offset - 1;
-
+            
             let zmonth = sum  % 12;
-
+            
             // Compensate for JavaScript's incorrect modulo operation
             while(zmonth < 0) {
                 zmonth += 12;
             }
-
+            
             let yoffset = Math.floor(sum / 12);
-
+            
             this.search_year += yoffset;
             this.search_month = zmonth + 1;
         },
-
+        
         async update_calendar() {
             this.month = await this.$axios.$get('/api/ui/finder/search', { params: {...this.$route.query, year: this.search_year, month: this.search_month } });
         },
-
+        
         search(assign) {
             let q = {...this.$route.query, ...assign};
-
+            
             if(q.beginning === undefined) {
                 q.beginning = new Date().toISOString();
             }

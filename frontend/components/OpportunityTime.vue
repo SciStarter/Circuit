@@ -81,7 +81,7 @@ export default {
     },
 
     mounted() {
-        this.$emit('upcoming', this.upcoming);
+        this.$emit('upcoming', this.upcoming_soonest);
     },
 
     methods: {
