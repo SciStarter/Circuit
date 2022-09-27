@@ -27,7 +27,7 @@
   <div class="nav-tab-wrapper">
     <ul class="nav-tabs">
       <li><a class="tab-link" :class="{'active':state=='engagement'}" @click="state='engagement'">Engagement</a></li>
-      <li><a class="tab-link" :class="{'active':state=='audience'}" @click="state='audience'">Audience</a></li>
+      <li><a class="tab-link" :class="{'active':state=='states'}" @click="state='states'">Audience</a></li>
       <li><a class="tab-link" :class="{'active':state=='traffic'}" @click="state='traffic'">Traffic</a></li>
     </ul>
   </div>
@@ -40,7 +40,7 @@
     <div class="filters">
       <div class="stack">
         <label>Opportunity Status</label>
-        <b-select :value="report[org].engagement.data.opportunity_status" @input="console.log('TBD download from server')">
+        <b-select :value="report[org].engagement.data.opportunity_status" @input="log('TBD download from server')">
           <option v-for="status in report[org].engagement.opportunity_statuses" :key="status" :value="status">
             {{status}}
           </option>
@@ -48,7 +48,7 @@
       </div>
       <div class="stack">
         <label>Time Period</label>
-        <b-select :value="report[org].engagement.data.time_period" @input="console.log('TBD download from server')">
+        <b-select :value="report[org].engagement.data.time_period" @input="log('TBD download from server')">
           <option v-for="period in report[org].engagement.time_periods" :key="period" :value="period">
             {{period}}
           </option>
@@ -93,7 +93,7 @@
 
   </div>
 
-  <div v-else-if="state=='audience'">
+  <div v-else-if="state=='states'">
     <h2>Audience</h2>
 
     <div class="notification">
@@ -104,23 +104,74 @@
     <div class="filters">
       <div class="stack">
         <label>Opportunity Status</label>
-        <b-select :value="report[org].audience.data.opportunity_status" @input="console.log('TBD download from server')">
-          <option v-for="status in report[org].audience.opportunity_statuses" :key="status" :value="status">
+        <b-select :value="report[org].states.data.opportunity_status" @input="log('TBD download from server')">
+          <option v-for="status in report[org].states.opportunity_statuses" :key="status" :value="status">
             {{status}}
           </option>
         </b-select>
       </div>
       <div class="stack">
         <label>Time Period</label>
-        <b-select :value="report[org].audience.data.time_period" @input="console.log('TBD download from server')">
-          <option v-for="period in report[org].audience.time_periods" :key="period" :value="period">
+        <b-select :value="report[org].states.data.time_period" @input="log('TBD download from server')">
+          <option v-for="period in report[org].states.time_periods" :key="period" :value="period">
             {{period}}
           </option>
         </b-select>
       </div>
     </div>
 
-    <choropleth-states :value="report[org].audience.data.states" attr="Unique Users"/>
+    <choropleth-states :value="report[org].states.data.states" attr="Unique Users"/>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Engagement By Location</th>
+          <th>Unique Users
+            <a v-if="states_top_order == 'unique_users_desc'" @click="states_top_order = 'unique_users_asc'">&bigvee;</a>
+            <a v-else-if="states_top_order == 'unique_users_asc'" @click="states_top_order = 'unique_users_desc'">&bigwedge;</a>
+            <a v-else @click="states_top_order = 'unique_users_desc'">&bigcirc;</a>
+          </th>
+          <th>New Users
+            <a v-if="states_top_order == 'new_users_desc'" @click="states_top_order = 'new_users_asc'">&bigvee;</a>
+            <a v-else-if="states_top_order == 'new_users_asc'" @click="states_top_order = 'new_users_desc'">&bigwedge;</a>
+            <a v-else @click="states_top_order = 'new_users_desc'">&bigcirc;</a>
+          </th>
+          <th>Returning Users
+            <a v-if="states_top_order == 'returning_users_desc'" @click="states_top_order = 'returning_users_asc'">&bigvee;</a>
+            <a v-else-if="states_top_order == 'returning_users_asc'" @click="states_top_order = 'returning_users_desc'">&bigwedge;</a>
+            <a v-else @click="states_top_order = 'returning_users_desc'">&bigcirc;</a>
+          </th>
+          <th>Total Pageviews
+            <a v-if="states_top_order == 'total_pageviews_desc'" @click="states_top_order = 'total_pageviews_asc'">&bigvee;</a>
+            <a v-else-if="states_top_order == 'total_pageviews_asc'" @click="states_top_order = 'total_pageviews_desc'">&bigwedge;</a>
+            <a v-else @click="states_top_order = 'total_pageviews_desc'">&bigcirc;</a>
+          </th>
+          <th>Unique Pageviews
+            <a v-if="states_top_order == 'unique_pageviews_desc'" @click="states_top_order = 'unique_pageviews_asc'">&bigvee;</a>
+            <a v-else-if="states_top_order == 'unique_pageviews_asc'" @click="states_top_order = 'unique_pageviews_desc'">&bigwedge;</a>
+            <a v-else @click="states_top_order = 'unique_pageviews_desc'">&bigcirc;</a>
+          </th>
+          <th>Avg. Time
+            <a v-if="states_top_order == 'average_time_desc'" @click="states_top_order = 'average_time_asc'">&bigvee;</a>
+            <a v-else-if="states_top_order == 'average_time_asc'" @click="states_top_order = 'average_time_desc'">&bigwedge;</a>
+            <a v-else @click="states_top_order = 'average_time_desc'">&bigcirc;</a>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="row in states_top_sorted">
+          <td>{{row['name']}}</td> <!-- TODO make the name link to the per-state view -->
+          <td><comparison-bar :value="row['Unique Users']" :max="report[org].states.data.max['Unique Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['New Users']" :max="report[org].states.data.max['New Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Returning Users']" :max="report[org].states.data.max['Returning Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Total Pageviews']" :max="report[org].states.data.max['Total Pageviews']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Unique Pageviews']" :max="report[org].states.data.max['Unique Pageviews']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Avg. Time']" :max="report[org].states.data.max['Avg. Time']" color="#268699" /></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- !!! -->
   </div>
 
   <div v-else-if="state=='traffic'">
@@ -131,6 +182,19 @@
 </template>
 
 <script>
+
+function cmp(a, b) {
+    if(a > b) {
+        return 1;
+    }
+    else if(a < b) {
+        return -1;
+    }
+    else {
+        return 0;
+    }
+}
+
 export default {
     name: "MyDataOverview",
 
@@ -185,12 +249,13 @@ export default {
                         },
                     },
 
-                    "audience": {
+                    "states": {
                         "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
                         "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
                         "data": {
                             "opportunity_status": "Live and Closed",
                             "time_period": "This Month",
+                            "max": {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
                             "states": {
                                 'Texas': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
                                 'California': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
@@ -198,9 +263,21 @@ export default {
                             },
                         },
                     },
+
+                    "technology": {
+                        "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
+                        "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
+                        "data": {
+                            "opportunity_status": "Live and Closed",
+                            "time_period": "This Month",
+                            'mobile': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
+                            'tablet': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
+                            'desktop': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                        },
+                    },
                 },
-            }
-        }
+            },
+        };
     },
 
     data() {
@@ -208,6 +285,7 @@ export default {
             state: 'engagement',
             org: "Demo Org",
             engagement_top_order: 'total_views_desc',
+            states_top_order: 'unique_users_desc',
         }
     },
 
@@ -224,19 +302,34 @@ export default {
             return new Date(this.report[this.org].updated).toLocaleDateString();
         },
 
-        engagement_top_sorted() {
-            function cmp(a, b) {
-                if(a > b) {
-                    return 1;
+        states_tabular() {
+            const states = Object.getOwnPropertyNames(this.report[this.org].states.data.states);
+            let ret = [];
+
+            for(let state of states) {
+                if(state.startsWith("_")) {
+                    continue;
                 }
-                else if(a < b) {
-                    return -1;
-                }
-                else {
-                    return 0;
-                }
+
+                const src = this.report[this.org].states.data.states[state];
+
+                const val = {
+                    "name": state,
+                    "Unique Users": src["Unique Users"],
+                    "New Users": src["New Users"],
+                    "Returning Users": src["Returning Users"],
+                    "Total Pageviews": src["Total Pageviews"],
+                    "Unique Pageviews": src["Unique Pageviews"],
+                    "Avg. Time": src["Avg. Time"],
+                };
+
+                ret.push(val);
             }
 
+            return ret;
+        },
+
+        engagement_top_sorted() {
             switch(this.engagement_top_order) {
                 case "total_views_desc":
                 return this.report[this.org].engagement.data.table.slice().sort((a, b) => -cmp(a['Views'], b['Views']));
@@ -253,10 +346,45 @@ export default {
                 default:
                 return this.report[this.org].engagement.data.table;
             }
-        }
+        },
+
+        states_top_sorted() {
+            switch(this.states_top_order) {
+                case "unique_users_asc":
+                return this.states_tabular.slice().sort((a, b) => cmp(a['Unique Users'], b['Unique Users']));
+                case "unique_users_desc":
+                return this.states_tabular.slice().sort((a, b) => -cmp(a['Unique Users'], b['Unique Users']));
+                case "new_users_asc":
+                return this.states_tabular.slice().sort((a, b) => cmp(a['New Users'], b['New Users']));
+                case "new_users_desc":
+                return this.states_tabular.slice().sort((a, b) => -cmp(a['New Users'], b['New Users']));
+                case "returning_users_asc":
+                return this.states_tabular.slice().sort((a, b) => cmp(a['Returning Users'], b['Returning Users']));
+                case "returning_users_desc":
+                return this.states_tabular.slice().sort((a, b) => -cmp(a['Returning Users'], b['Returning Users']));
+                case "total_pageviews_asc":
+                return this.states_tabular.slice().sort((a, b) => cmp(a['Total Pageviews'], b['Total Pageviews']));
+                case "total_pageviews_desc":
+                return this.states_tabular.slice().sort((a, b) => -cmp(a['Total Pageviews'], b['Total Pageviews']));
+                case "unique_pageviews_asc":
+                return this.states_tabular.slice().sort((a, b) => cmp(a['Unique Pageviews'], b['Unique Pageviews']));
+                case "unique_pageviews_desc":
+                return this.states_tabular.slice().sort((a, b) => -cmp(a['Unique Pageviews'], b['Unique Pageviews']));
+                case "average_time_asc":
+                return this.states_tabular.slice().sort((a, b) => cmp(a['Avg. Time'], b['Avg. Time']));
+                case "average_time_desc":
+                return this.states_tabular.slice().sort((a, b) => -cmp(a['Avg. Time'], b['Avg. Time']));
+                default:
+                return this.states_tabular;
+            }
+        },
     },
 
     methods: {
+        log(msg) {
+            console.log(msg);
+        },
+
         save_engagement_csv() {
             let structured = this.report[this.org].engagement.data.chart;
 
@@ -309,6 +437,10 @@ h3 {
     font: normal normal bold 16px/19px Roboto;
     letter-spacing: 0px;
     color: #2F2F2F;
+}
+
+th,td {
+    padding-right: 1rem;
 }
 
 aside {
