@@ -8,7 +8,7 @@
   <div class="nav-tab-wrapper">
   <ul class="nav-tabs">
       <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Current, Live Opportunities</a></li>
-      <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Draft, Unpublished &amp; Expired</a></li>
+      <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Draft or Unpublished &amp;</a></li>
       <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Expired or Trashed</a></li>
       <li class="push-right"><action-button text2 @click="export_records">Export Records</action-button></li>
   </ul>
@@ -65,7 +65,7 @@
   <div v-if="state==2">
     <div class="flex-header filter-actions">
       <div class="flex filter-area">
-        <h2>Draft &amp; Unpublished Opportunities</h2>
+        <h2>Draft or Unpublished Opportunities</h2>
         <filter-icon class="filter" @click="show_filters_draft = !show_filters_draft" />
       </div>
       <div class="flex header-actions" :class="{'show_filters':show_filters_draft}">

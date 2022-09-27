@@ -949,6 +949,7 @@ pub struct OpportunityQuery {
     pub topics: Option<Vec<Topic>>,
     pub partner: Option<Uuid>,
     pub partner_member: Option<Uuid>,
+    pub prefer_partner: Option<Uuid>,
     pub near: Option<(f32, f32, f32)>,
     pub physical: Option<OpportunityQueryPhysical>,
     pub text: Option<String>,
@@ -1366,6 +1367,15 @@ OR
 
     query_string.push_str(" FROM (SELECT *");
 
+    if let Some(uid) = &query.prefer_partner {
+        query_string.push_str(&format!(
+            ", ((${}::jsonb) @> (exterior -> 'partner'))::int AS _sort_preferential",
+            ParamValue::Uuid(uid.clone()).append(&mut params)
+        ));
+    } else {
+        query_string.push_str(", 0 as _sort_preferential");
+    }
+
     if let Some((longitude, latitude, proximity)) = &query.near {
         let lon_param = ParamValue::RawFloat(*longitude).append(&mut params);
         let lat_param = ParamValue::RawFloat(*latitude).append(&mut params);
@@ -1438,12 +1448,12 @@ OR
         }
         OpportunityQueryOrdering::Closest => {
             query_string.push_str(
-                " ORDER BY _sort_location_priority ASC, _sort_distance + sqrt(_sort_area) ASC, _sort_time ASC",
+                " ORDER BY _sort_preferential DESC, _sort_location_priority ASC, _sort_distance + sqrt(_sort_area) ASC, _sort_time ASC",
             );
         }
         OpportunityQueryOrdering::Soonest => {
             query_string.push_str(
-                " ORDER BY _sort_location_priority ASC, _sort_time ASC, _sort_distance + sqrt(_sort_area) ASC",
+                " ORDER BY _sort_preferential DESC, _sort_location_priority ASC, _sort_time ASC, _sort_distance + sqrt(_sort_area) ASC",
             );
         }
         OpportunityQueryOrdering::Native => query_string.push_str(" ORDER BY id ASC"),

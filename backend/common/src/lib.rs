@@ -34,9 +34,14 @@ static LOG_ENDPOINT: Lazy<String> = Lazy::new(|| {
 
 pub static INTERNAL_UID: Lazy<Uuid> = Lazy::new(|| {
     Uuid::parse_str(
-        &std::env::var("INTERNAL_UID").expect("INTERNAL_UID is not set in the environmnet"),
+        &std::env::var("INTERNAL_UID").expect("INTERNAL_UID should be set in the environmnet"),
     )
-    .expect("INTERNAL_UID environment variable did not contain a UUID")
+    .expect("INTERNAL_UID environment variable should contain a UUID")
+});
+
+pub static ANONYMOUS_UID: Lazy<Uuid> = Lazy::new(|| {
+    Uuid::parse_str("66ec1ab7-f0fb-4771-88b8-54bff8dddebb")
+        .expect("const UUID string should parse correctly")
 });
 
 pub static LANGUAGES: Lazy<BTreeMap<String, String>> = Lazy::new(|| {

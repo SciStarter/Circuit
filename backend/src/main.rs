@@ -33,6 +33,22 @@ async fn initialize(db: &Database) -> tide::Result {
         }
     };
 
+    common::model::person::ANONYMOUS
+        .set(
+            match model::person::Person::load_by_uid(db, &common::ANONYMOUS_UID).await {
+                Ok(person) => person,
+                Err(_) => {
+                    log::info!("Creating anonymous user...");
+                    let mut anonymous = model::person::Person::default();
+                    anonymous.exterior.username = Some(String::from("Not Logged In"));
+                    anonymous.interior.email = String::from("logged-out");
+                    anonymous.store(db).await?;
+                    anonymous
+                }
+            },
+        )
+        .expect("ANONYMOUS OnceCell should be empty prior to initialization");
+
     if !model::partner::Partner::exists_by_uid(db, &INTERNAL_UID).await? {
         log::info!("Creating internal partner entry...");
         let mut internal = model::partner::Partner {
