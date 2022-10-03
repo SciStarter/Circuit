@@ -12,7 +12,7 @@ bump:
 	echo $$(( $(PATCH) + 1 )) > PATCH
 
 image: bump ../../Dockerfile.uploader
-	docker build -f ../../Dockerfile.logger -t "$(REPO):$(RELEASE).$(PATCH)" ../..
+	docker build -f ../../Dockerfile.uploader -t "$(REPO):$(RELEASE).$(PATCH)" ../..
 
 upload: image
 	docker push "$(REPO):$(RELEASE).$(PATCH)"

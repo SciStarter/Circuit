@@ -10,9 +10,16 @@ edition = "2021"
 container = []
 
 [dependencies]
-async-std = { version = "1.12.0", features = ["attributes"] }
+bytes = "1.2.1"
 chrono = "0.4.22"
+common = { version = "0.1.0", path = "../common" }
+futures-lite = "1.12.0"
+once_cell = "1.15.0"
+reqwest = "0.11.12"
 rusty-s3 = "0.3.2"
-surf = { version = "2.3.2", features = ["h1-client-rustls"], default-features = false }
-tide = "0.16.0"
+serde = { version = "1.0.145", features = ["derive"] }
+tokio = { version = "1.21.2", features = ["full"] }
+ulid = "1.0.0"
 url = "2.3.1"
+uuid = "1.1.2"
+warp = "0.3.3"
