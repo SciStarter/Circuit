@@ -1,5 +1,5 @@
 [package]
-name = "logger"
+name = "uploader"
 version = "0.1.0"
 authors = ["Daniel Arbuckle <daniel@arbuckle-everything.com>"]
 edition = "2021"

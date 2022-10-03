@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-uploader-deploy
+  labels:
+    app: circuit-uploader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circuit-uploader
+  template:
+    metadata:
+      labels:
+        app: circuit-uploader
+    spec:
+      containers:
+      - name: circuit-uploader
+        image: scistarter/circuit-uploader:0.1.1
+        ports:
+        - containerPort: 9001
+        env:
+        - name: UPLOADER_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: uploader-beta
+              key: UPLOADER_ENDPOINT
+        - name: UPLOADER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: uploader-beta
+              key: UPLOADER_ACCESS_KEY
+        - name: UPLOADER_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uploader-beta
+              key: UPLOADER_SECRET
+        - name: CLICK_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: uploader-beta
+              key: CLICK_ENDPOINT
+        - name: CLICK_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: uploader-beta
+              key: CLICK_ACCESS_KEY
+        - name: CLICK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uploader-beta
+              key: CLICK_SECRET
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circuit-uploader-service
+spec:
+  selector:
+    app: circuit-uploader
+  ports:
+    - protocol: TCP
+      port: 9001
+
+
