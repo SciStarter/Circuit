@@ -355,19 +355,26 @@
         <legend>Display Image</legend>
         <p class="help mb">This is the image that will show when people see your opportunity’s record. If no image URL is provided, participants will see a default image.</p>
 
-        <label class="label">Display Image URL<span class="required">*</span></label>
+        <label class="label">Upload Image<span class="required"></span></label>
+        <upload-file @url="value.image_url=$event" />
+        <br>
+
+        <label class="label">Image URL<span class="required">*</span></label>
         <div class="flex display-image-wrapper" :class="{'is-danger': validation.image_url}">
           <div>
             <img v-if="value.image_url" :src="value.image_url" class="display-image">
             <img v-else src="~/assets/img/no-image.jpg" class="display-image"></img>
           </div>
-          <b-field :type="validation.image_url" label="Image URL" message="Must start with http:// or https://">
-            <small>What is the optimal image size <b-tooltip label="600px x 400px. Remember that when displayed as a thumbail it will be cropped to a square from the center." multilined>
-          <b-button label="?" />
-        </b-tooltip></small>
+          <b-field :type="validation.image_url" message="Must start with http:// or https://">
+            <small>What is the optimal image size
+              <b-tooltip label="600px x 400px. Remember that when displayed as a thumbail it will be cropped to a square from the center." multilined>
+                <b-button label="?" />
+              </b-tooltip>
+            </small>
             <b-input type="url" :value="value.image_url" @input="value.image_url = $event.replace(/ /g, '')" />
           </b-field>
         </div>
+
 
         <b-field :type="validation.pes_domain">
           <template #label>
