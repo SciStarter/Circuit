@@ -1,6 +1,6 @@
 <template>
 <div class="upload-file">
-  <b-upload v-model="dropFiles" @input="upload" native drag-drop>
+  <b-upload @input="upload" native drag-drop>
     <section class="section">
       <div class="content has-text-centered">
         <p>

@@ -354,11 +354,15 @@
 
         <legend>Display Image</legend>
         <p class="help mb">
-          This is the image that will show when people see your
-          opportunity’s record. Images should reflect the activity,
-          rather than a logo. Acceptable formats: png, jpeg,
-          webp. Size limit: 10 MiB. Recommended dimensions:
-          600&times;400 pixels.
+          Ideal images should reflect the activity participants will
+          experience, rather than a logo. Acceptable formats: png,
+          jpeg, webp. Size limit: 10 MiB. Recommended dimensions:
+          600×400 pixels.
+          <br>
+          By sharing this image, you represent that you have the
+          rights to share it and grant Science Near Me and partners a
+          worldwide, royalty free license as described on our Terms of
+          Use.
         </p>
 
         <label class="label">Upload Image<span class="required"></span></label>
@@ -1069,11 +1073,11 @@ export default {
                 if(this.invalid('title', !this.value.title)) valid = false;
                 if(this.invalid('organization_name', !this.value.organization_name)) valid = false;
                 if(this.invalid('location', !this.location)) valid = false;
-                if(this.invalid('partner_opp_url', this.location === 'online' && (!this.value.partner_opp_url || !this.value.partner_opp_url.startsWith('http')))) valid = false;
-                if(this.invalid('partner_opp_url', this.location === 'both' && (!this.value.partner_opp_url || !this.value.partner_opp_url.startsWith('http')))) valid = false;
+                if(this.invalid('partner_opp_url', this.location === 'online' && (!this.value.partner_opp_url || !this.value.partner_opp_url.toUpperCase().startsWith('HTTP')))) valid = false;
+                if(this.invalid('partner_opp_url', this.location === 'both' && (!this.value.partner_opp_url || !this.value.partner_opp_url.toUpperCase().startsWith('HTTP')))) valid = false;
                 if(this.invalid('location_name', this.location === 'physical' && !this.value.location_name)) valid = false;
                 if(this.invalid('location_name', this.location === 'both' && !this.value.location_name)) valid = false;
-                if(this.invalid('organization_website', this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.startsWith('http')))) valid = false;
+                if(this.invalid('organization_website', this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.toUpperCase().startsWith('HTTP')))) valid = false;
                 if(this.invalid('begin_datetime', this.when === 'time' && this.time_periods.length < 1)) valid = false;
                 if(this.invalid('begin_datetime', this.when === 'time' && (this.time_periods[0][0] && this.time_periods[0][1] && this.time_periods[0][0] > this.time_periods[0][1]))) valid = false;
             }
