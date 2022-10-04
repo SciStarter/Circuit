@@ -6,5 +6,7 @@ RUN cargo install --path uploader --features container
 
 FROM debian:bullseye
 EXPOSE 9001
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
+RUN update-ca-certificates
 COPY --from=builder /usr/local/cargo/bin/uploader /usr/local/bin/uploader
 CMD ["uploader"]

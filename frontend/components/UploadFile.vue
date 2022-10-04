@@ -14,9 +14,10 @@ export default {
     methods: {
         async upload() {
             let spinner = this.$buefy.loading.open();
+            let uploaded = null;
 
             try {
-                let uploaded = await this.$axios.$post("/api/upload", new FormData(this.$refs.file_picker));
+                uploaded = await this.$axios.$post("/api/upload", new FormData(this.$refs.file_picker));
             }
             catch(err) {
                 spinner.close();
@@ -46,7 +47,7 @@ export default {
                 });
             }
             else {
-                for(url of uploaded) {
+                for(let url of uploaded) {
                     this.$emit("url", url);
                 }
 

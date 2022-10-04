@@ -87,8 +87,12 @@ where
         .send()
         .await
     {
-        Ok(resp) => resp,
-        Err(err) => return Err(reject::custom(RejectReqwestError(err))),
+        Ok(resp) => {
+            if resp.status() != StatusCode::OK {
+                dbg!(&resp);
+            };
+        }
+        Err(err) => return Err(reject::custom(RejectReqwestError(dbg!(err)))),
     };
 
     Ok(())
@@ -142,12 +146,17 @@ where
             task::yield_now().await;
         }
 
-        task::spawn(store(
+        // Could spawn this as a task, if we start seeing timeout
+        // errors. The client side would need to get a little smarter
+        // to account for the fact that upload might not be completed
+        // when the response arrives.
+        let _ = store(
             endpoint.clone(),
             fname,
             Bytes::from(data),
             preprocess.clone(),
-        ));
+        )
+        .await;
     }
 
     Ok(json(&urls))

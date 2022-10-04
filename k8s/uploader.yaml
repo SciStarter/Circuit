@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-uploader
-        image: scistarter/circuit-uploader:0.1.4
+        image: scistarter/circuit-uploader:0.1.9
         ports:
         - containerPort: 9001
         env:
@@ -32,6 +32,11 @@ spec:
             secretKeyRef:
               name: uploader
               key: UPLOADER_SECRET
+        - name: JWT_SIGNING_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-signing-beta
+              key: JWT_SIGNING_KEY
 ---
 apiVersion: v1
 kind: Service
