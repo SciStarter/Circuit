@@ -1,9 +1,18 @@
 <template>
 <div class="upload-file">
-  <form ref="file_picker">
-    <input type="file" name="file">
-  </form>
-  <button type="button" @click="upload">Upload</button>
+  <b-upload v-model="dropFiles" @input="upload" native drag-drop>
+    <section class="section">
+      <div class="content has-text-centered">
+        <p>
+          <b-icon
+            icon="upload"
+            size="is-large">
+          </b-icon>
+        </p>
+        <p>Drop your files here or click to upload</p>
+      </div>
+    </section>
+  </b-upload>
 </div>
 </template>
 
@@ -12,12 +21,15 @@ export default {
     name: "UploadFile",
 
     methods: {
-        async upload() {
+        async upload(file) {
             let spinner = this.$buefy.loading.open();
             let uploaded = null;
 
+            let form = new FormData();
+            form.append("file", file);
+
             try {
-                uploaded = await this.$axios.$post("/api/upload", new FormData(this.$refs.file_picker));
+                uploaded = await this.$axios.$post("/api/upload", form);
             }
             catch(err) {
                 spinner.close();
