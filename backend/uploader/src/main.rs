@@ -5,8 +5,7 @@ use chrono::Duration;
 use futures_lite::prelude::*;
 use once_cell::sync::Lazy;
 use rusty_s3::{Bucket, BucketError, Credentials, S3Action, UrlStyle};
-use tokio::task;
-use uuid::Uuid;
+use tokio::{sync::Mutex, task};
 use warp::{
     filters::multipart,
     hyper::StatusCode,
@@ -41,6 +40,11 @@ impl Reject for RejectBucketError {}
 struct RejectReqwestError(reqwest::Error);
 
 impl Reject for RejectReqwestError {}
+
+#[derive(Debug)]
+struct RejectHTTPError(Mutex<Option<reqwest::Response>>);
+
+impl Reject for RejectHTTPError {}
 
 #[derive(serde::Serialize)]
 struct Response {
@@ -89,7 +93,9 @@ where
     {
         Ok(resp) => {
             if resp.status() != StatusCode::OK {
-                dbg!(&resp);
+                return Err(reject::custom(RejectHTTPError(Mutex::new(Some(dbg!(
+                    resp
+                ))))));
             };
         }
         Err(err) => return Err(reject::custom(RejectReqwestError(dbg!(err)))),
@@ -207,6 +213,18 @@ async fn report_errors(err: Rejection) -> Result<impl Reply, Infallible> {
     } else if let Some(e) = err.find::<RejectReqwestError>() {
         code = StatusCode::INTERNAL_SERVER_ERROR;
         out.message = Some(format!("Communication with file storage failed: {}", e.0));
+    } else if let Some(r) = err.find::<RejectHTTPError>() {
+        if let Some(resp) = r.0.lock().await.take() {
+            code = resp.status();
+            out.message = Some(
+                resp.text()
+                    .await
+                    .unwrap_or_else(|_| String::from("File storage error")),
+            );
+        } else {
+            code = StatusCode::INTERNAL_SERVER_ERROR;
+            out.message = Some(String::from("No response from file storage"));
+        }
     }
 
     dbg!(err);
