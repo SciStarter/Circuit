@@ -353,7 +353,12 @@
         </b-field>
 
         <legend>Display Image</legend>
-        <p class="help mb">This is the image that will show when people see your opportunity’s record. If no image URL is provided, participants will see a default image.</p>
+        <p class="help mb">
+          This is the image that will show when people see your opportunity’s record. If no image URL is provided, participants will see a default image.
+        </p>
+        <p class="help mb">
+          Images should reflect the activity, rather than a logo. Acceptable formats: png, jpeg, webp. Size limit: 10 MiB. Recommended dimensions: 600&times;400 pixels.
+        </p>
 
         <label class="label">Upload Image<span class="required"></span></label>
         <upload-file @url="value.image_url=$event" />
