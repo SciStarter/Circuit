@@ -46,6 +46,11 @@ struct RejectHTTPError(Mutex<Option<reqwest::Response>>);
 
 impl Reject for RejectHTTPError {}
 
+#[derive(Debug)]
+struct RejectAuthError(String);
+
+impl Reject for RejectAuthError {}
+
 #[derive(serde::Serialize)]
 struct Response {
     result: String,
@@ -169,8 +174,11 @@ where
 }
 
 /// Uploads files, without doing any intermediate processing
-async fn generic(token: String, form: multipart::FormData) -> Result<impl Reply, Rejection> {
-    upload_all_with(token, form, |data| Ok(data)).await
+async fn generic(
+    authorization: String,
+    form: multipart::FormData,
+) -> Result<impl Reply, Rejection> {
+    upload_all_with(extract_token(authorization)?, form, |data| Ok(data)).await
 }
 
 #[tokio::main]
@@ -178,7 +186,8 @@ async fn main() {
     let app = warp::post()
         .and(warp::path("api"))
         .and(warp::path("upload"))
-        .and(warp::cookie("__Host-token"))
+        //.and(warp::cookie("__Host-token"))
+        .and(warp::header("Authorization"))
         .and(multipart::form())
         .and_then(generic)
         .recover(report_errors);
@@ -190,6 +199,22 @@ async fn main() {
                 .expect("bind address should parse"),
         )
         .await;
+}
+
+fn extract_token(authorization: String) -> Result<String, Rejection> {
+    if let Some((scheme, token)) = authorization.split_once(' ') {
+        if scheme == "Bearer" {
+            Ok(token.to_string())
+        } else {
+            Err(reject::custom(RejectAuthError(String::from(
+                "Incorrect authorization scheme",
+            ))))
+        }
+    } else {
+        Err(reject::custom(RejectAuthError(String::from(
+            "Improperly formatted authorization header",
+        ))))
+    }
 }
 
 async fn report_errors(err: Rejection) -> Result<impl Reply, Infallible> {
@@ -213,8 +238,8 @@ async fn report_errors(err: Rejection) -> Result<impl Reply, Infallible> {
     } else if let Some(e) = err.find::<RejectReqwestError>() {
         code = StatusCode::INTERNAL_SERVER_ERROR;
         out.message = Some(format!("Communication with file storage failed: {}", e.0));
-    } else if let Some(r) = err.find::<RejectHTTPError>() {
-        if let Some(resp) = r.0.lock().await.take() {
+    } else if let Some(e) = err.find::<RejectHTTPError>() {
+        if let Some(resp) = e.0.lock().await.take() {
             code = resp.status();
             out.message = Some(
                 resp.text()
@@ -225,6 +250,9 @@ async fn report_errors(err: Rejection) -> Result<impl Reply, Infallible> {
             code = StatusCode::INTERNAL_SERVER_ERROR;
             out.message = Some(String::from("No response from file storage"));
         }
+    } else if let Some(e) = err.find::<RejectAuthError>() {
+        code = StatusCode::FORBIDDEN;
+        out.message = Some(e.0.clone());
     }
 
     dbg!(err);

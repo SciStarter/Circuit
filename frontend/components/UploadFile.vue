@@ -29,31 +29,30 @@ export default {
             form.append("file", file);
 
             try {
-                uploaded = await this.$axios.$post("/api/upload", form);
+                uploaded = await this.$axios.$post("/api/upload", form, this.$store.state.auth);
             }
             catch(err) {
+                console.error(err.toJSON());
                 spinner.close();
                 this.$buefy.dialog.alert({
                     title: 'Error',
-                    message: "Unable to communicate with the server",
+                    message: "Unable to communicate with the server: " + (!!err.response ? err.response.data.message : "no response"),
                     type: 'is-danger',
-                    hasIcon: true,
-                    icon: 'times-circle',
-                    iconPack: 'fa',
+                    hasIcon: false,
                     ariaRole: 'alertdialog',
                     ariaModal: true
                 });
+                return;
             }
 
             if(uploaded.result === 'error') {
+                console.error(uploaded);
                 spinner.close();
                 this.$buefy.dialog.alert({
                     title: 'Error',
                     message: uploaded.message,
                     type: 'is-danger',
-                    hasIcon: true,
-                    icon: 'times-circle',
-                    iconPack: 'fa',
+                    hasIcon: false,
                     ariaRole: 'alertdialog',
                     ariaModal: true
                 });
