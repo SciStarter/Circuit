@@ -28,7 +28,7 @@
         </div>
         <div>
           <p class="small-t">If your opportunities are</p>
-          <h3>Out-of-School Time<br />STEM for Youth</h3>
+          <h3>Girl-Serving<br>Out-of-School Time STEM</h3>
           <img src="~/assets/img/add-opps/connectory.jpg" alt="connectory logo" />
           <dynamic-block group="add-opportunities" item="connectory">
             <p>If you provide opportunities for children and teens to explore STEM in out-of-school time settings, visit <a href="https://theconnectory.org/">The Connectory</a> to add your opportunities there.</p>
