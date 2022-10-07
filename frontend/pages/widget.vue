@@ -128,6 +128,8 @@
 
       data() {
           return {
+              search_place: {near: "", longitude: 0, latitude: 0, proximity: 0},
+              search_text: "",
               search_beginning: new Date().toISOString().slice(0, 10),
               search_ending: null,
           };
