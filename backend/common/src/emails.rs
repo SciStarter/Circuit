@@ -15,6 +15,7 @@ static MAILER_ENDPOINT: Lazy<String> = Lazy::new(|| {
     )
 });
 
+#[derive(Debug)]
 pub struct EmailMessage {
     slug: Option<String>,
     pub subject: String,

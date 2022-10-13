@@ -257,8 +257,13 @@ pub async fn save_opportunity(
         }
     }
 
+    dbg!(
+        &original.interior.review_status,
+        &opp.interior.review_status
+    );
     if let ReviewStatus::Pending = original.interior.review_status {
         if let ReviewStatus::Publish = opp.interior.review_status {
+            dbg!(&opp.interior.submitted_by);
             if let Some(person_uid) = opp.interior.submitted_by {
                 let submitted_by = Person::load_by_uid(req.state(), &person_uid).await?;
 
@@ -278,7 +283,9 @@ pub async fn save_opportunity(
                     ("opp_slug", &opp.exterior.slug),
                 ]);
 
-                common::emails::send_message(submitted_by.interior.email, &msg).await;
+                dbg!(&msg);
+
+                dbg!(common::emails::send_message(submitted_by.interior.email, &msg).await);
             }
         }
     }
