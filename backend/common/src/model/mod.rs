@@ -27,6 +27,10 @@ pub static PARTNER_NAMESPACE: Lazy<uuid::Uuid> =
 pub enum Error {
     #[error("Required field is missing or empty: {0}")]
     Missing(String),
+    #[error("Fields are exclusive: {0} and {1}")]
+    Exclusive(String, String),
+    #[error("Field contains invalid value: {0}")]
+    Value(String),
     #[error("SQLx error")]
     SQLx(#[from] sqlx::Error),
     #[error("JSON error")]

@@ -31,6 +31,8 @@ pub struct ParticipationInterior {
     #[serde(default)]
     pub participant: Option<Uuid>,
     #[serde(default)]
+    pub snml: Option<String>,
+    #[serde(default)]
     pub location: Option<serde_json::Value>,
 }
 
@@ -46,7 +48,16 @@ pub struct Participation {
 
 impl Participation {
     pub fn validate(&mut self) -> Result<(), Error> {
-        Ok(())
+        if self.interior.participant.is_some() && self.interior.snml.is_some() {
+            Err(Error::Exclusive(
+                String::from("participant"),
+                String::from("snml"),
+            ))
+        } else if self.interior.participant.is_none() && self.interior.snml.is_none() {
+            Err(Error::Missing(String::from("particpant or snml")))
+        } else {
+            Ok(())
+        }
     }
 
     pub async fn load_by_id(db: &Database, id: i32) -> Result<Participation, Error> {
