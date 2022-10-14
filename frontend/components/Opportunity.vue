@@ -444,6 +444,7 @@
         <social-button mode="facebook" :opportunity="opportunity" />
         <social-button mode="twitter" :opportunity="opportunity" />
         <social-button mode="linkedin" :opportunity="opportunity" />
+        <social-button mode="link" :opportunity="opportunity" />
       </div>
     </div>
   </b-modal>

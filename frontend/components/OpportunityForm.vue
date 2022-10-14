@@ -43,7 +43,19 @@
           </template>
           <b-input v-model="value.organization_name"></b-input>
         </b-field>
-        <b-field :type="validation.name" :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '')">
+        <b-field :type="validation.contact_name" message="This is the name of the person Science Near Me and partners should contact, if necessary, about this opportunity. It is not published.">
+          <template #label>
+            Contact Name<span class="required">*</span>
+          </template>
+          <b-input v-model="value.contact_name"></b-input>
+        </b-field>
+        <b-field :type="validation.contact_email" message="This is the email of the person Science Near Me and partners should contact, if necessary, about this opportunity. It is not published.">
+          <template #label>
+            Contact Email<span class="required">*</span>
+          </template>
+          <b-input type="email" v-model="value.contact_email"></b-input>
+        </b-field>
+        <b-field :type="validation.name" :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '') + ' All data entered into this form will be available to Science Near Me and to the partner.'">
           <template #label>
             Science Near Me partner<span class="required">*</span>
           </template>
@@ -1072,6 +1084,8 @@ export default {
             if(state == 0 || state == 1) {
                 if(this.invalid('title', !this.value.title)) valid = false;
                 if(this.invalid('organization_name', !this.value.organization_name)) valid = false;
+                if(this.invalid('contact_name', !this.value.contact_name)) valid = false;
+                if(this.invalid('contact_email', !this.value.contact_email)) valid = false;
                 if(this.invalid('location', !this.location)) valid = false;
                 if(this.invalid('partner_opp_url', this.location === 'online' && (!this.value.partner_opp_url || !this.value.partner_opp_url.toUpperCase().startsWith('HTTP')))) valid = false;
                 if(this.invalid('partner_opp_url', this.location === 'both' && (!this.value.partner_opp_url || !this.value.partner_opp_url.toUpperCase().startsWith('HTTP')))) valid = false;

@@ -1,13 +1,13 @@
 <template>
 <div class="exchange exchange-index">
-  
+
   <div class="exchange-actions" v-if="$store.state.user.authenticated">
-    
+
     <button  v-if="$store.state.user.authenticated" class="toggle-menu mobile-only" title="Toggle menu" data-context="header-menu" @click="toggle_mobile_nav = !toggle_mobile_nav">
       <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
       <img v-else src="~assets/img/hamburger.svg?data">
     </button>
-    
+
     <div class="exchange-nav" :class="{'show':toggle_mobile_nav}">
       <template v-if="partner !== null">
         <nuxt-link :to="{name: 'exchange-uid', params: {uid: $route.params.uid}}" class="home" title="home"><home-icon /><span class="home-text">Home</span></nuxt-link>
@@ -16,19 +16,19 @@
       <nuxt-link v-if="$store.state.user.authenticated" :to="{name: 'exchange-uid-opps', params: {uid: exchange.uid}}">Manage Opportunities</nuxt-link>
       <nuxt-link v-if="partner !== null || ($store.state.user.authenticated && exchange.open_submission)" :to="{name: 'exchange-uid-submit', params: {uid: exchange.uid}}" class="button"><submit-opportunity-icon/> Add an Opportunity</nuxt-link>
     </div>
-    
+
     <div class="exchange-logins">
       <div v-if="$store.state.user.authenticated">
         <a @click="$store.dispatch('logout')">Logout</a>
       </div>
     </div>
-    
-    
+
+
   </div><!-- .exchange-actions -->
-  
-  
+
+
   <!-- <div class="partner-logo"></div> -->
-  
+
   <div class="exchange-wrapper">
     <div class="exchange-search  general-filters">
       <div class="ex-search basic-filter-backdrop">
@@ -79,11 +79,11 @@
             </action-button>
           </div>
         </form>
-        
+
       </div>
-      
+
     </div>
-    
+
     <div class="exchange-filters">
       <div v-if="filter==false" class="filter-btn">
         <a @click="filter = true"><filter-icon /> show filters</a>
@@ -92,7 +92,7 @@
         <div class="filter-btn">
           <a @click="filter = false"><filter-icon /> hide filters</a>
         </div>
-        
+
         <div class="filters">
           <fieldset>
             <label class="b">Age</label>
@@ -177,13 +177,13 @@
             </b-field>
           </fieldset>
         </div>
-        
-        
+
+
       </div>
     </div>
-    
-    
-    
+
+
+
     <div class="exchange-results">
       <b-tabs v-if="calendar" v-model="opp_view">
         <b-tab-item label="Calendar">
@@ -196,7 +196,7 @@
       <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
     </div>
   </div><!-- .exchange-wrapper -->
-  
+
   <div class="exchange-logins exl-bottom">
     <div v-if="$store.state.user.authenticated">
       <a @click="$store.dispatch('logout')">Logout</a>
@@ -212,7 +212,7 @@
       <!-- </template> -->
     </div>
   </div>
-  
+
   <div class="exchange-power"><div>powered by <a href="http://sciencenearme.org" target="_blank">Science Near Me</a></div></div>
 </div>
 </template>
@@ -232,41 +232,47 @@ export default {
         LookupPlace,
         FilterIcon
     },
-    
+
     props: {
         partner: {
             type: Object,
             required: false,
             default: null,
         },
-        
+
         exchange: {
             type: Object,
             required: true,
         },
     },
-    
+
     async asyncData(context) {
+        let partner = await context.$axios.$get(
+            'https://sciencenearme.org/api/ui/organization/' + context.params.uid + '/public'
+        );
+        
+        let default_query = !!partner.default_query ? Object.fromEntries(new URLSearchParams(partner.default_query).entries()) : {};
+
         let query = {...context.query};
-        
+
         let calendar = (query.calendar !== undefined);
-        
+
         if(!query.all) {
             query.partner = context.params.uid;
         }
-        
+
         if(!query.impartial) {
             query.prefer_partner = context.params.uid;
         }
-        
+
         if(query.page === undefined) {
             query.page = 0;
         }
-        
+
         if(query.beginning === undefined) {
             query.beginning = new Date().toISOString();
         }
-        
+
         let search_text = query.text || '';
         let search_place = {near: query.near || 0, longitude: query.longitude || 0, latitude: query.latitude || 0, proximity: query.proximity || 0};
         let beginning = query.beginning;
@@ -276,21 +282,21 @@ export default {
         let adults_only = !!query.adults_only && query.adults_only != 'false';
         let kids_only = !!query.kids_only && query.kids_only != 'false';
         let physical = query.physical || 'in-person-or-online';
-        
-        let opps = await context.$axios.$get('/api/ui/finder/search', { params: query });
-        
+
+        let opps = await context.$axios.$get('/api/ui/finder/search', { params: {...default_query, ...query} });
+
         let now = new Date();
         let search_year = now.getFullYear();
         let search_month = now.getMonth() + 1;
         let month = null;
-        
+
         let base_year = search_year;
         let base_month = search_month;
-        
+
         if(calendar) {
-            month = await context.$axios.$get('/api/ui/finder/search', { params: {...query, year: search_year, month: search_month } });
+            month = await context.$axios.$get('/api/ui/finder/search', { params: {...default_query, ...query, year: search_year, month: search_month } });
         }
-        
+
         return {
             opportunities: opps,
             calendar,
@@ -310,7 +316,7 @@ export default {
             physical,
         };
     },
-    
+
     data() {
         return {
             toggle_mobile_nav: false,
@@ -320,83 +326,93 @@ export default {
             loading: false,
         };
     },
-    
+
     computed: {
+        default_query() {
+            if(this.partner.default_query) {
+                let defaults = new URLSearchParams(this.partner.default_query);
+                return Object.fromEntries(defaults.entries());
+            }
+            else {
+                return {};
+            }
+        },
+
         has_calendar_previous() {
             return this.search_year > this.base_year || (this.search_year == this.base_year && this.search_month > this.base_month);
         },
-        
+
         beginning_proxy: {
             get() {
                 return this.beginning ? new Date(this.beginning) : null;
             },
-            
+
             set(val) {
                 this.beginning = val.toISOString();
             }
         },
-        
+
         ending_proxy: {
             get() {
                 return this.ending ? new Date(this.ending) : null;
             },
-            
+
             set(val) {
                 this.ending = val.toISOString();
             }
         },
-        
+
         min_age_active: {
             get() {
                 return this.min_age !== undefined && this.min_age > 0;
             },
-            
+
             set(value) {
                 this.min_age = value ? 1 : 0;
             }
         },
-        
+
         max_age_active: {
             get() {
                 return this.max_age !== undefined && this.max_age < 121;
             },
-            
+
             set(value) {
                 this.max_age = value ? 120 : 121;
             }
         },
     },
-    
+
     watchQuery: true,
-    
+
     async mounted() {
         this.search_place = await this.$store.dispatch("get_here");
     },
-    
+
     methods: {
         month_add(offset) {
             let sum = this.search_month + offset - 1;
-            
+
             let zmonth = sum  % 12;
-            
+
             // Compensate for JavaScript's incorrect modulo operation
             while(zmonth < 0) {
                 zmonth += 12;
             }
-            
+
             let yoffset = Math.floor(sum / 12);
-            
+
             this.search_year += yoffset;
             this.search_month = zmonth + 1;
         },
-        
+
         async update_calendar() {
             this.month = await this.$axios.$get('/api/ui/finder/search', { params: {...this.$route.query, year: this.search_year, month: this.search_month } });
         },
-        
+
         search(assign) {
-            let q = {...this.$route.query, ...assign};
-            
+            let q = {...this.default_query, ...this.$route.query, ...assign};
+
             if(q.beginning === undefined) {
                 q.beginning = new Date().toISOString();
             }

@@ -68,6 +68,10 @@ export default {
     },
 
     computed: {
+        linkage() {
+            return '' + (Date.now() + Math.random());
+        },
+
         joint () {
             if (!this.href.includes('?')) {
                 return '?'
@@ -80,24 +84,26 @@ export default {
             let params = ''
 
             if (this.source) {
-                params = params + (params ? '&' : '') + 'utm_source=' + this.source
+                params = params + (params ? '&' : '') + 'utm_source=' + this.source;
             }
 
             if (this.medium) {
-                params = params + (params ? '&' : '') + 'utm_medium=' + this.medium
+                params = params + (params ? '&' : '') + 'utm_medium=' + this.medium;
             }
 
             if (this.campaign) {
-                params = params + (params ? '&' : '') + 'utm_campaign=' + this.campaign
+                params = params + (params ? '&' : '') + 'utm_campaign=' + this.campaign;
             }
 
             if (this.term) {
-                params = params + (params ? '&' : '') + 'utm_term=' + this.term
+                params = params + (params ? '&' : '') + 'utm_term=' + this.term;
             }
 
             if (this.content) {
-                params = params + (params ? '&' : '') + 'utm_content=' + this.content
+                params = params + (params ? '&' : '') + 'utm_content=' + this.content;
             }
+
+            params = params + (params ? '&' : '') + 'snml=' + this.linkage;
 
             if (params.length) {
                 return this.href + this.joint + params
@@ -126,7 +132,8 @@ export default {
                 medium: this.medium,
                 campaign: this.campaign,
                 term: this.term,
-                content: this.content
+                content: this.content,
+                snml: this.linkage,
             })
 
             if (this.newTab) {
