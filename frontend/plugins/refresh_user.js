@@ -27,7 +27,9 @@ window.onNuxtReady(async () => {
     window.localStorage.setItem("session", user.uid);
   } else {
     window.localStorage.removeItem("token");
-    window.localStorage.setItem("session", issue_tag());
+    if(!window.localStorage.getItem("session")) {
+        window.localStorage.setItem("session", issue_tag());
+    }
   }
 
   window.dataLayer = window.dataLayer || [];
