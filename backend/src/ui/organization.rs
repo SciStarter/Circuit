@@ -251,7 +251,10 @@ pub async fn invite_managers(mut req: tide::Request<Database>) -> tide::Result {
         for email in form.emails.iter() {
             let mut inv = Invitation::new(partner.exterior.uid, InvitationMode::JoinOrganization);
             inv.store(req.state()).await?;
-            let outgoing = msg.materialize(vec![("invitation", inv.uid())]);
+            let outgoing = msg.materialize(vec![
+                ("invitation", inv.uid().to_string()),
+                ("partner_name", partner.exterior.name.clone()),
+            ]);
             common::emails::send_message(email, &outgoing).await;
         }
     } else {

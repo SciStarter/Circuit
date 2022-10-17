@@ -86,7 +86,7 @@ async fn request_person(req: &mut tide::Request<Database>) -> tide::Result<Optio
             return Ok(None);
         }
     } else {
-        if let Some(val) = req.cookie("token") {
+        if let Some(val) = req.cookie("__Host-token") {
             val.value().to_string()
         } else {
             return Ok(None);
