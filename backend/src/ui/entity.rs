@@ -4,7 +4,7 @@ use common::{
         involvement::{Involvement, Mode},
         opportunity::{Opportunity, OpportunityQuery, OpportunityQueryOrdering, ReviewStatus},
         person::{LogEvent, LogIdentifier, Permission, PermitAction},
-        Pagination,
+        Pagination, Partner, Person,
     },
     Database, ToFixedOffset,
 };
@@ -470,6 +470,67 @@ pub async fn set_review_status(mut req: tide::Request<Database>) -> tide::Result
     {
         opp.interior.review_status = form.status;
         opp.store(req.state()).await?;
+
+        if let ReviewStatus::Publish = opp.interior.review_status {
+            if let Some(person_uid) = opp.interior.submitted_by {
+                let submitted_by = Person::load_by_uid(req.state(), &person_uid).await?;
+                let partner = Partner::load_by_uid(req.state(), &opp.exterior.partner).await?;
+
+                let template = common::emails::EmailMessage::load_or_default(
+                    req.state(),
+                    "opportunity-approved",
+                    "Published on Science Near Me: {title}",
+                    r#"
+<p>The opportunity <strong>{title}</strong> has been published on {partner_name} and Science Near Me.</p>
+<p>You can view the opportunity on {partner_name}'s web site or at <a href="https://sciencenearme.org/{opp_slug}">Science Near Me</a>.</p>
+"#,
+                ).await;
+
+                let msg = template.materialize(vec![
+                    ("title", &opp.exterior.title),
+                    ("partner_name", &partner.exterior.name),
+                    ("opp_slug", &opp.exterior.slug),
+                ]);
+
+                common::emails::send_message(submitted_by.interior.email, &msg).await
+            }
+        } else if let ReviewStatus::Draft = opp.interior.review_status {
+            if let Some(person_uid) = opp.interior.submitted_by {
+                let submitted_by = Person::load_by_uid(req.state(), &person_uid).await?;
+
+                let template = common::emails::EmailMessage::load_or_default(
+                    req.state(),
+                    "opportunity-returned-to-draft",
+                    "Revisions needed on Science Near Me: {title}",
+                    r#"
+<p>The opportunity <strong>{title}</strong> has been returned to draft status, as it still requires work in order to be ready for publication.</p>
+"#,
+                ).await;
+
+                let msg = template.materialize(vec![("title", &opp.exterior.title)]);
+
+                common::emails::send_message(submitted_by.interior.email, &msg).await
+            }
+        } else if let ReviewStatus::Reject = opp.interior.review_status {
+            if let Some(person_uid) = opp.interior.submitted_by {
+                let submitted_by = Person::load_by_uid(req.state(), &person_uid).await?;
+
+                let template = common::emails::EmailMessage::load_or_default(
+                    req.state(),
+                    "opportunity-rejected",
+                    "Not published on Science Near Me: {title}",
+                    r#"
+<p>We're sorry, but the opportunity <strong>{title}</strong> has been rejected for publication.</p>
+"#,
+                )
+                .await;
+
+                let msg = template.materialize(vec![("title", &opp.exterior.title)]);
+
+                common::emails::send_message(submitted_by.interior.email, &msg).await
+            }
+        }
+
         okay_empty()
     } else {
         Err(tide::Error::from_str(

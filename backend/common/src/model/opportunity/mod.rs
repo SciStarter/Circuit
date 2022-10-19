@@ -1,7 +1,7 @@
 pub mod for_slug;
 
 use super::person::PermitAction;
-use super::Error;
+use super::{Error, Person};
 use crate::model::involvement;
 use crate::{geo, Database, ToFixedOffset};
 
@@ -1105,14 +1105,14 @@ fn build_matching_query(
                 )
                 OR
                 (
-                 coalesce(nullif(exterior ->> 'end_recurrence', ''), '0001-01-01')::timestamptz > ${}::timestamptz                 
+                 coalesce(nullif(exterior ->> 'end_recurrence', ''), '0001-01-01')::timestamptz > ${}::timestamptz
                 )
                )"#,
             begin_param, end_param, begin_param, end_param, begin_param));
     } else {
         if let Some(val) = query.current {
             clauses.push(format!(
-                r#""current" = ${}"#,
+                r#"c_opportunity_is_current(interior, exterior) = ${}"#,
                 ParamValue::RawBool(val).append(&mut params)
             ));
         }

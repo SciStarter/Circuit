@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-uploader-deploy
+  labels:
+    app: circuit-uploader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circuit-uploader
+  template:
+    metadata:
+      labels:
+        app: circuit-uploader
+    spec:
+      containers:
+      - name: circuit-uploader
+        image: scistarter/circuit-uploader:0.1.11
+        ports:
+        - containerPort: 9001
+        env:
+        - name: UPLOADER_ENDPOINT
+          value: "https://snm-uploads.us-east-1.linodeobjects.com/"
+        - name: UPLOADER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: uploader
+              key: UPLOADER_ACCESS_KEY
+        - name: UPLOADER_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uploader
+              key: UPLOADER_SECRET
+        - name: JWT_SIGNING_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-signing-beta
+              key: JWT_SIGNING_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circuit-uploader-service
+spec:
+  selector:
+    app: circuit-uploader
+  ports:
+    - protocol: TCP
+      port: 9001
+
+

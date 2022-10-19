@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Circuit API v1",
-        "version": "1.5.2",
+        "version": "1.6.0",
         "description": ""
     },
     "servers": [
@@ -1180,6 +1180,97 @@
                         "schema": {
                             "type": "string",
                             "format": "hexidecimal"
+                        }
+                    },
+                    {
+                        "name": "Authorization",
+                        "in": "header",
+                        "description": "An authorization bearer header containing an unexpired token returned from the /partner/authorize endpoint",
+                        "required": true
+                    }
+                ],
+                "security": [
+                    {
+                        "token": []
+                    }
+                ],
+                "requestBody": {
+                    "description": "Values to store as a new participation record.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/participation"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Public part of the participation record as stored by the server, after defaults have been applied, and validation performed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/participation"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Incorrectly formatted request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization header was not provided",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The opportunity is managed by a different partner",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Participant or opportunity does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/participation/{snml}": {
+            "post": {
+                "summary": "Create a record of a person's participation in an opportunity at a particular time",
+                "operationId": "participation_new_snml",
+                "parameters": [
+                    {
+                        "name": "snml",
+                        "in": "path",
+                        "description": "This is an anonymous session identifier. When a user navigates from Science Near Me to your site, it is added to the URL as a query parameter, so that you can store it for later use here.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "decimal"
                         }
                     },
                     {

@@ -257,31 +257,5 @@ pub async fn save_opportunity(
         }
     }
 
-    if let ReviewStatus::Pending = original.interior.review_status {
-        if let ReviewStatus::Publish = opp.interior.review_status {
-            if let Some(person_uid) = opp.interior.submitted_by {
-                let submitted_by = Person::load_by_uid(req.state(), &person_uid).await?;
-
-                let template = common::emails::EmailMessage::load_or_default(
-                    req.state(),
-                    "opportunity-approved",
-                    "Published on Science Near Me: {title}",
-                    r#"
-<p>The opportunity <strong>{title}</strong> has been published on {partner_name} and Science Near Me.</p>
-<p>You can view the opportunity on {partner_name}'s web site or at <a href="https://sciencenearme.org/{opp_slug}">Science Near Me</a>.</p>
-"#,
-                ).await;
-
-                let msg = template.materialize(vec![
-                    ("title", &opp.exterior.title),
-                    ("partner_name", &partner.exterior.name),
-                    ("opp_slug", &opp.exterior.slug),
-                ]);
-
-                common::emails::send_message(submitted_by.interior.email, &msg).await;
-            }
-        }
-    }
-
     okay(&opp)
 }

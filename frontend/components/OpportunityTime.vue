@@ -1,6 +1,6 @@
 <template>
 <ul class="opportunity-time">
-  <li v-for="pair in upcoming_soonest" :key="pair[0].toISOString()">
+  <li v-for="pair in upcoming_soonest" :key="'' + pair">
     {{ display(pair) }}
   </li>
 </ul>
@@ -41,7 +41,7 @@ export default {
                 }
             }
             else if(this.opportunity.start_datetimes.length == 0 && this.opportunity.end_datetimes.length == 1) {
-                    return [[EARLIEST, this.opportunity.end_datetimes[0]]];
+                    return [[EARLIEST, new Date(this.opportunity.end_datetimes[0])]];
             }
             else {
                 return this.opportunity.start_datetimes.map(iso => {

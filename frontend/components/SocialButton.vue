@@ -3,6 +3,7 @@
   <twitter-icon v-if="mode == 'twitter'" />
   <facebook-icon v-else-if="mode == 'facebook'" />
   <linkedin-icon v-else-if="mode == 'linkedin'" />
+  <link-icon v-else-if="mode == 'link'" />
   <span v-else>unknown social network</span>
 </a>
 </template>
@@ -11,6 +12,7 @@
 import TwitterIcon from '~/assets/img/twitter-app.svg?inline'
 import FacebookIcon from '~/assets/img/facebook-app.svg?inline'
 import LinkedinIcon from '~/assets/img/linkedin-app.svg?inline'
+import LinkIcon from '~/assets/img/link.svg?inline'
 
 export default {
     name: "SocialButton",
@@ -19,6 +21,7 @@ export default {
         TwitterIcon,
         FacebookIcon,
         LinkedinIcon,
+        LinkIcon,
     },
 
     props: {
@@ -73,6 +76,8 @@ export default {
                 return 'https://www.facebook.com/sharer.php?u=' + url;
             case 'linkedin':
                 return 'https://www.linkedin.com/sharing/share-offsite/?url=' + url;
+            case 'link':
+                return 'https://sciencenearme.org/' + this.opportunity.slug;
             default:
                 return 'unknown';
             }

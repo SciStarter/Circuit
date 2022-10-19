@@ -28,13 +28,6 @@ async fn participation_new(mut req: tide::Request<Database>) -> tide::Result {
 
     let db = req.state();
 
-    let participant = match Person::load_by_email_hash(db, req.param("hash")?).await {
-        Ok(p) => p,
-        Err(_) => {
-            return Ok(error(StatusCode::NotFound, req.param("hash")?));
-        }
-    };
-
     let opp = match Opportunity::load_by_uid(db, &part.exterior.opportunity).await {
         Ok(o) => o,
         Err(_) => {
@@ -49,8 +42,13 @@ async fn participation_new(mut req: tide::Request<Database>) -> tide::Result {
         return Ok(error(StatusCode::Forbidden, req.param("hash")?));
     }
 
-    part.interior.participant = Some(participant.exterior.uid);
     part.exterior.partner = auth;
+
+    if let Ok(participant) = Person::load_by_email_hash(db, req.param("hash")?).await {
+        part.interior.participant = Some(participant.exterior.uid);
+    } else if let Ok(hash) = req.param("hash") {
+        part.interior.snml = Some(String::from(hash));
+    }
 
     if let Err(err) = part.validate() {
         return Ok(error(StatusCode::BadRequest, err.to_string()));
@@ -59,6 +57,8 @@ async fn participation_new(mut req: tide::Request<Database>) -> tide::Result {
     if let Err(err) = part.store(db, true).await {
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
+
+    common::log("participation", &part);
 
     let res = Response::builder(StatusCode::Created)
         .content_type(mime::JSON)

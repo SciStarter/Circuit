@@ -43,7 +43,19 @@
           </template>
           <b-input v-model="value.organization_name"></b-input>
         </b-field>
-        <b-field :type="validation.name" :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '')">
+        <b-field :type="validation.contact_name" message="This is the name of the person Science Near Me and partners should contact, if necessary, about this opportunity. It is not published.">
+          <template #label>
+            Contact Name<span class="required">*</span>
+          </template>
+          <b-input v-model="value.contact_name"></b-input>
+        </b-field>
+        <b-field :type="validation.contact_email" message="This is the email of the person Science Near Me and partners should contact, if necessary, about this opportunity. It is not published.">
+          <template #label>
+            Contact Email<span class="required">*</span>
+          </template>
+          <b-input type="email" v-model="value.contact_email"></b-input>
+        </b-field>
+        <b-field :type="validation.name" :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '') + ' All data entered into this form will be available to Science Near Me and to the partner.'">
           <template #label>
             Science Near Me partner<span class="required">*</span>
           </template>
@@ -353,21 +365,38 @@
         </b-field>
 
         <legend>Display Image</legend>
-        <p class="help mb">This is the image that will show when people see your opportunity’s record. If no image URL is provided, participants will see a default image.</p>
+        <p class="help mb">
+          Ideal images should reflect the activity participants will
+          experience, rather than a logo. Acceptable formats: png,
+          jpeg, webp. Size limit: 10 MiB. Recommended dimensions:
+          600×400 pixels.
+          <br>
+          By sharing this image, you represent that you have the
+          rights to share it and grant Science Near Me and partners a
+          worldwide, royalty free license as described on our Terms of
+          Use.
+        </p>
 
-        <label class="label">Display Image URL<span class="required">*</span></label>
+        <label class="label">Upload Image<span class="required"></span></label>
+        <upload-file @url="value.image_url=$event" />
+        <br>
+
+        <label class="label">Image URL<span class="required">*</span></label>
         <div class="flex display-image-wrapper" :class="{'is-danger': validation.image_url}">
           <div>
             <img v-if="value.image_url" :src="value.image_url" class="display-image">
             <img v-else src="~/assets/img/no-image.jpg" class="display-image"></img>
           </div>
-          <b-field :type="validation.image_url" label="Image URL" message="Must start with http:// or https://">
-            <small>What is the optimal image size <b-tooltip label="600px x 400px. Remember that when displayed as a thumbail it will be cropped to a square from the center." multilined>
-          <b-button label="?" />
-        </b-tooltip></small>
+          <b-field :type="validation.image_url" message="Must start with http:// or https://">
+            <small>What is the optimal image size
+              <b-tooltip label="600px x 400px. Remember that when displayed as a thumbail it will be cropped to a square from the center." multilined>
+                <b-button label="?" />
+              </b-tooltip>
+            </small>
             <b-input type="url" :value="value.image_url" @input="value.image_url = $event.replace(/ /g, '')" />
           </b-field>
         </div>
+
 
         <b-field :type="validation.pes_domain">
           <template #label>
@@ -1055,12 +1084,14 @@ export default {
             if(state == 0 || state == 1) {
                 if(this.invalid('title', !this.value.title)) valid = false;
                 if(this.invalid('organization_name', !this.value.organization_name)) valid = false;
+                if(this.invalid('contact_name', !this.value.contact_name)) valid = false;
+                if(this.invalid('contact_email', !this.value.contact_email)) valid = false;
                 if(this.invalid('location', !this.location)) valid = false;
-                if(this.invalid('partner_opp_url', this.location === 'online' && (!this.value.partner_opp_url || !this.value.partner_opp_url.startsWith('http')))) valid = false;
-                if(this.invalid('partner_opp_url', this.location === 'both' && (!this.value.partner_opp_url || !this.value.partner_opp_url.startsWith('http')))) valid = false;
+                if(this.invalid('partner_opp_url', this.location === 'online' && (!this.value.partner_opp_url || !this.value.partner_opp_url.toUpperCase().startsWith('HTTP')))) valid = false;
+                if(this.invalid('partner_opp_url', this.location === 'both' && (!this.value.partner_opp_url || !this.value.partner_opp_url.toUpperCase().startsWith('HTTP')))) valid = false;
                 if(this.invalid('location_name', this.location === 'physical' && !this.value.location_name)) valid = false;
                 if(this.invalid('location_name', this.location === 'both' && !this.value.location_name)) valid = false;
-                if(this.invalid('organization_website', this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.startsWith('http')))) valid = false;
+                if(this.invalid('organization_website', this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.toUpperCase().startsWith('HTTP')))) valid = false;
                 if(this.invalid('begin_datetime', this.when === 'time' && this.time_periods.length < 1)) valid = false;
                 if(this.invalid('begin_datetime', this.when === 'time' && (this.time_periods[0][0] && this.time_periods[0][1] && this.time_periods[0][0] > this.time_periods[0][1]))) valid = false;
             }
