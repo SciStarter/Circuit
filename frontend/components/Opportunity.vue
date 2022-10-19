@@ -161,6 +161,7 @@
               campaign="opp-page"
               content="find-out-more"
               @before="register_interest"
+              style="overflow-wrap: break-word"
               >
               {{opportunity.partner_opp_url || opportunity.organization_website}}
             </external-link>
