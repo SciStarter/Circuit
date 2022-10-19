@@ -7,7 +7,7 @@
   </b-select>
 
   <div class="flex-header">
-    <h1>Your Data Overview</h1>
+    <h1>Data Overview</h1>
   </div>
 
   <div id="current-proportion" class="labeled-gauge-ends">
@@ -171,11 +171,63 @@
       </tbody>
     </table>
 
-    <!-- !!! -->
+    <h3>Technology</h3>
+
+    <pie-chart :data="technology_pie" doughnut />
+
+    <table>
+      <thead>
+        <tr>
+          <th>Engagement By Device Type</th>
+          <th>Unique Users
+            <a v-if="technology_top_order == 'unique_users_desc'" @click="technology_top_order = 'unique_users_asc'">&bigvee;</a>
+            <a v-else-if="technology_top_order == 'unique_users_asc'" @click="technology_top_order = 'unique_users_desc'">&bigwedge;</a>
+            <a v-else @click="technology_top_order = 'unique_users_desc'">&bigcirc;</a>
+          </th>
+          <th>New Users
+            <a v-if="technology_top_order == 'new_users_desc'" @click="technology_top_order = 'new_users_asc'">&bigvee;</a>
+            <a v-else-if="technology_top_order == 'new_users_asc'" @click="technology_top_order = 'new_users_desc'">&bigwedge;</a>
+            <a v-else @click="technology_top_order = 'new_users_desc'">&bigcirc;</a>
+          </th>
+          <th>Returning Users
+            <a v-if="technology_top_order == 'returning_users_desc'" @click="technology_top_order = 'returning_users_asc'">&bigvee;</a>
+            <a v-else-if="technology_top_order == 'returning_users_asc'" @click="technology_top_order = 'returning_users_desc'">&bigwedge;</a>
+            <a v-else @click="technology_top_order = 'returning_users_desc'">&bigcirc;</a>
+          </th>
+          <th>Total Pageviews
+            <a v-if="technology_top_order == 'total_pageviews_desc'" @click="technology_top_order = 'total_pageviews_asc'">&bigvee;</a>
+            <a v-else-if="technology_top_order == 'total_pageviews_asc'" @click="technology_top_order = 'total_pageviews_desc'">&bigwedge;</a>
+            <a v-else @click="technology_top_order = 'total_pageviews_desc'">&bigcirc;</a>
+          </th>
+          <th>Unique Pageviews
+            <a v-if="technology_top_order == 'unique_pageviews_desc'" @click="technology_top_order = 'unique_pageviews_asc'">&bigvee;</a>
+            <a v-else-if="technology_top_order == 'unique_pageviews_asc'" @click="technology_top_order = 'unique_pageviews_desc'">&bigwedge;</a>
+            <a v-else @click="technology_top_order = 'unique_pageviews_desc'">&bigcirc;</a>
+          </th>
+          <th>Avg. Time
+            <a v-if="technology_top_order == 'average_time_desc'" @click="technology_top_order = 'average_time_asc'">&bigvee;</a>
+            <a v-else-if="technology_top_order == 'average_time_asc'" @click="technology_top_order = 'average_time_desc'">&bigwedge;</a>
+            <a v-else @click="technology_top_order = 'average_time_desc'">&bigcirc;</a>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="row in technology_top_sorted">
+          <td>{{row['name']}}</td> <!-- TODO make the name link to the per-state view -->
+          <td><comparison-bar :value="row['Unique Users']" :max="report[org].technology.data.max['Unique Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['New Users']" :max="report[org].technology.data.max['New Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Returning Users']" :max="report[org].technology.data.max['Returning Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Total Pageviews']" :max="report[org].technology.data.max['Total Pageviews']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Unique Pageviews']" :max="report[org].technology.data.max['Unique Pageviews']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Avg. Time']" :max="report[org].technology.data.max['Avg. Time']" color="#268699" /></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <div v-else-if="state=='traffic'">
     <h2>Traffic</h2>
+    <!-- !!! -->
   </div>
 
 </div>
@@ -270,6 +322,7 @@ export default {
                         "data": {
                             "opportunity_status": "Live and Closed",
                             "time_period": "This Month",
+                            'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
                             'mobile': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
                             'tablet': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
                             'desktop': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
@@ -286,6 +339,7 @@ export default {
             org: "Demo Org",
             engagement_top_order: 'total_views_desc',
             states_top_order: 'unique_users_desc',
+            technology_top_order: 'unique_users_desc',
         }
     },
 
@@ -324,6 +378,62 @@ export default {
                 };
 
                 ret.push(val);
+            }
+
+            return ret;
+        },
+
+        technology_tabular() {
+            const techs = ["mobile", "tablet", "desktop"]
+            let ret = [];
+
+            for(let tech of techs) {
+                const src = this.report[this.org].technology.data[tech];
+
+                const val = {
+                    "name": tech,
+                    "Unique Users": src["Unique Users"],
+                    "New Users": src["New Users"],
+                    "Returning Users": src["Returning Users"],
+                    "Total Pageviews": src["Total Pageviews"],
+                    "Unique Pageviews": src["Unique Pageviews"],
+                    "Avg. Time": src["Avg. Time"],
+                };
+
+                ret.push(val);
+            }
+
+            return ret;
+        },
+
+        technology_pie() {
+            const techs = ["mobile", "tablet", "desktop"];
+            const colors = ["#165E6F", "#7CB4BF", "#D6D6D6"];
+            const fields = ["Unique Users", "New Users", "Returning Users", "Total Pageviews", "Unique Pageviews", "Avg. Time"];
+
+            let ret = {
+                labels: techs,
+                datasets: [],
+            };
+
+            for(let field of fields) {
+                if(field !== "Unique Users") {
+                    continue;
+                }
+
+                let dataset = {
+                    label: field,
+                    hoverOffset: 4,
+                    backgroundColor: colors,
+                    data: [],
+                };
+
+                for(let tech of techs) {
+                    const src = this.report[this.org].technology.data[tech];
+                    dataset.data.push(src[field]);
+                }
+
+                ret.datasets.push(dataset);
             }
 
             return ret;
@@ -376,6 +486,37 @@ export default {
                 return this.states_tabular.slice().sort((a, b) => -cmp(a['Avg. Time'], b['Avg. Time']));
                 default:
                 return this.states_tabular;
+            }
+        },
+
+        technology_top_sorted() {
+            switch(this.technology_top_order) {
+                case "unique_users_asc":
+                return this.technology_tabular.slice().sort((a, b) => cmp(a['Unique Users'], b['Unique Users']));
+                case "unique_users_desc":
+                return this.technology_tabular.slice().sort((a, b) => -cmp(a['Unique Users'], b['Unique Users']));
+                case "new_users_asc":
+                return this.technology_tabular.slice().sort((a, b) => cmp(a['New Users'], b['New Users']));
+                case "new_users_desc":
+                return this.technology_tabular.slice().sort((a, b) => -cmp(a['New Users'], b['New Users']));
+                case "returning_users_asc":
+                return this.technology_tabular.slice().sort((a, b) => cmp(a['Returning Users'], b['Returning Users']));
+                case "returning_users_desc":
+                return this.technology_tabular.slice().sort((a, b) => -cmp(a['Returning Users'], b['Returning Users']));
+                case "total_pageviews_asc":
+                return this.technology_tabular.slice().sort((a, b) => cmp(a['Total Pageviews'], b['Total Pageviews']));
+                case "total_pageviews_desc":
+                return this.technology_tabular.slice().sort((a, b) => -cmp(a['Total Pageviews'], b['Total Pageviews']));
+                case "unique_pageviews_asc":
+                return this.technology_tabular.slice().sort((a, b) => cmp(a['Unique Pageviews'], b['Unique Pageviews']));
+                case "unique_pageviews_desc":
+                return this.technology_tabular.slice().sort((a, b) => -cmp(a['Unique Pageviews'], b['Unique Pageviews']));
+                case "average_time_asc":
+                return this.technology_tabular.slice().sort((a, b) => cmp(a['Avg. Time'], b['Avg. Time']));
+                case "average_time_desc":
+                return this.technology_tabular.slice().sort((a, b) => -cmp(a['Avg. Time'], b['Avg. Time']));
+                default:
+                return this.technology_tabular;
             }
         },
     },
