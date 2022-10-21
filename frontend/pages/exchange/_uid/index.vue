@@ -386,7 +386,9 @@ export default {
     watchQuery: true,
 
     async mounted() {
-        this.search_place = await this.$store.dispatch("get_here");
+        if(!this.search_place.near) {
+            this.search_place = await this.$store.dispatch("get_here");
+        }
     },
 
     methods: {
