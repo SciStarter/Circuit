@@ -329,8 +329,8 @@ export default {
 
     computed: {
         default_query() {
-            if(this.partner.default_query) {
-                let defaults = new URLSearchParams(this.partner.default_query);
+            if(this.exchange && this.exchange.default_query) {
+                let defaults = new URLSearchParams(this.exchange.default_query);
                 return Object.fromEntries(defaults.entries());
             }
             else {

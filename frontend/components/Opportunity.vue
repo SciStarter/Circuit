@@ -319,7 +319,7 @@
       <!--   </p> -->
       <!-- </div> -->
 
-      <div class="reviews">
+      <div class="reviews" v-if="exchange !== null">
         <div class="reviews-header">
           <h2>Reviews</h2>
           <action-button secondary @click="show_review_add = true">
