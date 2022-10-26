@@ -11,7 +11,7 @@ import STATES from "~/assets/geo/simplified-territories-usa.json"
 
 export default {
     name: "ChoroplethStates",
-    
+
     props: {
         value: {
             type: Object,
@@ -25,18 +25,18 @@ export default {
             default: "",
         },
     },
-    
+
     data() {
         return {
             map: null,
         };
     },
-    
+
     computed: {
         states() {
             const attr = this.attr;
             let states = structuredClone(STATES);
-            
+
             states.features = states.features.map(f => {
                 let val = this.value[f.properties.name];
 
@@ -51,23 +51,23 @@ export default {
 
                 return f;
             });
-            
+
             return states;
         },
-        
+
         max_participants() {
             let max = 2;
-            
+
             for(let f of this.states.features) {
                 if(f.properties.participants > max) {
                     max = f.properties.participants;
                 }
             }
-            
+
             return max;
         },
     },
-    
+
     mounted() {
         let map = this.map = new mapboxgl.Map({
             accessToken: this.$config.mapboxToken,
@@ -76,9 +76,10 @@ export default {
             center: [-98, 39],
             zoom: 2.5,
         });
-        
+
         map.on('style.load', () => {
             map.addSource('states-data', {type: 'geojson', data: this.states});
+
             map.addLayer({
                 id: 'states-fill',
                 type: 'fill',
@@ -96,30 +97,33 @@ export default {
                     'fill-opacity': 0.75,
                 },
             });
-        });
-        
-        const popup = new mapboxgl.Popup({
-            closeButton: false,
-            closeOnClick: false
-        });
-        
-        map.on('mousemove', 'states-fill', (e) => {
-            if (e.features.length > 0) {
-                const coordinates = centroid(e.features[0]).geometry.coordinates;
-                const name = e.features[0].properties.name;
-                const participants = e.features[0].properties.participants;
 
-                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            map.on('click', 'states-fill', (evt) => {
+                this.$emit('state', evt.features[0].properties.name);
+            });
+
+            const popup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: false
+            });
+
+            map.on('mousemove', 'states-fill', (e) => {
+                if (e.features.length > 0) {
+                    const coordinates = centroid(e.features[0]).geometry.coordinates;
+                    const name = e.features[0].properties.name;
+                    const participants = e.features[0].properties.participants;
+
+                    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                    }
+
+                    popup.setLngLat(coordinates).setHTML(`<strong>${name}</strong><br>Participants: ${participants}`).addTo(map);
                 }
+            });
 
-                popup.setLngLat(coordinates).setHTML(`<strong>${name}</strong><br>Participants: ${participants}`).addTo(map);
-            }
-        });
-               
- 
-        map.on('mouseleave', 'states-fill', () => {
-            popup.remove();
+            map.on('mouseleave', 'states-fill', () => {
+                popup.remove();
+            });
         });
     },
 }

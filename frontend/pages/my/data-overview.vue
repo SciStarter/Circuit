@@ -120,7 +120,19 @@
       </div>
     </div>
 
-    <choropleth-states :value="report[org].states.data.states" attr="Unique Users"/>
+    <choropleth-states v-if="selected_state === null" :value="report[org].states.data.states" attr="Unique Users" @state="select_state($event)"/>
+    <div v-else>
+      <a @click="selected_state = null">← Back to US Map</a>
+      <b-select v-model="selected_attr" placeholder="Select Data Type">
+        <option>Unique Users</option>
+        <option>New Users</option>
+        <option>Returning Users</option>
+        <option>Total Pageviews</option>
+        <option>Unique Pageviews</option>
+        <option>Avg. Time</option>
+      </b-select>
+      <activity-regional :state="selected_state" :data="selected_state_data" :attr="selected_attr" />
+    </div>
 
     <table>
       <thead>
@@ -160,13 +172,14 @@
       </thead>
       <tbody>
         <tr v-for="row in states_top_sorted">
-          <td>{{row['name']}}</td> <!-- TODO make the name link to the per-state view -->
-          <td><comparison-bar :value="row['Unique Users']" :max="report[org].states.data.max['Unique Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['New Users']" :max="report[org].states.data.max['New Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Returning Users']" :max="report[org].states.data.max['Returning Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Total Pageviews']" :max="report[org].states.data.max['Total Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Unique Pageviews']" :max="report[org].states.data.max['Unique Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Avg. Time']" :max="report[org].states.data.max['Avg. Time']" color="#268699" /></td>
+          <td v-if="selected_state === null"><a @click="select_state(row['name'])">{{row['name']}}</a></td>
+          <td v-else>{{row['name']}}</td>
+          <td><comparison-bar :value="row['Unique Users']" :max="states_max['Unique Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['New Users']" :max="states_max['New Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Returning Users']" :max="states_max['Returning Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Total Pageviews']" :max="states_max['Total Pageviews']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Unique Pageviews']" :max="states_max['Unique Pageviews']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Avg. Time']" :max="states_max['Avg. Time']" color="#268699" /></td>
         </tr>
       </tbody>
     </table>
@@ -213,7 +226,7 @@
       </thead>
       <tbody>
         <tr v-for="row in technology_top_sorted">
-          <td>{{row['name']}}</td> <!-- TODO make the name link to the per-state view -->
+          <td>{{row['name']}}</td>
           <td><comparison-bar :value="row['Unique Users']" :max="report[org].technology.data.max['Unique Users']" color="#268699" /></td>
           <td><comparison-bar :value="row['New Users']" :max="report[org].technology.data.max['New Users']" color="#268699" /></td>
           <td><comparison-bar :value="row['Returning Users']" :max="report[org].technology.data.max['Returning Users']" color="#268699" /></td>
@@ -309,9 +322,33 @@ export default {
                             "time_period": "This Month",
                             "max": {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
                             "states": {
-                                'Texas': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
-                                'California': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
-                                'Oregon': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                                'Texas': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "regional": {
+                                    'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                                    "regions": {
+                                        'Agua Dulce': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-97.910833, 27.7825]},
+                                        'Bear Creek': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-97.932778, 30.181944]},
+                                        'Blackwell': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-100.319722, 32.085556]},
+                                        'Buffalo Springs': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-101.709167, 33.532222]},
+                                    },
+                                }},
+                                'California': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "regional": {
+                                    'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                                    "regions": {
+                                        'Arcata': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-124.090556, 40.868056]},
+                                        'Buellton': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-120.193889, 34.614167]},
+                                        'Cotati': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-122.709167, 38.327778]},
+                                        'Eastvale': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-117.564167, 33.963611]},
+                                    },
+                                }},
+                                'Oregon': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "regional": {
+                                    'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                                    "regions": {
+                                        'Keizer': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-123.021944, 45.000556]},
+                                        'Monmouth': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-123.23, 44.849167]},
+                                        'Winston': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-123.4175, 43.121667]},
+                                        'Nyssa': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-116.996944, 43.879167]},
+                                    },
+                                }},
                             },
                         },
                     },
@@ -340,6 +377,8 @@ export default {
             engagement_top_order: 'total_views_desc',
             states_top_order: 'unique_users_desc',
             technology_top_order: 'unique_users_desc',
+            selected_state: null,
+            selected_attr: "Unique Users",
         }
     },
 
@@ -356,16 +395,45 @@ export default {
             return new Date(this.report[this.org].updated).toLocaleDateString();
         },
 
+        states_max() {
+            if(this.selected_state != null) {
+                return this.report[this.org].states.data.states[this.selected_state].regional.max;
+            }
+            else {
+                return this.report[this.org].states.data.max;
+            }
+        },
+
+        states_data() {
+            if(this.selected_state != null) {
+                return this.report[this.org].states.data.states[this.selected_state].regional.regions;
+            }
+            else {
+                return this.report[this.org].states.data.states;
+            }
+        },
+
+        selected_state_data() {
+            if(this.selected_state != null) {
+                return this.report[this.org].states.data.states[this.selected_state];
+            }
+            else {
+                return {};
+            }            
+        },
+
         states_tabular() {
-            const states = Object.getOwnPropertyNames(this.report[this.org].states.data.states);
             let ret = [];
+
+            const states = Object.getOwnPropertyNames(this.states_data);
+
 
             for(let state of states) {
                 if(state.startsWith("_")) {
                     continue;
                 }
 
-                const src = this.report[this.org].states.data.states[state];
+                const src = this.states_data[state];
 
                 const val = {
                     "name": state,
@@ -524,6 +592,11 @@ export default {
     methods: {
         log(msg) {
             console.log(msg);
+        },
+
+        select_state(state) {
+            console.log("selected", state);
+            this.selected_state = state;
         },
 
         save_engagement_csv() {
