@@ -6,7 +6,6 @@
       title="Find out more"
       campaign="opp-page"
       content="find-out-more"
-      new-tab
       >
       <link-icon /> Find Out More
     </external-link>
@@ -155,7 +154,6 @@
           <div class="info weblink" v-if="opportunity.partner_opp_url || opportunity.organization_website">
             <link-icon />
             <external-link
-              new-tab
               :href="opportunity.partner_opp_url || opportunity.organization_website"
               title="Find out more"
               campaign="opp-page"
@@ -213,7 +211,6 @@
 
           <div class="opp-action-btn stronger" v-if="opportunity.partner_opp_url">
             <external-link
-              new-tab
               :href="opportunity.partner_opp_url"
               title="Find out more"
               campaign="opp-page"
@@ -261,14 +258,14 @@
       <div class="partner-and-org">
         <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
           <figcaption>Provided By</figcaption>
-          <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on" new-tab>
+          <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on">
             <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name" :title="opportunity.partner_name">
             <span v-else>{{ opportunity.partner_name }}</span>
           </component>
         </figure>
         <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
           <figcaption>Hosted By</figcaption>
-          <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" campaign="opp-page" content="hosted-by" new-tab>
+          <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" campaign="opp-page" content="hosted-by">
             <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name" :title="opportunity.organization_name">
             <span v-else>{{ opportunity.organization_name }}</span>
           </component>
@@ -319,7 +316,7 @@
       <!--   </p> -->
       <!-- </div> -->
 
-      <div class="reviews">
+      <div class="reviews" v-if="exchange === null">
         <div class="reviews-header">
           <h2>Reviews</h2>
           <action-button secondary @click="show_review_add = true">

@@ -107,8 +107,8 @@
             </ul>
           </div>
           <div v-else class="not-authenticated">
-            <nuxt-link class="action-button primary" :to="{name: 'login', query: {next: $route.name, ...$route.query}}">Login</nuxt-link>
-            <nuxt-link class="action-button primary" :to="{name: 'signup', query: {next: $route.name, ...$route.query}}">Create Account</nuxt-link>
+            <nuxt-link class="action-button primary" :to="{name: 'login', query: {next: $route.fullPath}}">Login</nuxt-link>
+            <nuxt-link class="action-button primary" :to="{name: 'signup', query: {next: $route.fullPath}}">Create Account</nuxt-link>
             <!-- <action-button primary @click="show_login = true">
               Login
             </action-button>
@@ -286,7 +286,7 @@
 
       <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
         <div class="card">
-          <login-form @close="show_login=false" @signup="show_login=false;show_signup=true;" :next="$route.path" :next_query="$route.query" in-modal>
+          <login-form @close="show_login=false" @signup="show_login=false;show_signup=true;" :next="$route.path == 'slug' ? $route.params.slug : $route.path" :next_query="$route.query" in-modal>
             <dynamic-block group="login-modal" item="standard" class="content" />
           </login-form>
         </div>
@@ -294,7 +294,7 @@
 
       <b-modal v-model="show_signup" :width="640" aria-role="dialog" aria-label="Sign up" aria-modal>
         <div class="card">
-          <signup-form @close="show_signup=false" @login="show_signup=false;show_login=true;" :next="$route.path" :next_query="$route.query" in-modal>
+          <signup-form @close="show_signup=false" @login="show_signup=false;show_login=true;" :next="$route.path == 'slug' ? $route.params.slug : $route.path" :next_query="$route.query" in-modal>
             <dynamic-block group="signup-modal" item="standard" class="content" />
           </signup-form>
         </div>

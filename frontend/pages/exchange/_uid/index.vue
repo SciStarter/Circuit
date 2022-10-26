@@ -329,8 +329,8 @@ export default {
 
     computed: {
         default_query() {
-            if(this.partner.default_query) {
-                let defaults = new URLSearchParams(this.partner.default_query);
+            if(this.exchange && this.exchange.default_query) {
+                let defaults = new URLSearchParams(this.exchange.default_query);
                 return Object.fromEntries(defaults.entries());
             }
             else {
@@ -386,7 +386,9 @@ export default {
     watchQuery: true,
 
     async mounted() {
-        this.search_place = await this.$store.dispatch("get_here");
+        if(!this.search_place.near) {
+            this.search_place = await this.$store.dispatch("get_here");
+        }
     },
 
     methods: {

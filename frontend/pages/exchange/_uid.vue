@@ -25,6 +25,11 @@ export default {
             exterior = await context.$axios.$get(
                 '/api/ui/organization/' + context.params.uid + '/public',
             );
+
+            let split = context.route.fullPath.indexOf('?');
+            if(split > -1) {
+                exterior.default_query = context.route.fullPath.slice(split + 1);
+            }
         }
 
         return {
