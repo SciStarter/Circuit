@@ -628,6 +628,18 @@ pub struct OpportunityExterior {
     pub partner: Uuid, // uid of the Partner entry which controls this entry
 }
 
+impl OpportunityExterior {
+    pub fn into_reference(self) -> OpportunityReference {
+        OpportunityReference {
+            uid: self.uid,
+            slug: self.slug,
+            title: self.title,
+            image_url: self.image_url,
+            short_desc: self.short_desc,
+        }
+    }
+}
+
 impl std::fmt::Debug for OpportunityExterior {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(

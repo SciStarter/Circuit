@@ -1,26 +1,25 @@
 <template>
 <div class="your-data-overview snm-container">
-  <b-select v-if="available_orgs.length > 1" v-model="org" placeholder="Select Organization">
-    <option v-for="org_name in available_orgs" :value="org_name" :key="org_name">
-      {{org_name}}
-    </option>
-  </b-select>
-
   <div class="flex-header">
-    <h1>Data Overview</h1>
+    <h1>Opportunity Data Explorer</h1>
   </div>
 
-  <div id="current-proportion" class="labeled-gauge-ends">
-    <progress-gauge class="gauge" :value="report[org].total_opportunities - report[org].current_opportunities" :max="report[org].total_opportunities" reverse/>
-    <div class="labels">
-      <div class="stack">
-        <label>{{report[org].total_opportunities}}</label>
-        <small>Opportunities<br>Total on SNM</small>
-      </div>
-      <div class="stack">
-        <label>{{report[org].current_opportunities}}</label>
-        <small>Opportunities<br>Currently Live</small>
-      </div>
+  <div class="filters">
+    <div class="stack">
+      <label>Opportunity</label>
+      <b-select :value="current_opp" @input="log('TBD download from server')">
+        <option v-for="opp in opps" :key="opp.id" :value="opp">
+          {{opp.title}}
+        </option>
+      </b-select>
+    </div>
+    <div class="stack">
+      <label>Time Period</label>
+      <b-select :value="report[org].engagement.data.time_period" @input="log('TBD download from server')">
+        <option v-for="period in report[org].engagement.time_periods" :key="period" :value="period">
+          {{period}}
+        </option>
+      </b-select>
     </div>
   </div>
 
@@ -36,28 +35,6 @@
 
   <div v-if="state=='engagement'">
     <h2>Engagement</h2>
-
-    <div class="filters">
-      <div class="stack">
-        <label>Opportunity Status</label>
-        <b-select :value="report[org].engagement.data.opportunity_status" @input="log('TBD download from server')">
-          <option v-for="status in report[org].engagement.opportunity_statuses" :key="status" :value="status">
-            {{status}}
-          </option>
-        </b-select>
-      </div>
-      <div class="stack">
-        <label>Time Period</label>
-        <b-select :value="report[org].engagement.data.time_period" @input="log('TBD download from server')">
-          <option v-for="period in report[org].engagement.time_periods" :key="period" :value="period">
-            {{period}}
-          </option>
-        </b-select>
-      </div>
-      <div class="extra">
-        <a @click="save_engagement_csv">export csv</a>
-      </div>
-    </div>
 
     <line-chart
       :rows="report[org].engagement.data.chart"
@@ -340,7 +317,7 @@ function cmp(a, b) {
 }
 
 export default {
-    name: "MyDataOverview",
+    name: "MyOpportunityDataExplorer",
 
     httpHeaders() {
         return {
@@ -353,6 +330,7 @@ export default {
 
     async asyncData(context) {
         const user = await context.store.dispatch('get_user');
+        const opps = await context.$axios.$get('/api/ui/finder/search?mine=true&sort=alphabetical&per_page=4294967295&refs=true', context.store.state.auth);
 
         if(!user.authenticated) {
             context.error({
@@ -362,6 +340,8 @@ export default {
         }
 
         return {
+            opps: opps.matches,
+            current_opp: opps.matches.length ? opps.matches[0] : {},
             report: {
                 "Demo Org": {
                     "uid": 'c36bd22f-f530-4469-8c9e-b919951e3486',
