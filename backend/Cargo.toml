@@ -57,4 +57,4 @@ bytes = { version = "1.2.1", features = ["serde"] }
 counter = "0.5.6"
 clap = { version = "4.0.8", features = ["derive"] }
 csv = "1.1.6"
-sailfish = { git = "https://github.com/rust-sailfish/sailfish" } # temporary, until sailfish > 0.4.0 is released
+sailfish = "0.5.0"
