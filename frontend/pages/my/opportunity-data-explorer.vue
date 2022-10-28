@@ -15,8 +15,8 @@
     </div>
     <div class="stack">
       <label>Time Period</label>
-      <b-select :value="report[org].engagement.data.time_period" @input="log('TBD download from server')">
-        <option v-for="period in report[org].engagement.time_periods" :key="period" :value="period">
+      <b-select :value="report.engagement.data.time_period" @input="log('TBD download from server')">
+        <option v-for="period in report.engagement.time_periods" :key="period" :value="period">
           {{period}}
         </option>
       </b-select>
@@ -28,46 +28,36 @@
       <li><a class="tab-link" :class="{'active':state=='engagement'}" @click="state='engagement'">Engagement</a></li>
       <li><a class="tab-link" :class="{'active':state=='states'}" @click="state='states'">Audience</a></li>
       <li><a class="tab-link" :class="{'active':state=='traffic'}" @click="state='traffic'">Traffic</a></li>
+      <li><a class="tab-link" :class="{'active':state=='overlap'}" @click="state='overlap'">Engagement Overlap</a></li>
     </ul>
   </div>
 
   <aside>Date updated: {{updated_local}}</aside>
 
   <div v-if="state=='engagement'">
-    <h2>Engagement</h2>
+    <h2>{{current_opp.title}}</h2>
+
+    <div>{{ report.engagement.data.bars.self["Views"] }} Page Views</div>
 
     <line-chart
-      :rows="report[org].engagement.data.chart"
+      :rows="report.engagement.data.chart"
       :xaxis="d => new Date(d.date)"
-      :yaxes="['Views', 'Unique', 'Clicks to Website']"
-      :colors="['#268699', '#BFDCE2', '#FABF40']"
+      :yaxes="['Views', 'Unique']"
+      :colors="['#268699', '#BFDCE2']"
       />
 
-    <table>
-      <thead>
-        <tr>
-          <th>Top Performing Opportunities</th>
-          <th>Total Views
-            <a v-if="engagement_top_order == 'total_views_desc'" @click="engagement_top_order = 'total_views_asc'">&bigvee;</a>
-            <a v-else-if="engagement_top_order == 'total_views_asc'" @click="engagement_top_order = 'total_views_desc'">&bigwedge;</a>
-            <a v-else @click="engagement_top_order = 'total_views_desc'">&bigcirc;</a>
-          </th>
-          <th>Clicks to Website
-            <a v-if="engagement_top_order == 'clicks_desc'" @click="engagement_top_order = 'clicks_asc'">&bigvee;</a>
-            <a v-else-if="engagement_top_order == 'clicks_asc'" @click="engagement_top_order = 'clicks_desc'">&bigwedge;</a>
-            <a v-else @click="engagement_top_order = 'clicks_desc'">&bigcirc;</a>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in engagement_top_sorted">
-          <td>{{row['name']}}</td>
-          <td><comparison-bar :value="row['Views']" :max="report[org].engagement.data.max['Views']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Clicks to Website']" :max="report[org].engagement.data.max['Clicks to Website']" color="#FABF40" /></td>
-        </tr>
-      </tbody>
-    </table>
+    <div>{{ report.engagement.data.bars.self["Clicks to Website"] }} Clicks To Your Website</div>
 
+    <strong>Conversion Rates</strong>
+    <div class="conversion-rate">
+      <comparison-bar :value="report.engagement.data.bars.self['Views'] > 0 ? report.engagement.data.bars.self['Clicks to Website'] / report.engagement.data.bars.self['Views'] : 0" :max="1.0" color="#165E6F" background="#DEDEDE" width="100%" height="2rem" />
+    </div>
+    <div class="conversion-rate">
+      <comparison-bar :value="report.engagement.data.bars.median['Views'] > 0 ? report.engagement.data.bars.median['Clicks to Website'] / report.engagement.data.bars.median['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" />
+    </div>
+    <div class="conversion-rate">
+      <comparison-bar :value="report.engagement.data.bars.mean['Views'] > 0 ? report.engagement.data.bars.mean['Clicks to Website'] / report.engagement.data.bars.mean['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" />
+    </div>
   </div>
 
   <div v-else-if="state=='states'">
@@ -81,23 +71,23 @@
     <div class="filters">
       <div class="stack">
         <label>Opportunity Status</label>
-        <b-select :value="report[org].states.data.opportunity_status" @input="log('TBD download from server')">
-          <option v-for="status in report[org].states.opportunity_statuses" :key="status" :value="status">
+        <b-select :value="report.states.data.opportunity_status" @input="log('TBD download from server')">
+          <option v-for="status in report.states.opportunity_statuses" :key="status" :value="status">
             {{status}}
           </option>
         </b-select>
       </div>
       <div class="stack">
         <label>Time Period</label>
-        <b-select :value="report[org].states.data.time_period" @input="log('TBD download from server')">
-          <option v-for="period in report[org].states.time_periods" :key="period" :value="period">
+        <b-select :value="report.states.data.time_period" @input="log('TBD download from server')">
+          <option v-for="period in report.states.time_periods" :key="period" :value="period">
             {{period}}
           </option>
         </b-select>
       </div>
     </div>
 
-    <choropleth-states v-if="selected_state === null" :value="report[org].states.data.states" attr="Unique Users" @state="select_state($event)"/>
+    <choropleth-states v-if="selected_state === null" :value="report.states.data.states" attr="Unique Users" @state="select_state($event)"/>
     <div v-else>
       <a @click="selected_state = null">← Back to US Map</a>
       <b-select v-model="selected_attr" placeholder="Select Data Type">
@@ -204,12 +194,12 @@
       <tbody>
         <tr v-for="row in technology_top_sorted">
           <td>{{row['name']}}</td>
-          <td><comparison-bar :value="row['Unique Users']" :max="report[org].technology.data.max['Unique Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['New Users']" :max="report[org].technology.data.max['New Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Returning Users']" :max="report[org].technology.data.max['Returning Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Total Pageviews']" :max="report[org].technology.data.max['Total Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Unique Pageviews']" :max="report[org].technology.data.max['Unique Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Avg. Time']" :max="report[org].technology.data.max['Avg. Time']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Unique Users']" :max="report.technology.data.max['Unique Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['New Users']" :max="report.technology.data.max['New Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Returning Users']" :max="report.technology.data.max['Returning Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Total Pageviews']" :max="report.technology.data.max['Total Pageviews']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Unique Pageviews']" :max="report.technology.data.max['Unique Pageviews']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Avg. Time']" :max="report.technology.data.max['Avg. Time']" color="#268699" /></td>
         </tr>
       </tbody>
     </table>
@@ -221,16 +211,16 @@
     <div class="filters">
       <div class="stack">
         <label>Opportunity Status</label>
-        <b-select :value="report[org].engagement.data.opportunity_status" @input="log('TBD download from server')">
-          <option v-for="status in report[org].engagement.opportunity_statuses" :key="status" :value="status">
+        <b-select :value="report.engagement.data.opportunity_status" @input="log('TBD download from server')">
+          <option v-for="status in report.engagement.opportunity_statuses" :key="status" :value="status">
             {{status}}
           </option>
         </b-select>
       </div>
       <div class="stack">
         <label>Time Period</label>
-        <b-select :value="report[org].engagement.data.time_period" @input="log('TBD download from server')">
-          <option v-for="period in report[org].engagement.time_periods" :key="period" :value="period">
+        <b-select :value="report.engagement.data.time_period" @input="log('TBD download from server')">
+          <option v-for="period in report.engagement.time_periods" :key="period" :value="period">
             {{period}}
           </option>
         </b-select>
@@ -241,13 +231,13 @@
     </div>
 
     <line-chart
-      :rows="report[org].traffic.data.chart"
+      :rows="report.traffic.data.chart"
       :xaxis="d => new Date(d.date)"
       :yaxes="['Unique', 'New', 'Returning']"
       :colors="['#268699', '#868686', '#BFDCE2']"
       />
 
-    <pie-chart :data="report[org].traffic.data.pie" />
+    <pie-chart :data="report.traffic.data.pie" />
 
     <table>
       <thead>
@@ -288,17 +278,29 @@
       <tbody>
         <tr v-for="row in traffic_top_sorted">
           <td>{{row['name']}}</td>
-          <td><comparison-bar :value="row['Unique Users']" :max="report[org].traffic.data.max['Unique Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['New Users']" :max="report[org].traffic.data.max['New Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Returning Users']" :max="report[org].traffic.data.max['Returning Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Total Pageviews']" :max="report[org].traffic.data.max['Total Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Unique Pageviews']" :max="report[org].traffic.data.max['Unique Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Avg. Time']" :max="report[org].traffic.data.max['Avg. Time']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Unique Users']" :max="report.traffic.data.max['Unique Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['New Users']" :max="report.traffic.data.max['New Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Returning Users']" :max="report.traffic.data.max['Returning Users']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Total Pageviews']" :max="report.traffic.data.max['Total Pageviews']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Unique Pageviews']" :max="report.traffic.data.max['Unique Pageviews']" color="#268699" /></td>
+          <td><comparison-bar :value="row['Avg. Time']" :max="report.traffic.data.max['Avg. Time']" color="#268699" /></td>
         </tr>
       </tbody>
     </table>
   </div>
+  <div v-else-if="state=='overlap'">
+    <h2>Engagement Overlap</h2>
+    <div>
+      <b-select :value="report.overlap.data.engagement_type" @input="log('TBD download from server')">
+        <option v-for="e_type in report.overlap.engagement_types" :key="e_type" :value="e_type">
+          {{e_type}}
+        </option>
+      </b-select>
+    </div>
 
+    <!-- !!! -->
+      
+  </div>
 </div>
 </template>
 
@@ -343,127 +345,132 @@ export default {
             opps: opps.matches,
             current_opp: opps.matches.length ? opps.matches[0] : {},
             report: {
-                "Demo Org": {
-                    "uid": 'c36bd22f-f530-4469-8c9e-b919951e3486',
-                    "updated": "2022-07-28T14:33:27.12343242-07:00",
-                    "total_opportunities": 23,
-                    "current_opportunities": 18,
-                    "engagement": {
-                        "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
-                        "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
-                        "data": {
-                            "opportunity_status": "Live and Closed",
-                            "time_period": "This Month",
-                            "begin": "2022-07-27",
-                            "end": "2022-07-29",
-                            "columns": ["Views" , "Unique", "Clicks to Website"],
-                            "totals": {"Views": 36, "Unique": 21, "Clicks to Website": 12},
-                            "max": {"Views": 432, "Unique": 234, "Clicks to Website": 210},
-                            "chart": [
-                                {"date": "2022-07-29", "Views": 15, "Unique": 8, "Clicks to Website": 4},
-                                {"date": "2022-07-28", "Views": 8, "Unique": 2, "Clicks to Website": 7},
-                                {"date": "2022-07-27", "Views": 13, "Unique": 11, "Clicks to Website": 1},
-                            ],
-                            "table": [
-                                {"name": "Test Opp 1", "slug": "test-opp-1", "Views": 432, "Unique": 234, "Clicks to Website": 119},
-                                {"name": "Test Opp 2", "slug": "test-opp-2", "Views": 321, "Unique": 78, "Clicks to Website": 210},
-                                {"name": "Test Opp 3", "slug": "test-opp-3", "Views": 210, "Unique": 112, "Clicks to Website": 87},
-                                {"name": "Test Opp 4", "slug": "test-opp-4", "Views": 122, "Unique": 34, "Clicks to Website": 12},
-                                {"name": "Test Opp 5", "slug": "test-opp-5", "Views": 97, "Unique": 12, "Clicks to Website": 4},
-                                {"name": "Test Opp 6", "slug": "test-opp-6", "Views": 15, "Unique": 2, "Clicks to Website": 1},
-                            ],
+                "uid": 'c36bd22f-f530-4469-8c9e-b919951e3486',
+                "updated": "2022-07-28T14:33:27.12343242-07:00",
+                "total_opportunities": 23,
+                "current_opportunities": 18,
+                "engagement": {
+                    "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
+                    "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
+                    "data": {
+                        "opportunity_status": "Live and Closed",
+                        "time_period": "This Month",
+                        "begin": "2022-07-27",
+                        "end": "2022-07-29",
+                        "columns": ["Views" , "Unique", "Clicks to Website"],
+                        "chart": [
+                            {"date": "2022-07-29", "Views": 15, "Unique": 8, "Clicks to Website": 4},
+                            {"date": "2022-07-28", "Views": 8, "Unique": 2, "Clicks to Website": 7},
+                            {"date": "2022-07-27", "Views": 13, "Unique": 11, "Clicks to Website": 1},
+                        ],
+                        "bars": {
+                            "self": {"Views": 432, "Unique": 234, "Clicks to Website": 119},
+                            "mean": {"Views": 321, "Unique": 78, "Clicks to Website": 210},
+                            "median": {"Views": 210, "Unique": 112, "Clicks to Website": 87},
                         },
                     },
+                },
 
-                    "states": {
-                        "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
-                        "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
-                        "data": {
-                            "opportunity_status": "Live and Closed",
-                            "time_period": "This Month",
-                            "begin": "2022-07-27",
-                            "end": "2022-07-29",
-                            "max": {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                            "states": {
-                                'Texas': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "regional": {
-                                    'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                                    "regions": {
-                                        'Agua Dulce': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-97.910833, 27.7825]},
-                                        'Bear Creek': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-97.932778, 30.181944]},
-                                        'Blackwell': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-100.319722, 32.085556]},
-                                        'Buffalo Springs': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-101.709167, 33.532222]},
-                                    },
-                                }},
-                                'California': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "regional": {
-                                    'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                                    "regions": {
-                                        'Arcata': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-124.090556, 40.868056]},
-                                        'Buellton': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-120.193889, 34.614167]},
-                                        'Cotati': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-122.709167, 38.327778]},
-                                        'Eastvale': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-117.564167, 33.963611]},
-                                    },
-                                }},
-                                'Oregon': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "regional": {
-                                    'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                                    "regions": {
-                                        'Keizer': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-123.021944, 45.000556]},
-                                        'Monmouth': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-123.23, 44.849167]},
-                                        'Winston': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-123.4175, 43.121667]},
-                                        'Nyssa': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-116.996944, 43.879167]},
-                                    },
-                                }},
-                            },
+                "states": {
+                    "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
+                    "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
+                    "data": {
+                        "opportunity_status": "Live and Closed",
+                        "time_period": "This Month",
+                        "begin": "2022-07-27",
+                        "end": "2022-07-29",
+                        "max": {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                        "states": {
+                            'Texas': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "regional": {
+                                'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                                "regions": {
+                                    'Agua Dulce': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-97.910833, 27.7825]},
+                                    'Bear Creek': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-97.932778, 30.181944]},
+                                    'Blackwell': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-100.319722, 32.085556]},
+                                    'Buffalo Springs': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-101.709167, 33.532222]},
+                                },
+                            }},
+                            'California': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "regional": {
+                                'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                                "regions": {
+                                    'Arcata': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-124.090556, 40.868056]},
+                                    'Buellton': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-120.193889, 34.614167]},
+                                    'Cotati': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-122.709167, 38.327778]},
+                                    'Eastvale': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-117.564167, 33.963611]},
+                                },
+                            }},
+                            'Oregon': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "regional": {
+                                'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                                "regions": {
+                                    'Keizer': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-123.021944, 45.000556]},
+                                    'Monmouth': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-123.23, 44.849167]},
+                                    'Winston': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-123.4175, 43.121667]},
+                                    'Nyssa': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-116.996944, 43.879167]},
+                                },
+                            }},
                         },
                     },
+                },
 
-                    "technology": {
-                        "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
-                        "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
-                        "data": {
-                            "opportunity_status": "Live and Closed",
-                            "time_period": "This Month",
-                            "begin": "2022-07-27",
-                            "end": "2022-07-29",
-                            'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                            'mobile': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
-                            'tablet': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
-                            'desktop': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                        },
+                "technology": {
+                    "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
+                    "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
+                    "data": {
+                        "opportunity_status": "Live and Closed",
+                        "time_period": "This Month",
+                        "begin": "2022-07-27",
+                        "end": "2022-07-29",
+                        'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                        'mobile': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
+                        'tablet': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
+                        'desktop': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
                     },
+                },
 
-                    "traffic": {
-                        "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
-                        "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
-                        "data": {
-                            "opportunity_status": "Live and Closed",
-                            "time_period": "This Month",
-                            "begin": "2022-07-27",
-                            "end": "2022-07-29",
-                            "columns": ["Unique", "New", "Returning"],
-                            "max": {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                            "chart": [
-                                {"date": "2022-07-29", "Unique": 15, "New": 8, "Returning": 4},
-                                {"date": "2022-07-28", "Unique": 8, "New": 2, "Returning": 7},
-                                {"date": "2022-07-27", "Unique": 13, "New": 11, "Returning": 1},
-                            ],
-                            "pie": {
-                                "labels": ["Direct", "Payed Search", "Display", "Affiliates", "Other"],
-                                "datasets": [{
-                                    "label": "Referrers by Type",
-                                    "hoverOffset": 4,
-                                    "backgroundColor": ["#387ab5", "#5da136", "#cd4c24", "#e7e93c", "#5abdda"],
-                                    "data": [202, 15, 11, 0, 0],
-                                }],
-                            },
-                            "table": [
-                                {"name": "Test Ref 1", "type": "Direct", "Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
-                                {"name": "Test Ref 2", "type": "Direct", "Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
-                                {"name": "Test Ref 3", "type": "Direct", "Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                                {"name": "Test Ref 4", "type": "Paid Search", "Unique Users": 3, "New Users": 34, "Returning Users": 32, "Total Pageviews": 23, "Unique Pageviews": 22, "Avg. Time": 32},
-                                {"name": "Test Ref 5", "type": "Paid Search", "Unique Users": 12, "New Users": 14, "Returning Users": 32, "Total Pageviews": 23, "Unique Pageviews": 32, "Avg. Time": 12},
-                                {"name": "Test Ref 6", "type": "Display", "Unique Users": 11, "New Users": 13, "Returning Users": 33, "Total Pageviews": 22, "Unique Pageviews": 32, "Avg. Time": 13},
-                            ],
+                "traffic": {
+                    "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
+                    "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
+                    "data": {
+                        "opportunity_status": "Live and Closed",
+                        "time_period": "This Month",
+                        "begin": "2022-07-27",
+                        "end": "2022-07-29",
+                        "columns": ["Unique", "New", "Returning"],
+                        "max": {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                        "chart": [
+                            {"date": "2022-07-29", "Unique": 15, "New": 8, "Returning": 4},
+                            {"date": "2022-07-28", "Unique": 8, "New": 2, "Returning": 7},
+                            {"date": "2022-07-27", "Unique": 13, "New": 11, "Returning": 1},
+                        ],
+                        "pie": {
+                            "labels": ["Direct", "Payed Search", "Display", "Affiliates", "Other"],
+                            "datasets": [{
+                                "label": "Referrers by Type",
+                                "hoverOffset": 4,
+                                "backgroundColor": ["#387ab5", "#5da136", "#cd4c24", "#e7e93c", "#5abdda"],
+                                "data": [202, 15, 11, 0, 0],
+                            }],
                         },
+                        "table": [
+                            {"name": "Test Ref 1", "type": "Direct", "Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
+                            {"name": "Test Ref 2", "type": "Direct", "Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
+                            {"name": "Test Ref 3", "type": "Direct", "Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
+                            {"name": "Test Ref 4", "type": "Paid Search", "Unique Users": 3, "New Users": 34, "Returning Users": 32, "Total Pageviews": 23, "Unique Pageviews": 22, "Avg. Time": 32},
+                            {"name": "Test Ref 5", "type": "Paid Search", "Unique Users": 12, "New Users": 14, "Returning Users": 32, "Total Pageviews": 23, "Unique Pageviews": 32, "Avg. Time": 12},
+                            {"name": "Test Ref 6", "type": "Display", "Unique Users": 11, "New Users": 13, "Returning Users": 33, "Total Pageviews": 22, "Unique Pageviews": 32, "Avg. Time": 13},
+                        ],
+                    },
+                },
+
+                "overlap": {
+                    "engagement_types": ["Views", "Unique", "Clicks to Website"],
+                    "data": {
+                        "engagement_type": "Views",
+                        "table": [
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Jellicle Dogs", "activity_types": ["science_slam", "service"], "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                        ]
                     },
                 },
             },
@@ -474,7 +481,6 @@ export default {
         return {
             state: 'engagement',
             org: "Demo Org",
-            engagement_top_order: 'total_views_desc',
             states_top_order: 'unique_users_desc',
             technology_top_order: 'unique_users_desc',
             traffic_top_order: 'unique_users_desc',
@@ -493,34 +499,34 @@ export default {
         },
 
         updated_local() {
-            return new Date(this.report[this.org].updated).toLocaleDateString();
+            return new Date(this.report.updated).toLocaleDateString();
         },
 
         states_max() {
             if(this.selected_state != null) {
-                return this.report[this.org].states.data.states[this.selected_state].regional.max;
+                return this.report.states.data.states[this.selected_state].regional.max;
             }
             else {
-                return this.report[this.org].states.data.max;
+                return this.report.states.data.max;
             }
         },
 
         states_data() {
             if(this.selected_state != null) {
-                return this.report[this.org].states.data.states[this.selected_state].regional.regions;
+                return this.report.states.data.states[this.selected_state].regional.regions;
             }
             else {
-                return this.report[this.org].states.data.states;
+                return this.report.states.data.states;
             }
         },
 
         selected_state_data() {
             if(this.selected_state != null) {
-                return this.report[this.org].states.data.states[this.selected_state];
+                return this.report.states.data.states[this.selected_state];
             }
             else {
                 return {};
-            }            
+            }
         },
 
         states_tabular() {
@@ -557,7 +563,7 @@ export default {
             let ret = [];
 
             for(let tech of techs) {
-                const src = this.report[this.org].technology.data[tech];
+                const src = this.report.technology.data[tech];
 
                 const val = {
                     "name": tech,
@@ -598,7 +604,7 @@ export default {
                 };
 
                 for(let tech of techs) {
-                    const src = this.report[this.org].technology.data[tech];
+                    const src = this.report.technology.data[tech];
                     dataset.data.push(src[field]);
                 }
 
@@ -606,25 +612,6 @@ export default {
             }
 
             return ret;
-        },
-
-        engagement_top_sorted() {
-            switch(this.engagement_top_order) {
-                case "total_views_desc":
-                return this.report[this.org].engagement.data.table.slice().sort((a, b) => -cmp(a['Views'], b['Views']));
-                case "total_views_asc":
-                return this.report[this.org].engagement.data.table.slice().sort((a, b) => cmp(a['Views'], b['Views']));
-                case "unique_views_desc":
-                return this.report[this.org].engagement.data.table.slice().sort((a, b) => -cmp(a['Unique'], b['Unique']));
-                case "unique_views_asc":
-                return this.report[this.org].engagement.data.table.slice().sort((a, b) => cmp(a['Unique'], b['Unique']));
-                case "clicks_desc":
-                return this.report[this.org].engagement.data.table.slice().sort((a, b) => -cmp(a['Clicks to Website'], b['Clicks to Website']));
-                case "clicks_asc":
-                return this.report[this.org].engagement.data.table.slice().sort((a, b) => cmp(a['Clicks to Website'], b['Clicks to Website']));
-                default:
-                return this.report[this.org].engagement.data.table;
-            }
         },
 
         states_top_sorted() {
@@ -692,31 +679,31 @@ export default {
         traffic_top_sorted() {
             switch(this.traffic_top_order) {
                 case "unique_users_asc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => cmp(a['Unique Users'], b['Unique Users']));
+                return this.report.traffic.data.table.slice().sort((a, b) => cmp(a['Unique Users'], b['Unique Users']));
                 case "unique_users_desc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => -cmp(a['Unique Users'], b['Unique Users']));
+                return this.report.traffic.data.table.slice().sort((a, b) => -cmp(a['Unique Users'], b['Unique Users']));
                 case "new_users_asc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => cmp(a['New Users'], b['New Users']));
+                return this.report.traffic.data.table.slice().sort((a, b) => cmp(a['New Users'], b['New Users']));
                 case "new_users_desc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => -cmp(a['New Users'], b['New Users']));
+                return this.report.traffic.data.table.slice().sort((a, b) => -cmp(a['New Users'], b['New Users']));
                 case "returning_users_asc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => cmp(a['Returning Users'], b['Returning Users']));
+                return this.report.traffic.data.table.slice().sort((a, b) => cmp(a['Returning Users'], b['Returning Users']));
                 case "returning_users_desc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => -cmp(a['Returning Users'], b['Returning Users']));
+                return this.report.traffic.data.table.slice().sort((a, b) => -cmp(a['Returning Users'], b['Returning Users']));
                 case "total_pageviews_asc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => cmp(a['Total Pageviews'], b['Total Pageviews']));
+                return this.report.traffic.data.table.slice().sort((a, b) => cmp(a['Total Pageviews'], b['Total Pageviews']));
                 case "total_pageviews_desc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => -cmp(a['Total Pageviews'], b['Total Pageviews']));
+                return this.report.traffic.data.table.slice().sort((a, b) => -cmp(a['Total Pageviews'], b['Total Pageviews']));
                 case "unique_pageviews_asc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => cmp(a['Unique Pageviews'], b['Unique Pageviews']));
+                return this.report.traffic.data.table.slice().sort((a, b) => cmp(a['Unique Pageviews'], b['Unique Pageviews']));
                 case "unique_pageviews_desc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => -cmp(a['Unique Pageviews'], b['Unique Pageviews']));
+                return this.report.traffic.data.table.slice().sort((a, b) => -cmp(a['Unique Pageviews'], b['Unique Pageviews']));
                 case "average_time_asc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => cmp(a['Avg. Time'], b['Avg. Time']));
+                return this.report.traffic.data.table.slice().sort((a, b) => cmp(a['Avg. Time'], b['Avg. Time']));
                 case "average_time_desc":
-                return this.report[this.org].traffic.data.table.slice().sort((a, b) => -cmp(a['Avg. Time'], b['Avg. Time']));
+                return this.report.traffic.data.table.slice().sort((a, b) => -cmp(a['Avg. Time'], b['Avg. Time']));
                 default:
-                return this.report[this.org].traffic.data.table;
+                return this.report.traffic.data.table;
             }
         },
     },
@@ -732,7 +719,7 @@ export default {
         },
 
         save_engagement_csv() {
-            let structured = this.report[this.org].engagement.data.chart;
+            let structured = this.report.engagement.data.chart;
 
             if(!structured || !structured.length || structured.length <= 0) {
                 this.$buefy.dialog.alert({
@@ -750,14 +737,14 @@ export default {
             }
 
             this.$save_table_csv(
-                this.org + ' engagement ' + this.report[this.org].engagement.data.begin + ' - ' + this.report[this.org].engagement.data.end,
-                ['date', ...this.report[this.org].engagement.data.columns],
+                this.org + ' engagement ' + this.report.engagement.data.begin + ' - ' + this.report.engagement.data.end,
+                ['date', ...this.report.engagement.data.columns],
                 structured
             );
         },
 
         save_traffic_csv() {
-            let structured = this.report[this.org].traffic.data.chart;
+            let structured = this.report.traffic.data.chart;
 
             if(!structured || !structured.length || structured.length <= 0) {
                 this.$buefy.dialog.alert({
@@ -775,8 +762,8 @@ export default {
             }
 
             this.$save_table_csv(
-                this.org + ' traffic ' + this.report[this.org].traffic.data.begin + ' - ' + this.report[this.org].traffic.data.end,
-                ['date', ...this.report[this.org].traffic.data.columns],
+                this.org + ' traffic ' + this.report.traffic.data.begin + ' - ' + this.report.traffic.data.end,
+                ['date', ...this.report.traffic.data.columns],
                 structured
             );
         },
@@ -799,7 +786,8 @@ h2 {
     text-align: left;
     font: normal normal bold 24px/28px Fira Sans;
     letter-spacing: 0px;
-    color: #1A1A1A;
+    color: #165E6F;
+    font-weight: bold;
 }
 
 h3 {
@@ -891,6 +879,10 @@ aside {
     >.extra {
         margin-left: auto;
     }
+}
+
+.conversion-rate {
+    margin: 1rem;
 }
 
 #current-proportion {

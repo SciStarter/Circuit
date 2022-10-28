@@ -98,6 +98,26 @@
                 </nuxt-link>
               </li>
               <li class="mobile-only">
+                <nuxt-link v-if="owner" to="/my/data-overview">
+                  <my-opportunities-icon class="menu-icon" /> Your Data Overview
+                </nuxt-link>
+              </li>
+              <li class="mobile-only">
+                <nuxt-link v-if="owner" to="/my/hosts-explorer">
+                  <my-opportunities-icon class="menu-icon" /> Hosts Explorer
+                </nuxt-link>
+              </li>
+              <li class="mobile-only">
+                <nuxt-link v-if="owner" to="/my/opportunity-data-explorer">
+                  <my-opportunities-icon class="menu-icon" /> Opportunity Data Explorer
+                </nuxt-link>
+              </li>
+              <li class="mobile-only">
+                <nuxt-link v-if="owner" to="/my/snm-data-overview">
+                  <my-opportunities-icon class="menu-icon" /> SNM Data Overview
+                </nuxt-link>
+              </li>
+              <li class="mobile-only">
                 <nuxt-link v-if="owner" to="/my/submit-opportunity">
                   <submit-opportunity-icon class="menu-icon" /> Add an Opportunity
                 </nuxt-link>
@@ -197,6 +217,22 @@
 
               <nuxt-link v-if="owner" to="/my/organization">
                 <my-organization-icon /> Your Partner Organization
+              </nuxt-link>
+
+              <nuxt-link v-if="owner" to="/my/data-overview">
+                <my-opportunities-icon class="menu-icon" /> Your Data Overview
+              </nuxt-link>
+
+              <nuxt-link v-if="owner" to="/my/hosts-explorer">
+                <my-opportunities-icon class="menu-icon" /> Hosts Explorer
+              </nuxt-link>
+
+              <nuxt-link v-if="owner" to="/my/opportunity-data-explorer">
+                <my-opportunities-icon class="menu-icon" /> Opportunity Data Explorer
+              </nuxt-link>
+
+              <nuxt-link v-if="owner" to="/my/snm-data-overview">
+                <my-opportunities-icon class="menu-icon" /> SNM Data Overview
               </nuxt-link>
 
               <nuxt-link v-if="owner" to="/my/submit-opportunity">
