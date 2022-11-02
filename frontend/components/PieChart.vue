@@ -29,11 +29,31 @@ export default {
         };
     },
 
+    watch: {
+        data() {
+            this.refresh();
+        },
+
+        doughnut() {
+            this.refresh();
+        },
+    },
+
     mounted() {
-        this.chart = new Chart(this.$refs.display, {
-            type: this.doughnut ? 'doughnut' : 'pie',
-            data: this.data,
-        });
+        this.refresh();
+    },
+
+    methods: {
+        refresh() {
+            if(this.chart !== null) {
+                this.chart.destroy();
+            }
+
+            this.chart = new Chart(this.$refs.display, {
+                type: this.doughnut ? 'doughnut' : 'pie',
+                data: this.data,
+            });
+        },
     },
 }
 </script>

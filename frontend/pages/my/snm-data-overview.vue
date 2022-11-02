@@ -1,26 +1,7 @@
 <template>
 <div class="your-data-overview snm-container">
   <div class="flex-header">
-    <h1>Opportunity Data Explorer</h1>
-  </div>
-
-  <div class="filters">
-    <div class="stack">
-      <label>Opportunity</label>
-      <b-select :value="current_opp" @input="log('TBD download from server')">
-        <option v-for="opp in opps" :key="opp.id" :value="opp">
-          {{opp.title}}
-        </option>
-      </b-select>
-    </div>
-    <div class="stack">
-      <label>Time Period</label>
-      <b-select :value="report.engagement.data.time_period" @input="log('TBD download from server')">
-        <option v-for="period in report.engagement.time_periods" :key="period" :value="period">
-          {{period}}
-        </option>
-      </b-select>
-    </div>
+    <h1>SNM Data Overview</h1>
   </div>
 
   <div class="nav-tab-wrapper">
@@ -28,63 +9,151 @@
       <li><a class="tab-link" :class="{'active':state=='engagement'}" @click="state='engagement'">Engagement</a></li>
       <li><a class="tab-link" :class="{'active':state=='states'}" @click="state='states'">Audience</a></li>
       <li><a class="tab-link" :class="{'active':state=='traffic'}" @click="state='traffic'">Traffic</a></li>
-      <li><a class="tab-link" :class="{'active':state=='overlap'}" @click="state='overlap'">Engagement Overlap</a></li>
+      <li><a class="tab-link" :class="{'active':state=='domain'}" @click="state='domain'">Domain Insights</a></li>
     </ul>
   </div>
 
   <aside>Date updated: {{updated_local}}</aside>
 
   <div v-if="state=='engagement'">
-    <h2>{{current_opp.title}}</h2>
-
-    <div>{{ report.engagement.data.bars.self["Views"] }} Page Views</div>
-
-    <line-chart
-      :rows="report.engagement.data.chart"
-      :xaxis="d => new Date(d.date)"
-      :yaxes="['Views', 'Unique']"
-      :colors="['#268699', '#BFDCE2']"
-      />
-
-    <div>{{ report.engagement.data.bars.self["Clicks to Website"] }} Clicks To Your Website</div>
-
-    <strong>Conversion Rates</strong>
-    <div class="conversion-rate">
-      <comparison-bar :value="report.engagement.data.bars.self['Views'] > 0 ? report.engagement.data.bars.self['Clicks to Website'] / report.engagement.data.bars.self['Views'] : 0" :max="1.0" color="#165E6F" background="#DEDEDE" width="100%" height="2rem" />
+    <div id="snm-unique-visitors">
+      {{report.engagement.data.stats.unique_visitors}}
+      <label>Unique SNM Visitors</label>
     </div>
-    <div class="conversion-rate">
-      <comparison-bar :value="report.engagement.data.bars.median['Views'] > 0 ? report.engagement.data.bars.median['Clicks to Website'] / report.engagement.data.bars.median['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" />
+    <div id="snm-accounts">
+      {{report.engagement.data.stats.accounts}}
+      <label>SNM Accounts</label>
     </div>
-    <div class="conversion-rate">
-      <comparison-bar :value="report.engagement.data.bars.mean['Views'] > 0 ? report.engagement.data.bars.mean['Clicks to Website'] / report.engagement.data.bars.mean['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" />
+    <div id="snm-total-opp-page-views">
+      {{report.engagement.data.stats.opportunity_views}}
+      <label>Total Opportunity Page Views</label>
     </div>
+    <div id="snm-total-opp-unique">
+      {{report.engagement.data.stats.opportunity_unique}}
+      <label>Unique Opportunity Page Views</label>
+    </div>
+    <div id="snm-website-clicks">
+      {{report.engagement.data.stats.opportunity_exits}}
+      <label>Website4 Clicks</label>
+    </div>
+    <div id="snm-self-reports">
+      {{report.engagement.data.stats.didits}}
+      <label>Self-Reports</label>
+    </div>
+    <div id="snm-saves">
+      {{report.engagement.data.stats.saves}}
+      <label>Saves</label>
+    </div>
+    <div id="snm-likes">
+      {{report.engagement.data.stats.likes}}
+      <label>Likes</label>
+    </div>
+    <div id="snm-shares">
+      {{report.engagement.data.stats.shares}}
+      <label>Shares</label>
+    </div>
+    <div id="snm-calendar-adds">
+      {{report.engagement.data.stats.calendar_adds}}
+      <label>Calendar Adds</label>
+    </div>
+
+    <table>
+      <tr>
+        <th class="narrow-column">Top 30 Searches by Keyword</th>
+        <th>Total Searches</th>
+      </tr>
+      <tr v-for="row in report.engagement.data.searches">
+        <td class="narrow-column">{{row.phrase}}</td>
+        <td><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#7CB4BF" background="#DEDEDE" width="100%" height="1rem" /></td>
+      </tr>
+    </table>
   </div>
 
   <div v-else-if="state=='states'">
-    <h2>Audience</h2>
-
-    <div class="notification">
-      <label>Demographics Coming Soon!</label>
-      We are working on getting demographic data at the opportunity level. Right now you can view <nuxt-link to="/">site-wide demographic data</nuxt-link>.
+    <div>
+      <h2>Sex &amp; Age</h2> <!-- I used "sex" instead of "gender" since we're not talking about gay or straight, trans or cis, ace, aro, etc. -->
+      <div>
+        <label>Female <comparison-bar :value="report.demographics.sex.female.proportion" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="1rem" /></label>
+        <label>Male <comparison-bar :value="report.demographics.sex.male.proportion" :max="1.0" color="#165E6F" background="#DEDEDE" width="100%" height="1rem" /></label>
+      </div>
+      <div>
+        <label v-for="entry in sorted_kv(report.demographics.age)">
+          {{entry[0]}} {{percent(entry[1].proportion)}}
+          <comparison-bar :value="entry[1].male.proportion" :max="entry[1].proportion" color="#165E6F" background="#7CB4BF" width="100%" height="1rem" />
+        </label>
+      </div>
     </div>
 
-    <div class="filters">
-      <div class="stack">
-        <label>Opportunity Status</label>
-        <b-select :value="report.states.data.opportunity_status" @input="log('TBD download from server')">
-          <option v-for="status in report.states.opportunity_statuses" :key="status" :value="status">
-            {{status}}
-          </option>
-        </b-select>
-      </div>
-      <div class="stack">
-        <label>Time Period</label>
-        <b-select :value="report.states.data.time_period" @input="log('TBD download from server')">
-          <option v-for="period in report.states.time_periods" :key="period" :value="period">
-            {{period}}
-          </option>
-        </b-select>
-      </div>
+    <div>
+      <h2>Ethnicity</h2>
+      <label>
+        Caucasian
+        <comparison-bar :value="report.demographics.ethnicity['Cauc.'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+      <label>
+        Hispanic
+        <comparison-bar :value="report.demographics.ethnicity['Hisp'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+      <label>
+        African American
+        <comparison-bar :value="report.demographics.ethnicity['Afr. Am.'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+      <label>
+        Asian
+        <comparison-bar :value="report.demographics.ethnicity['Asian'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+      <label>
+        Other
+        <comparison-bar :value="report.demographics.ethnicity['Other'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+    </div>
+
+    <div>
+      <h2>Education</h2>
+      <label>
+        No College
+        <comparison-bar :value="report.demographics.education['No College'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+      <label>
+        College
+        <comparison-bar :value="report.demographics.education['College'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+      <label>
+        Grad School
+        <comparison-bar :value="report.demographics.education['Grad. Sch.'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+    </div>
+
+    <div>
+      <h2>Household Income</h2>
+      <label>
+        $0-50k
+        <comparison-bar :value="report.demographics.income['$0-50k'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+      <label>
+        $50-100k
+        <comparison-bar :value="report.demographics.income['$50-100k'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+      <label>
+        $100-150k
+        <comparison-bar :value="report.demographics.income['$100-150k'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+      <label>
+        $150k+
+        <comparison-bar :value="report.demographics.income['$150k+'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+    </div>
+
+    <div>
+      <h2>Children</h2>
+      <label>
+        Has Kids
+        <comparison-bar :value="report.demographics.children['Some Children under 17'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
+      <label>
+        No Kids
+        <comparison-bar :value="report.demographics.children['No Children under 17'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+      </label>
     </div>
 
     <choropleth-states v-if="selected_state === null" :value="report.states.data.states" attr="Unique Users" @state="select_state($event)"/>
@@ -208,28 +277,6 @@
   <div v-else-if="state=='traffic'">
     <h2>Traffic</h2>
 
-    <div class="filters">
-      <div class="stack">
-        <label>Opportunity Status</label>
-        <b-select :value="report.engagement.data.opportunity_status" @input="log('TBD download from server')">
-          <option v-for="status in report.engagement.opportunity_statuses" :key="status" :value="status">
-            {{status}}
-          </option>
-        </b-select>
-      </div>
-      <div class="stack">
-        <label>Time Period</label>
-        <b-select :value="report.engagement.data.time_period" @input="log('TBD download from server')">
-          <option v-for="period in report.engagement.time_periods" :key="period" :value="period">
-            {{period}}
-          </option>
-        </b-select>
-      </div>
-      <div class="extra">
-        <a @click="save_traffic_csv">export csv</a>
-      </div>
-    </div>
-
     <line-chart
       :rows="report.traffic.data.chart"
       :xaxis="d => new Date(d.date)"
@@ -288,54 +335,21 @@
       </tbody>
     </table>
   </div>
-  <div v-else-if="state=='overlap'">
+  <div v-else-if="state=='domain'">
     <h2>Engagement Overlap</h2>
     <div>
-      <b-select :value="report.overlap.data.engagement_type" @input="log('TBD download from server')">
-        <option v-for="e_type in report.overlap.engagement_types" :key="e_type" :value="e_type">
+      <b-select :value="report.crossover.data.engagement_type" @input="log('TBD download from server')">
+        <option v-for="e_type in report.crossover.engagement_types" :key="e_type" :value="e_type">
           {{e_type}}
         </option>
       </b-select>
     </div>
 
     <div style="box-shadow: 2px 2px 4px #999 inset; font-size: 18pt; margin: 2rem; padding: 2rem; border: 1px solid #999;">
-      I don't know how to render the bubble chart thing. Over to you, Kevin.
+      I don't know how to render this chart, but the data to drive it
+      are in <code>report.crossover.data.chart</code>. Over to you,
+      Kevin.
     </div>
-
-    <!-- Making this table sortable by different fields would be a
-    huge can of worms, since it brings up logic conflicts and
-    ambiguities. Seems like it should always be sorted by overlap
-    percent anyhow, so that's what I've done here. -->
-    <table>
-      <thead>
-        <tr>
-          <th>Opportunity</th>
-          <th colspan="2">Overlap Percent</th>
-          <th>Hosted By</th>
-          <th>Activity Types</th>
-          <th>Format</th>
-          <th>Venue Types</th>
-          <th>Min. Age</th>
-          <th>Max. Age</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in report.overlap.data.table">
-          <td>{{row.name}}</td>
-          <td>{{percent(row.overlap)}}</td>
-          <td><comparison-bar :value="row.overlap" :max="1.0" color="#268699" /></td>
-          <td>{{row.host}}</td>
-          <td>{{friendly(row.activity_types)}}</td>
-          <td>{{row.format}}</td>
-          <td>{{friendly(row.venue_types)}}</td>
-          <td v-if="row.min_age > 0">{{row.min_age}}</td>
-          <td v-else><small>N/A</small></td>
-          <td v-if="row.max_age < 999">{{row.max_age}}</td>
-          <td v-else><small>N/A</small></td>
-        </tr>
-      </tbody>
-    </table>
-      
   </div>
 </div>
 </template>
@@ -355,7 +369,7 @@ function cmp(a, b) {
 }
 
 export default {
-    name: "MyOpportunityDataExplorer",
+    name: "MySNMDataOverview",
 
     httpHeaders() {
         return {
@@ -368,7 +382,6 @@ export default {
 
     async asyncData(context) {
         const user = await context.store.dispatch('get_user');
-        const opps = await context.$axios.$get('/api/ui/finder/search?mine=true&sort=alphabetical&per_page=4294967295&refs=true', context.store.state.auth);
 
         if(!user.authenticated) {
             context.error({
@@ -378,32 +391,72 @@ export default {
         }
 
         return {
-            opps: opps.matches,
-            current_opp: opps.matches.length ? opps.matches[0] : {},
             report: {
-                "uid": 'c36bd22f-f530-4469-8c9e-b919951e3486',
                 "updated": "2022-07-28T14:33:27.12343242-07:00",
-                "total_opportunities": 23,
-                "current_opportunities": 18,
                 "engagement": {
-                    "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
-                    "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
                     "data": {
-                        "opportunity_status": "Live and Closed",
-                        "time_period": "This Month",
                         "begin": "2022-07-27",
                         "end": "2022-07-29",
-                        "columns": ["Views" , "Unique", "Clicks to Website"],
-                        "chart": [
-                            {"date": "2022-07-29", "Views": 15, "Unique": 8, "Clicks to Website": 4},
-                            {"date": "2022-07-28", "Views": 8, "Unique": 2, "Clicks to Website": 7},
-                            {"date": "2022-07-27", "Views": 13, "Unique": 11, "Clicks to Website": 1},
-                        ],
-                        "bars": {
-                            "self": {"Views": 432, "Unique": 234, "Clicks to Website": 119},
-                            "mean": {"Views": 321, "Unique": 78, "Clicks to Website": 210},
-                            "median": {"Views": 210, "Unique": 112, "Clicks to Website": 87},
+                        "search_max": 41363,
+                        "stats": {
+                            "unique_visitors": 5732,
+                            "accounts": 1112,
+                            "opportunity_views": 4214,
+                            "opportunity_unique": 3214,
+                            "opportunity_exits": 2341,
+                            "didits": 123,
+                            "saves": 632,
+                            "likes": 423,
+                            "shares": 343,
+                            "calendar_adds": 211,
                         },
+                        "searches": [
+                            {"phrase": "Science Festival", "searches": 41363},
+                            {"phrase": "mumblety-peg", "searches": 8123},
+                            {"phrase": "kids and families", "searches": 712}
+                        ],
+                    },
+                },
+
+                "demographics": {
+                    "sex": {
+                        "male": {"index": 92, "proportion": 0.4507, "national": 0.4915},
+                        "female": {"index": 108, "proportion": 0.5493, "national": 0.5085},
+                    },
+                    "age": {
+                        "18-20": {"index": 96, "proportion": 0.0539, "national": 0.0562, "male": {"index": 108, "proportion": 0.0273, "national": 0.0253}, "female": {"index": 86, "proportion": 0.0266, "national": 0.0309}},
+                        "21-24": {"index": 86, "proportion": 0.0679, "national": 0.0788, "male": {"index": 87, "proportion": 0.0307, "national": 0.0355}, "female": {"index": 86, "proportion": 0.0372, "national": 0.0433}},
+                        "25-29": {"index": 135, "proportion": 0.1358, "national": 0.1005, "male": {"index": 105, "proportion": 0.0474, "national": 0.0453}, "female": {"index": 160, "proportion": 0.0884, "national": 0.0552}},
+                        "30-34": {"index": 112, "proportion": 0.1149, "national": 0.1025, "male": {"index": 116, "proportion": 0.0535, "national": 0.0462}, "female":{"index": 109, "proportion": 0.0615, "national": 0.0563}},
+                        "35-39": {"index": 112, "proportion": 0.1305, "national": 0.117, "male": {"index": 95, "proportion": 0.0501, "national": 0.0527}, "female": {"index": 125, "proportion": 0.0804, "national": 0.0642}},
+                        "40-44": {"index": 101, "proportion": 0.1187, "national": 0.118, "male": {"index": 87, "proportion": 0.0463, "national": 0.0532}, "female": {"index": 112, "proportion": 0.0725, "national": 0.0648}},
+                        "45-49": {"index": 94, "proportion": 0.1017, "national": 0.1076, "male": {"index": 104, "proportion": 0.0505, "national": 0.0485}, "female": {"index": 87, "proportion": 0.0512, "national": 0.0591}},
+                        "50-54": {"index": 100, "proportion": 0.1093, "national": 0.1092, "male": {"index": 118, "proportion": 0.058, "national": 0.0492}, "female": {"index": 85, "proportion": 0.0512, "national": 0.06}},
+                        "55-59": {"index": 89, "proportion": 0.058, "national": 0.0654, "male": {"index": 111, "proportion": 0.0326, "national": 0.0295}, "female": {"index": 71, "proportion": 0.0254, "national": 0.0359}},
+                        "60-64": {"index": 76, "proportion": 0.0505, "national": 0.0668, "male": {"index": 92, "proportion": 0.0277, "national": 0.0301}, "female": {"index": 62, "proportion": 0.0228, "national": 0.0367}},
+                        "65+": {"index": 75, "proportion": 0.0588, "national": 0.0781, "male": {"index": 75, "proportion": 0.0266, "national": 0.0352}, "female": {"index": 75, "proportion": 0.0322, "national": 0.0429}},
+                    },
+                    "education": {
+                        "No College": {"index": 85, "proportion": 0.3642, "national": 0.4306},
+                        "College": {"index": 103, "proportion": 0.4279, "national": 0.4158},
+                        "Grad. Sch.": {"index": 135, "proportion": 0.2079, "national": 0.1536},
+                    },
+                    "income": {
+                        "$0-50k": {"index": 84, "proportion": 0.3365, "national": 0.4028},
+                        "$50-100k": {"index": 116, "proportion": 0.3657, "national": 0.3139},
+                        "$100-150k": {"index": 114, "proportion": 0.1741, "national": 0.1532},
+                        "$150k+": {"index": 95, "proportion": 0.1237, "national": 0.1301},
+                    },
+                    "children": {
+                        "No Children under 17": {"index": 103, "proportion": 0.5247, "national": 0.5071},
+                        "Some Children under 17": {"index": 96, "proportion": 0.4753, "national": 0.4929},
+                    },
+                    "ethnicity": {
+                        "Cauc.": {"index": 98, "proportion": 0.7362, "national": 0.7506},
+                        "Afr. Am.": {"index": 103, "proportion": 0.0961, "national": 0.0936},
+                        "Asian": {"index": 140, "proportion": 0.0614, "national": 0.0437},
+                        "Hisp": {"index": 99, "proportion": 0.0968, "national": 0.0978},
+                        "Other": {"index": 66, "proportion": 0.0094, "national": 0.0143},
                     },
                 },
 
@@ -498,15 +551,111 @@ export default {
                     },
                 },
 
-                "overlap": {
+                "crossover": {
                     "engagement_types": ["Views", "Unique", "Clicks to Website"],
                     "data": {
                         "engagement_type": "Views",
-                        "table": [
-                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Jellicle Dogs", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                        ]
+                        "chart": {
+                            "citizen_science": {
+                                "proportion": 0.23,
+                                "live_science": {"Views": 0.166, "Unique": 0.5, "Clicks to Website": 0.333},
+                                "museum_or_science_center": {"Views": 0.166, "Unique": 0.05, "Clicks to Website": 0.0},
+                                "maker": {"Views": 0.166, "Unique": 0.04, "Clicks to Website": 0.333},
+                                "policy": {"Views": 0.166, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "out_of_school_time_program": {"Views": 0.166, "Unique": 0.4, "Clicks to Website": 0.333},
+                                "formal_education": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "science_communications": {"Views": 0.166, "Unique": 0.01, "Clicks to Website": 0.0},
+                                "unspecified": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0}
+                            },
+                            "live_science": {
+                                "proportion": 0.05,
+                                "citizen_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "museum_or_science_center": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "maker": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "policy": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "out_of_school_time_program": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "formal_education": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "science_communications": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "unspecified": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166}
+                            },
+                            "museum_or_science_center": {
+                                "proportion": 0.17,
+                                "citizen_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "live_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "maker": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "policy": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "out_of_school_time_program": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "formal_education": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "science_communications": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "unspecified": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166}
+                            },
+                            "maker": {
+                                "proportion": 0.21,
+                                "citizen_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "live_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "museum_or_science_center": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "policy": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "out_of_school_time_program": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "formal_education": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "science_communications": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "unspecified": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166}
+                            },
+                            "policy": {
+                                "proportion": 0.08,
+                                "citizen_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "live_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "museum_or_science_center": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "maker": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "out_of_school_time_program": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "formal_education": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "science_communications": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "unspecified": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166}
+                            },
+                            "out_of_school_time_program": {
+                                "proportion": 0.22,
+                                "citizen_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "live_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "museum_or_science_center": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "maker": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "policy": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "formal_education": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "science_communications": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "unspecified": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166}
+                            },
+                            "formal_education": {
+                                "proportion": 0.0,
+                                "citizen_science": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "live_science": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "museum_or_science_center": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "maker": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "policy": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "out_of_school_time_program": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "science_communications": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "unspecified": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0}
+                            },
+                            "science_communications": {
+                                "proportion": 0.04,
+                                "citizen_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "live_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "museum_or_science_center": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "maker": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "policy": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "out_of_school_time_program": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "formal_education": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
+                                "unspecified": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166}
+                            },
+                            "unspecified": {
+                                "proportion": 0.0,
+                                "citizen_science": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "live_science": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "museum_or_science_center": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "maker": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "policy": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "out_of_school_time_program": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "formal_education": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "science_communications,": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0}
+                            },
+                        },
                     },
                 },
             },
@@ -749,6 +898,10 @@ export default {
             console.log(msg);
         },
 
+        sorted_kv(obj) {
+            return Object.entries(obj).sort();
+        },
+
         friendly(list) {
             return list.map(x => x.split("_").map(w => w[0].toUpperCase() + w.slice(1)).join(" ")).join(", ");
         },
@@ -819,6 +972,15 @@ export default {
 small {
     font-size: 10pt;
     color: #999;
+}
+
+table {
+    width: 100%;
+    min-width: 300px;
+
+    th.narrow-column,td.narrow-column {
+        width: 20rem;
+    }
 }
 
 h1 {
