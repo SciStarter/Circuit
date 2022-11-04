@@ -104,11 +104,14 @@
               </div>
               <transition name="slide">
                 <div v-if="location=='physical'" class="add">
+                  <b-field label="Name of the location, if applicable">
+                    <b-input type="text" v-model="location_name">
+                  </b-field>
                   <b-field :type="validation.location_name" message="Begin typing and select location">
                     <template #label>
                       Search for an address or location<span class="required">*</span>
                     </template>
-                    <lookup-geometry v-model="value.location_name" @polygon="location_poly" @point="location_point" @license="location_license" />
+                    <lookup-geometry v-model="location_lookup" @polygon="location_poly" @point="location_point" @license="location_license" />
                   </b-field>
                 </div>
               </transition>
@@ -127,11 +130,14 @@
               </div>
               <transition name="slide">
                 <div v-if="location=='both'" class="add">
+                  <b-field label="Name of the location, if applicable">
+                    <b-input type="text" v-model="location_name">
+                  </b-field>
                   <b-field :type="validation.location_name" message="Begin typing and select location">
                     <template #label>
                       Search for an address or location<span class="required">*</span>
                     </template>
-                    <lookup-geometry v-model="value.location_name" @polygon="location_poly" @point="location_point" @license="location_license" />
+                    <lookup-geometry v-model="location_lookup" @polygon="location_poly" @point="location_point" @license="location_license" />
                   </b-field>
                   <b-field :type="validation.partner_opp_url" message="Must start with http:// or https://">
                     <template #label>
@@ -354,7 +360,7 @@
             <p class="help">Tell prospective participants what to expect from your opportunity in a short, friendly sentence. 164 character limit.</p>
           </template>
           <b-input v-model="value.short_desc" maxlength="164" has-counter type="textarea"></b-input>
-          
+
         </b-field>
 
         <b-field :type="validation.description" class="no-message">
@@ -543,7 +549,7 @@
        <!-- <legend>Additional Information</legend>
         <p class="help mb">While not required, this information will tell prospective participants more about your opportunity and help them find your opportunity.</p>-->
 
-       
+
 
         <legend>Social Media</legend>
         <p class="help mb">All of this information is optional. You can always add or edit later through your dashboard.</p>
@@ -782,6 +788,52 @@ export default {
     },
 
     computed: {
+        location_name: {
+            get() {
+                let idx = this.value.location_name.indexOf(" at ");
+
+                if(idx < 0) {
+                    return "";
+                }
+
+                return this.value.location_name.slice(0, idx);
+            },
+
+            set(val) {
+                val = val.trim();
+
+                if(val) {
+                    this.value.location_name = val + " at " + this.location_lookup.trim();
+                }
+                else {
+                    this.value.location_name = this.location_lookup.trim();
+                }
+            }
+        },
+
+        location_lookup: {
+            get() {
+                let idx = this.value.location_name.indexOf(" at ");
+
+                if(idx < 0) {
+                    return this.value.location_name;
+                }
+
+                return this.value.location_name.slice(idx + 4);
+            },
+
+            set(val) {
+                val = val.trim();
+
+                if(val) {
+                    this.value.location_name = this.location_name.trim() + " at " + val;
+                }
+                else {
+                    this.value.location_name = this.location_name.trim();
+                }
+            }
+        },
+
         has_minimum: {
             get() {
                 return this.value.min_age > 0;
@@ -1089,8 +1141,8 @@ export default {
                 if(this.invalid('location', !this.location)) valid = false;
                 if(this.invalid('partner_opp_url', this.location === 'online' && (!this.value.partner_opp_url || !this.value.partner_opp_url.toUpperCase().startsWith('HTTP')))) valid = false;
                 if(this.invalid('partner_opp_url', this.location === 'both' && (!this.value.partner_opp_url || !this.value.partner_opp_url.toUpperCase().startsWith('HTTP')))) valid = false;
-                if(this.invalid('location_name', this.location === 'physical' && !this.value.location_name)) valid = false;
-                if(this.invalid('location_name', this.location === 'both' && !this.value.location_name)) valid = false;
+                if(this.invalid('location_name', this.location === 'physical' && !this.location_lookup)) valid = false;
+                if(this.invalid('location_name', this.location === 'both' && !this.location_lookup)) valid = false;
                 if(this.invalid('organization_website', this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.toUpperCase().startsWith('HTTP')))) valid = false;
                 if(this.invalid('begin_datetime', this.when === 'time' && this.time_periods.length < 1)) valid = false;
                 if(this.invalid('begin_datetime', this.when === 'time' && (this.time_periods[0][0] && this.time_periods[0][1] && this.time_periods[0][0] > this.time_periods[0][1]))) valid = false;
