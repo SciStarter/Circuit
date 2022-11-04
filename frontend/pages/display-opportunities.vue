@@ -223,7 +223,23 @@
   </div>
 
   <div v-if="state==2" class="about-exchange">
-    <p>If you have many existing opportunities you'd like to display on SNM and your Exchange, please select one of the options to share your opportunities on our<a href="/add-opportunities">add opportuities page</a>. That way all those opportunities will appear on SNM and on your Exchange, in addition to any others available to your community from SNM! You'll still have the option to use the Add Opportunity Form on your site to add future opportunities.</p>
+    <p>
+      If you have many existing opportunities you'd like to display on
+      SNM and your Exchange, please select one of the options to share
+      your opportunities on our <nuxt-link to="/add-opportunities">add
+      opportuities page</nuxt-link>. That way all those opportunities will
+      appear on SNM and on your Exchange, in addition to any others
+      available to your community from SNM! You'll still have the
+      option to use the Add Opportunity Form on your site to add
+      future opportunities.
+    </p>
+    <h2 class="h3" style="margin-top:20px">Example Exchanges</h2>
+    <ul>
+      <li><external-link href="https://stemcouncil.alabama.gov/stem-near-me/">Alabama STEM Ecosystem</external-link></li>
+      <li><external-link href="https://www.nationofmakers.us/find-a-maker-event">Nation of Makers</external-link></li>
+      <li><external-link href="https://www.wisconsinsciencefest.org/science%20near%20me/">Wisconsin Science Festival</external-link></li>
+      <li><external-link href="https://mainediscovery.wixsite.com/sciencearoundme/science">Maine Discovery Museum</external-link> (beta)</li>
+    </ul>
     <h2 class="h3" style="margin-top:20px">Request an Exchange</h2>
     <ol>
       <li>Create a Science Near Me account, if you haven't done so already</li>
