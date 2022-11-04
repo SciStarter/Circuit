@@ -1076,7 +1076,7 @@ export default {
                 }
             }
 
-            if(!Object.keys(item).some(x => x[0] != '_')) {
+            if(typeof(item) === 'object' && !Object.keys(item).some(x => x[0] != '_')) {
                 return false;
             }
 
