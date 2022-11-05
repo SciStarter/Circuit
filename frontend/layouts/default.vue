@@ -284,6 +284,23 @@
       </div>
       </div>
 
+      <div v-if="show_popup" id="popup">
+        <div class="popup_head"><div class="popup-title"><span class="popup-count">{{messages.length}}</span>SNM Messages For You! </div>
+          <b-dropdown aria-role="menu" position="is-top-right">
+                 <template #trigger="{ active }">
+                     <b-button size="is-small"
+                         :icon-right="active ? 'dots-vertical' : 'dots-vertical'" />
+                 </template>
+                       <b-dropdown-item aria-role="menuitem">Opt Out</b-dropdown-item>
+                   </b-dropdown>
+            </div>
+        <ul class="popup-list">
+          <li v-for="m,i in messages">
+            <a @click="message_index = i;show_message = true">{{m.title}}</a><a @click="dismiss_message(i)">&times;</a>
+          </li>
+        </ul>
+      </div>
+
       <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
         <div class="card">
           <login-form @close="show_login=false" @signup="show_login=false;show_signup=true;" :next="$route.path == 'slug' ? $route.params.slug : $route.path" :next_query="$route.query" in-modal>
@@ -299,6 +316,21 @@
           </signup-form>
         </div>
       </b-modal>
+
+      <b-modal
+        v-model="show_message"
+        has-modal-card
+        trap-focus
+        :destroy-on-hide="false"
+        aria-role="dialog"
+        aria-label="Notification"
+        aria-modal
+      >
+      <div class="card" >
+          <h2>{{messages[message_index].title}} <span class="close" @click="show_message = false">&times;</span></h2>
+          <p>{{messages[message_index].message}}</p>
+        </div>
+  </b-modal>
 
     </div>
 </template>
@@ -355,6 +387,21 @@ export default {
             show_person_dropdown: false,
             show_cookie: false,
             show_location_modal: false,
+            show_popup: true,
+            mesage_index: null,
+            show_message: false,
+            messages: [
+              {
+                title: 'Join Us at the Iowa City Bar Crawl and here are more words to make really long',
+                message: `A whole bunch of text`,
+                link: ''
+              },
+              {
+                title: 'Researchers want your help!',
+                message: `A whole bunch of text`,
+                link: ''
+              }
+            ],
 
             query: {
                 keywords: '',
@@ -514,6 +561,10 @@ export default {
         store_here(place) {
             this.$store.commit('here', place);
         },
+
+        dismiss_message(i) {
+          alert('pop message ' + i);
+        }
     }
 }
 </script>
@@ -1427,6 +1478,123 @@ footer {
   }
 }
 
+
+#popup {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    z-index: 999;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0 0 6px rgba(0,0,0,.5);
+    width: 380px;
+    max-width: calc(100vw - 20px);
+
+    :deep(.button.is-small) {
+      background-color: transparent;
+      border: 2px solid #ffe1a4;
+      box-shadow:none;
+      border-radius: 6px;
+    }
+    :deep(.mdi){
+      font-size:18px;
+      color: #ffe1a4;
+    }
+  }
+
+  .popup_head {
+    background-color: #ffbf40;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    align-items: center;
+    padding: 5px;
+    border-radius: 6px 6px 0 0;
+
+    .popup-title {
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+  }
+
+  .popup-count {
+      background-color: #991B08;
+      color: #fff;
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      border-radius: 100%;
+      text-align: center;
+      margin-right: 6px;
+    }
+    .popup-list {
+      padding: 10px;
+      li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding:6px 0;
+        border-bottom: 1px solid #f9f9f9;
+        &:last-child {
+          border:0;
+        }
+        :last-child {
+          font-size: 28px;
+          font-weight: bold;
+          color: #d0d0d0;
+          &:hover {
+            color: #991B08;
+          }
+        }
+        :first-child {
+          line-height: 1.2;
+          text-decoration: underline;
+        }
+      }
+    }
+
+    .modal {
+    .card {
+      padding:16px;
+        h2 {
+            font-family: $snm-font-heading;
+            font-weight: bold;
+            font-size: $snm-font-medium;
+            line-height: 26px;
+            letter-spacing: 0px;
+            color: $snm-color-background-dark;
+
+            .close {
+                float: right;
+                font-size: $snm-font-larger;
+                position: relative;
+                top: -10px;
+                cursor: pointer;
+            }
+        }
+
+        p {
+            font-family: $snm-font-content;
+            font-weight: normal;
+            font-size: $snm-font-small;
+            line-height: 22px;
+            letter-spacing: 0px;
+            color: $snm-color-tldr;
+            margin: 1rem 0px;
+        }
+
+        div:last-child {
+            display: flex;
+            // justify-content: right;
+
+            > * {
+                flex-grow: 0;
+            }
+        }
+    }
+}
+
 </style>
 
 <style type="scss">
@@ -1445,4 +1613,7 @@ footer {
       min-width: 600px;
     }
   }
+
+ 
+
 </style>
