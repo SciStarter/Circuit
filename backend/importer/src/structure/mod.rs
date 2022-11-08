@@ -6,12 +6,14 @@ use uuid::Uuid;
 pub mod atlanta_science_fest;
 pub mod eventsjson;
 pub mod eventsql;
+pub mod mec;
 pub mod neon;
 pub mod night_sky_network;
 
 pub use atlanta_science_fest::AtlantaScienceFest;
 pub use eventsjson::EventsJson;
 pub use eventsql::EventsQL;
+pub use mec::ModernEventsCalendar;
 pub use night_sky_network::NightSkyNetwork;
 
 pub enum OneOrMany<T> {

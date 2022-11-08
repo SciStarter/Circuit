@@ -9,10 +9,40 @@ use importer::structure::{self, OneOrMany, PartnerAddress, PartnerFlag, PartnerI
 use importer::Importer;
 
 /// This function is the 'config file' for the importer. Each entry
-/// added to th importers vector defines how to grab data from one
+/// added to the importers vector defines how to grab data from one
 /// partner.
 pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     let hours = Duration::new(60 * 60, 0);
+
+    importers.push(Box::new(Import {
+        source: source::HttpGet::new(
+            "https://scitechinstitute.org/wp-json/mecexternal/v1/calendar/1",
+        ),
+        format: format::Json,
+        structure: structure::ModernEventsCalendar(PartnerInfo {
+            partner: "12a96513-a9a5-5372-8a85-c68ce074a54b".parse().unwrap(),
+            partner_name: "SciTech Institute".to_string(),
+            partner_website: Some("https://scitechinstitute.org/".to_string()),
+            partner_logo_url: Some(
+                "https://scitechinstitute.org/wp-content/themes/aztc-scitech/img/logo.svg"
+                    .to_string(),
+            ),
+            domain: Domain::MuseumOrScienceCenter,
+            descriptor: vec![Descriptor::ExpoStyle],
+            topics: vec![Topic::Engineering, Topic::Technology],
+            flags: vec![],
+            address: Some(PartnerAddress {
+                name: "SciTech Institute".to_string(),
+                street: "1438 W. Broadway Rd., Ste 101".to_string(),
+                city: "Tempe".to_string(),
+                state: "AZ".to_string(),
+                zip: "85282".to_string(),
+                country: "United States of America".to_string(),
+            }),
+            timezone: Some(chrono_tz::US::Mountain),
+        }),
+        period: 4 * hours,
+    }));
 
     importers.push(Box::new(Import {
         source: source::Airtable::new("appytM7ldnmIDcbRV", ["Events"]),
@@ -35,7 +65,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
         format: format::Json,
         structure: structure::EventsJson(PartnerInfo {
             partner: "82b846de-dda5-5bad-a918-41a2a0648b71".parse().unwrap(),
-            partner_name: "Nevada Discovery Museum".to_string(),
+            partner_name: "Terry Lee Wells Nevada Discovery Museum".to_string(),
             partner_website: Some("https://nvdm.org/".to_string()),
             partner_logo_url: Some(
                 "https://nvdm.org/wp-content/themes/discoverypress-site/assets/svgs/discovery-logo.svg".to_string(),
@@ -237,7 +267,11 @@ where
                     false, // Ignored is for a hypothetical case, where we may skip importing a record because the current version is authoritative. In that case, it should be set to true.
                 )
                 .await?;
-                println!("Saved {}", &item.exterior.title);
+                println!(
+                    "{} {}",
+                    if created { "Added" } else { "Updated" },
+                    &item.exterior.title
+                );
             }
             OneOrMany::Many(vec) => {
                 for mut item in vec {
@@ -253,7 +287,11 @@ where
                         false,
                     )
                     .await?;
-                    println!("Saved {}", &item.exterior.title);
+                    println!(
+                        "{} {}",
+                        if created { "Added" } else { "Updated" },
+                        &item.exterior.title
+                    );
                 }
             }
         }
