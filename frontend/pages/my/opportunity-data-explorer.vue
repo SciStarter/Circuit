@@ -24,40 +24,79 @@
   </div>
 
   <div class="nav-tab-wrapper">
-    <ul class="nav-tabs">
-      <li><a class="tab-link" :class="{'active':state=='engagement'}" @click="state='engagement'">Engagement</a></li>
-      <li><a class="tab-link" :class="{'active':state=='states'}" @click="state='states'">Audience</a></li>
-      <li><a class="tab-link" :class="{'active':state=='traffic'}" @click="state='traffic'">Traffic</a></li>
-      <li><a class="tab-link" :class="{'active':state=='overlap'}" @click="state='overlap'">Engagement Overlap</a></li>
+    <ul class="nav-tabs nav-tabs-alt">
+      <li><a class="tab-link" :class="{'active':state=='engagement'}" @click="state='engagement'"><span>Engagement</span><small>How users interact with your opportunity</small></a></li>
+      <li><a class="tab-link" :class="{'active':state=='states'}" @click="state='states'"><span>Audience</span><small>Demographics, locations and technology of your users</small></a></li>
+      <li><a class="tab-link" :class="{'active':state=='traffic'}" @click="state='traffic'"><span>Traffic</span><small>How users get to your opportunity</small></a></li>
+      <li><a class="tab-link" :class="{'active':state=='overlap'}" @click="state='overlap'"><span>Engagement Overlap</span><small>See how your users interact with other opportunities</small></a></li>
     </ul>
   </div>
 
   <aside>Date updated: {{updated_local}}</aside>
 
   <div v-if="state=='engagement'">
+
+
     <h2>{{current_opp.title}}</h2>
-
-    <div>{{ report.engagement.data.bars.self["Views"] }} Page Views</div>
-
-    <line-chart
-      :rows="report.engagement.data.chart"
-      :xaxis="d => new Date(d.date)"
-      :yaxes="['Views', 'Unique']"
-      :colors="['#268699', '#BFDCE2']"
-      />
-
-    <div>{{ report.engagement.data.bars.self["Clicks to Website"] }} Clicks To Your Website</div>
-
-    <strong>Conversion Rates</strong>
-    <div class="conversion-rate">
-      <comparison-bar :value="report.engagement.data.bars.self['Views'] > 0 ? report.engagement.data.bars.self['Clicks to Website'] / report.engagement.data.bars.self['Views'] : 0" :max="1.0" color="#165E6F" background="#DEDEDE" width="100%" height="2rem" />
+    <div class="data-wrapper">
+      <div class="data-header">
+      <div class="big-legend bl-blue">
+          <div class="ll-icon"><eye-icon></eye-icon></div>
+          <div>
+            <h2>{{ report.engagement.data.bars.self["Views"] }}</h2>
+            <h3>Page Views</h3>
+            <div class="ll-legend">
+              <div><span class="dark-blue"></span> Total</div>
+              <div><span class="light-blue"></span> Unique</div> 
+            </div>
+          </div>
+        </div>
+      </div>
+        <line-chart
+          :rows="report.engagement.data.chart"
+          :xaxis="d => new Date(d.date)"
+          :yaxes="['Views', 'Unique']"
+          :colors="['#268699', '#BFDCE2']"
+          />
     </div>
-    <div class="conversion-rate">
-      <comparison-bar :value="report.engagement.data.bars.median['Views'] > 0 ? report.engagement.data.bars.median['Clicks to Website'] / report.engagement.data.bars.median['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" />
-    </div>
-    <div class="conversion-rate">
-      <comparison-bar :value="report.engagement.data.bars.mean['Views'] > 0 ? report.engagement.data.bars.mean['Clicks to Website'] / report.engagement.data.bars.mean['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" />
-    </div>
+
+    <div class="data-wrapper">
+      <div class="data-header">
+      <div class="big-legend bl-yellow">
+          <div class="ll-icon"><link-icon></link-icon></div>
+          <div>
+            <h2>{{ report.engagement.data.bars.self["Clicks to Website"] }}</h2>
+            <h3>Clicks To Your Website</h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="data-header2">
+        <h4>Conversion Rates</h4><small>based on total page views</small>
+      </div>
+      <div class="conversion-rate">
+        <h5>Your Conversion Rate</h5>
+        <div class="flex align-center">
+        <comparison-bar :value="report.engagement.data.bars.self['Views'] > 0 ? report.engagement.data.bars.self['Clicks to Website'] / report.engagement.data.bars.self['Views'] : 0" :max="1.0" color="#165E6F" background="#DEDEDE" width="100%" height="2rem" />
+          <span class="con-num">{{report.engagement.data.bars.self['Views'] > 0 ? ((report.engagement.data.bars.self['Clicks to Website'] / report.engagement.data.bars.self['Views']) * 100).toFixed(2) : 0}}%</span>
+        </div>
+      </div>
+      <div class="conversion-rate">
+        <h5>All SNM Opportunity Median</h5>
+        <div class="flex align-center">
+        <comparison-bar :value="report.engagement.data.bars.median['Views'] > 0 ? report.engagement.data.bars.median['Clicks to Website'] / report.engagement.data.bars.median['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" />
+          <span class="con-num">{{report.engagement.data.bars.median['Views'] > 0 ? ((report.engagement.data.bars.median['Clicks to Website'] / report.engagement.data.bars.median['Views'])*100).toFixed(2) : 0}}%</span>
+        </div>
+      </div>
+      <div class="conversion-rate">
+        <h5>All SNM Opportunity Average</h5>
+        <div class="flex align-center">
+        <comparison-bar :value="report.engagement.data.bars.mean['Views'] > 0 ? report.engagement.data.bars.mean['Clicks to Website'] / report.engagement.data.bars.mean['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" />
+          <span class="con-num">{{report.engagement.data.bars.mean['Views'] > 0 ? ((report.engagement.data.bars.mean['Clicks to Website'] / report.engagement.data.bars.mean['Views'])*100).toFixed(2) : 0}}%</span>
+        </div>
+      </div>
+  </div>
+  
   </div>
 
   <div v-else-if="state=='states'">
@@ -101,39 +140,39 @@
       <activity-regional :state="selected_state" :data="selected_state_data" :attr="selected_attr" />
     </div>
 
-    <table>
+    <table class="data-table">
       <thead>
         <tr>
           <th>Engagement By Location</th>
           <th>Unique Users
-            <a v-if="states_top_order == 'unique_users_desc'" @click="states_top_order = 'unique_users_asc'">&bigvee;</a>
-            <a v-else-if="states_top_order == 'unique_users_asc'" @click="states_top_order = 'unique_users_desc'">&bigwedge;</a>
-            <a v-else @click="states_top_order = 'unique_users_desc'">&bigcirc;</a>
+            <a v-if="states_top_order == 'unique_users_desc'" @click="states_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="states_top_order == 'unique_users_asc'" @click="states_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="states_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>New Users
-            <a v-if="states_top_order == 'new_users_desc'" @click="states_top_order = 'new_users_asc'">&bigvee;</a>
-            <a v-else-if="states_top_order == 'new_users_asc'" @click="states_top_order = 'new_users_desc'">&bigwedge;</a>
-            <a v-else @click="states_top_order = 'new_users_desc'">&bigcirc;</a>
+            <a v-if="states_top_order == 'new_users_desc'" @click="states_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="states_top_order == 'new_users_asc'" @click="states_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="states_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Returning Users
-            <a v-if="states_top_order == 'returning_users_desc'" @click="states_top_order = 'returning_users_asc'">&bigvee;</a>
-            <a v-else-if="states_top_order == 'returning_users_asc'" @click="states_top_order = 'returning_users_desc'">&bigwedge;</a>
-            <a v-else @click="states_top_order = 'returning_users_desc'">&bigcirc;</a>
+            <a v-if="states_top_order == 'returning_users_desc'" @click="states_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="states_top_order == 'returning_users_asc'" @click="states_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="states_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Total Pageviews
-            <a v-if="states_top_order == 'total_pageviews_desc'" @click="states_top_order = 'total_pageviews_asc'">&bigvee;</a>
-            <a v-else-if="states_top_order == 'total_pageviews_asc'" @click="states_top_order = 'total_pageviews_desc'">&bigwedge;</a>
-            <a v-else @click="states_top_order = 'total_pageviews_desc'">&bigcirc;</a>
+            <a v-if="states_top_order == 'total_pageviews_desc'" @click="states_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="states_top_order == 'total_pageviews_asc'" @click="states_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="states_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Unique Pageviews
-            <a v-if="states_top_order == 'unique_pageviews_desc'" @click="states_top_order = 'unique_pageviews_asc'">&bigvee;</a>
-            <a v-else-if="states_top_order == 'unique_pageviews_asc'" @click="states_top_order = 'unique_pageviews_desc'">&bigwedge;</a>
-            <a v-else @click="states_top_order = 'unique_pageviews_desc'">&bigcirc;</a>
+            <a v-if="states_top_order == 'unique_pageviews_desc'" @click="states_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="states_top_order == 'unique_pageviews_asc'" @click="states_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="states_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Avg. Time
-            <a v-if="states_top_order == 'average_time_desc'" @click="states_top_order = 'average_time_asc'">&bigvee;</a>
-            <a v-else-if="states_top_order == 'average_time_asc'" @click="states_top_order = 'average_time_desc'">&bigwedge;</a>
-            <a v-else @click="states_top_order = 'average_time_desc'">&bigcirc;</a>
+            <a v-if="states_top_order == 'average_time_desc'" @click="states_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="states_top_order == 'average_time_asc'" @click="states_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="states_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
         </tr>
       </thead>
@@ -151,43 +190,47 @@
       </tbody>
     </table>
 
-    <h3>Technology</h3>
+    <div class="data-wrapper">
+      <div class="data-head">
+          <h3>Technology</h3>
+        </div>
+    
 
     <pie-chart :data="technology_pie" doughnut />
 
-    <table>
+    <table class="data-table">
       <thead>
         <tr>
           <th>Engagement By Device Type</th>
           <th>Unique Users
-            <a v-if="technology_top_order == 'unique_users_desc'" @click="technology_top_order = 'unique_users_asc'">&bigvee;</a>
-            <a v-else-if="technology_top_order == 'unique_users_asc'" @click="technology_top_order = 'unique_users_desc'">&bigwedge;</a>
-            <a v-else @click="technology_top_order = 'unique_users_desc'">&bigcirc;</a>
+            <a v-if="technology_top_order == 'unique_users_desc'" @click="technology_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="technology_top_order == 'unique_users_asc'" @click="technology_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="technology_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>New Users
-            <a v-if="technology_top_order == 'new_users_desc'" @click="technology_top_order = 'new_users_asc'">&bigvee;</a>
-            <a v-else-if="technology_top_order == 'new_users_asc'" @click="technology_top_order = 'new_users_desc'">&bigwedge;</a>
-            <a v-else @click="technology_top_order = 'new_users_desc'">&bigcirc;</a>
+            <a v-if="technology_top_order == 'new_users_desc'" @click="technology_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="technology_top_order == 'new_users_asc'" @click="technology_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="technology_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Returning Users
-            <a v-if="technology_top_order == 'returning_users_desc'" @click="technology_top_order = 'returning_users_asc'">&bigvee;</a>
-            <a v-else-if="technology_top_order == 'returning_users_asc'" @click="technology_top_order = 'returning_users_desc'">&bigwedge;</a>
-            <a v-else @click="technology_top_order = 'returning_users_desc'">&bigcirc;</a>
+            <a v-if="technology_top_order == 'returning_users_desc'" @click="technology_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="technology_top_order == 'returning_users_asc'" @click="technology_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="technology_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Total Pageviews
-            <a v-if="technology_top_order == 'total_pageviews_desc'" @click="technology_top_order = 'total_pageviews_asc'">&bigvee;</a>
-            <a v-else-if="technology_top_order == 'total_pageviews_asc'" @click="technology_top_order = 'total_pageviews_desc'">&bigwedge;</a>
-            <a v-else @click="technology_top_order = 'total_pageviews_desc'">&bigcirc;</a>
+            <a v-if="technology_top_order == 'total_pageviews_desc'" @click="technology_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="technology_top_order == 'total_pageviews_asc'" @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Unique Pageviews
-            <a v-if="technology_top_order == 'unique_pageviews_desc'" @click="technology_top_order = 'unique_pageviews_asc'">&bigvee;</a>
-            <a v-else-if="technology_top_order == 'unique_pageviews_asc'" @click="technology_top_order = 'unique_pageviews_desc'">&bigwedge;</a>
-            <a v-else @click="technology_top_order = 'unique_pageviews_desc'">&bigcirc;</a>
+            <a v-if="technology_top_order == 'unique_pageviews_desc'" @click="technology_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="technology_top_order == 'unique_pageviews_asc'" @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Avg. Time
-            <a v-if="technology_top_order == 'average_time_desc'" @click="technology_top_order = 'average_time_asc'">&bigvee;</a>
-            <a v-else-if="technology_top_order == 'average_time_asc'" @click="technology_top_order = 'average_time_desc'">&bigwedge;</a>
-            <a v-else @click="technology_top_order = 'average_time_desc'">&bigcirc;</a>
+            <a v-if="technology_top_order == 'average_time_desc'" @click="technology_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="technology_top_order == 'average_time_asc'" @click="technology_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="technology_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
         </tr>
       </thead>
@@ -203,6 +246,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 
   <div v-else-if="state=='traffic'">
@@ -244,34 +288,34 @@
         <tr>
           <th>Top Referrers</th>
           <th>Unique Users
-            <a v-if="traffic_top_order == 'unique_users_desc'" @click="traffic_top_order = 'unique_users_asc'">&bigvee;</a>
-            <a v-else-if="traffic_top_order == 'unique_users_asc'" @click="traffic_top_order = 'unique_users_desc'">&bigwedge;</a>
-            <a v-else @click="traffic_top_order = 'unique_users_desc'">&bigcirc;</a>
+            <a v-if="traffic_top_order == 'unique_users_desc'" @click="traffic_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="traffic_top_order == 'unique_users_asc'" @click="traffic_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="traffic_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>New Users
-            <a v-if="traffic_top_order == 'new_users_desc'" @click="traffic_top_order = 'new_users_asc'">&bigvee;</a>
-            <a v-else-if="traffic_top_order == 'new_users_asc'" @click="traffic_top_order = 'new_users_desc'">&bigwedge;</a>
-            <a v-else @click="traffic_top_order = 'new_users_desc'">&bigcirc;</a>
+            <a v-if="traffic_top_order == 'new_users_desc'" @click="traffic_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="traffic_top_order == 'new_users_asc'" @click="traffic_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="traffic_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Returning Users
-            <a v-if="traffic_top_order == 'returning_users_desc'" @click="traffic_top_order = 'returning_users_asc'">&bigvee;</a>
-            <a v-else-if="traffic_top_order == 'returning_users_asc'" @click="traffic_top_order = 'returning_users_desc'">&bigwedge;</a>
-            <a v-else @click="traffic_top_order = 'returning_users_desc'">&bigcirc;</a>
+            <a v-if="traffic_top_order == 'returning_users_desc'" @click="traffic_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="traffic_top_order == 'returning_users_asc'" @click="traffic_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="traffic_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Total Pageviews
-            <a v-if="traffic_top_order == 'total_pageviews_desc'" @click="traffic_top_order = 'total_pageviews_asc'">&bigvee;</a>
-            <a v-else-if="traffic_top_order == 'total_pageviews_asc'" @click="traffic_top_order = 'total_pageviews_desc'">&bigwedge;</a>
-            <a v-else @click="traffic_top_order = 'total_pageviews_desc'">&bigcirc;</a>
+            <a v-if="traffic_top_order == 'total_pageviews_desc'" @click="traffic_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="traffic_top_order == 'total_pageviews_asc'" @click="traffic_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="traffic_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Unique Pageviews
-            <a v-if="traffic_top_order == 'unique_pageviews_desc'" @click="traffic_top_order = 'unique_pageviews_asc'">&bigvee;</a>
-            <a v-else-if="traffic_top_order == 'unique_pageviews_asc'" @click="traffic_top_order = 'unique_pageviews_desc'">&bigwedge;</a>
-            <a v-else @click="traffic_top_order = 'unique_pageviews_desc'">&bigcirc;</a>
+            <a v-if="traffic_top_order == 'unique_pageviews_desc'" @click="traffic_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="traffic_top_order == 'unique_pageviews_asc'" @click="traffic_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="traffic_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
           <th>Avg. Time
-            <a v-if="traffic_top_order == 'average_time_desc'" @click="traffic_top_order = 'average_time_asc'">&bigvee;</a>
-            <a v-else-if="traffic_top_order == 'average_time_asc'" @click="traffic_top_order = 'average_time_desc'">&bigwedge;</a>
-            <a v-else @click="traffic_top_order = 'average_time_desc'">&bigcirc;</a>
+            <a v-if="traffic_top_order == 'average_time_desc'" @click="traffic_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+            <a v-else-if="traffic_top_order == 'average_time_asc'" @click="traffic_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+            <a v-else @click="traffic_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
         </tr>
       </thead>
@@ -353,9 +397,18 @@ function cmp(a, b) {
         return 0;
     }
 }
-
+import EyeIcon from '~/assets/img/eye.svg?inline'
+import LinkIcon from '~/assets/img/link.svg?inline'
+import SortIcon from '~/assets/img/sort.svg?inline'
+import SortableIcon from '~/assets/img/sortable.svg?inline'
 export default {
     name: "MyOpportunityDataExplorer",
+    components:{
+      EyeIcon,
+      LinkIcon,
+      SortIcon,
+      SortableIcon
+    },
 
     httpHeaders() {
         return {
@@ -913,12 +966,14 @@ aside {
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    margin-bottom: 2rem;
 
     label {
         text-align: left;
         font: normal normal bold 16px/19px Roboto;
         letter-spacing: 0px;
         color: #2F2F2F;
+        margin-bottom: .5rem;
     }
 
     >* {
@@ -937,4 +992,209 @@ aside {
 #current-proportion {
     margin: 1rem auto;
 }
+
+$linework : #dee2e6;
+$lightblue: #BFDCE2;
+
+.data-wrapper, .data-table {
+  border: 1px solid $linework;
+  margin-bottom: 2rem;
+}
+
+.data-wrapper {
+  h5 {
+    font-size: .8rem;
+  }
+}
+
+.data-wrapper > .data-table {
+  margin-bottom: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  tr:last-child {
+    border-bottom: 0;
+  }
+}
+.data-header {
+  padding:1rem 1rem 0;
+  display: flex;
+  justify-content:space-between;
+}
+
+.big-legend {
+  display:flex;
+  h2 {
+    margin:0;
+    margin-bottom: 0;
+    color: $snm-color-element-med;
+  }
+  h3 {
+    margin:0;
+    color: $snm-color-element-med;
+  }
+  &.bl-yellow {
+    h2, h3 {
+      color: $snm-color-action;
+    }
+  }
+}
+
+.ll-legend {
+  display: flex;
+  margin-top: 6px;
+  > div {
+    margin-right: 10px;
+  }
+  > :last-child {
+    margin-right: 0;
+  }
+  span {
+    display: inline-block;
+    width: 16px;
+    height:16px;
+    border-radius: 100%;
+    background-color: #165E6F;
+    position: relative;
+    bottom: -2px;
+    &.light-blue {
+      background-color: $lightblue;
+    }
+  }
+}
+
+.ll-icon {
+  border-radius: 100%;
+  height:45px;
+  width: 45px;
+  background-color: $lightblue;
+  display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+}
+.ll-icon svg  * {
+  fill: $snm-color-element-med;
+}
+
+.bl-yellow {
+  .ll-icon {
+    background-color: $snm-color-action;
+  }
+  .ll-icon svg * {
+    fill:white;
+  }
+}
+
+.data-table {
+  width: 100%;
+
+  thead {
+    border-bottom: 1px solid $linework;
+    box-shadow: 0 4px 4px rgba(0,0,0,.05);
+  }
+
+  td,th {
+    padding: 3px 10px;
+  }
+  th {
+    padding: 10px;
+    font-weight: normal;
+    &:first-child {
+      font-weight: bold;
+    }
+  }
+
+  tr {
+    border-bottom: 1px solid $linework;
+  }
+  td,th {
+    border-left: 1px solid $linework;
+    vertical-align: middle;
+    &:first-child {
+      border-left: 0;
+    }
+  }
+
+  td > div {
+    display: flex;
+    align-items: center;
+    :first-child {
+      margin-right: 8px;
+    }
+  }
+
+}
+
+.data-head {
+  padding:1rem;
+  border-bottom: 1px solid $linework;
+  box-shadow: 0 4px 4px rgba(0,0,0,.05);
+
+  h3 {
+    margin:0;
+  }
+}
+
+
+.sort {
+  position: relative;
+  top:4px;
+}
+
+.sortable.sort {
+  top:1px;
+}
+.sortable.sort svg {
+  width: 12px;
+  height: 12px;
+  * {
+    fill: #d5d5d5;
+  }
+}
+
+.sort svg {
+  width: 16px;
+  height: 16px;
+  * {
+    fill : $snm-color-element-med;
+  }
+}
+
+.sort-desc svg {
+  transform:rotate(180deg);
+}
+
+:deep(select){
+  max-width: 200px;
+}
+
+.conversion-rate :deep(.outer), .conversion-rate :deep(.inner) {
+  border-radius: 30px;
+}
+
+.conversion-rate :deep(.outer) {
+  width: calc(100% - 50px);
+}
+
+.data-header2 {
+  padding: 2rem 1rem 0 1rem;
+  display: flex;
+  align-items: baseline;
+  h4 {
+    font-weight: bold;
+    margin-right: 6px;
+  }
+}
+
+.con-num {
+  font-weight: bold;
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+.align-center {
+  align-items: center;
+}
+
 </style>

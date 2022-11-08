@@ -4,7 +4,8 @@
     <h1>Hosts Explorer</h1>
   </div>
 
-  <div class="area-display">
+  <p>can we change to https://observablehq.com/@d3/treemap</p>
+  <div class="area-display data-wrapper">
     <div class="area-column" v-for="chunk in [2, 4, 8, 16]">
       <div v-for="host in hosts_chunk(chunk)" class="area-host" :style="{'height': host.proportion}">
         {{host.name}} ({{host.value}})
@@ -12,94 +13,98 @@
     </div>
   </div>
 
-  <table>
+  <div class="data-table-wrapper">
+  <table class="data-table">
     <thead>
       <tr>
         <th>Host</th>
         <th colspan="2">Total Opportunities
-          <a v-if="hosts_top_order == 'total_desc'" @click="hosts_top_order = 'total_asc'">&bigvee;</a>
-          <a v-else-if="hosts_top_order == 'total_asc'" @click="hosts_top_order = 'total_desc'">&bigwedge;</a>
-          <a v-else @click="hosts_top_order = 'total_desc'">&bigcirc;</a>
+          <a v-if="hosts_top_order == 'total_desc'" @click="hosts_top_order = 'total_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+          <a v-else-if="hosts_top_order == 'total_asc'" @click="hosts_top_order = 'total_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+          <a v-else @click="hosts_top_order = 'total_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
         <th colspan="2">Live Opportunities
-          <a v-if="hosts_top_order == 'live_desc'" @click="hosts_top_order = 'live_asc'">&bigvee;</a>
-          <a v-else-if="hosts_top_order == 'live_asc'" @click="hosts_top_order = 'live_desc'">&bigwedge;</a>
-          <a v-else @click="hosts_top_order = 'live_desc'">&bigcirc;</a>
+          <a v-if="hosts_top_order == 'live_desc'" @click="hosts_top_order = 'live_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+          <a v-else-if="hosts_top_order == 'live_asc'" @click="hosts_top_order = 'live_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+          <a v-else @click="hosts_top_order = 'live_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="row in hosts_top_sorted">
         <td>{{row.name}}</td>
-        <td>{{row.total}}</td>
-        <td><comparison-bar :value="row.total" :max="report.data.max.total" color="#268699" /></td>
-        <td>{{row.live}}</td>
-        <td><comparison-bar :value="row.live" :max="report.data.max.live" color="#268699" /></td>
+        <td class="table-num">{{row.total}}</td>
+        <td class="table-bar"><comparison-bar :value="row.total" :max="report.data.max.total" color="#268699" /></td>
+        <td class="table-num">{{row.live}}</td>
+        <td class="table-bar"><comparison-bar :value="row.live" :max="report.data.max.live" color="#268699" /></td>
       </tr>
     </tbody>
   </table>
+</div>
 
-  <table>
+  <div class="data-table-wrapper">
+  <table class="data-table">
     <thead>
       <tr>
         <th>Host</th>
         <th colspan="2">Views
-          <a v-if="engagement_top_order == 'views_desc'" @click="engagement_top_order = 'views_asc'">&bigvee;</a>
-          <a v-else-if="engagement_top_order == 'views_asc'" @click="engagement_top_order = 'views_desc'">&bigwedge;</a>
-          <a v-else @click="engagement_top_order = 'views_desc'">&bigcirc;</a>
+          <a v-if="engagement_top_order == 'views_desc'" @click="engagement_top_order = 'views_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+          <a v-else-if="engagement_top_order == 'views_asc'" @click="engagement_top_order = 'views_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+          <a v-else @click="engagement_top_order = 'views_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
         <th colspan="2">Clicks to Website
-          <a v-if="engagement_top_order == 'opportunity_exits_desc'" @click="engagement_top_order = 'opportunity_exits_asc'">&bigvee;</a>
-          <a v-else-if="engagement_top_order == 'opportunity_exits_asc'" @click="engagement_top_order = 'opportunity_exits_desc'">&bigwedge;</a>
-          <a v-else @click="engagement_top_order = 'opportunity_exits_desc'">&bigcirc;</a>
+          <a v-if="engagement_top_order == 'opportunity_exits_desc'" @click="engagement_top_order = 'opportunity_exits_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+          <a v-else-if="engagement_top_order == 'opportunity_exits_asc'" @click="engagement_top_order = 'opportunity_exits_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+          <a v-else @click="engagement_top_order = 'opportunity_exits_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
         <th colspan="2">Self-Reports
-          <a v-if="engagement_top_order == 'didits_desc'" @click="engagement_top_order = 'didits_asc'">&bigvee;</a>
-          <a v-else-if="engagement_top_order == 'didits_asc'" @click="engagement_top_order = 'didits_desc'">&bigwedge;</a>
-          <a v-else @click="engagement_top_order = 'didits_desc'">&bigcirc;</a>
+          <a v-if="engagement_top_order == 'didits_desc'" @click="engagement_top_order = 'didits_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+          <a v-else-if="engagement_top_order == 'didits_asc'" @click="engagement_top_order = 'didits_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+          <a v-else @click="engagement_top_order = 'didits_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
         <th colspan="2">Saves
-          <a v-if="engagement_top_order == 'saves_desc'" @click="engagement_top_order = 'saves_asc'">&bigvee;</a>
-          <a v-else-if="engagement_top_order == 'saves_asc'" @click="engagement_top_order = 'saves_desc'">&bigwedge;</a>
-          <a v-else @click="engagement_top_order = 'saves_desc'">&bigcirc;</a>
+          <a v-if="engagement_top_order == 'saves_desc'" @click="engagement_top_order = 'saves_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+          <a v-else-if="engagement_top_order == 'saves_asc'" @click="engagement_top_order = 'saves_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+          <a v-else @click="engagement_top_order = 'saves_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
         <th colspan="2">Likes
-          <a v-if="engagement_top_order == 'likes_desc'" @click="engagement_top_order = 'likes_asc'">&bigvee;</a>
-          <a v-else-if="engagement_top_order == 'likes_asc'" @click="engagement_top_order = 'likes_desc'">&bigwedge;</a>
-          <a v-else @click="engagement_top_order = 'likes_desc'">&bigcirc;</a>
+          <a v-if="engagement_top_order == 'likes_desc'" @click="engagement_top_order = 'likes_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+          <a v-else-if="engagement_top_order == 'likes_asc'" @click="engagement_top_order = 'likes_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+          <a v-else @click="engagement_top_order = 'likes_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
         <th colspan="2">Shares
-          <a v-if="engagement_top_order == 'shares_desc'" @click="engagement_top_order = 'shares_asc'">&bigvee;</a>
-          <a v-else-if="engagement_top_order == 'shares_asc'" @click="engagement_top_order = 'shares_desc'">&bigwedge;</a>
-          <a v-else @click="engagement_top_order = 'shares_desc'">&bigcirc;</a>
+          <a v-if="engagement_top_order == 'shares_desc'" @click="engagement_top_order = 'shares_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+          <a v-else-if="engagement_top_order == 'shares_asc'" @click="engagement_top_order = 'shares_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+          <a v-else @click="engagement_top_order = 'shares_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
         <th colspan="2">Calendar Adds
-          <a v-if="engagement_top_order == 'calendar_adds_desc'" @click="engagement_top_order = 'calendar_adds_asc'">&bigvee;</a>
-          <a v-else-if="engagement_top_order == 'calendar_adds_asc'" @click="engagement_top_order = 'calendar_adds_desc'">&bigwedge;</a>
-          <a v-else @click="engagement_top_order = 'calendar_adds_desc'">&bigcirc;</a>
+          <a v-if="engagement_top_order == 'calendar_adds_desc'" @click="engagement_top_order = 'calendar_adds_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+          <a v-else-if="engagement_top_order == 'calendar_adds_asc'" @click="engagement_top_order = 'calendar_adds_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+          <a v-else @click="engagement_top_order = 'calendar_adds_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="row in engagement_top_sorted">
         <td>{{row.name}}</td>
-        <td>{{row.views}}</td>
-        <td><comparison-bar :value="row.views" :max="report.data.max.views" color="#268699" /></td>
-        <td>{{row.opportunity_exits}}</td>
-        <td><comparison-bar :value="row.opportunity_exits" :max="report.data.max.opportunity_exits" color="#268699" /></td>
-        <td>{{row.didits}}</td>
-        <td><comparison-bar :value="row.didits" :max="report.data.max.didits" color="#268699" /></td>
-        <td>{{row.saves}}</td>
-        <td><comparison-bar :value="row.saves" :max="report.data.max.saves" color="#268699" /></td>
-        <td>{{row.likes}}</td>
-        <td><comparison-bar :value="row.likes" :max="report.data.max.likes" color="#268699" /></td>
-        <td>{{row.shares}}</td>
-        <td><comparison-bar :value="row.shares" :max="report.data.max.shares" color="#268699" /></td>
-        <td>{{row.calendar_adds}}</td>
-        <td><comparison-bar :value="row.calendar_adds" :max="report.data.max.calendar_adds" color="#268699" /></td>
+        <td class="table-num">{{row.views}}</td>
+        <td class="table-bar"><comparison-bar :value="row.views" :max="report.data.max.views" color="#268699" /></td>
+        <td class="table-num">{{row.opportunity_exits}}</td>
+        <td class="table-bar"><comparison-bar :value="row.opportunity_exits" :max="report.data.max.opportunity_exits" color="#268699" /></td>
+        <td class="table-num">{{row.didits}}</td>
+        <td class="table-bar"><comparison-bar :value="row.didits" :max="report.data.max.didits" color="#268699" /></td>
+        <td class="table-num">{{row.saves}}</td>
+        <td class="table-bar"><comparison-bar :value="row.saves" :max="report.data.max.saves" color="#268699" /></td>
+        <td class="table-num">{{row.likes}}</td>
+        <td class="table-bar"><comparison-bar :value="row.likes" :max="report.data.max.likes" color="#268699" /></td>
+        <td class="table-num">{{row.shares}}</td>
+        <td class="table-bar"><comparison-bar :value="row.shares" :max="report.data.max.shares" color="#268699" /></td>
+        <td class="table-num">{{row.calendar_adds}}</td>
+        <td class="table-bar"><comparison-bar :value="row.calendar_adds" :max="report.data.max.calendar_adds" color="#268699" /></td>
       </tr>
     </tbody>
   </table>
+</div>
 </div>
 </template>
 
@@ -117,8 +122,16 @@ function cmp(k, a, b) {
     }
 }
 
+import SortIcon from '~/assets/img/sort.svg?inline'
+import SortableIcon from '~/assets/img/sortable.svg?inline'
+
 export default {
     name: "MyHostsExplorer",
+
+    components: {
+      SortIcon,
+      SortableIcon
+    },
 
     httpHeaders() {
         return {
@@ -413,4 +426,186 @@ aside {
 #current-proportion {
     margin: 1rem auto;
 }
+
+$linework : #dee2e6;
+$lightblue: #BFDCE2;
+
+.data-wrapper, .data-table {
+  border: 1px solid $linework;
+  margin-bottom: 2rem;
+}
+
+.data-wrapper > .data-table {
+  margin-bottom: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  tr:last-child {
+    border-bottom: 0;
+  }
+}
+.data-header {
+  padding:1rem 1rem 0;
+  display: flex;
+  justify-content:space-between;
+}
+
+.big-legend {
+  display:flex;
+  h2 {
+    margin:0;
+    margin-bottom: 0;
+    color: $snm-color-element-med;
+  }
+  h3 {
+    margin:0;
+    color: $snm-color-element-med;
+  }
+  &.bl-yellow {
+    h2, h3 {
+      color: $snm-color-action;
+    }
+  }
+}
+
+.ll-legend {
+  display: flex;
+  margin-top: 6px;
+  > div {
+    margin-right: 10px;
+  }
+  > :last-child {
+    margin-right: 0;
+  }
+  span {
+    display: inline-block;
+    width: 16px;
+    height:16px;
+    border-radius: 100%;
+    background-color: #165E6F;
+    position: relative;
+    bottom: -2px;
+    &.light-blue {
+      background-color: $lightblue;
+    }
+  }
+}
+
+.ll-icon {
+  border-radius: 100%;
+  height:45px;
+  width: 45px;
+  background-color: $lightblue;
+  display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+}
+.ll-icon svg  * {
+  fill: $snm-color-element-med;
+}
+
+.bl-yellow {
+  .ll-icon {
+    background-color: $snm-color-action;
+  }
+  .ll-icon svg * {
+    fill:white;
+  }
+}
+
+.data-table-wrapper {
+  min-width: 500px;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+
+  thead {
+    border-bottom: 1px solid $linework;
+    box-shadow: 0 4px 4px rgba(0,0,0,.05);
+  }
+
+  td,th {
+    padding: 3px 10px;
+  }
+  th {
+    padding: 10px;
+    font-weight: normal;
+    &:first-child {
+      font-weight: bold;
+    }
+  }
+
+  tr {
+    border-bottom: 1px solid $linework;
+  }
+  td,th {
+    border-left: 1px solid $linework;
+    vertical-align: middle;
+    &:first-child {
+      border-left: 0;
+    }
+  }
+  .table-num {
+    text-align: right;
+    width: 50px;
+    padding-right: 8px;
+  }
+
+  .table-bar {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  td > div {
+    display: flex;
+    align-items: center;
+    :first-child {
+      margin-right: 8px;
+    }
+  }
+
+}
+
+.data-head {
+  padding:1rem;
+  border-bottom: 1px solid $linework;
+  box-shadow: 0 4px 4px rgba(0,0,0,.05);
+
+  h3 {
+    margin:0;
+  }
+}
+
+
+.sort {
+  position: relative;
+  top:4px;
+}
+
+.sortable.sort {
+  top:1px;
+}
+.sortable.sort svg {
+  width: 12px;
+  height: 12px;
+  * {
+    fill: #d5d5d5;
+  }
+}
+
+.sort svg {
+  width: 16px;
+  height: 16px;
+  * {
+    fill : $snm-color-element-med;
+  }
+}
+
+.sort-desc svg {
+  transform:rotate(180deg);
+}
+
 </style>
