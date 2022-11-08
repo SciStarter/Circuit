@@ -107,12 +107,12 @@ export default {
                   .attr('style', 'fill:' + fg)
                   .attr('transform', `translate(${size.width/2},${size.height})`);
 
-            const end = svg.append("circle")
-                  .attr('style', 'fill:' + (reverse ? bg : fg))
-                  .attr('transform', `translate(${size.width/2},${size.height-radius+thickness/2})`)
-                  .attr('width', thickness)
-                  .attr('height', thickness)
-                  .attr('r', thickness/2);
+            // const end = svg.append("circle")
+            //       .attr('style', 'fill:' + (reverse ? bg : fg))
+            //       .attr('transform', `translate(${size.width/2},${size.height-radius+thickness/2})`)
+            //       .attr('width', thickness)
+            //       .attr('height', thickness)
+            //       .attr('r', thickness/2);
 
             if(show_label) {
                 let progress_label = svg.append("text")
@@ -137,13 +137,13 @@ export default {
                         }
                     })
 
-                    end.transition().duration(animate_ms).attrTween('transform', function(){
-                        return function(t) {
-                            return `translate(${size.width/2},${size.height})`+
-                                `rotate(${(start_degrees + delta_degrees * t)})`+
-                                `translate(0,-${radius-thickness/2})`
-                        }
-                    })
+                    // end.transition().duration(animate_ms).attrTween('transform', function(){
+                    //     return function(t) {
+                    //         return `translate(${size.width/2},${size.height})`+
+                    //             `rotate(${(start_degrees + delta_degrees * t)})`+
+                    //             `translate(0,-${radius-thickness/2})`
+                    //     }
+                    // })
 
                     if(show_label) {
                         progress_label.transition().duration(animate_ms).tween('bla', function() {

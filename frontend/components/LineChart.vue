@@ -39,6 +39,7 @@ export default {
     data() {
         return {
             chart: null,
+            windowWidth: window.innerWidth
         }
     },
 
@@ -61,6 +62,7 @@ export default {
     },
 
     mounted() {
+        this.getChartWidth();
         this.set_chart();
     },
 
@@ -75,6 +77,11 @@ export default {
             }
 
             let chart = Plot.plot({
+                width: this.windowWidth,
+                height: 225,
+                y: {
+                    grid: true
+                },
                 marks: yaxes.map((ya, i) => Plot.line(this.rows, {
                     x: xaxis,
                     y: ya,
@@ -103,6 +110,16 @@ export default {
             }
             else {
                 return [this.getter(x)];
+            }
+        },
+
+        getChartWidth() {
+            if (window.innerWidth >= 1200 ) {
+                this.windowWidth = window.innerWidth - 280;
+            } else if (window.innerWidth <= 959) {
+                this.windowWidth = window.innerWidth;
+            } else {
+                this.windowWidth = window.innerWidth - 200;
             }
         }
     },
