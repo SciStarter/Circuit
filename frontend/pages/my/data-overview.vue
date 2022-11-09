@@ -324,7 +324,7 @@
         </div>
         <div class="ll-legend">
               <div><span class="dark-blue"></span> Unique</div>
-              <div><span class="light-blue"></span> New</div> 
+              <div><span class="gray"></span> New</div> 
               <div><span class="light-blue"></span> Returning</div> 
             </div>
         </div>
@@ -338,6 +338,9 @@
 
 
     <div class="data-wrapper">
+      <div class="data-head">
+          <h3>Referral Sources</h3>
+        </div>
     <pie-chart :data="report[org].traffic.data.pie" />
 
     <table class="data-table">
@@ -1018,7 +1021,7 @@ aside {
   margin-bottom: 2rem;
 }
 
-.data-wrapper > .data-table {
+.data-wrapper .data-table {
   margin-bottom: 0;
   border-left: 0;
   border-right: 0;
@@ -1055,7 +1058,7 @@ aside {
   display: flex;
   margin-top: 6px;
   > div {
-    margin-right: 10px;
+    margin-right: 16px;
   }
   > :last-child {
     margin-right: 0;
@@ -1070,6 +1073,9 @@ aside {
     bottom: -2px;
     &.light-blue {
       background-color: $lightblue;
+    }
+    &.gray {
+      background-color: #868686;
     }
   }
 }

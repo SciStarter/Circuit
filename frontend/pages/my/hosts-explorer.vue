@@ -567,6 +567,7 @@ $lightblue: #BFDCE2;
     }
   }
 
+
 }
 
 .data-head {

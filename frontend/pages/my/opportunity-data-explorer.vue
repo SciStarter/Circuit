@@ -45,13 +45,14 @@
           <div>
             <h2>{{ report.engagement.data.bars.self["Views"] }}</h2>
             <h3>Page Views</h3>
-            <div class="ll-legend">
+          </div>
+         
+      </div>
+      <div class="ll-legend">
               <div><span class="dark-blue"></span> Total</div>
               <div><span class="light-blue"></span> Unique</div> 
             </div>
-          </div>
         </div>
-      </div>
         <line-chart
           :rows="report.engagement.data.chart"
           :xaxis="d => new Date(d.date)"
@@ -144,32 +145,32 @@
       <thead>
         <tr>
           <th>Engagement By Location</th>
-          <th>Unique Users
+          <th colspan="2">Unique Users
             <a v-if="states_top_order == 'unique_users_desc'" @click="states_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'unique_users_asc'" @click="states_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>New Users
+          <th colspan="2">New Users
             <a v-if="states_top_order == 'new_users_desc'" @click="states_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'new_users_asc'" @click="states_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Returning Users
+          <th colspan="2">Returning Users
             <a v-if="states_top_order == 'returning_users_desc'" @click="states_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'returning_users_asc'" @click="states_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Total Pageviews
+          <th colspan="2">Total Pageviews
             <a v-if="states_top_order == 'total_pageviews_desc'" @click="states_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'total_pageviews_asc'" @click="states_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Unique Pageviews
+          <th colspan="2">Unique Pageviews
             <a v-if="states_top_order == 'unique_pageviews_desc'" @click="states_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'unique_pageviews_asc'" @click="states_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Avg. Time
+          <th colspan="2">Avg. Time
             <a v-if="states_top_order == 'average_time_desc'" @click="states_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'average_time_asc'" @click="states_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -180,12 +181,18 @@
         <tr v-for="row in states_top_sorted">
           <td v-if="selected_state === null"><a @click="select_state(row['name'])">{{row['name']}}</a></td>
           <td v-else>{{row['name']}}</td>
-          <td><comparison-bar :value="row['Unique Users']" :max="states_max['Unique Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['New Users']" :max="states_max['New Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Returning Users']" :max="states_max['Returning Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Total Pageviews']" :max="states_max['Total Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Unique Pageviews']" :max="states_max['Unique Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Avg. Time']" :max="states_max['Avg. Time']" color="#268699" /></td>
+          <td class="table-num">{{row['Unique Users']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Unique Users']" :max="states_max['Unique Users']" color="#268699" /></td>
+          <td class="table-num">{{row['New Users']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['New Users']" :max="states_max['New Users']" color="#268699" /></td>
+          <td class="table-num">{{row['Returning Users']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Returning Users']" :max="states_max['Returning Users']" color="#268699" /></td>
+          <td class="table-num">{{row['Total Pageviews']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="states_max['Total Pageviews']" color="#268699" /></td>
+          <td class="table-num">{{row['Unique Pageviews']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="states_max['Unique Pageviews']" color="#268699" /></td>
+          <td class="table-num">{{row['Avg. Time']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="states_max['Avg. Time']" color="#268699" /></td>
         </tr>
       </tbody>
     </table>
@@ -202,32 +209,32 @@
       <thead>
         <tr>
           <th>Engagement By Device Type</th>
-          <th>Unique Users
+          <th colspan="2">Unique Users
             <a v-if="technology_top_order == 'unique_users_desc'" @click="technology_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'unique_users_asc'" @click="technology_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>New Users
+          <th colspan="2">New Users
             <a v-if="technology_top_order == 'new_users_desc'" @click="technology_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'new_users_asc'" @click="technology_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Returning Users
+          <th colspan="2">Returning Users
             <a v-if="technology_top_order == 'returning_users_desc'" @click="technology_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'returning_users_asc'" @click="technology_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Total Pageviews
+          <th colspan="2">Total Pageviews
             <a v-if="technology_top_order == 'total_pageviews_desc'" @click="technology_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'total_pageviews_asc'" @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Unique Pageviews
+          <th colspan="2">Unique Pageviews
             <a v-if="technology_top_order == 'unique_pageviews_desc'" @click="technology_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'unique_pageviews_asc'" @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Avg. Time
+          <th colspan="2">Avg. Time
             <a v-if="technology_top_order == 'average_time_desc'" @click="technology_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'average_time_asc'" @click="technology_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -237,12 +244,18 @@
       <tbody>
         <tr v-for="row in technology_top_sorted">
           <td>{{row['name']}}</td>
-          <td><comparison-bar :value="row['Unique Users']" :max="report.technology.data.max['Unique Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['New Users']" :max="report.technology.data.max['New Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Returning Users']" :max="report.technology.data.max['Returning Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Total Pageviews']" :max="report.technology.data.max['Total Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Unique Pageviews']" :max="report.technology.data.max['Unique Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Avg. Time']" :max="report.technology.data.max['Avg. Time']" color="#268699" /></td>
+          <td class="table-num">{{row['Unique Users']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Unique Users']" :max="report.technology.data.max['Unique Users']" color="#268699" /></td>
+          <td class="table-num">{{row['New Users']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['New Users']" :max="report.technology.data.max['New Users']" color="#268699" /></td>
+          <td class="table-num">{{row['Returning Users']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Returning Users']" :max="report.technology.data.max['Returning Users']" color="#268699" /></td>
+          <td class="table-num">{{row['Total Pageviews']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="report.technology.data.max['Total Pageviews']" color="#268699" /></td>
+          <td class="table-num">{{row['Unique Pageviews']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="report.technology.data.max['Unique Pageviews']" color="#268699" /></td>
+          <td class="table-num">{{row['Avg. Time']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="report.technology.data.max['Avg. Time']" color="#268699" /></td>
         </tr>
       </tbody>
     </table>
@@ -274,45 +287,66 @@
       </div>
     </div>
 
+    <div class="data-wrapper">
+      <div class="data-header">
+        <div class="big-legend bl-blue">
+          <div class="ll-icon ll-icon-user"><user-icon></user-icon></div>
+          <div>
+            <h2># (Total Unique Users during time period)</h2>
+            <h3>Users</h3>
+            
+          </div>
+        </div>
+        <div class="ll-legend">
+              <div><span class="dark-blue"></span> Unique</div>
+              <div><span class="light-blue"></span> New</div> 
+              <div><span class="light-blue"></span> Returning</div> 
+            </div>
+        </div>
     <line-chart
       :rows="report.traffic.data.chart"
       :xaxis="d => new Date(d.date)"
       :yaxes="['Unique', 'New', 'Returning']"
       :colors="['#268699', '#868686', '#BFDCE2']"
       />
+    </div>
 
+    <div class="data-wrapper">
+      <div class="data-head">
+          <h3>Referral Sources</h3>
+        </div>
     <pie-chart :data="report.traffic.data.pie" />
 
-    <table>
+    <table class="data-table">
       <thead>
         <tr>
           <th>Top Referrers</th>
-          <th>Unique Users
+          <th colspan="2">Unique Users
             <a v-if="traffic_top_order == 'unique_users_desc'" @click="traffic_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'unique_users_asc'" @click="traffic_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>New Users
+          <th colspan="2">New Users
             <a v-if="traffic_top_order == 'new_users_desc'" @click="traffic_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'new_users_asc'" @click="traffic_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Returning Users
+          <th colspan="2">Returning Users
             <a v-if="traffic_top_order == 'returning_users_desc'" @click="traffic_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'returning_users_asc'" @click="traffic_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Total Pageviews
+          <th colspan="2">Total Pageviews
             <a v-if="traffic_top_order == 'total_pageviews_desc'" @click="traffic_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'total_pageviews_asc'" @click="traffic_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Unique Pageviews
+          <th colspan="2">Unique Pageviews
             <a v-if="traffic_top_order == 'unique_pageviews_desc'" @click="traffic_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'unique_pageviews_asc'" @click="traffic_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Avg. Time
+          <th colspan="2">Avg. Time
             <a v-if="traffic_top_order == 'average_time_desc'" @click="traffic_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'average_time_asc'" @click="traffic_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -322,15 +356,22 @@
       <tbody>
         <tr v-for="row in traffic_top_sorted">
           <td>{{row['name']}}</td>
-          <td><comparison-bar :value="row['Unique Users']" :max="report.traffic.data.max['Unique Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['New Users']" :max="report.traffic.data.max['New Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Returning Users']" :max="report.traffic.data.max['Returning Users']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Total Pageviews']" :max="report.traffic.data.max['Total Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Unique Pageviews']" :max="report.traffic.data.max['Unique Pageviews']" color="#268699" /></td>
-          <td><comparison-bar :value="row['Avg. Time']" :max="report.traffic.data.max['Avg. Time']" color="#268699" /></td>
+          <td class="table-num">{{row['Unique Users']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Unique Users']" :max="report.traffic.data.max['Unique Users']" color="#268699" /></td>
+          <td class="table-num">{{row['New Users']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['New Users']" :max="report.traffic.data.max['New Users']" color="#268699" /></td>
+          <td class="table-num">{{row['Returning Users']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Returning Users']" :max="report.traffic.data.max['Returning Users']" color="#268699" /></td>
+          <td class="table-num">{{row['Total Pageviews']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="report.traffic.data.max['Total Pageviews']" color="#268699" /></td>
+          <td class="table-num">{{row['Unique Pageviews']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="report.traffic.data.max['Unique Pageviews']" color="#268699" /></td>
+          <td class="table-num">{{row['Avg. Time']}}</td>
+          <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="report.traffic.data.max['Avg. Time']" color="#268699" /></td>
         </tr>
       </tbody>
     </table>
+  </div>
   </div>
   <div v-else-if="state=='overlap'">
     <h2>Engagement Overlap</h2>
@@ -350,7 +391,7 @@
     huge can of worms, since it brings up logic conflicts and
     ambiguities. Seems like it should always be sorted by overlap
     percent anyhow, so that's what I've done here. -->
-    <table>
+    <table class="data-table">
       <thead>
         <tr>
           <th>Opportunity</th>
@@ -366,13 +407,13 @@
       <tbody>
         <tr v-for="row in report.overlap.data.table">
           <td>{{row.name}}</td>
-          <td>{{percent(row.overlap)}}</td>
-          <td><comparison-bar :value="row.overlap" :max="1.0" color="#268699" /></td>
+          <td class="table-num">{{percent(row.overlap)}}</td>
+          <td class="table-bar"><comparison-bar :value="row.overlap" :max="1.0" color="#268699" /></td>
           <td>{{row.host}}</td>
           <td>{{friendly(row.activity_types)}}</td>
           <td>{{row.format}}</td>
           <td>{{friendly(row.venue_types)}}</td>
-          <td v-if="row.min_age > 0">{{row.min_age}}</td>
+          <td v-if="row.min_age > 0" >{{row.min_age}}</td>
           <td v-else><small>N/A</small></td>
           <td v-if="row.max_age < 999">{{row.max_age}}</td>
           <td v-else><small>N/A</small></td>
@@ -401,13 +442,15 @@ import EyeIcon from '~/assets/img/eye.svg?inline'
 import LinkIcon from '~/assets/img/link.svg?inline'
 import SortIcon from '~/assets/img/sort.svg?inline'
 import SortableIcon from '~/assets/img/sortable.svg?inline'
+import UserIcon from '~/assets/img/user.svg?inline'
 export default {
     name: "MyOpportunityDataExplorer",
     components:{
       EyeIcon,
       LinkIcon,
       SortIcon,
-      SortableIcon
+      SortableIcon,
+      UserIcon
     },
 
     httpHeaders() {
@@ -1072,6 +1115,10 @@ $lightblue: #BFDCE2;
     justify-content: center;
     align-items: center;
     margin-right: 10px;
+    &.ll-icon-user svg {
+      height:32px;
+      width: 32px;
+    }
 }
 .ll-icon svg  * {
   fill: $snm-color-element-med;
@@ -1114,6 +1161,16 @@ $lightblue: #BFDCE2;
     &:first-child {
       border-left: 0;
     }
+  }
+  .table-num {
+    text-align: right;
+    width: 50px;
+    padding-right: 8px;
+  }
+
+  .table-bar {
+    border-left: 0;
+    padding-left: 0;
   }
 
   td > div {
@@ -1171,6 +1228,7 @@ $lightblue: #BFDCE2;
 
 .conversion-rate :deep(.outer), .conversion-rate :deep(.inner) {
   border-radius: 30px;
+  height: 16px!important;
 }
 
 .conversion-rate :deep(.outer) {
