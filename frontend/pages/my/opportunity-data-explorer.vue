@@ -1074,7 +1074,7 @@ $lightblue: #BFDCE2;
   }
   h3 {
     margin:0;
-    color: $snm-color-element-med;
+    color: #5694A2;
   }
   &.bl-yellow {
     h2, h3 {

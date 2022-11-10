@@ -19,55 +19,81 @@
 
 
     <div class="flex flex2">
-      <div id="snm-unique-visitors">
-        {{report.engagement.data.stats.unique_visitors}}
-        <label>Unique SNM Visitors</label>
+      <div id="snm-unique-visitors" class="stack center big-legend">
+        <telescope-icon></telescope-icon>
+        <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+        <h3>Unique SNM Visitors</h3>
       </div>
-      <div id="snm-accounts">
-        {{report.engagement.data.stats.accounts}}
-        <label>SNM Accounts</label>
+      <div id="snm-accounts" class="stack center big-legend">
+        <atom-icon></atom-icon>
+        <h2>{{report.engagement.data.stats.accounts}}</h2>
+        <h3>SNM Accounts</h3>
       </div>
     </div>
 
     <h3>Total Engagement</h3>
     <div class="flex flex2">
-      <div id="snm-total-opp-page-views">
-        {{report.engagement.data.stats.opportunity_views}}
-        <label>Total Opportunity Page Views</label>
+      <div id="snm-total-opp-page-views" class="big-legend bl-blue">
+          <div class="ll-icon"><eye-icon></eye-icon><strong>T</strong></div>
+          <div>
+            <h2>{{report.engagement.data.stats.opportunity_views}}</h2>
+            <h3>Total Opportunity Page Views</h3>
+          </div>
       </div>
-      <div id="snm-total-opp-unique">
-        {{report.engagement.data.stats.opportunity_unique}}
-        <label>Unique Opportunity Page Views</label>
-      </div>
-    </div>
-
-    <div class="flex flex3">
-      <div id="snm-website-clicks">
-        {{report.engagement.data.stats.opportunity_exits}}
-        <label>Website4 Clicks</label>
-      </div>
-      <div id="snm-self-reports">
-        {{report.engagement.data.stats.didits}}
-        <label>Self-Reports</label>
-      </div>
-      <div id="snm-saves">
-        {{report.engagement.data.stats.saves}}
-        <label>Saves</label>
+      <div id="snm-total-opp-unique" class="big-legend bl-blue">
+        <div class="ll-icon"><eye-icon></eye-icon><strong>U</strong></div>
+          <div>
+            <h2>{{report.engagement.data.stats.opportunity_unique}}</h2>
+            <h3>Unique Opportunity Page Views</h3>
+          </div>
       </div>
     </div>
 
     <div class="flex flex3">
-      <div id="snm-likes">
-        {{report.engagement.data.stats.likes}}
-        <label>Likes</label>
+      <div id="snm-website-clicks" class="big-legend bl-blue">
+        <div class="ll-icon"><link-icon></link-icon></div>
+          <div>
+            <h2>{{report.engagement.data.stats.opportunity_exits}}</h2>
+            <h3>Clicks to Websites</h3>
+          </div>
       </div>
-      <div id="snm-shares">
-        {{report.engagement.data.stats.shares}}
-        <label>Shares</label>
+      <div id="snm-self-reports" class="big-legend bl-blue">
+        <div class="ll-icon"><plus-icon></plus-icon></div>
+          <div>
+            <h2>{{report.engagement.data.stats.didits}}</h2>
+            <h3>Self-Reports</h3>
+          </div>
       </div>
-      <div id="snm-calendar-adds">
-        {{report.engagement.data.stats.calendar_adds}}
-        <label>Calendar Adds</label>
+      <div id="snm-saves" class="big-legend bl-blue">
+        <div class="ll-icon"><save-icon></save-icon></div>
+          <div>
+            <h2>{{report.engagement.data.stats.saves}}</h2>
+            <h3>Saves</h3>
+          </div>
+      </div>
+    </div>
+
+    <div class="flex flex3">
+      <div id="snm-likes" class="big-legend bl-blue">
+        <div class="ll-icon"><like-icon></like-icon></div>
+          <div>
+            <h2>{{report.engagement.data.stats.likes}}</h2>
+            <h3>Likes</h3>
+          </div>
+      </div>
+      <div id="snm-shares" class="big-legend bl-blue">
+        <div class="ll-icon"><share-icon></share-icon></div>
+          <div>
+            <h2>{{report.engagement.data.stats.shares}}</h2>
+            <h3>Shares</h3>
+          </div>
+      </div>
+      <div id="snm-calendar-adds" class="big-legend bl-blue">
+        <div class="ll-icon calendar"><calendar-icon></calendar-icon></div>
+          <div>
+            <h2>{{report.engagement.data.stats.calendar_adds}}</h2>
+            <h3>Calendar Adds</h3>
+          </div>
       </div>
     </div>
 
@@ -82,111 +108,131 @@
       <tr v-for="row in report.engagement.data.searches">
         <td class="narrow-column">{{row.phrase}}</td>
         <td class="table-num">{{row.searches}}</td>
-        <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#7CB4BF" background="#DEDEDE" width="100%" height="1rem" /></td>
+        <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
       </tr>
     </tbody>
     </table>
   </div>
 
   <div v-else-if="state=='states'">
-    <div>
+    <div class="data-wrapper">
       <div class="data-head">
-            <h3>Sex &amp; Age</h3>
-          </div>
+        <h3>Sex &amp; Age</h3>
+      </div>
+      <div class="flex flex2 sex">
       <div>
         <label>Female <comparison-bar :value="report.demographics.sex.female.proportion" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="1rem" /></label>
+
+
+
         <label>Male <comparison-bar :value="report.demographics.sex.male.proportion" :max="1.0" color="#165E6F" background="#DEDEDE" width="100%" height="1rem" /></label>
       </div>
       <div>
-        <label v-for="entry in sorted_kv(report.demographics.age)">
-          {{entry[0]}} {{percent(entry[1].proportion)}}
-          <comparison-bar :value="entry[1].male.proportion" :max="entry[1].proportion" color="#165E6F" background="#7CB4BF" width="100%" height="1rem" />
-        </label>
+      <div class="bar-viz" v-for="entry in sorted_kv(report.demographics.age)">
+        <label>{{entry[0]}}</label>
+          <comparison-bar :value="entry[1].male.proportion" :max="entry[1].proportion" color="#165E6F" background="#7CB4BF" :width="(entry[1].proportion * 100)*5 + '%'" height="1rem" />
+        <span>{{percent(entry[1].proportion)}}</span>
       </div>
     </div>
+     </div>
+    </div>
 
-    <div class="flex flex2">
-        <div>
+    <div class="flex flex2 fill">
+        <div class="push">
           <div class="data-head">
             <h3>Ethnicity</h3>
           </div>
          
-          <label>
-            Caucasian
-            <comparison-bar :value="report.demographics.ethnicity['Cauc.'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
-          <label>
-            Hispanic
+          <div class="bar-viz">
+            <label>Caucasian</label>
+              <comparison-bar :value="report.demographics.ethnicity['Cauc.'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
+            <span>{{(report.demographics.ethnicity['Cauc.'].proportion * 100).toFixed(2)}}%</span>
+          </div>
+          <div class="bar-viz">
+            <label>Hispanic</label>
             <comparison-bar :value="report.demographics.ethnicity['Hisp'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
-          <label>
-            African American
+            <span>{{(report.demographics.ethnicity['Hisp'].proportion * 100).toFixed(2)}}%</span>
+          </div>
+          <div class="bar-viz">
+            <label>African American</label>
             <comparison-bar :value="report.demographics.ethnicity['Afr. Am.'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
-          <label>
-            Asian
+            <span>{{(report.demographics.ethnicity['Afr. Am.'].proportion * 100).toFixed(2)}}%</span>
+          </div>
+          <div class="bar-viz">
+            <label>Asian</label>
             <comparison-bar :value="report.demographics.ethnicity['Asian'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
-          <label>
-            Other
+            <span>{{(report.demographics.ethnicity['Asian'].proportion * 100).toFixed(2)}}%</span>
+          </div>
+          <div class="bar-viz">
+            <label>Other</label>
             <comparison-bar :value="report.demographics.ethnicity['Other'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
+            <span>{{(report.demographics.ethnicity['Other'].proportion * 100).toFixed(2)}}%</span>
+          </div>
         </div>
 
-        <div>
+        <div class="push">
           <div class="data-head">
             <h3>Education</h3>
           </div>
-          <label>
-            No College
+          <div class="bar-viz">
+            <label>No College</label>
             <comparison-bar :value="report.demographics.education['No College'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
-          <label>
-            College
+            <span>{{(report.demographics.education['No College'].proportion * 100).toFixed(2)}}%</span>
+          </div>
+          <div class="bar-viz">
+            <label>College</label>
             <comparison-bar :value="report.demographics.education['College'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
-          <label>
-            Grad School
+            <span>{{(report.demographics.education['College'].proportion * 100).toFixed(2)}}%</span>
+          </div>
+          <div class="bar-viz">
+            <label>Grad School</label>
             <comparison-bar :value="report.demographics.education['Grad. Sch.'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
+            <span>{{(report.demographics.education['Grad. Sch.'].proportion * 100).toFixed(2)}}%</span>
+          </div>
         </div>
       </div>
 
-      <div class="flex flex2">
-        <div>
+      <div class="flex flex2 fill">
+        <div class="push">
           <div class="data-head">
-            <h3>Housefold Income</h3>
+            <h3>Household Income</h3>
           </div>
-          <label>
-            $0-50k
+          <div class="bar-viz">
+            <label>$0-50k</label>
             <comparison-bar :value="report.demographics.income['$0-50k'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
-          <label>
-            $50-100k
+            <span>{{(report.demographics.income['$0-50k'].proportion * 100).toFixed(2)}}%</span>
+          </div>
+          <div class="bar-viz">
+            <label>$50-100k</label>
             <comparison-bar :value="report.demographics.income['$50-100k'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
-          <label>
-            $100-150k
+            <span>{{(report.demographics.income['$50-100k'].proportion * 100).toFixed(2)}}%</span>
+          </div>
+          <div class="bar-viz">
+            <label>$100-150k</label>
             <comparison-bar :value="report.demographics.income['$100-150k'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
-          <label>
-            $150k+
+            <span>{{(report.demographics.income['$100-150k'].proportion * 100).toFixed(2)}}%</span>
+          </div>
+          <div class="bar-viz">
+            <label>$150k+</label>
             <comparison-bar :value="report.demographics.income['$150k+'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
+            <span>{{(report.demographics.income['$150k+'].proportion * 100).toFixed(2)}}%</span>
+          </div>
         </div>
 
-        <div>
+        <div class="push">
           <div class="data-head">
             <h3>Children</h3>
           </div>
-          <label>
-            Has Kids
+          <div class="bar-viz">
+            <label>Has Kids</label>
             <comparison-bar :value="report.demographics.children['Some Children under 17'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
-          <label>
-            No Kids
+            <span>{{(report.demographics.children['Some Children under 17'].proportion * 100).toFixed(2)}}%</span>
+          </div>
+          <div class="bar-viz">
+            <label>No Kids</label>
             <comparison-bar :value="report.demographics.children['No Children under 17'].proportion" :max="1.0" color="#165E6F" width="100%" height="1rem" />
-          </label>
+            <span>{{(report.demographics.children['No Children under 17'].proportion * 100).toFixed(2)}}%</span>
+          </div>
         </div>
       </div>
 
@@ -445,6 +491,13 @@ import EyeIcon from '~/assets/img/eye.svg?inline'
 import LinkIcon from '~/assets/img/link.svg?inline'
 import SortIcon from '~/assets/img/sort.svg?inline'
 import SortableIcon from '~/assets/img/sortable.svg?inline'
+import PlusIcon from '~/assets/img/plus.svg?inline'
+import AtomIcon from '~/assets/img/atom.svg?inline'
+import CalendarIcon from '~/assets/img/calendar.svg?inline'
+import LikeIcon from '~/assets/img/like.svg?inline'
+import ShareIcon from '~/assets/img/share.svg?inline'
+import TelescopeIcon from '~/assets/img/astronomy-and-space.svg?inline'
+import SaveIcon from '~/assets/img/saved-science-opportunities.svg?inline'
 
 
 export default {
@@ -454,7 +507,14 @@ export default {
       EyeIcon,
       LinkIcon,
       SortIcon,
-      SortableIcon
+      SortableIcon,
+      PlusIcon,
+      AtomIcon,
+      CalendarIcon,
+      LikeIcon,
+      ShareIcon,
+      TelescopeIcon,
+      SaveIcon
     },
 
     httpHeaders() {
@@ -1088,7 +1148,7 @@ h2 {
 }
 
 h3 {
-    margin: 05rem 0px;
+    margin: 1em 0px;
     text-align: left;
     font: normal normal bold 16px/19px Roboto;
     letter-spacing: 0px;
@@ -1124,6 +1184,9 @@ aside {
 .stack {
     display: flex;
     flex-direction: column;
+    &.center {
+      align-items: center;
+    }
 }
 
 .labeled-gauge-ends {
@@ -1217,7 +1280,7 @@ $lightblue: #BFDCE2;
   }
   h3 {
     margin:0;
-    color: $snm-color-element-med;
+    color: #5694A2;
   }
   &.bl-yellow {
     h2, h3 {
@@ -1258,6 +1321,28 @@ $lightblue: #BFDCE2;
     justify-content: center;
     align-items: center;
     margin-right: 10px;
+    position: relative;
+
+    svg {
+      height: 24px;
+    }
+
+    &.calendar {
+      svg {
+        height: 32px;
+        width:22px;
+      }
+      rect {
+        fill:transparent;
+      }
+    }
+    strong {
+      position: absolute;
+      bottom:2px;
+      right:10px;
+      color: $snm-color-element-med;
+      font-size: 12px;
+    }
 }
 .ll-icon svg  * {
   fill: $snm-color-element-med;
@@ -1381,4 +1466,68 @@ $lightblue: #BFDCE2;
 
 }
 
+#snm-unique-visitors, #snm-accounts {
+  h2 {
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+  h3 {
+    font-size: 1.2rem;
+  }
+  svg {
+    height: 80px;
+    width: 100px;
+    margin-bottom: 0.5rem;
+}
+  }
+
+  .push {
+    margin-bottom: 2rem!important;
+  }
+
+  .sex.flex2 > div {
+      border:0;
+      margin-bottom: 0;
+  }
+
+  .bar-viz {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+    label, span {
+      width: 130px;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: right;
+    }
+    span {
+      text-align: left;
+      width: 60px;
+    }
+    
+  }
+
+  :deep(.fill .bar-viz .outer){
+      background-color: $linework!important;
+      margin: 0 8px;
+    }
+
+
+.data-head + .bar-viz {
+  margin-top: 1.5rem;
+}
+
+.sex {
+  .bar-viz {
+    justify-content: flex-start;
+    label {
+      width:50px;
+      margin-right: 8px;
+    }
+    span {
+      margin-left: 8px;
+      display: block;
+    }
+  }
+}
 </style>
