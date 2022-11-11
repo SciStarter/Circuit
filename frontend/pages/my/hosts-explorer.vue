@@ -1,4 +1,5 @@
 <template>
+<div class="snm-wrapper">
 <div class="snm-container">
   <div class="flex-header">
     <h1>Hosts Explorer</h1>
@@ -18,12 +19,16 @@
     <thead>
       <tr>
         <th>Host</th>
-        <th colspan="2">Total Opportunities
+        <th colspan="2">Total Opportunities <b-tooltip label="# of live and closed opportunities of the host." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
           <a v-if="hosts_top_order == 'total_desc'" @click="hosts_top_order = 'total_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
           <a v-else-if="hosts_top_order == 'total_asc'" @click="hosts_top_order = 'total_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
           <a v-else @click="hosts_top_order = 'total_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
-        <th colspan="2">Live Opportunities
+        <th colspan="2">Live Opportunities <b-tooltip label="# of opportunities of the host currently on SNM." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
           <a v-if="hosts_top_order == 'live_desc'" @click="hosts_top_order = 'live_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
           <a v-else-if="hosts_top_order == 'live_asc'" @click="hosts_top_order = 'live_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
           <a v-else @click="hosts_top_order = 'live_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -47,37 +52,51 @@
     <thead>
       <tr>
         <th>Host</th>
-        <th colspan="2">Views
+        <th colspan="2">Views <b-tooltip label="Total number of times opportunities of host have been viewed." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
           <a v-if="engagement_top_order == 'views_desc'" @click="engagement_top_order = 'views_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
           <a v-else-if="engagement_top_order == 'views_asc'" @click="engagement_top_order = 'views_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
           <a v-else @click="engagement_top_order = 'views_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
-        <th colspan="2">Clicks to Website
+        <th colspan="2">Clicks to Website <b-tooltip label="Total number of times users have clicked on the website link of opportunities of host." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
           <a v-if="engagement_top_order == 'opportunity_exits_desc'" @click="engagement_top_order = 'opportunity_exits_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
           <a v-else-if="engagement_top_order == 'opportunity_exits_asc'" @click="engagement_top_order = 'opportunity_exits_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
           <a v-else @click="engagement_top_order = 'opportunity_exits_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
-        <th colspan="2">Self-Reports
+        <th colspan="2">Self-Reports <b-tooltip label="Total number of users have reported doing opportunities of host." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
           <a v-if="engagement_top_order == 'didits_desc'" @click="engagement_top_order = 'didits_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
           <a v-else-if="engagement_top_order == 'didits_asc'" @click="engagement_top_order = 'didits_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
           <a v-else @click="engagement_top_order = 'didits_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
-        <th colspan="2">Saves
+        <th colspan="2">Saves <b-tooltip label="Total number of times users have saved opportunities of host." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
           <a v-if="engagement_top_order == 'saves_desc'" @click="engagement_top_order = 'saves_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
           <a v-else-if="engagement_top_order == 'saves_asc'" @click="engagement_top_order = 'saves_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
           <a v-else @click="engagement_top_order = 'saves_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
-        <th colspan="2">Likes
+        <th colspan="2">Likes <b-tooltip label="Total number of times users have liked opportunities of host." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
           <a v-if="engagement_top_order == 'likes_desc'" @click="engagement_top_order = 'likes_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
           <a v-else-if="engagement_top_order == 'likes_asc'" @click="engagement_top_order = 'likes_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
           <a v-else @click="engagement_top_order = 'likes_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
-        <th colspan="2">Shares
+        <th colspan="2">Shares <b-tooltip label="Total number of times users have shared the opportunities of host using our share button." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
           <a v-if="engagement_top_order == 'shares_desc'" @click="engagement_top_order = 'shares_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
           <a v-else-if="engagement_top_order == 'shares_asc'" @click="engagement_top_order = 'shares_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
           <a v-else @click="engagement_top_order = 'shares_desc'"><i class="sort sortable"><sortable-icon /></i></a>
         </th>
-        <th colspan="2">Calendar Adds
+        <th colspan="2">Calendar Adds <b-tooltip label="Total number of times users have added opportunities of host to their calendar using our add to calendar button." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
           <a v-if="engagement_top_order == 'calendar_adds_desc'" @click="engagement_top_order = 'calendar_adds_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
           <a v-else-if="engagement_top_order == 'calendar_adds_asc'" @click="engagement_top_order = 'calendar_adds_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
           <a v-else @click="engagement_top_order = 'calendar_adds_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -104,6 +123,7 @@
       </tr>
     </tbody>
   </table>
+</div>
 </div>
 </div>
 </template>
@@ -515,8 +535,27 @@ $lightblue: #BFDCE2;
 }
 
 .data-table-wrapper {
-  min-width: 500px;
-  overflow-x: auto;
+  width: 100%;
+  overflow: auto;
+  max-height: 500px;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid $linework;
+  border-top: 1px solid $linework;
+  .data-table {
+    border-top: 0;
+    border-bottom: 0;
+    margin-bottom: 0;
+
+    :tr:last-child {
+      border-bottom: 0;
+    }
+  }
+  .data-table thead {
+    position: sticky;
+    top:0;
+    background-color: #fff;
+    z-index: 99;
+  }
 }
 
 .data-table {
@@ -533,6 +572,7 @@ $lightblue: #BFDCE2;
   th {
     padding: 10px;
     font-weight: normal;
+    white-space: nowrap;
     &:first-child {
       font-weight: bold;
     }
@@ -608,5 +648,23 @@ $lightblue: #BFDCE2;
 .sort-desc svg {
   transform:rotate(180deg);
 }
+
+.tooltip-trigger button {
+    height: 1rem;
+    width: 1rem;
+    border-radius: 100%;
+    padding: 0.5rem;
+    font-size: 14px;
+    margin-left: 0;
+    background-color: $snm-color-action;
+    border:0;
+    position: relative;
+    top:4px;
+    margin-right: 8px;
+    color: #fff;
+    &:hover {
+      color:#fff;
+    }
+  }
 
 </style>

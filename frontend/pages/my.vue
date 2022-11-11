@@ -27,7 +27,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@media (min-width: $fullsize-screen) {
+@media (min-width: 1280px) {
     div.my {
         padding: 2rem 2rem 0;
     }

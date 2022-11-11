@@ -4,6 +4,7 @@
     <h1>SNM Data Overview</h1>
   </div>
 
+  <div class="nav-mobile-wrapper">
   <div class="nav-tab-wrapper">
     <ul class="nav-tabs nav-tabs-alt">
       <li><a class="tab-link" :class="{'active':state=='engagement'}" @click="state='engagement'"><span>Engagement</span><small>How users interact with our site</small></a></li>
@@ -12,8 +13,9 @@
       <li><a class="tab-link" :class="{'active':state=='domain'}" @click="state='domain'"><span>Domain Insights</span><small>See how our users interact across science domains</small></a></li>
     </ul>
   </div>
+</div>
 
-  <aside>Date updated: {{updated_local}}</aside>
+  <aside class="data-update">Date updated: {{updated_local}}</aside>
 
   <div v-if="state=='engagement'">
 
@@ -97,6 +99,7 @@
       </div>
     </div>
 
+    <div class="data-table-wrapper">
     <table class="data-table">
       <thead>
       <tr>
@@ -112,6 +115,7 @@
       </tr>
     </tbody>
     </table>
+  </div>
   </div>
 
   <div v-else-if="state=='states'">
@@ -250,36 +254,49 @@
       <activity-regional :state="selected_state" :data="selected_state_data" :attr="selected_attr" />
     </div>
 
+    <div class="data-table-wrapper">
     <table class="data-table">
       <thead>
         <tr>
           <th>Engagement By Location</th>
-          <th colspan="2">Unique Users
+          <th colspan="2">Unique Users <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="states_top_order == 'unique_users_desc'" @click="states_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'unique_users_asc'" @click="states_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">New Users
+          <th colspan="2">New Users <b-tooltip label="First time visitors." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="states_top_order == 'new_users_desc'" @click="states_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'new_users_asc'" @click="states_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">Returning Users
+          <th colspan="2">Returning Users <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="states_top_order == 'returning_users_desc'" @click="states_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'returning_users_asc'" @click="states_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">Total Pageviews
+          <th colspan="2">Total Pageviews <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="states_top_order == 'total_pageviews_desc'" @click="states_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'total_pageviews_asc'" @click="states_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">Unique Pageviews
+          <th colspan="2">Unique Pageviews <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="states_top_order == 'unique_pageviews_desc'" @click="states_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'unique_pageviews_asc'" @click="states_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">Avg. Time
+          <th colspan="2">Avg. Time <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="states_top_order == 'average_time_desc'" @click="states_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="states_top_order == 'average_time_asc'" @click="states_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="states_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -305,45 +322,61 @@
         </tr>
       </tbody>
     </table>
+  </div>
 
-    <div class="data-wrapper">
+    <div class="data-wrapper crush">
 
       <div class="data-head">
         <h3>Technology</h3>
       </div>
 
     <pie-chart :data="technology_pie" doughnut />
+    </div>
+
+    <div class="data-table-wrapper">
 
     <table class="data-table">
       <thead>
         <tr>
           <th>Engagement By Device Type</th>
-          <th>Unique Users
+          <th>Unique Users <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="technology_top_order == 'unique_users_desc'" @click="technology_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'unique_users_asc'" @click="technology_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>New Users
+          <th>New Users <b-tooltip label="First time visitors." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="technology_top_order == 'new_users_desc'" @click="technology_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'new_users_asc'" @click="technology_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Returning Users
+          <th>Returning Users <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="technology_top_order == 'returning_users_desc'" @click="technology_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'returning_users_asc'" @click="technology_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Total Pageviews
+          <th>Total Pageviews <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="technology_top_order == 'total_pageviews_desc'" @click="technology_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'total_pageviews_asc'" @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Unique Pageviews
+          <th>Unique Pageviews <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="technology_top_order == 'unique_pageviews_desc'" @click="technology_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'unique_pageviews_asc'" @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Avg. Time
+          <th>Avg. Time <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="technology_top_order == 'average_time_desc'" @click="technology_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'average_time_asc'" @click="technology_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -392,42 +425,57 @@
 
     </div>
 
-    <div class="data-wrapper">
+    <div class="data-wrapper crush">
       <div class="data-head">
           <h3>Referral Sources</h3>
         </div>
     <pie-chart :data="report.traffic.data.pie" />
+    </div>
+
+    <div class="data-table-wrapper">
 
     <table class="data-table">
       <thead>
         <tr>
           <th>Top Referrers</th>
-          <th colspan="2">Unique Users
+          <th colspan="2">Unique Users <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="traffic_top_order == 'unique_users_desc'" @click="traffic_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'unique_users_asc'" @click="traffic_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">New Users
+          <th colspan="2">New Users <b-tooltip label="First time visitors." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="traffic_top_order == 'new_users_desc'" @click="traffic_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'new_users_asc'" @click="traffic_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">Returning Users
+          <th colspan="2">Returning Users <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="traffic_top_order == 'returning_users_desc'" @click="traffic_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'returning_users_asc'" @click="traffic_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">Total Pageviews
+          <th colspan="2">Total Pageviews <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="traffic_top_order == 'total_pageviews_desc'" @click="traffic_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'total_pageviews_asc'" @click="traffic_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">Unique Pageviews
+          <th colspan="2">Unique Pageviews <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="traffic_top_order == 'unique_pageviews_desc'" @click="traffic_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'unique_pageviews_asc'" @click="traffic_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">Avg. Time
+          <th colspan="2">Avg. Time <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined>
+          <b-button label="?" />
+        </b-tooltip>
             <a v-if="traffic_top_order == 'average_time_desc'" @click="traffic_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="traffic_top_order == 'average_time_asc'" @click="traffic_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="traffic_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -1371,6 +1419,7 @@ $lightblue: #BFDCE2;
   th {
     padding: 10px;
     font-weight: normal;
+    white-space: nowrap;
     &:first-child {
       font-weight: bold;
     }
@@ -1405,6 +1454,36 @@ $lightblue: #BFDCE2;
     }
   }
 
+}
+
+.data-table-wrapper {
+  width: 100%;
+  overflow: auto;
+  max-height: 500px;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid $linework;
+  border-top: 1px solid $linework;
+  .data-table {
+    border-top: 0;
+    border-bottom: 0;
+    margin-bottom: 0;
+
+    :tr:last-child {
+      border-bottom: 0;
+    }
+  }
+  .data-table thead {
+    position: sticky;
+    top:0;
+    background-color: #fff;
+    z-index: 99;
+  }
+}
+
+.data-wrapper.crush {
+  margin-bottom:0;
+  border-bottom: 0;
+  padding-bottom: 1rem;
 }
 
 .data-head {
@@ -1530,4 +1609,41 @@ $lightblue: #BFDCE2;
     }
   }
 }
+
+
+.tooltip-trigger button {
+    height: 1rem;
+    width: 1rem;
+    border-radius: 100%;
+    padding: 0.5rem;
+    font-size: 14px;
+    margin-left: 0;
+    background-color: $snm-color-action;
+    border:0;
+    position: relative;
+    top:4px;
+    margin-right: 8px;
+    color: #fff;
+    &:hover {
+      color:#fff;
+    }
+  }
+
+  .nav-mobile-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    .nav-tabs {
+      margin-bottom: 0;
+    }
+    .nav-tabs.nav-tabs-alt li {
+      width: 200px;
+    }
+  }
+  .nav-tab-wrapper {
+    min-width: 840px;
+  }
+
+  .data-update {
+    margin-top: 2rem;
+  }
 </style>
