@@ -166,14 +166,21 @@ where
 
                         opp.exterior.image_url = entry.data.featured_image.large;
 
-                        opp.exterior.start_datetimes = vec![Utc
-                            .timestamp(entry.date.start.timestamp, 0)
-                            .to_fixed_offset()];
+                        if let Some(tz) = &self.0.timezone {
+                            // add 7 hours (25200 seconds) to the
+                            // timestamp since for reasons unknown it
+                            // is offset by that much in the SciTech
+                            // Institute data.
+                            opp.exterior.start_datetimes = vec![tz
+                                .timestamp(entry.date.start.timestamp + 25200, 0)
+                                .to_fixed_offset()];
 
-                        opp.exterior.end_datetimes =
-                            vec![Utc.timestamp(entry.date.end.timestamp, 0).to_fixed_offset()];
+                            opp.exterior.end_datetimes = vec![tz
+                                .timestamp(entry.date.end.timestamp + 25200, 0)
+                                .to_fixed_offset()];
 
-                        opp.exterior.has_end = true;
+                            opp.exterior.has_end = true;
+                        }
 
                         opp.exterior.attraction_hours = None;
 
