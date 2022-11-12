@@ -4,15 +4,21 @@
     <h1>Hosts Explorer</h1>
   </div>
 
-  <p>can we change to https://observablehq.com/@d3/treemap</p>
-  <div class="area-display data-wrapper">
+  <div class="flex hosts-header">
+    <div><strong>{{report.data.total_hosts}}</strong><span>Hosts</span></div>
+    <div><strong>{{report.data.total_opportunities}}</strong><span>Opportunities All Time</span></div>
+  </div>
+  <!-- <div class="area-display data-wrapper">
     <div class="area-column" v-for="chunk in [2, 4, 8, 16]">
       <div v-for="host in hosts_chunk(chunk)" class="area-host" :style="{'height': host.proportion}">
         {{host.name}} ({{host.value}})
       </div>
     </div>
-  </div>
+  </div> -->
 
+<div class="tree-wrap">
+  <treemap :treemap_data="report.data.hosts" />
+</div>
   <div class="data-table-wrapper">
   <table class="data-table">
     <thead>
@@ -663,6 +669,23 @@ $lightblue: #BFDCE2;
     &:hover {
       color:#fff;
     }
+  }
+
+  .hosts-header {
+    font-weight: bold;
+    color: $snm-color-element-med;
+    > div {
+      margin-right: 1.2rem;
+    }
+    strong {
+     font-size: 2rem;
+     color: $snm-color-element-med;
+     margin-right: .33rem;
+    }
+  }
+
+  .tree-wrap {
+    margin-bottom: 2rem;
   }
 
 </style>
