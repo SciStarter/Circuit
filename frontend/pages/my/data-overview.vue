@@ -1,6 +1,5 @@
 <template>
-<div class="snm-wrapper">
-<div class="your-data-overview snm-container">
+<div class="your-data-overview">
   <b-select v-if="available_orgs.length > 1" v-model="org" placeholder="Select Organization">
     <option v-for="org_name in available_orgs" :value="org_name" :key="org_name">
       {{org_name}}
@@ -448,7 +447,6 @@
   </div>
   </div>
 
-</div>
 </div>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-<div class="your-data-overview snm-container">
+<div class="your-data-overview">
   <div class="flex-header">
     <h1>SNM Data Overview</h1>
   </div>
@@ -125,11 +125,20 @@
       </div>
       <div class="flex flex2 sex">
       <div>
-        <label>Female <comparison-bar :value="report.demographics.sex.female.proportion" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="1rem" /></label>
-
-
-
-        <label>Male <comparison-bar :value="report.demographics.sex.male.proportion" :max="1.0" color="#165E6F" background="#DEDEDE" width="100%" height="1rem" /></label>
+          <div class="donut donut-first">
+            <label>Female</label>
+            <div class="donut-wrap">
+              <pie-chart :data="female_pie" doughnut simplify />
+              <span class="female">{{percent(report.demographics.sex.female.proportion)}}</span>
+            </div>
+          </div>
+          <div class="donut">
+            <label>Male</label>
+            <div class="donut-wrap">
+            <pie-chart :data="male_pie" doughnut simplify />
+            <span class="male">{{percent(report.demographics.sex.male.proportion)}}</span>
+            </div>
+          </div>
       </div>
       <div>
       <div class="bar-viz" v-for="entry in sorted_kv(report.demographics.age)">
@@ -978,6 +987,7 @@ export default {
                 let dataset = {
                     label: field,
                     hoverOffset: 4,
+                    borderWidth: 0,
                     backgroundColor: colors,
                     data: [],
                 };
@@ -990,6 +1000,46 @@ export default {
                 ret.datasets.push(dataset);
             }
 
+            return ret;
+        },
+
+        female_pie() {
+            const pieces = ["", ""];
+            const colors = ["#dedede","#7cb4bf"];
+            const fields = ["", ""];
+
+            let ret = {
+                labels: pieces,
+                datasets: [
+                  {
+                      label: fields,
+                      hoverOffset: 0,
+                      backgroundColor: colors,
+                      borderWidth:0,
+                      data: [1 - this.report.demographics.sex.female.proportion,this.report.demographics.sex.female.proportion],
+                  }
+                ],
+            };
+            return ret;
+        },
+
+        male_pie() {
+            const pieces = ["", ""];
+            const colors = ["#dedede","#165e6f"];
+            const fields = ["", ""];
+
+            let ret = {
+                labels: pieces,
+                datasets: [
+                  {
+                      label: fields,
+                      hoverOffset: 0,
+                      backgroundColor: colors,
+                      borderWidth:0,
+                      data: [1 - this.report.demographics.sex.male.proportion,this.report.demographics.sex.male.proportion],
+                  }
+                ],
+            };
             return ret;
         },
 
@@ -1568,6 +1618,9 @@ $lightblue: #BFDCE2;
       border:0;
       margin-bottom: 0;
   }
+  .sex {
+    padding-top: 2rem;
+  }
 
   .bar-viz {
     display: flex;
@@ -1645,5 +1698,29 @@ $lightblue: #BFDCE2;
 
   .data-update {
     margin-top: 2rem;
+  }
+
+  .donut {
+    text-align: center;
+    label {
+      margin-bottom: 4px;
+      font-weight: bold;
+      display: block;
+    }
+  }
+  .donut-first {
+    margin-bottom: 4rem;
+  }
+  .donut-wrap {
+    position: relative;
+    width:100px;
+    height: 100px;
+    margin: 0 auto 2rem;
+    span {
+      font-weight: bold;
+      position: absolute;
+      top: 39px;
+      left: 30px;
+    }
   }
 </style>

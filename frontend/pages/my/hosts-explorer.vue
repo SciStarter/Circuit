@@ -1,6 +1,5 @@
 <template>
-<div class="snm-wrapper">
-<div class="snm-container">
+<div class="hosts-explorer">
   <div class="flex-header">
     <h1>Hosts Explorer</h1>
   </div>
@@ -123,7 +122,6 @@
       </tr>
     </tbody>
   </table>
-</div>
 </div>
 </div>
 </template>

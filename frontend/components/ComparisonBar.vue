@@ -1,5 +1,5 @@
 <template>
-<div class="outer" :style="{width: width, height: height, 'background-color': background}"><div class="inner" :style="{width: bar_width, height: height, 'background-color': color}"></div></div>
+        <div class="outer" :style="{width: width, height: height, 'background-color': background}"><div class="inner" :style="{width: bar_width, height: height, 'background-color': color}"></div></div>
 </template>
 
 <script>
@@ -47,6 +47,11 @@ export default {
             type: String,
             required: false,
             default: "transparent"
+        },
+        tooltip: {
+            type: Boolean,
+            required: false,
+            default: false
         },
     },
 

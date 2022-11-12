@@ -1,6 +1,5 @@
 <template>
-<div class="snm-wrapper">
-<div class="your-data-overview snm-container">
+<div class="your-data-overview">
   <div class="flex-header">
     <h1>Opportunity Data Explorer</h1>
   </div>
@@ -482,7 +481,6 @@
     </div>
       
   </div>
-</div>
 </div>
 </template>
 

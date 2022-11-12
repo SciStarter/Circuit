@@ -1,5 +1,5 @@
 <template>
-<div>
+<div :class="{'simplify':simplify}">
   <canvas ref="display"/>
 </div>
 </template>
@@ -21,6 +21,12 @@ export default {
             type: Object,
             required: true,
         },
+
+        simplify: {
+            type:Boolean,
+            required: false,
+            default:false
+        }
     },
 
     data() {
@@ -49,10 +55,30 @@ export default {
                 this.chart.destroy();
             }
 
-            this.chart = new Chart(this.$refs.display, {
+
+            let opt = {
                 type: this.doughnut ? 'doughnut' : 'pie',
-                data: this.data,
-            });
+                data: this.data
+            };
+
+            if (this.simplify) {
+                opt.options = {
+                    cutout: '60%',
+                    hover: {mode: null},
+                    animation: false,
+                    plugins: {
+                        tooltip: {
+                            enabled: false
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                };
+            }
+
+
+            this.chart = new Chart(this.$refs.display, opt);
         },
     },
 }
@@ -63,5 +89,10 @@ div {
     width: 300px;
     height: 300px;
     margin: 2rem auto;
+}
+div.simplify {
+    width: 100px;
+    height: 100px;
+    margin: 0;
 }
 </style>
