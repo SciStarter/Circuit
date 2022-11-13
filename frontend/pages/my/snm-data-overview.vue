@@ -779,7 +779,7 @@ export default {
                                 "unspecified": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166}
                             },
                             "museum_or_science_center": {
-                                "proportion": 0.17,
+                                "proportion": 0.16,
                                 "citizen_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
                                 "live_science": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
                                 "maker": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166},
@@ -823,7 +823,7 @@ export default {
                                 "unspecified": {"Views": 0.166, "Unique": 0.166, "Clicks to Website": 0.166}
                             },
                             "formal_education": {
-                                "proportion": 0.0,
+                                "proportion": 0.01,
                                 "citizen_science": {"Views": .1, "Unique": 0.0, "Clicks to Website": 0.0},
                                 "live_science": {"Views": 0.1, "Unique": 0.0, "Clicks to Website": 0.0},
                                 "museum_or_science_center": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},

@@ -61,7 +61,8 @@
                             if (d == e) {
                                 a.push(0);
                             } else {
-                                a.push(data[d][e][metric]);
+                                // a.push(data[d][e][metric]);
+                                a.push(data[d][e][metric] * data[d].proportion);
                             }
                         });
                     arr.push(a);
@@ -84,6 +85,8 @@
                 let matrix = this.matrix;
 
                 let metric = this.metric;
+
+                let chart_data = this.chart_data;
 
 
             // based off https://bl.ocks.org/JulienAssouline/2847e100ac7d4d3981b0f49111e185fe
@@ -197,8 +200,8 @@
                                 .style("top", (e.pageY - 150) + "px")
                             
                                 .html(
-                                    '<p><strong>' + (d.source.value * 100).toFixed(1) + '%</strong> who ' + e_lang[metric] + " a <strong>" + nameByIndex[d.source.index] + "</strong> opportunity " + e_lang[metric] + " a <strong>"  + nameByIndex[d.target.index] + '</strong> opportunity.</p>' +
-                                    '<p><strong>' + (d.target.value * 100).toFixed(1) + '%</strong> who ' + e_lang[metric] + " a <strong>" + nameByIndex[d.target.index] + "</strong> opportunity " + e_lang[metric] + " a <strong>"  + nameByIndex[d.source.index] + '</strong> opportunity.</p>'
+                                    '<p><strong>' + ((d.source.value/chart_data[Names[d.source.index]].proportion) * 100).toFixed(1) + '%</strong> who ' + e_lang[metric] + " a <strong>" + nameByIndex[d.source.index] + "</strong> opportunity " + e_lang[metric] + " a <strong>"  + nameByIndex[d.target.index] + '</strong> opportunity.</p>' +
+                                    '<p><strong>' + ((d.target.value/chart_data[Names[d.target.index]].proportion) * 100).toFixed(1) + '%</strong> who ' + e_lang[metric] + " a <strong>" + nameByIndex[d.target.index] + "</strong> opportunity " + e_lang[metric] + " a <strong>"  + nameByIndex[d.source.index] + '</strong> opportunity.</p>'
 
                                 );
 
@@ -220,13 +223,24 @@
                         .data(chord.groups)
                         .enter()
                         .append("g")
-                        .attr("class", "group")    
+                        .attr("class", "group");  
 
 
                     g.append("path")
                         .style("fill", function(d){ return color(d.index)})
                         .attr("d", arcs)
                         .style("opacity", 1)
+                        .on('mouseenter',function(e,d){
+                            d3.select('#tooltip')
+                                .style("opacity",1)
+                                .style("left", (e.pageX) + "px")		
+                                .style("top", (e.pageY - 150) + "px")
+                            
+                                .html(
+                                    '<p><strong>' + (chart_data[Names[d.index]].proportion * 100).toFixed(1) + '%</strong> of SNM projects are ' + "<strong>" + nameByIndex[d.index] + "</strong> opportunities" +'</p>'
+
+                                );
+                        });
 
                     //labels
                     g.append("text")
@@ -287,9 +301,10 @@
     #tooltip {
         opacity: 0;
         position: absolute;	
-        display:block;
+        display:flex;
+        flex-direction: column;
         width: 240px;
-        height: 140px;
+        height: auto;
         background-color: #fff;
         box-shadow: 0 0 4px rgba(0,0,0,.5);
         border-radius: 6px;
