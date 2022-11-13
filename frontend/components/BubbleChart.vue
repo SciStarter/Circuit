@@ -172,8 +172,12 @@
 
                        leaf.on("mouseover", function(e,d) {		
                
-                            if (D[d.data].name != opp)
-                                tooltip.transition().duration(200).style("opacity", 1);		
+                            if (D[d.data].name == opp) {
+                                tooltip.style("opacity", 0);	
+                            } else {
+                                tooltip.transition().duration(200).style("opacity", 1);	
+                            }
+                                	
 
                             tooltip.html('<h2><strong>' + (D[d.data].overlap * 100).toFixed(0) + '%</strong> overlap of ' + engage  +'</h2><p class="opp">' +  D[d.data].name + '</p><p>' + D[d.data].host + '</p>');
                             // `${D[d.data].name}`

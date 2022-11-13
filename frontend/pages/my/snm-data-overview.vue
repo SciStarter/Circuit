@@ -514,18 +514,15 @@
   <div v-else-if="state=='domain'">
     <h2>Engagement Overlap</h2>
     <div>
-      <b-select :value="report.crossover.data.engagement_type" @input="log('TBD download from server')">
+      <b-select :value="report.crossover.data.engagement_type" @input="log('TBD download from server')" v-model="e_type">
         <option v-for="e_type in report.crossover.engagement_types" :key="e_type" :value="e_type">
           {{e_type}}
         </option>
       </b-select>
     </div>
 
-    <div style="box-shadow: 2px 2px 4px #999 inset; font-size: 18pt; margin: 2rem; padding: 2rem; border: 1px solid #999;">
-      I don't know how to render this chart, but the data to drive it
-      are in <code>report.crossover.data.chart</code>. Over to you,
-      Kevin.
-    </div>
+    <chord-diagram :chart_data="report.crossover.data.chart" :metric="e_type" />
+
   </div>
 </div>
 </template>
@@ -761,7 +758,7 @@ export default {
                         "chart": {
                             "citizen_science": {
                                 "proportion": 0.23,
-                                "live_science": {"Views": 0.166, "Unique": 0.5, "Clicks to Website": 0.333},
+                                "live_science": {"Views": 0.6, "Unique": 0.5, "Clicks to Website": 0.333},
                                 "museum_or_science_center": {"Views": 0.166, "Unique": 0.05, "Clicks to Website": 0.0},
                                 "maker": {"Views": 0.166, "Unique": 0.04, "Clicks to Website": 0.333},
                                 "policy": {"Views": 0.166, "Unique": 0.0, "Clicks to Website": 0.0},
@@ -827,11 +824,11 @@ export default {
                             },
                             "formal_education": {
                                 "proportion": 0.0,
-                                "citizen_science": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
-                                "live_science": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "citizen_science": {"Views": .1, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "live_science": {"Views": 0.1, "Unique": 0.0, "Clicks to Website": 0.0},
                                 "museum_or_science_center": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
                                 "maker": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
-                                "policy": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
+                                "policy": {"Views": 0.1, "Unique": 0.0, "Clicks to Website": 0.0},
                                 "out_of_school_time_program": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
                                 "science_communications": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0},
                                 "unspecified": {"Views": 0.0, "Unique": 0.0, "Clicks to Website": 0.0}
@@ -874,6 +871,7 @@ export default {
             traffic_top_order: 'unique_users_desc',
             selected_state: null,
             selected_attr: "Unique Users",
+            e_type: "Views"
         }
     },
 
