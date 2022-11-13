@@ -416,8 +416,19 @@
   </div>
   </div>
   <div v-else-if="state=='overlap'">
-    <h2>Engagement Overlap</h2>
-    <div>
+    <div class="explain-header">
+      <h2>Engagement Overlap</h2>
+    <small>See what people who engage with your Science Near Me page tend to engage with. </small>
+
+    </div>
+    
+    <div class="data-wrapper">
+
+      <div class="data-head"><h3>Top 50</h3></div>
+
+      <div class="bubble-header">
+      <div>
+        <label>Engagement Type</label>
       <b-select :value="report.overlap.data.engagement_type" @input="log('TBD download from server')">
         <option v-for="e_type in report.overlap.engagement_types" :key="e_type" :value="e_type">
           {{e_type}}
@@ -425,9 +436,16 @@
       </b-select>
     </div>
 
-    <div style="box-shadow: 2px 2px 4px #999 inset; font-size: 18pt; margin: 2rem; padding: 2rem; border: 1px solid #999;">
-      I don't know how to render the bubble chart thing. Over to you, Kevin.
+      <div class="ll-legend">
+          <div><span class="gray"></span> {{current_opp.title}} (100% of users)</div>
+          <div><span class="dark-blue"></span> Opportunity Owned By You</div> 
+          <div><span class="light-blue"></span> Opportunity Owned By Someone Else</div> 
+        </div>
+      </div>
+
+      <bubble-chart :chart_data="report.overlap.data" :org="org" :current_opp="current_opp" />
     </div>
+
 
     <!-- Making this table sortable by different fields would be a
     huge can of worms, since it brings up logic conflicts and
@@ -659,7 +677,31 @@ export default {
                         "engagement_type": "Views",
                         "table": [
                             {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Jellicle Dogs", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
                             {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
                         ]
                     },
@@ -1376,6 +1418,37 @@ $lightblue: #BFDCE2;
 
   .data-update {
     margin-top: 2rem;
+  }
+
+  .bubble-header {
+    padding:1rem;
+
+    label {
+      font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 4px;
+    display: block;
+    }
+
+    .ll-legend {
+      margin-top: 1.2rem;
+      > div {
+        margin-right:2rem;
+      }
+      .gray {
+        background-color: #dedede;
+      }
+    }
+  }
+
+  .explain-header {
+    h2 {
+      margin-bottom:4px;
+    }
+    small {
+      display: block;
+      margin-bottom: 2rem;
+    }
   }
 
 </style>
