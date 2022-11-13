@@ -1,5 +1,10 @@
 <template>
-    <div ref="display"></div>
+    <div id="bubble-wrap">
+        <div ref="display"></div>
+        <div id="bubble-tooltip">
+
+        </div>
+    </div>
 </template>
     
     <script>
@@ -30,7 +35,7 @@
         data() {
             return {
                 chart: null,
-                windowWidth: window.innerWidth
+                windowWidth: window.innerWidth,
             }
         },
     
@@ -73,6 +78,10 @@
     
         methods: {
             set_chart() {
+
+                let engage = this.chart_data.engagement_type.toLowerCase();
+
+                let opp = this.current_opp.title;
                 
 
                 // Copyright 2021 Observable, Inc.
@@ -131,6 +140,7 @@
                         (d3.hierarchy({children: I})
                         .sum(i => V[i]));
 
+
                     const svg = d3.create("svg")
                         // .attr("width", width)
                         // .attr("height", height)
@@ -147,24 +157,45 @@
                     const g = svg.append('g')
                         .attr("id","bubble-g");
 
+                    const tooltip = d3.select("#bubble-tooltip");
+
                     const leaf = g.selectAll("a")
                         .data(root.leaves())
                         .join("a")
                         // .attr("xlink:href", link == null ? null : (d, i) => link(D[d.data], i, data))
                         // .attr("target", link == null ? null : linkTarget)
-                        .attr("transform", d => `translate(${d.x},${d.y})`);
+                        .attr("transform", d => `translate(${d.x},${d.y})`)
+                        .style('opacity',function(d){
+                            return 1;
+                        });
+
+
+                       leaf.on("mouseover", function(e,d) {		
+               
+                            if (D[d.data].name != opp)
+                                tooltip.transition().duration(200).style("opacity", 1);		
+
+                            tooltip.html('<h2><strong>' + (D[d.data].overlap * 100).toFixed(0) + '%</strong> overlap of ' + engage  +'</h2><p class="opp">' +  D[d.data].name + '</p><p>' + D[d.data].host + '</p>');
+                            // `${D[d.data].name}`
+                             tooltip
+                                .style("left", (e.pageX) + "px")		
+                                .style("top", (e.pageY - 28) + "px");	
+                            })	
+                        .on("mousemove", function(d){
+                            tooltip.style("left", (d.pageX) + "px")		
+                            .style("top", (d.pageY - 120) + "px");	
+                        })		
+                         .on("mouseleave", function(d) {		
+                            tooltip.transition().duration(500).style("opacity", 0);	
+                        });
 
                     leaf.append("circle")
                         .attr("stroke", stroke)
                         .attr("stroke-width", strokeWidth)
                         .attr("stroke-opacity", strokeOpacity)
-
                         .attr("fill", d => D[d.data].color)
-
-
-                        // .attr("fill", D ? d => (D[d.data]) : fill == null ? "none" : fill)
-                        // .attr("fill-opacity", 1)
                         .attr("r", d => d.r);
+                         
 
                     if (T) leaf.append("title")
                         .text(d => T[d.data]);
@@ -246,6 +277,38 @@
 
     a {
         cursor:default;
+    }
+
+    #bubble-tooltip {
+        opacity: 0;
+        position: absolute;	
+        display:block;
+        width: 200px;
+        height: 100px;
+        background-color: #fff;
+        box-shadow: 0 0 4px rgba(0,0,0,.5);
+        border-radius: 6px;
+
+       :deep(h2) {
+            border-bottom: 1px solid #dee2e6;
+            box-shadow: 0 4px 4px rgba(0,0,0,.05);
+            padding:.5rem 1rem .3rem;
+            color: #888888;
+            margin-bottom: .5rem;
+            strong {
+                color: #357382;
+                font-size: 18px;
+            }
+        }
+        :deep(.opp) {
+            font-weight: bold;;
+        }
+        :deep(p) {
+            padding: 0 1rem;
+            font-size: 12px;
+            line-height: 1.1;
+        }
+
     }
     </style>
     
