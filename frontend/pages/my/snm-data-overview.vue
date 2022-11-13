@@ -34,7 +34,7 @@
     </div>
 
     <h3>Total Engagement</h3>
-    <div class="flex flex2">
+    <div class="flex flex2 engagement-divs">
       <div id="snm-total-opp-page-views" class="big-legend bl-blue">
           <div class="ll-icon"><eye-icon></eye-icon><strong>T</strong></div>
           <div>
@@ -51,7 +51,7 @@
       </div>
     </div>
 
-    <div class="flex flex3">
+    <div class="flex flex3  engagement-divs">
       <div id="snm-website-clicks" class="big-legend bl-blue">
         <div class="ll-icon"><link-icon></link-icon></div>
           <div>
@@ -75,7 +75,7 @@
       </div>
     </div>
 
-    <div class="flex flex3">
+    <div class="flex flex3 engagement-divs">
       <div id="snm-likes" class="big-legend bl-blue">
         <div class="ll-icon"><like-icon></like-icon></div>
           <div>
@@ -123,8 +123,8 @@
       <div class="data-head">
         <h3>Sex &amp; Age</h3>
       </div>
-      <div class="flex flex2 sex">
-      <div>
+      <div class="flex flex2 sex audience">
+      <div class="donuts">
           <div class="donut donut-first">
             <label>Female</label>
             <div class="donut-wrap">
@@ -150,7 +150,7 @@
      </div>
     </div>
 
-    <div class="flex flex2 fill">
+    <div class="flex flex2 fill audience">
         <div class="push">
           <div class="data-head">
             <h3>Ethnicity</h3>
@@ -205,7 +205,7 @@
         </div>
       </div>
 
-      <div class="flex flex2 fill">
+      <div class="flex flex2 fill audience">
         <div class="push">
           <div class="data-head">
             <h3>Household Income</h3>
@@ -1280,8 +1280,12 @@ aside {
 .stack {
     display: flex;
     flex-direction: column;
+    
     &.center {
       align-items: center;
+    }
+    h3 {
+      text-align:center;
     }
 }
 
@@ -1377,6 +1381,7 @@ $lightblue: #BFDCE2;
   h3 {
     margin:0;
     color: #5694A2;
+
   }
   &.bl-yellow {
     h2, h3 {
@@ -1412,6 +1417,7 @@ $lightblue: #BFDCE2;
   border-radius: 100%;
   height:45px;
   width: 45px;
+  min-width: 45px;
   background-color: $lightblue;
   display: flex;
     justify-content: center;
@@ -1719,6 +1725,88 @@ $lightblue: #BFDCE2;
       position: absolute;
       top: 39px;
       left: 30px;
+    }
+  }
+  @media (max-width:599px) {
+    .engagement-divs {
+      .ll-icon {
+        border-radius: 100%;
+        height:28px;
+        width: 28px;
+        background-color: $lightblue;
+        display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-right: 10px;
+          position: relative;
+          min-width: 28px;
+
+          svg {
+            height: 16px;
+          }
+
+          &.calendar {
+            svg {
+              height: 13px;
+              width:15px;
+            }
+            rect {
+              fill:transparent;
+            }
+          }
+          strong {
+            position: absolute;
+            bottom:2px;
+            right:10px;
+            color: $snm-color-element-med;
+            font-size: 10px;
+
+          }
+      }
+      .big-legend {
+          display:flex;
+          h2 {
+            margin:0;
+            margin-bottom: 0;
+            color: $snm-color-element-med;
+          }
+          h3 {
+            margin:0;
+            color: #5694A2;
+            font-size:14px;
+          }
+          &.bl-yellow {
+            h2, h3 {
+              color: $snm-color-action;
+            }
+          }
+        }
+    }
+
+  }
+
+  @media (max-width:500px) {
+    .audience.flex2 {
+      flex-direction: column;
+    }
+    .donuts {
+      display: flex;
+      justify-content: space-around;
+      .donut {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  @media (max-width:475px){
+    .engagement-divs {
+      .big-legend {
+        flex-direction: column;
+
+        .ll-icon {
+          margin-bottom: 4px;
+        }
+      }
     }
   }
 </style>
