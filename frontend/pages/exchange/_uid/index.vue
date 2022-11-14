@@ -37,7 +37,7 @@
             <b-field label="Search" label-position="inside" data-context="find-keywords">
               <b-input ref="search_keywords" v-model="search_text" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
             </b-field>
-            <lookup-place v-model="search_place" label-position="inside" data-context="find-lookup-place" />
+            <lookup-place v-model="search_place" @valid="first_search" label-position="inside" data-context="find-lookup-place" />
             <div class="centered-row">
               <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
                 <b-datepicker
@@ -250,7 +250,7 @@ export default {
         let partner = await context.$axios.$get(
             'https://sciencenearme.org/api/ui/organization/' + context.params.uid + '/public'
         );
-        
+
         let default_query = !!partner.default_query ? Object.fromEntries(new URLSearchParams(partner.default_query).entries()) : {};
 
         let query = {...context.query};
@@ -324,6 +324,8 @@ export default {
             opp_view: 0,
             filter: false,
             loading: false,
+            num_reloads: 0,
+            first_searched: false,
         };
     },
 
@@ -412,6 +414,22 @@ export default {
             this.month = await this.$axios.$get('/api/ui/finder/search', { params: {...this.$route.query, year: this.search_year, month: this.search_month } });
         },
 
+        first_search() {
+            if(this.first_searched) {
+                return;
+            }
+
+            this.first_searched = true;
+
+            this.search({
+                longitude: this.search_place.longitude,
+                latitude: this.search_place.latitude,
+                near: this.search_place.near,
+                beginning: this.beginning ? this.beginning : undefined,
+                page: 0
+            });
+        },
+
         search(assign) {
             let q = {...this.default_query, ...this.$route.query, ...assign};
 
@@ -426,6 +444,8 @@ export default {
             if(q.max_age < 1 || q.max_age >= 121) {
                 delete q.max_age;
             }
+
+            q.r = this.num_reloads += 1;
 
             this.$router.push({name: 'exchange-uid', params: this.$route.params, query: q});
         }
