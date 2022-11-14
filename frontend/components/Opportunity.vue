@@ -171,7 +171,7 @@
         </div>
       </div><!-- end .opp-head -->
 
-      <div class="opp-actions">
+      <div class="opp-actions" :class="{'exchange':exchange}">
         <div class="opp-action-wrap">
           <div class="opp-action-btn">
             <action-button class="round-btn" principal :disabled="did.save" @click="do_save">
@@ -1936,6 +1936,9 @@ img.opportunity-image {
   position:sticky;
   top:45px;
   z-index:99;
+  &.exchange {
+    position:static!important;
+  }
   .opp-action-wrap {
     background-color: $snm-color-background-medlight;
     display: flex;
