@@ -37,7 +37,7 @@
             <b-field label="Search" label-position="inside" data-context="find-keywords">
               <b-input ref="search_keywords" v-model="search_text" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
             </b-field>
-            <lookup-place v-model="search_place" @valid="first_search" label-position="inside" data-context="find-lookup-place" />
+            <lookup-place v-model="search_place" label-position="inside" data-context="find-lookup-place" />
             <div class="centered-row">
               <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
                 <b-datepicker
@@ -232,47 +232,47 @@ export default {
         LookupPlace,
         FilterIcon
     },
-
+    
     props: {
         partner: {
             type: Object,
             required: false,
             default: null,
         },
-
+        
         exchange: {
             type: Object,
             required: true,
         },
     },
-
+    
     async asyncData(context) {
         let partner = await context.$axios.$get(
             'https://sciencenearme.org/api/ui/organization/' + context.params.uid + '/public'
         );
-
+        
         let default_query = !!partner.default_query ? Object.fromEntries(new URLSearchParams(partner.default_query).entries()) : {};
-
+        
         let query = {...context.query};
-
+        
         let calendar = (query.calendar !== undefined);
-
+        
         if(!query.all) {
             query.partner = context.params.uid;
         }
-
+        
         if(!query.impartial) {
             query.prefer_partner = context.params.uid;
         }
-
+        
         if(query.page === undefined) {
             query.page = 0;
         }
-
+        
         if(query.beginning === undefined) {
             query.beginning = new Date().toISOString();
         }
-
+        
         let search_text = query.text || '';
         let search_place = {near: query.near || 0, longitude: query.longitude || 0, latitude: query.latitude || 0, proximity: query.proximity || 0};
         let beginning = query.beginning;
@@ -282,21 +282,21 @@ export default {
         let adults_only = !!query.adults_only && query.adults_only != 'false';
         let kids_only = !!query.kids_only && query.kids_only != 'false';
         let physical = query.physical || 'in-person-or-online';
-
+        
         let opps = await context.$axios.$get('/api/ui/finder/search', { params: {...default_query, ...query} });
-
+        
         let now = new Date();
         let search_year = now.getFullYear();
         let search_month = now.getMonth() + 1;
         let month = null;
-
+        
         let base_year = search_year;
         let base_month = search_month;
-
+        
         if(calendar) {
             month = await context.$axios.$get('/api/ui/finder/search', { params: {...default_query, ...query, year: search_year, month: search_month } });
         }
-
+        
         return {
             opportunities: opps,
             calendar,
@@ -316,7 +316,7 @@ export default {
             physical,
         };
     },
-
+    
     data() {
         return {
             toggle_mobile_nav: false,
@@ -325,10 +325,9 @@ export default {
             filter: false,
             loading: false,
             num_reloads: 0,
-            first_searched: false,
         };
     },
-
+    
     computed: {
         default_query() {
             if(this.exchange && this.exchange.default_query) {
@@ -339,58 +338,68 @@ export default {
                 return {};
             }
         },
-
+        
         has_calendar_previous() {
             return this.search_year > this.base_year || (this.search_year == this.base_year && this.search_month > this.base_month);
         },
-
+        
         beginning_proxy: {
             get() {
                 return this.beginning ? new Date(this.beginning) : null;
             },
-
+            
             set(val) {
                 this.beginning = val.toISOString();
             }
         },
-
+        
         ending_proxy: {
             get() {
                 return this.ending ? new Date(this.ending) : null;
             },
-
+            
             set(val) {
                 this.ending = val.toISOString();
             }
         },
-
+        
         min_age_active: {
             get() {
                 return this.min_age !== undefined && this.min_age > 0;
             },
-
+            
             set(value) {
                 this.min_age = value ? 1 : 0;
             }
         },
-
+        
         max_age_active: {
             get() {
                 return this.max_age !== undefined && this.max_age < 121;
             },
-
+            
             set(value) {
                 this.max_age = value ? 120 : 121;
             }
         },
     },
-
+    
     watchQuery: true,
-
+    
     async mounted() {
         if(!this.search_place.near) {
             this.search_place = await this.$store.dispatch("get_here");
         }
+
+        this.search({
+            longitude: this.search_place.longitude,
+            latitude: this.search_place.latitude,
+            near: this.search_place.near,
+            beginning: this.beginning ? this.beginning : undefined,
+            proximity: 80467,
+            sort: "closest",
+            page: 0
+        });
     },
 
     methods: {
@@ -412,22 +421,6 @@ export default {
 
         async update_calendar() {
             this.month = await this.$axios.$get('/api/ui/finder/search', { params: {...this.$route.query, year: this.search_year, month: this.search_month } });
-        },
-
-        first_search() {
-            if(this.first_searched) {
-                return;
-            }
-
-            this.first_searched = true;
-
-            this.search({
-                longitude: this.search_place.longitude,
-                latitude: this.search_place.latitude,
-                near: this.search_place.near,
-                beginning: this.beginning ? this.beginning : undefined,
-                page: 0
-            });
         },
 
         search(assign) {
