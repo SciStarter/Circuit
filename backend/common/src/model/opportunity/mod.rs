@@ -1,7 +1,7 @@
 pub mod for_slug;
 
 use super::person::PermitAction;
-use super::{Error, Person};
+use super::Error;
 use crate::model::involvement;
 use crate::{geo, Database, ToFixedOffset};
 

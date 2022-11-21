@@ -72,10 +72,10 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
         || (opp.interior.accepted.unwrap_or(false) && !opp.interior.withdrawn)
     {
         common::log(
+            person.as_ref().map(|p| &p.exterior.uid),
             "viewed",
             &json!({
-                "who": person.as_ref().map(|p| p.exterior.uid),
-                "opp": opp.exterior.uid}),
+                "opportunity": opp.exterior.uid}),
         );
         if let Some(person) = person {
             person
@@ -118,8 +118,9 @@ pub async fn add_didit(mut req: tide::Request<Database>) -> tide::Result {
         .await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-didit",
-        &json!({"person": person.exterior.uid, "opportunity": slug}),
+        &json!({ "opportunity": slug }),
     );
     person
         .log(db, LogEvent::AddDidit(LogIdentifier::Slug(slug)))
@@ -139,8 +140,9 @@ pub async fn remove_didit(mut req: tide::Request<Database>) -> tide::Result {
         .await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-remove-didit",
-        &json!({"person": person.exterior.uid, "opportunity": slug}),
+        &json!({ "opportunity": slug }),
     );
     person
         .log(db, LogEvent::DeleteDidit(LogIdentifier::Slug(slug)))
@@ -167,8 +169,9 @@ pub async fn add_save(mut req: tide::Request<Database>) -> tide::Result {
         .await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-save",
-        &json!({"person": person.exterior.uid, "opportunity": slug}),
+        &json!({ "opportunity": slug }),
     );
     person
         .log(db, LogEvent::AddSave(LogIdentifier::Slug(slug)))
@@ -188,8 +191,9 @@ pub async fn remove_save(mut req: tide::Request<Database>) -> tide::Result {
         .await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-remove-save",
-        &json!({"person": person.exterior.uid, "opportunity": slug}),
+        &json!({ "opportunity": slug }),
     );
     person
         .log(db, LogEvent::DeleteSave(LogIdentifier::Slug(slug)))
@@ -217,8 +221,9 @@ pub async fn add_like(mut req: tide::Request<Database>) -> tide::Result {
     .await?;
 
     common::log(
+        person.as_ref().map(|p| &p.exterior.uid),
         "ui-like",
-        &json!({"person": person.as_ref().map(|p| p.exterior.uid), "opportunity": slug}),
+        &json!({ "opportunity": slug }),
     );
     if let Some(person) = person {
         person
@@ -241,8 +246,9 @@ pub async fn remove_like(mut req: tide::Request<Database>) -> tide::Result {
         .await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-remove-like",
-        &json!({"person": &person.exterior.uid, "opportunity": slug}),
+        &json!({ "opportunity": slug }),
     );
     person
         .log(db, LogEvent::DeleteLike(LogIdentifier::Slug(slug)))
@@ -277,8 +283,9 @@ pub async fn add_review(mut req: tide::Request<Database>) -> tide::Result {
     .await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-review",
-        &json!({"person": person.exterior.uid, "opportunity": slug}),
+        &json!({ "opportunity": slug }),
     );
     person
         .log(db, LogEvent::AddReview(LogIdentifier::Slug(slug)))
@@ -298,8 +305,9 @@ pub async fn report_review(mut req: tide::Request<Database>) -> tide::Result {
         let db = req.state();
         common::model::opportunity::for_slug::report_review(db, report.id).await?;
         common::log(
+            Some(&person.exterior.uid),
             "ui-report-review",
-            &json!({"person": person.exterior.uid, "review": report.id}),
+            &json!({"review": report.id}),
         );
         person
             .log(db, LogEvent::ReportReview(LogIdentifier::Id(report.id)))
@@ -382,8 +390,13 @@ pub async fn recommended(req: tide::Request<Database>) -> tide::Result {
     okay(&matches)
 }
 
-pub async fn request_page_management(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-request-page-management", "");
+pub async fn request_page_management(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req).await?;
+    common::log(
+        person.as_ref().map(|p| &p.exterior.uid),
+        "ui-request-page-management",
+        "",
+    );
     todo!()
 }
 
@@ -434,8 +447,9 @@ pub async fn register_interest(mut req: tide::Request<Database>) -> tide::Result
         .await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-interest",
-        &json!({"person": person.exterior.uid, "opportunity": slug}),
+        &json!({ "opportunity": slug }),
     );
     person
         .log(db, LogEvent::AddInterest(LogIdentifier::Slug(slug)))

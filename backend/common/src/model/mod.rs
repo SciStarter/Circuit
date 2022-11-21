@@ -5,6 +5,7 @@ pub use person::Person;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+pub mod analytics;
 pub mod block;
 pub mod geojson;
 pub mod invitation;

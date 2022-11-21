@@ -116,8 +116,9 @@ pub async fn add_organization(mut req: tide::Request<Database>) -> tide::Result 
     .await;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-add-organization-request",
-        &json!({"person": person.exterior.uid, "subject": form.partner}),
+        &json!({"subject": form.partner}),
     );
 
     okay_empty()
@@ -227,8 +228,9 @@ pub async fn save_organization(mut req: tide::Request<Database>) -> tide::Result
     incoming.store(req.state()).await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-save-organization",
-        &json!({"person": person.exterior.uid, "partner": partner.exterior.uid}),
+        &json!({"partner": partner.exterior.uid}),
     );
 
     okay_empty()
@@ -265,8 +267,9 @@ pub async fn invite_managers(mut req: tide::Request<Database>) -> tide::Result {
     }
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-invite-organization-managers",
-        &json!({"person": person.exterior.uid, "partner": partner.exterior.uid, "emails": form.emails}),
+        &json!({"partner": partner.exterior.uid, "emails": form.emails}),
     );
 
     okay_empty()
@@ -287,13 +290,15 @@ pub async fn get_pending_managers(mut req: tide::Request<Database>) -> tide::Res
     )
 }
 
-pub async fn add_pending_manager(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-add-pending-manager", "");
+pub async fn add_pending_manager(mut req: tide::Request<Database>) -> tide::Result {
+    let (person, _partner) = authorized_partner(&mut req).await?;
+    common::log(Some(&person.exterior.uid), "ui-add-pending-manager", "");
     todo!()
 }
 
-pub async fn remove_pending_manager(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-remove-pending-manager", "");
+pub async fn remove_pending_manager(mut req: tide::Request<Database>) -> tide::Result {
+    let (person, _partner) = authorized_partner(&mut req).await?;
+    common::log(Some(&person.exterior.uid), "ui-remove-pending-manager", "");
     todo!()
 }
 
@@ -312,12 +317,14 @@ pub async fn get_managers(mut req: tide::Request<Database>) -> tide::Result {
     )
 }
 
-pub async fn add_manager(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-add-manager", "");
+pub async fn add_manager(mut req: tide::Request<Database>) -> tide::Result {
+    let (person, _partner) = authorized_partner(&mut req).await?;
+    common::log(Some(&person.exterior.uid), "ui-add-manager", "");
     todo!()
 }
 
-pub async fn remove_manager(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-remove-manager", "");
+pub async fn remove_manager(mut req: tide::Request<Database>) -> tide::Result {
+    let (person, _partner) = authorized_partner(&mut req).await?;
+    common::log(Some(&person.exterior.uid), "ui-remove-manager", "");
     todo!()
 }

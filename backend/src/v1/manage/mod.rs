@@ -531,7 +531,7 @@ struct MasqueradePage {
 }
 
 async fn masquerade(req: tide::Request<Database>) -> tide::Result {
-    let _admin = match authorized_admin(&req, &Permission::ManagePersons).await {
+    let admin = match authorized_admin(&req, &Permission::ManagePersons).await {
         Ok(person) => person,
         Err(resp) => return Ok(resp),
     };
@@ -539,7 +539,7 @@ async fn masquerade(req: tide::Request<Database>) -> tide::Result {
     let uid = Uuid::parse_str(req.param("uid")?)?;
     let jwt = issue_jwt(&uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
 
-    common::log("masquerade", &jwt);
+    common::log(Some(&admin.exterior.uid), "masquerade", &jwt);
 
     let page = MasqueradePage { jwt: jwt.clone() };
     let mut resp: Response = page.into_response(StatusCode::Ok)?;

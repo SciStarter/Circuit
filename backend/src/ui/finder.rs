@@ -278,6 +278,7 @@ struct SearchQuery {
 
 pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req).await?;
+    let person_uid = person.as_ref().map(|p| p.exterior.uid.clone());
 
     let db = req.state();
 
@@ -415,7 +416,7 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
 
     let (page_index, last_page, per_page) = pagination.expand(total);
 
-    common::log("ui-search", &req.url().query());
+    common::log(person_uid.as_ref(), "ui-search", &req.url().query());
 
     if search.refs.unwrap_or(false) {
         okay(&json!({
