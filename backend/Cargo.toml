@@ -22,7 +22,8 @@ members = [
     "uploader",
     "mailer",
     "soon",
-    "vue_template_compiler"
+    "vue_template_compiler",
+    "collator",
 ]
 
 [dependencies]

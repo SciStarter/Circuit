@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-collator-deploy
+  labels:
+    app: circuit-collator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circuit-collator
+  template:
+    metadata:
+      labels:
+        app: circuit-collator
+    spec:
+      volumes:
+      - name: ga4
+        secret:
+          secretName: ga4
+          optional: false
+      containers:
+      - name: circuit-collator
+        image: scistarter/circuit-collator:0.1.1
+        ports:
+        - containerPort: 9000
+        volumeMounts:
+        - name: ga4
+          mountPath: "/etc/ga4"
+          readOnly: true
+        env:
+        - name: LOGGER_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: LOGGER_ENDPOINT
+        - name: LOGGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: LOGGER_ACCESS_KEY
+        - name: LOGGER_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: LOGGER_SECRET
+        - name: CLICK_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: CLICK_ENDPOINT
+        - name: CLICK_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: CLICK_ACCESS_KEY
+        - name: CLICK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: logger-beta
+              key: CLICK_SECRET
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circuit-collator-service
+spec:
+  selector:
+    app: circuit-collator
+  ports:
+    - protocol: TCP
+      port: 9000
+
+
