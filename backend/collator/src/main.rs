@@ -6,6 +6,8 @@ use google_analyticsdata1_beta::api::{
 use google_analyticsdata1_beta::{hyper, hyper_rustls, oauth2, AnalyticsData};
 //use rusty_s3::{Bucket, Credentials, S3Action, UrlStyle};
 
+mod reportiter;
+
 #[tokio::main]
 async fn main() {
     let secret = oauth2::read_service_account_key(
@@ -97,7 +99,13 @@ async fn main() {
         .doit()
         .await;
 
-    let _ = dbg!(result);
+    if let Ok((response, data)) = result {
+        if response.status() == 200 {
+            for row in reportiter::ReportIterator::new(data) {
+                println!("{:?}", row);
+            }
+        }
+    };
 }
 
 /*
