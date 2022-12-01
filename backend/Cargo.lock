@@ -3324,6 +3324,7 @@ dependencies = [
  "shellfish",
  "sodiumoxide",
  "sqlx",
+ "strum",
  "surf",
  "thiserror",
  "tide",

@@ -266,7 +266,7 @@ OPPORTUNITY DATA EXPLORER
             }
 
 
-DATA OVERVIEW
+ORGANIZATION DATA OVERVIEW
               {
                 "Demo Org": {
                     "uid": 'c36bd22f-f530-4469-8c9e-b919951e3486',

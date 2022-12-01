@@ -59,3 +59,4 @@ counter = "0.5.7"
 clap = { version = "4.0.18", features = ["derive"] }
 csv = "1.1.6"
 sailfish = "0.5.0"
+strum = { version = "0.24.1", features = ["derive"] }
