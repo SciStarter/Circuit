@@ -1,7 +1,9 @@
 use std::collections::BTreeMap;
 
-use sqlx::types::chrono::{DateTime, FixedOffset};
+use chrono::{Date, DateTime, Datelike, Duration, FixedOffset, TimeZone, Utc};
 use uuid::Uuid;
+
+use crate::ToFixedOffset;
 
 use super::opportunity::{Descriptor, VenueType};
 
@@ -12,6 +14,12 @@ pub enum Status {
     LiveAndClosed,
     Live,
     Closed,
+}
+
+#[derive(Debug)]
+pub struct AbsoluteTimePeriod {
+    pub begin: DateTime<FixedOffset>,
+    pub end: DateTime<FixedOffset>,
 }
 
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, strum::EnumIter)]
@@ -35,6 +43,109 @@ pub enum RelativeTimePeriod {
     LastYear,
     #[serde(rename = "All Time")]
     AllTime,
+}
+
+fn beginning_of_month<Tz: TimeZone>(day: &Date<Tz>) -> DateTime<Tz> {
+    day.timezone()
+        .ymd(day.year(), day.month(), 1)
+        .and_hms(0, 0, 0)
+}
+
+fn beginning_of_quarter<Tz: TimeZone>(day: &Date<Tz>) -> DateTime<Tz> {
+    day.timezone()
+        .ymd(
+            day.year(),
+            match day.month() {
+                1 | 2 | 3 => 1,
+                4 | 5 | 6 => 4,
+                7 | 8 | 9 => 7,
+                10 | 11 | 12 => 10,
+                _ => unreachable!(),
+            },
+            1,
+        )
+        .and_hms(0, 0, 0)
+}
+
+fn beginning_of_semiannum<Tz: TimeZone>(day: &Date<Tz>) -> DateTime<Tz> {
+    day.timezone()
+        .ymd(
+            day.year(),
+            match day.month() {
+                1 | 2 | 3 | 4 | 5 | 6 => 1,
+                7 | 8 | 9 | 10 | 11 | 12 => 7,
+                _ => unreachable!(),
+            },
+            1,
+        )
+        .and_hms(0, 0, 0)
+}
+
+fn beginning_of_year<Tz: TimeZone>(day: &Date<Tz>) -> DateTime<Tz> {
+    day.timezone().ymd(day.year(), 1, 1).and_hms(0, 0, 0)
+}
+
+impl RelativeTimePeriod {
+    pub fn absolute(&self) -> AbsoluteTimePeriod {
+        let now = Utc::now().to_fixed_offset();
+        let today = now.date();
+        let day = Duration::days(1);
+
+        match self {
+            RelativeTimePeriod::ThisMonth => AbsoluteTimePeriod {
+                begin: beginning_of_month(&today),
+                end: now,
+            },
+            RelativeTimePeriod::LastMonth => {
+                let month_start = beginning_of_month(&today);
+                let last_month_start = beginning_of_month(&(month_start - day).date());
+                AbsoluteTimePeriod {
+                    begin: last_month_start,
+                    end: month_start,
+                }
+            }
+            RelativeTimePeriod::ThisQuarter => AbsoluteTimePeriod {
+                begin: beginning_of_quarter(&today),
+                end: now,
+            },
+            RelativeTimePeriod::LastQuarter => {
+                let quarter_start = beginning_of_quarter(&today);
+                let last_quarter_start = beginning_of_quarter(&(quarter_start - day).date());
+                AbsoluteTimePeriod {
+                    begin: last_quarter_start,
+                    end: quarter_start,
+                }
+            }
+            RelativeTimePeriod::ThisSemiannum => AbsoluteTimePeriod {
+                begin: beginning_of_semiannum(&today),
+                end: now,
+            },
+            RelativeTimePeriod::LastSemiannum => {
+                let semi_start = beginning_of_semiannum(&today);
+                let last_semi_start = beginning_of_semiannum(&(semi_start - day).date());
+                AbsoluteTimePeriod {
+                    begin: last_semi_start,
+                    end: semi_start,
+                }
+            }
+            RelativeTimePeriod::ThisYear => AbsoluteTimePeriod {
+                begin: beginning_of_year(&today),
+                end: now,
+            },
+            RelativeTimePeriod::LastYear => {
+                let year_start = beginning_of_year(&today);
+                let last_year_start = beginning_of_year(&(year_start - day).date());
+                AbsoluteTimePeriod {
+                    begin: last_year_start,
+                    end: year_start,
+                }
+            }
+            RelativeTimePeriod::AllTime => AbsoluteTimePeriod {
+                begin: today.timezone().ymd(1, 1, 1).and_hms(0, 0, 0),
+                end: now,
+            },
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, strum::EnumIter)]
