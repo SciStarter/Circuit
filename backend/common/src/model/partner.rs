@@ -5,6 +5,7 @@ use super::{
 };
 use crate::{Database, INTERNAL_UID};
 
+use chrono::FixedOffset;
 use serde::{Deserialize, Serialize};
 use sqlx;
 use uuid::Uuid;
@@ -232,6 +233,39 @@ impl Partner {
         })
         .fetch_all(db)
         .await?)
+    }
+
+    pub async fn count_total_opportunities(&self, db: &Database) -> Result<u32, Error> {
+        Ok(sqlx::query!(
+            r#"
+            SELECT COUNT(*) AS "count!: i64"
+            FROM c_opportunity
+            WHERE exterior -> 'partner' @> $1::jsonb
+            "#,
+            serde_json::to_value(self.exterior.uid)?
+        )
+        .fetch_one(db)
+        .await?
+        .count
+        .try_into()
+        .unwrap_or(0))
+    }
+
+    pub async fn count_current_opportunities(&self, db: &Database) -> Result<u32, Error> {
+        Ok(sqlx::query!(
+            r#"
+            SELECT COUNT(*) AS "count!: i64"
+            FROM c_opportunity
+            WHERE exterior -> 'partner' @> $1::jsonb
+            AND c_opportunity_is_current(interior, exterior) = true
+            "#,
+            serde_json::to_value(self.exterior.uid)?
+        )
+        .fetch_one(db)
+        .await?
+        .count
+        .try_into()
+        .unwrap_or(0))
     }
 
     pub fn validate(&mut self) -> Result<(), Error> {

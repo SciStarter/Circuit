@@ -7,7 +7,7 @@ use crate::ToFixedOffset;
 
 use super::opportunity::{Descriptor, VenueType};
 
-#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, strum::EnumIter)]
+#[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize, strum::EnumIter)]
 pub enum Status {
     #[default]
     #[serde(rename = "Live and Closed")]
@@ -16,13 +16,13 @@ pub enum Status {
     Closed,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AbsoluteTimePeriod {
     pub begin: DateTime<FixedOffset>,
     pub end: DateTime<FixedOffset>,
 }
 
-#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, strum::EnumIter)]
+#[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize, strum::EnumIter)]
 pub enum RelativeTimePeriod {
     #[default]
     #[serde(rename = "This Month")]
@@ -148,7 +148,7 @@ impl RelativeTimePeriod {
     }
 }
 
-#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, strum::EnumIter)]
+#[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize, strum::EnumIter)]
 pub enum EngagementType {
     #[default]
     Views,
@@ -157,7 +157,7 @@ pub enum EngagementType {
     ClicksToWebsite,
 }
 
-#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, strum::EnumIter)]
+#[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize, strum::EnumIter)]
 pub enum DetailedEngagementType {
     #[default]
     #[serde(rename = "Unique Users")]
@@ -330,7 +330,7 @@ pub struct PieChart {
     datasets: Vec<PieData>,
 }
 
-#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum TrafficType {
     #[default]
     Direct,
@@ -373,7 +373,7 @@ pub struct OpportunityTraffic {
     pub data: OpportunityTrafficData,
 }
 
-#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum OpportunityFormat {
     #[default]
     Event,
