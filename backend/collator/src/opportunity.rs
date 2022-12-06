@@ -1,26 +1,36 @@
+use std::collections::BTreeMap;
+
 use anyhow::Error;
-use chrono::Utc;
+use chrono::{Datelike, Days, LocalResult, TimeZone, Utc};
 use common::{
     model::analytics::{
-        AbsoluteTimePeriod, Opportunity, OpportunityEngagement, OpportunityEngagementData,
+        AbsoluteTimePeriod, EngagementDataBar, EngagementDataChart, EngagementType, Opportunity,
+        OpportunityEngagement, OpportunityEngagementData, OpportunityEngagementDataBars,
         RelativeTimePeriod, Status,
     },
     Database, ToFixedOffset,
 };
-use google_analyticsdata1_beta::api::InListFilter;
 use google_analyticsdata1_beta::api::{Filter, FilterExpression, StringFilter};
 use strum::IntoEnumIterator;
 
 use crate::ga4;
 
-pub async fn collect(
+pub async fn collect_by_slug(
     db: &Database,
     period: RelativeTimePeriod,
     slug: &str,
 ) -> Result<Opportunity, Error> {
+    let opp = common::model::opportunity::Opportunity::load_by_slug(db, slug).await?;
+    collect(db, period, opp).await
+}
+
+pub async fn collect(
+    db: &Database,
+    period: RelativeTimePeriod,
+    opp: common::model::opportunity::Opportunity,
+) -> Result<Opportunity, Error> {
     let AbsoluteTimePeriod { begin, end } = period.absolute();
 
-    let opp = common::model::opportunity::Opportunity::load_by_slug(db, slug).await?;
     let org = common::model::partner::Partner::load_by_uid(db, &opp.exterior.partner).await?;
     let total_opportunities = org.count_total_opportunities(db).await?;
     let current_opportunities = org.count_current_opportunities(db).await?;
@@ -35,7 +45,7 @@ pub async fn collect(
                 string_filter: Some(StringFilter {
                     case_sensitive: Some(false),
                     match_type: Some(String::from("ENDS_WITH")),
-                    value: Some(format!("/{slug}")),
+                    value: Some(format!("/{}", &opp.exterior.slug)),
                 }),
                 // in_list_filter: Some(InListFilter {
                 //     values: Some(vec![
@@ -51,8 +61,51 @@ pub async fn collect(
     )
     .await?;
 
+    let mut engagement_data_chart = BTreeMap::new();
+
     for entry in report {
+        let Ok(date) = ga4::get_date(&entry, "date") else { println!("Error parsing date in {:?}", entry); continue; };
+        let views = {
+            let x = ga4::get_int(&entry, "screenPageViews");
+            if x == 0 {
+                // best guess fallback, view is the primary event on opp page
+                ga4::get_int(&entry, "eventCount")
+            } else {
+                x
+            }
+        };
+
+        let row: &mut EngagementDataChart = engagement_data_chart.entry(date).or_default();
+        row.date = date;
+        row.views += views;
+        row.unique += ga4::get_int(&entry, "totalUsers");
+        row.new += ga4::get_int(&entry, "newUsers");
+        row.returning = row.unique - row.new;
+
         dbg!(entry);
+    }
+
+    for row in engagement_data_chart.values_mut() {
+        let LocalResult::Single(begin) = row.date.timezone().with_ymd_and_hms(
+            row.date.year(),
+            row.date.month(),
+            row.date.day(),
+            0,
+            0,
+            0,
+        ) else { println!("Error calculating beginning of day: {}", row.date); continue; };
+
+        let Some(end) = begin.checked_add_days(Days::new(1)) else {println!("Error calculating end of day: {}", row.date); continue; };
+
+        row.clicks = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) AS "count!: i64" FROM c_log WHERE "object" = $1 AND "when" > $2 AND "when" < $3"#,
+            opp.exterior.uid,
+            begin,
+            end
+        )
+        .fetch_one(db)
+        .await
+        .unwrap_or(0).try_into().unwrap_or(0);
     }
 
     Ok(Opportunity {
@@ -73,9 +126,25 @@ pub async fn collect(
                 time_period: period,
                 begin,
                 end,
-                columns: todo!(),
-                chart: todo!(),
-                bars: todo!(),
+                columns: EngagementType::iter().collect(),
+                chart: engagement_data_chart.into_values().collect(),
+                bars: OpportunityEngagementDataBars {
+                    self_: EngagementDataBar {
+                        views: todo!(),
+                        unique: todo!(),
+                        clicks: todo!(),
+                    },
+                    mean: EngagementDataBar {
+                        views: todo!(),
+                        unique: todo!(),
+                        clicks: todo!(),
+                    },
+                    median: EngagementDataBar {
+                        views: todo!(),
+                        unique: todo!(),
+                        clicks: todo!(),
+                    },
+                },
             },
         },
         states: todo!(),

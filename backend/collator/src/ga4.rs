@@ -1,7 +1,9 @@
+use std::collections::BTreeMap;
 use std::env;
 
 use anyhow::{anyhow, Error};
-use chrono::{DateTime, Days, FixedOffset};
+use chrono::{DateTime, Days, FixedOffset, LocalResult, NaiveDate, Utc};
+use common::ToFixedOffset;
 use google_analyticsdata1_beta::api::{
     DateRange, Dimension, FilterExpression, Metric, RunReportRequest,
 };
@@ -11,6 +13,23 @@ use crate::reportiter::ReportIterator;
 
 // Need to rate limit GA4 requests based on
 // property_quota.tokens_per_hour and tokens_per_day in response data
+
+pub fn get_date(
+    record: &BTreeMap<String, Option<String>>,
+    key: &str,
+) -> Result<DateTime<FixedOffset>, anyhow::Error> {
+    let Some(Some(date)) = record.get(key) else { return Err(anyhow!("Field is missing or empty: {}", key)); };
+    let Ok(date) = NaiveDate::parse_from_str(&*date, "%Y%m%d") else { return Err(anyhow!("Unparsable date: {}", date)); };
+    let Some(date) = date.and_hms_opt(12, 0, 0) else { return Err(anyhow!("Out of bounds date: {}", date)); };
+    let LocalResult::Single(date) = date.and_local_timezone(Utc) else { return Err(anyhow!("Failed setting timezone for date")); };
+    Ok(date.to_fixed_offset())
+}
+
+pub fn get_int(record: &BTreeMap<String, Option<String>>, key: &str) -> u64 {
+    let Some(Some(val)) = record.get(key) else { return 0 };
+    let Ok(val) = val.parse() else { return 0 };
+    val
+}
 
 pub async fn run_report(
     begin: DateTime<FixedOffset>,

@@ -22,7 +22,7 @@ async fn main() {
 
     println!(
         "{:?}",
-        opportunity::collect(&pool, period, "summer-science-institute")
+        opportunity::collect_by_slug(&pool, period, "summer-science-institute")
             .await
             .expect("collect analytics")
     );

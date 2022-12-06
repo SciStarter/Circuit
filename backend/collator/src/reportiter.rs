@@ -1,5 +1,6 @@
-use google_analyticsdata1_beta::api::{Row, RunReportResponse};
 use std::collections::BTreeMap;
+
+use google_analyticsdata1_beta::api::{Row, RunReportResponse};
 
 pub struct ReportIterator {
     idx: usize,
