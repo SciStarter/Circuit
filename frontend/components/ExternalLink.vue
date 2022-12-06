@@ -18,6 +18,12 @@ export default {
             required: true
         },
 
+        subject: {
+            type: String,
+            required: false,
+            default: ''
+        },
+
         title: {
             type: String,
             required: false,
@@ -134,6 +140,7 @@ export default {
                 term: this.term,
                 content: this.content,
                 snml: this.linkage,
+                subject: this.subject
             })
 
             if (this.newTab) {
