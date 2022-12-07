@@ -1,0 +1,8 @@
+drop index if exists c_log_by_when_this_year;
+drop function if exists c_refresh_log_by_when_this_year;
+drop index if exists c_log_by_action_external;
+drop index if exists c_analytics_cache_no_duplicates;
+drop index if exists c_analytics_cache_by_about;
+drop index if exists c_analytics_cache_by_temporary;
+drop index if exists c_analytics_cache_by_dates;
+drop table if exists c_analytics_cache;

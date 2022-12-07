@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use anyhow::Error;
-use chrono::{Datelike, Days, LocalResult, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Days, FixedOffset, LocalResult, TimeZone, Utc};
 use common::{
     model::analytics::{
         AbsoluteTimePeriod, EngagementDataBar, EngagementDataChart, EngagementType, Opportunity,
@@ -15,27 +15,19 @@ use strum::IntoEnumIterator;
 
 use crate::ga4;
 
-pub async fn collect_by_slug(
+pub async fn cache(
     db: &Database,
-    period: RelativeTimePeriod,
-    slug: &str,
-) -> Result<Opportunity, Error> {
-    let opp = common::model::opportunity::Opportunity::load_by_slug(db, slug).await?;
-    collect(db, period, opp).await
-}
+    opp: &common::model::Opportunity,
+    temporary: bool,
+    begin: DateTime<FixedOffset>,
+    end: DateTime<FixedOffset>,
+) -> Result<(), Error> {
+    if ga4::is_cached(db, begin, end, opp.exterior.uid).await {
+        return;
+    }
 
-pub async fn collect(
-    db: &Database,
-    period: RelativeTimePeriod,
-    opp: common::model::opportunity::Opportunity,
-) -> Result<Opportunity, Error> {
-    let AbsoluteTimePeriod { begin, end } = period.absolute();
-
-    let org = common::model::partner::Partner::load_by_uid(db, &opp.exterior.partner).await?;
-    let total_opportunities = org.count_total_opportunities(db).await?;
-    let current_opportunities = org.count_current_opportunities(db).await?;
-
-    let report = ga4::run_report(
+    ga4::cache_report(
+        db,
         begin,
         end,
         FilterExpression {
@@ -58,28 +50,50 @@ pub async fn collect(
             }),
             ..Default::default()
         },
+        opp.exterior.uid,
+        temporary,
     )
-    .await?;
+    .await?
+}
+
+pub async fn collect(
+    db: &Database,
+    opp: &common::model::opportunity::Opportunity,
+    begin: DateTime<FixedOffset>,
+    end: DateTime<FixedOffset>,
+) -> Result<Opportunity, Error> {
+    let AbsoluteTimePeriod { begin, end } = period.absolute();
+
+    let org = common::model::partner::Partner::load_by_uid(db, &opp.exterior.partner).await?;
+    let total_opportunities = org.count_total_opportunities(db).await?;
+    let current_opportunities = org.count_current_opportunities(db).await?;
 
     let mut engagement_data_chart = BTreeMap::new();
 
-    for entry in report {
-        let Ok(date) = ga4::get_date(&entry, "date") else { println!("Error parsing date in {:?}", entry); continue; };
+    let mut query = sqlx::query!(
+        r#"SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "about" = $3"#,
+        begin,
+        end,
+        opp.exterior.uid
+    )
+    .fetch(db);
+
+    while let Some(entry) = query.try_next().await {
+        let date = entry.date;
         let views = {
-            let x = ga4::get_int(&entry, "screenPageViews");
-            if x == 0 {
-                // best guess fallback, view is the primary event on opp page
-                ga4::get_int(&entry, "eventCount")
+            if entry.views > 0 {
+                entry.views
             } else {
-                x
+                // best guess fallback, view is the primary event on opp page
+                entry.events
             }
         };
 
         let row: &mut EngagementDataChart = engagement_data_chart.entry(date).or_default();
         row.date = date;
         row.views += views;
-        row.unique += ga4::get_int(&entry, "totalUsers");
-        row.new += ga4::get_int(&entry, "newUsers");
+        row.unique += entry.total_users;
+        row.new += entry.new_users;
         row.returning = row.unique - row.new;
 
         dbg!(entry);
@@ -98,16 +112,19 @@ pub async fn collect(
         let Some(end) = begin.checked_add_days(Days::new(1)) else {println!("Error calculating end of day: {}", row.date); continue; };
 
         row.clicks = sqlx::query_scalar!(
-            r#"SELECT COUNT(*) AS "count!: i64" FROM c_log WHERE "object" = $1 AND "when" > $2 AND "when" < $3"#,
+            r#"SELECT COUNT(*) AS "count!: i64" FROM c_log WHERE "action" = 'external' AND "object" = $1 AND "when" >= $2 AND "when" < $3"#,
             opp.exterior.uid,
             begin,
             end
         )
         .fetch_one(db)
         .await
-        .unwrap_or(0).try_into().unwrap_or(0);
+        .unwrap_or(0)
+        .try_into()
+        .unwrap_or(0);
     }
 
+    // !!!
     Ok(Opportunity {
         opportunity: opp.exterior.uid,
         updated: Utc::now().to_fixed_offset(),

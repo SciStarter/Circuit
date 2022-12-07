@@ -13,7 +13,7 @@ use serde_json::{json, Value};
 use sqlx::postgres::PgArguments;
 use sqlx::query::Query;
 use sqlx::{prelude::*, Postgres};
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::convert::AsRef;
 use strum::IntoEnumIterator;
 use strum_macros::{AsRefStr, EnumIter, EnumString};
@@ -1521,7 +1521,30 @@ impl OpportunityImportRecord {
     }
 }
 
+pub struct OpportunityPseudoIter<'db> {
+    db: &'db Database,
+    uids: VecDeque<Uuid>,
+}
+
+impl<'db> OpportunityPseudoIter<'db> {
+    pub async fn get_next(&'db mut self) -> Option<Opportunity> {
+        let Some(uid) = self.uids.pop_front() else { return None; };
+        Opportunity::load_by_uid(self.db, &uid).await.ok()
+    }
+}
+
 impl Opportunity {
+    pub async fn catalog(db: &Database) -> Result<OpportunityPseudoIter, Error> {
+        Ok(OpportunityPseudoIter {
+            db,
+            uids: sqlx::query!(r#"SELECT ("exterior"->>'uid')::uuid AS "uid!" FROM c_opportunity"#)
+                .map(|row| row.uid)
+                .fetch_all(db)
+                .await?
+                .into(),
+        })
+    }
+
     pub fn into_annotated_exterior(self, authorized: PermitAction) -> AnnotatedOpportunityExterior {
         let current = self.current();
         AnnotatedOpportunityExterior {

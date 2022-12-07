@@ -18,3 +18,4 @@ rusty-s3 = "0.3.2"
 sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "chrono", "postgres", "json", "uuid", "macros", "offline", "tls", "migrate"] }
 strum = { version = "0.24.1", features = ["derive"] }
 tokio = { version = "1.22.0", features = ["full"] }
+uuid = "1.2.2"

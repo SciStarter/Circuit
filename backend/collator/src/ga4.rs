@@ -3,21 +3,23 @@ use std::env;
 
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Days, FixedOffset, LocalResult, NaiveDate, Utc};
-use common::ToFixedOffset;
+use common::model::analytics::{AbsoluteTimePeriod, RelativeTimePeriod};
+use common::{Database, ToFixedOffset};
 use google_analyticsdata1_beta::api::{
     DateRange, Dimension, FilterExpression, Metric, RunReportRequest,
 };
 use google_analyticsdata1_beta::{hyper, hyper_rustls, oauth2, AnalyticsData};
+use uuid::Uuid;
 
 use crate::reportiter::ReportIterator;
 
 // Need to rate limit GA4 requests based on
 // property_quota.tokens_per_hour and tokens_per_day in response data
 
-pub fn get_date(
+fn get_date(
     record: &BTreeMap<String, Option<String>>,
     key: &str,
-) -> Result<DateTime<FixedOffset>, anyhow::Error> {
+) -> Result<DateTime<FixedOffset>, Error> {
     let Some(Some(date)) = record.get(key) else { return Err(anyhow!("Field is missing or empty: {}", key)); };
     let Ok(date) = NaiveDate::parse_from_str(&*date, "%Y%m%d") else { return Err(anyhow!("Unparsable date: {}", date)); };
     let Some(date) = date.and_hms_opt(12, 0, 0) else { return Err(anyhow!("Out of bounds date: {}", date)); };
@@ -25,10 +27,21 @@ pub fn get_date(
     Ok(date.to_fixed_offset())
 }
 
-pub fn get_int(record: &BTreeMap<String, Option<String>>, key: &str) -> u64 {
+fn get_int(record: &BTreeMap<String, Option<String>>, key: &str) -> i64 {
     let Some(Some(val)) = record.get(key) else { return 0 };
     let Ok(val) = val.parse() else { return 0 };
     val
+}
+
+fn get_float(record: &BTreeMap<String, Option<String>>, key: &str) -> f64 {
+    let Some(Some(val)) = record.get(key) else { return 0.0 };
+    let Ok(val) = val.parse() else { return 0.0 };
+    val
+}
+
+fn get_string(record: &BTreeMap<String, Option<String>>, key: &str) -> String {
+    let Some(Some(val)) = record.get(key) else { return 0 };
+    val.clone()
 }
 
 pub async fn run_report(
@@ -137,4 +150,108 @@ pub async fn run_report(
             response.body()
         )))
     }
+}
+
+pub async fn cache_report(
+    db: &Database,
+    begin: DateTime<FixedOffset>,
+    end: DateTime<FixedOffset>,
+    filter: FilterExpression,
+    about: Uuid,
+    temporary: bool,
+) {
+    for row in run_report(begin, end, filter).await? {
+        let date = get_date(&row, "date");
+        let city = get_string(&row, "city");
+        let device_category = get_string(&row, "deviceCategory");
+        let first_session_date = get_date(&row, "firstSessionDate");
+        let page_path = get_string(&row, "pagePath");
+        let region = get_string(&row, "region");
+        let views = get_int(&row, "screenPageViews");
+        let events = get_int(&row, "eventCount");
+        let total_users = get_int(&row, "totalUsers");
+        let new_users = get_int(&row, "newUsers");
+        let engagement_duration = get_float(&row, "userEngagementDuration");
+
+        sqlx::query!(
+            r#"
+INSERT INTO c_analytics_cache (
+    "temporary",
+    "begin",
+    "end",
+    "about",
+    "date",
+    "city",
+    "device_category",
+    "first_session_date",
+    "page_path",
+    "region",
+    "views",
+    "events",
+    "total_users",
+    "new_users",
+    "engagement_duration"
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+ON CONFLICT ("begin", "end", "about")
+DO UPDATE SET
+    "temporary" = EXCLUDED."temporary",
+    "date" = EXCLUDED."date",
+    "city" = EXCLUDED."city",
+    "device_category" = EXCLUDED."device_category",
+    "first_session_date" = EXCLUDED."first_session_date",
+    "page_path" = EXCLUDED."page_path",
+    "region" = EXCLUDED."region",
+    "views" = EXCLUDED."views",
+    "events" = EXCLUDED."events",
+    "total_users" = EXCLUDED."total_users",
+    "new_users" = EXCLUDED."new_users",
+    "engagement_duration" = EXCLUDED."engagement_duration"
+"#,
+            temporary,
+            begin,
+            end,
+            about,
+            date,
+            city,
+            device_category,
+            first_session_date,
+            page_path,
+            region,
+            views,
+            events,
+            total_users,
+            new_users,
+            engagement_duration
+        )
+        .execute(db)
+        .await?;
+    }
+}
+
+pub async fn is_cached(
+    db: &Database,
+    begin: DateTime<FixedOffset>,
+    end: DateTime<FixedOffset>,
+    about: Uuid,
+) -> bool {
+    sqlx::query_scalar!(
+        r#"
+SELECT COUNT(*) > 0 AS "exists!: bool"
+FROM c_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "about" = $3
+"#,
+        begin,
+        end,
+        about
+    )
+    .fetch_one(db)
+    .await?
+}
+
+pub async fn clear_cached_temporary(db: &Database) -> Result<(), Error> {
+    sqlx::query!(r#"DELETE FROM c_analytics_cache WHERE "temporary" = true"#)
+        .execute(db)
+        .await?;
+    Ok(())
 }

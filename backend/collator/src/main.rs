@@ -9,7 +9,7 @@ mod overview;
 mod reportiter;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool = PgPoolOptions::new()
         .min_connections(1)
         .connect(&std::env::var("DATABASE_URL").expect("environment variable DATABASE_URL"))
@@ -18,14 +18,51 @@ async fn main() {
 
     common::migrate(&pool).await.expect("run migrations");
 
-    let period = RelativeTimePeriod::ThisQuarter;
+    for period in RelativeTimePeriod::iter() {
+        let temporary = match period {
+            RelativeTimePeriod::ThisMonth => true,
+            RelativeTimePeriod::LastMonth => false,
+            RelativeTimePeriod::ThisQuarter => true,
+            RelativeTimePeriod::LastQuarter => false,
+            RelativeTimePeriod::ThisSemiannum => true,
+            RelativeTimePeriod::LastSemiannum => false,
+            RelativeTimePeriod::ThisYear => true,
+            RelativeTimePeriod::LastYear => false,
+            RelativeTimePeriod::AllTime => true,
+        };
 
-    println!(
-        "{:?}",
-        opportunity::collect_by_slug(&pool, period, "summer-science-institute")
-            .await
-            .expect("collect analytics")
-    );
+        let AbsoluteTimePeriod { begin, end } = period.absolute();
+
+        let mut iter = common::model::Opportunity::catalog(&pool).await?;
+        while let Some(opp) = iter.get_next().await {
+            opportunity::cache(&pool, &opp, temporary, begin, end).await?;
+        }
+
+        for partner_ref in common::model::partner::Partner::catalog(&pool).await? {
+            let partner =
+                common::model::partner::Partner::load_by_id(&pool, partner_ref.id).await?;
+            organization::cache(&pool, &partner, temporary, begin, end).await?;
+        }
+
+        overview::cache(&pool, temporary, begin, end).await?;
+
+        let mut iter = common::model::Opportunity::catalog(&pool).await?;
+        while let Some(opp) = iter.get_next().await {
+            opportunity::collect(&pool, &opp, end).await?;
+        }
+
+        for partner_ref in common::model::partner::Partner::catalog(&pool).await? {
+            let partner =
+                common::model::partner::Partner::load_by_id(&pool, partner_ref.id).await?;
+            organization::collect(&pool, &partner, begin, end).await?;
+        }
+
+        overview::collect(&pool, begin, end).await?;
+    }
+
+    ga4::clear_cached_temporary(&pool).await?;
+
+    Ok(())
 }
 
 /*

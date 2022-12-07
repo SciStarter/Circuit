@@ -49,5 +49,17 @@
       }
     },
     "query": "SELECT substring(interior ->> 'joined_at' FROM 0 FOR 8) AS month FROM c_person"
+  },
+  "db04257b8088331e65c5655e3055242977bec70d994261f1de66383b9f700fab": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "INSERT INTO c_log (\"action\", \"object\") values ('external', $1)"
   }
 }
