@@ -81,7 +81,7 @@ pub async fn record_external(mut req: tide::Request<Database>) -> tide::Result {
     sqlx::query!(
         r#"INSERT INTO c_log ("action", "object") values ('external', $1)"#,
         Uuid::try_parse(
-            body["subject"]
+            body["object"]
                 .as_str()
                 .unwrap_or("00000000-0000-0000-0000-000000000000")
         )

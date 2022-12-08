@@ -155,7 +155,7 @@
             <link-icon />
             <external-link
               :href="opportunity.partner_opp_url || opportunity.organization_website"
-              :subject="opportunity.partner"
+              :object="opportunity.partner"
               title="Find out more"
               campaign="opp-page"
               content="find-out-more"
@@ -213,7 +213,7 @@
           <div class="opp-action-btn stronger" v-if="opportunity.partner_opp_url">
             <external-link
               :href="opportunity.partner_opp_url"
-              :subject="opportunity.partner"
+              :object="opportunity.partner"
               title="Find out more"
               campaign="opp-page"
               content="find-out-more"
@@ -260,14 +260,14 @@
       <div class="partner-and-org">
         <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
           <figcaption>Provided By</figcaption>
-          <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" :subject="opportunity.uid" campaign="opp-page" content="featured-on">
+          <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" :object="opportunity.uid" campaign="opp-page" content="featured-on">
             <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name" :title="opportunity.partner_name">
             <span v-else>{{ opportunity.partner_name }}</span>
           </component>
         </figure>
         <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
           <figcaption>Hosted By</figcaption>
-          <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" :subject="opportunity.uid" campaign="opp-page" content="hosted-by">
+          <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" :object="opportunity.uid" campaign="opp-page" content="hosted-by">
             <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name" :title="opportunity.organization_name">
             <span v-else>{{ opportunity.organization_name }}</span>
           </component>

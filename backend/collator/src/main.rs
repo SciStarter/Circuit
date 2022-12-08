@@ -1,5 +1,10 @@
-use common::model::analytics::RelativeTimePeriod;
+use chrono::{DateTime, FixedOffset};
+use common::{
+    model::analytics::{AbsoluteTimePeriod, EngagementDataBar, RelativeTimePeriod},
+    Database,
+};
 use sqlx::postgres::PgPoolOptions;
+use strum::IntoEnumIterator;
 
 mod ga4;
 mod hosts;
@@ -7,6 +12,90 @@ mod opportunity;
 mod organization;
 mod overview;
 mod reportiter;
+
+#[derive(Default, Debug, Clone)]
+pub struct CommonState {
+    begin: DateTime<FixedOffset>,
+    end: DateTime<FixedOffset>,
+    period: RelativeTimePeriod,
+    engagement_mean: EngagementDataBar,
+    engagement_median: EngagementDataBar,
+}
+
+async fn collect(
+    db: &Database,
+    begin: DateTime<FixedOffset>,
+    end: DateTime<FixedOffset>,
+    period: RelativeTimePeriod,
+) -> Result<CommonState, Box<dyn std::error::Error>> {
+    let (mean_views, mean_unique, median_views, median_unique) = sqlx::query!(
+        r#"
+SELECT
+  AVG("view_count")::bigint AS "mean_views!: i64",
+  AVG("unique_count")::bigint AS "mean_unique!: i64",
+  PERCENTILE_CONT(0.5) WITHIN GROUP (order by "view_count")::bigint AS "median_views!: i64",
+  PERCENTILE_CONT(0.5) WITHIN GROUP (order by "unique_count")::bigint AS "median_unique!: i64"
+FROM (
+  SELECT "about", SUM("views") AS "view_count", SUM("total_users") AS "unique_count"
+  FROM c_analytics_cache
+  WHERE "begin" = $1 AND "end" = $2
+  GROUP BY "about"
+) AS c_sub
+"#,
+        begin,
+        end
+    )
+    .map(|row| {
+        (
+            row.mean_views.try_into().unwrap_or(0),
+            row.mean_unique.try_into().unwrap_or(0),
+            row.median_views.try_into().unwrap_or(0),
+            row.median_unique.try_into().unwrap_or(0),
+        )
+    })
+    .fetch_one(db)
+    .await?;
+
+    let (mean_clicks, median_clicks) = sqlx::query!(
+        r#"
+SELECT
+  AVG("clicks")::bigint AS "mean_clicks!: i64",
+  PERCENTILE_CONT(0.5) WITHIN GROUP (order by "clicks")::bigint AS "median_clicks!: i64"
+FROM (
+  SELECT "object", COUNT(*) AS "clicks"
+  FROM c_log
+  WHERE "action" = 'external' AND "when" >= $1 AND "when" < $2
+  GROUP BY "object"
+) AS c_sub
+"#,
+        begin,
+        end
+    )
+    .map(|row| {
+        (
+            row.mean_clicks.try_into().unwrap_or(0),
+            row.median_clicks.try_into().unwrap_or(0),
+        )
+    })
+    .fetch_one(db)
+    .await?;
+
+    Ok(CommonState {
+        begin,
+        end,
+        period,
+        engagement_mean: EngagementDataBar {
+            views: mean_views,
+            unique: mean_unique,
+            clicks: mean_clicks,
+        },
+        engagement_median: EngagementDataBar {
+            views: median_views,
+            unique: median_unique,
+            clicks: median_clicks,
+        },
+    })
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,7 +123,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let AbsoluteTimePeriod { begin, end } = period.absolute();
 
         let mut iter = common::model::Opportunity::catalog(&pool).await?;
-        while let Some(opp) = iter.get_next().await {
+        while let Some(opp) = iter.get_next(&pool).await {
             opportunity::cache(&pool, &opp, temporary, begin, end).await?;
         }
 
@@ -46,18 +135,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         overview::cache(&pool, temporary, begin, end).await?;
 
+        let state = collect(&pool, begin, end, period).await?;
+
         let mut iter = common::model::Opportunity::catalog(&pool).await?;
-        while let Some(opp) = iter.get_next().await {
-            opportunity::collect(&pool, &opp, end).await?;
+        while let Some(opp) = iter.get_next(&pool).await {
+            opportunity::collect(&pool, &opp, &state).await?;
         }
 
         for partner_ref in common::model::partner::Partner::catalog(&pool).await? {
             let partner =
                 common::model::partner::Partner::load_by_id(&pool, partner_ref.id).await?;
-            organization::collect(&pool, &partner, begin, end).await?;
+            organization::collect(&pool, &partner, &state).await?;
         }
 
-        overview::collect(&pool, begin, end).await?;
+        overview::collect(&pool, &state).await?;
     }
 
     ga4::clear_cached_temporary(&pool).await?;

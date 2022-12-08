@@ -18,7 +18,7 @@ export default {
             required: true
         },
 
-        subject: {
+        object: {
             type: String,
             required: false,
             default: ''
@@ -140,7 +140,7 @@ export default {
                 term: this.term,
                 content: this.content,
                 snml: this.linkage,
-                subject: this.subject
+                object: this.object
             })
 
             if (this.newTab) {

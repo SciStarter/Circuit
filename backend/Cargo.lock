@@ -759,6 +759,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "common",
+ "futures-util",
  "google-analyticsdata1_beta",
  "reqwest",
  "rusty-s3",

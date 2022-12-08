@@ -4,16 +4,16 @@ use anyhow::Error;
 use chrono::{DateTime, Datelike, Days, FixedOffset, LocalResult, TimeZone, Utc};
 use common::{
     model::analytics::{
-        AbsoluteTimePeriod, EngagementDataBar, EngagementDataChart, EngagementType, Opportunity,
-        OpportunityEngagement, OpportunityEngagementData, OpportunityEngagementDataBars,
-        RelativeTimePeriod, Status,
+        EngagementDataBar, EngagementDataChart, EngagementType, Opportunity, OpportunityEngagement,
+        OpportunityEngagementData, OpportunityEngagementDataBars, RelativeTimePeriod, Status,
     },
     Database, ToFixedOffset,
 };
+use futures_util::TryStreamExt;
 use google_analyticsdata1_beta::api::{Filter, FilterExpression, StringFilter};
 use strum::IntoEnumIterator;
 
-use crate::ga4;
+use crate::{ga4, CommonState};
 
 pub async fn cache(
     db: &Database,
@@ -23,7 +23,7 @@ pub async fn cache(
     end: DateTime<FixedOffset>,
 ) -> Result<(), Error> {
     if ga4::is_cached(db, begin, end, opp.exterior.uid).await {
-        return;
+        return Ok(());
     }
 
     ga4::cache_report(
@@ -53,17 +53,16 @@ pub async fn cache(
         opp.exterior.uid,
         temporary,
     )
-    .await?
+    .await;
+
+    Ok(())
 }
 
 pub async fn collect(
     db: &Database,
     opp: &common::model::opportunity::Opportunity,
-    begin: DateTime<FixedOffset>,
-    end: DateTime<FixedOffset>,
+    state: &CommonState,
 ) -> Result<Opportunity, Error> {
-    let AbsoluteTimePeriod { begin, end } = period.absolute();
-
     let org = common::model::partner::Partner::load_by_uid(db, &opp.exterior.partner).await?;
     let total_opportunities = org.count_total_opportunities(db).await?;
     let current_opportunities = org.count_current_opportunities(db).await?;
@@ -72,28 +71,20 @@ pub async fn collect(
 
     let mut query = sqlx::query!(
         r#"SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "about" = $3"#,
-        begin,
-        end,
+        state.begin,
+        state.end,
         opp.exterior.uid
     )
     .fetch(db);
 
-    while let Some(entry) = query.try_next().await {
-        let date = entry.date;
-        let views = {
-            if entry.views > 0 {
-                entry.views
-            } else {
-                // best guess fallback, view is the primary event on opp page
-                entry.events
-            }
-        };
+    while let Ok(Some(entry)) = query.try_next().await {
+        let date = entry.date.to_fixed_offset();
 
         let row: &mut EngagementDataChart = engagement_data_chart.entry(date).or_default();
         row.date = date;
-        row.views += views;
-        row.unique += entry.total_users;
-        row.new += entry.new_users;
+        row.views += entry.views.try_into().unwrap_or(0);
+        row.unique += entry.total_users.try_into().unwrap_or(0);
+        row.new += entry.new_users.try_into().unwrap_or(0);
         row.returning = row.unique - row.new;
 
         dbg!(entry);
@@ -118,13 +109,33 @@ pub async fn collect(
             end
         )
         .fetch_one(db)
-        .await
-        .unwrap_or(0)
-        .try_into()
-        .unwrap_or(0);
+        .await?.try_into().unwrap_or(0);
     }
 
-    // !!!
+    let opp_clicks = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) AS "count!: i64" FROM c_log WHERE "action" = 'external' AND "object" = $1 AND "when" >= $2 AND "when" < $3"#,
+            opp.exterior.uid,
+            state.begin,
+        state.end
+        )
+        .fetch_one(db)
+        .await?.try_into().unwrap_or(0);
+
+    let (opp_views, opp_unique) = sqlx::query!(
+        r#"SELECT SUM("views") AS "views!: i64", SUM("total_users") AS "unique!: i64" FROM c_analytics_cache WHERE "about" = $1 AND "begin" = $2 AND "end" = $3"#,
+        opp.exterior.uid,
+        state.begin,
+        state.end
+    )
+        .map(|row| {
+            (
+                row.views.try_into().unwrap_or(0),
+                row.unique.try_into().unwrap_or(0),
+            )
+        })
+        .fetch_one(db)
+        .await?;
+
     Ok(Opportunity {
         opportunity: opp.exterior.uid,
         updated: Utc::now().to_fixed_offset(),
@@ -140,27 +151,19 @@ pub async fn collect(
                 } else {
                     Status::Live
                 },
-                time_period: period,
-                begin,
-                end,
+                time_period: state.period,
+                begin: state.begin,
+                end: state.end,
                 columns: EngagementType::iter().collect(),
                 chart: engagement_data_chart.into_values().collect(),
                 bars: OpportunityEngagementDataBars {
                     self_: EngagementDataBar {
-                        views: todo!(),
-                        unique: todo!(),
-                        clicks: todo!(),
+                        views: opp_views,
+                        unique: opp_unique,
+                        clicks: opp_clicks,
                     },
-                    mean: EngagementDataBar {
-                        views: todo!(),
-                        unique: todo!(),
-                        clicks: todo!(),
-                    },
-                    median: EngagementDataBar {
-                        views: todo!(),
-                        unique: todo!(),
-                        clicks: todo!(),
-                    },
+                    mean: state.engagement_mean.clone(),
+                    median: state.engagement_median.clone(),
                 },
             },
         },

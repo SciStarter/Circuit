@@ -220,11 +220,11 @@ pub struct EngagementDataChart {
 #[serde(default)]
 pub struct EngagementDataBar {
     #[serde(rename = "Views")]
-    views: u64,
+    pub views: u64,
     #[serde(rename = "Unique")]
-    unique: u64,
+    pub unique: u64,
     #[serde(rename = "Clicks to Website")]
-    clicks: u64,
+    pub clicks: u64,
 }
 
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]

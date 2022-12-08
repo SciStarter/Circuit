@@ -1,5 +1,8 @@
+use anyhow::Error;
 use chrono::{DateTime, FixedOffset};
-use common::Database;
+use common::{model::analytics::Overview, Database};
+
+use crate::CommonState;
 
 pub async fn cache(
     db: &Database,
@@ -10,10 +13,6 @@ pub async fn cache(
     Ok(())
 }
 
-pub async fn collect(
-    db: &Database,
-    begin: DateTime<FixedOffset>,
-    end: DateTime<FixedOffset>,
-) -> Result<Opportunity, Error> {
-    Ok(())
+pub async fn collect(db: &Database, state: &CommonState) -> Result<Overview, Error> {
+    Ok(Overview::default())
 }

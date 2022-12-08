@@ -3,7 +3,6 @@ use std::env;
 
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Days, FixedOffset, LocalResult, NaiveDate, Utc};
-use common::model::analytics::{AbsoluteTimePeriod, RelativeTimePeriod};
 use common::{Database, ToFixedOffset};
 use google_analyticsdata1_beta::api::{
     DateRange, Dimension, FilterExpression, Metric, RunReportRequest,
@@ -40,7 +39,7 @@ fn get_float(record: &BTreeMap<String, Option<String>>, key: &str) -> f64 {
 }
 
 fn get_string(record: &BTreeMap<String, Option<String>>, key: &str) -> String {
-    let Some(Some(val)) = record.get(key) else { return 0 };
+    let Some(Some(val)) = record.get(key) else { return String::new(); };
     val.clone()
 }
 
@@ -160,11 +159,17 @@ pub async fn cache_report(
     about: Uuid,
     temporary: bool,
 ) {
-    for row in run_report(begin, end, filter).await? {
-        let date = get_date(&row, "date");
+    for row in match run_report(begin, end, filter).await {
+        Ok(iter) => iter,
+        Err(err) => {
+            println!("Error attempting to run GA4 report: {:?}", err);
+            return;
+        }
+    } {
+        let Ok(date) = get_date(&row, "date") else { println!("Unable to parse date in GA4 response: {:?}", row); continue; };
         let city = get_string(&row, "city");
         let device_category = get_string(&row, "deviceCategory");
-        let first_session_date = get_date(&row, "firstSessionDate");
+        let Ok(first_session_date) = get_date(&row, "firstSessionDate") else { println!("Unable to parse first session date in GA4 response: {:?}", row); continue; };
         let page_path = get_string(&row, "pagePath");
         let region = get_string(&row, "region");
         let views = get_int(&row, "screenPageViews");
@@ -173,7 +178,7 @@ pub async fn cache_report(
         let new_users = get_int(&row, "newUsers");
         let engagement_duration = get_float(&row, "userEngagementDuration");
 
-        sqlx::query!(
+        if let Err(err) = sqlx::query!(
             r#"
 INSERT INTO c_analytics_cache (
     "temporary",
@@ -225,7 +230,10 @@ DO UPDATE SET
             engagement_duration
         )
         .execute(db)
-        .await?;
+        .await
+        {
+            println!("Error inserting into c_analytics_cache: {:?}", err);
+        }
     }
 }
 
@@ -236,17 +244,13 @@ pub async fn is_cached(
     about: Uuid,
 ) -> bool {
     sqlx::query_scalar!(
-        r#"
-SELECT COUNT(*) > 0 AS "exists!: bool"
-FROM c_analytics_cache
-WHERE "begin" = $1 AND "end" = $2 AND "about" = $3
-"#,
+        r#"SELECT EXISTS(SELECT 1 FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "about" = $3) AS "exists!: bool""#,
         begin,
         end,
         about
     )
     .fetch_one(db)
-    .await?
+    .await.unwrap_or(false)
 }
 
 pub async fn clear_cached_temporary(db: &Database) -> Result<(), Error> {
