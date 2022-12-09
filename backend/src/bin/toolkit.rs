@@ -509,6 +509,30 @@ async fn refresh_geo_opportunities(state: &mut State, _args: Vec<String>) -> Res
     Ok(())
 }
 
+async fn geoquery(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+    let query = args.join(" ");
+
+    println!(
+        "{:?}",
+        common::geo::Query::new(query, false,).lookup_one().await
+    );
+
+    Ok(())
+}
+
+async fn geomquery(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+    let query = args.join(" ");
+
+    println!(
+        "{:?}",
+        common::geo::GeomQuery::new(query, 0.5)
+            .lookup(&state.db)
+            .await
+    );
+
+    Ok(())
+}
+
 fn table(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     let mut args = args.into_iter().skip(1);
 
@@ -989,6 +1013,14 @@ async fn run_shell(state: State) -> Result<(), DynError> {
         Command::new_async(
             "Update geo data for an opportunity based on address".into(),
             async_fn!(State, refresh_geo_opportunities),
+        ),
+    );
+
+    shell.commands.insert(
+        "geoquery".into(),
+        Command::new_async(
+            "Update geo data for an opportunity based on address".into(),
+            async_fn!(State, geoquery),
         ),
     );
 

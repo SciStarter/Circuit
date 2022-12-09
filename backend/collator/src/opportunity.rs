@@ -1,11 +1,14 @@
 use std::collections::BTreeMap;
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use chrono::{DateTime, Datelike, Days, FixedOffset, LocalResult, TimeZone, Utc};
 use common::{
     model::analytics::{
-        EngagementDataBar, EngagementDataChart, EngagementType, Opportunity, OpportunityEngagement,
-        OpportunityEngagementData, OpportunityEngagementDataBars, RelativeTimePeriod, Status,
+        DetailedEngagementDataChart, DetailedEngagementDataChartWithPoint, EngagementDataBar,
+        EngagementDataChart, EngagementType, Opportunity, OpportunityEngagement,
+        OpportunityEngagementData, OpportunityEngagementDataBars, OpportunityStates,
+        OpportunityStatesData, OpportunityTechnology, OpportunityTechnologyData, RegionEngagement,
+        RelativeTimePeriod, StateEngagement, Status,
     },
     Database, ToFixedOffset,
 };
@@ -100,7 +103,7 @@ pub async fn collect(
             0,
         ) else { println!("Error calculating beginning of day: {}", row.date); continue; };
 
-        let Some(end) = begin.checked_add_days(Days::new(1)) else {println!("Error calculating end of day: {}", row.date); continue; };
+        let Some(end) = begin.checked_add_days(Days::new(1)) else { println!("Error calculating end of day: {}", row.date); continue; };
 
         row.clicks = sqlx::query_scalar!(
             r#"SELECT COUNT(*) AS "count!: i64" FROM c_log WHERE "action" = 'external' AND "object" = $1 AND "when" >= $2 AND "when" < $3"#,
@@ -116,7 +119,7 @@ pub async fn collect(
             r#"SELECT COUNT(*) AS "count!: i64" FROM c_log WHERE "action" = 'external' AND "object" = $1 AND "when" >= $2 AND "when" < $3"#,
             opp.exterior.uid,
             state.begin,
-        state.end
+            state.end
         )
         .fetch_one(db)
         .await?.try_into().unwrap_or(0);
@@ -135,6 +138,257 @@ pub async fn collect(
         })
         .fetch_one(db)
         .await?;
+
+    let mut states_max = DetailedEngagementDataChart::default();
+    let mut states = BTreeMap::new();
+
+    // Note: in the values returned from GA4 and stored in the
+    // database, "region" denotes the state and "city" denotes the
+    // area within the state. In the engagement chart data, "state"
+    // denotes the state and "region" denotes the area within the
+    // state. The the word "region" is used with two different
+    // meanings: "region" -> "state" and "city" -> "region"
+
+    let mut states_rows = sqlx::query!(
+        r#"
+SELECT
+  "region" AS "state!: String",
+  SUM("total_users") AS "unique_users!: i64",
+  SUM("new_users") AS "new_users!: i64",
+  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
+  SUM("views") AS "total_pageviews!: i64",
+  SUM("sessions") AS "unique_pageviews!: i64",
+  AVG("engagement_duration") AS "average_time!: f64"
+FROM c_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "about" = $3
+GROUP BY "region"
+"#,
+        state.begin,
+        state.end,
+        opp.exterior.uid,
+    )
+    .fetch(db);
+
+    while let Some(state_row) = states_rows.try_next().await? {
+        let state_name = state_row.state;
+
+        let state_row = DetailedEngagementDataChart {
+            date: None,
+            unique_users: state_row.unique_users.try_into().unwrap_or(0),
+            new_users: state_row.new_users.try_into().unwrap_or(0),
+            returning_users: state_row.returning_users.try_into().unwrap_or(0),
+            total_pageviews: state_row.total_pageviews.try_into().unwrap_or(0),
+            unique_pageviews: state_row.unique_pageviews.try_into().unwrap_or(0),
+            average_time: state_row.average_time.try_into().unwrap_or(0.0),
+        };
+
+        if state_row.unique_users > states_max.unique_users {
+            states_max.unique_users = state_row.unique_users;
+        }
+
+        if state_row.new_users > states_max.new_users {
+            states_max.new_users = state_row.new_users;
+        }
+
+        if state_row.returning_users > states_max.returning_users {
+            states_max.returning_users = state_row.returning_users;
+        }
+
+        if state_row.total_pageviews > states_max.total_pageviews {
+            states_max.total_pageviews = state_row.total_pageviews;
+        }
+
+        if state_row.unique_pageviews > states_max.unique_pageviews {
+            states_max.unique_pageviews = state_row.unique_pageviews;
+        }
+
+        if state_row.average_time > states_max.average_time {
+            states_max.average_time = state_row.average_time;
+        }
+
+        let mut regions_max = DetailedEngagementDataChart::default();
+        let mut regions = BTreeMap::new();
+
+        let mut regions_rows = sqlx::query!(
+            r#"
+SELECT
+  "city" AS "region!: String",
+  SUM("total_users") AS "unique_users!: i64",
+  SUM("new_users") AS "new_users!: i64",
+  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
+  SUM("views") AS "total_pageviews!: i64",
+  SUM("sessions") AS "unique_pageviews!: i64",
+  AVG("engagement_duration") AS "average_time!: f64"
+FROM c_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "region" = $3 AND "about" = $4
+GROUP BY "city"
+"#,
+            state.begin,
+            state.end,
+            &state_name,
+            opp.exterior.uid,
+        )
+        .fetch(db);
+
+        while let Some(region_row) = regions_rows.try_next().await? {
+            let region_name = region_row.region;
+
+            let region_row = DetailedEngagementDataChart {
+                date: None,
+                unique_users: region_row.unique_users.try_into().unwrap_or(0),
+                new_users: region_row.new_users.try_into().unwrap_or(0),
+                returning_users: region_row.returning_users.try_into().unwrap_or(0),
+                total_pageviews: region_row.total_pageviews.try_into().unwrap_or(0),
+                unique_pageviews: region_row.unique_pageviews.try_into().unwrap_or(0),
+                average_time: region_row.average_time.try_into().unwrap_or(0.0),
+            };
+
+            if region_row.unique_users > regions_max.unique_users {
+                regions_max.unique_users = region_row.unique_users;
+            }
+
+            if region_row.new_users > regions_max.new_users {
+                regions_max.new_users = region_row.new_users;
+            }
+
+            if region_row.returning_users > regions_max.returning_users {
+                regions_max.returning_users = region_row.returning_users;
+            }
+
+            if region_row.total_pageviews > regions_max.total_pageviews {
+                regions_max.total_pageviews = region_row.total_pageviews;
+            }
+
+            if region_row.unique_pageviews > regions_max.unique_pageviews {
+                regions_max.unique_pageviews = region_row.unique_pageviews;
+            }
+
+            if region_row.average_time > regions_max.average_time {
+                regions_max.average_time = region_row.average_time;
+            }
+
+            let point =
+                common::geo::Query::new(format!("{}, {}", &region_name, &state_name), false)
+                    .lookup_one()
+                    .await
+                    .map(|m| (m.geometry.longitude as f64, m.geometry.latitude as f64));
+
+            regions.insert(
+                region_name,
+                DetailedEngagementDataChartWithPoint {
+                    values: DetailedEngagementDataChart {
+                        date: None,
+                        unique_users: region_row.unique_users,
+                        new_users: region_row.new_users,
+                        returning_users: region_row.returning_users,
+                        total_pageviews: region_row.total_pageviews,
+                        unique_pageviews: region_row.unique_pageviews,
+                        average_time: region_row.average_time,
+                    },
+                    point,
+                },
+            );
+        }
+
+        states.insert(
+            state_name,
+            StateEngagement {
+                values: DetailedEngagementDataChart {
+                    date: None,
+                    unique_users: state_row.unique_users,
+                    new_users: state_row.new_users,
+                    returning_users: state_row.returning_users,
+                    total_pageviews: state_row.total_pageviews,
+                    unique_pageviews: state_row.unique_pageviews,
+                    average_time: state_row.average_time,
+                },
+                regional: RegionEngagement {
+                    max: regions_max,
+                    regions,
+                },
+            },
+        );
+    }
+
+    let mut tech_desktop = DetailedEngagementDataChart::default();
+    let mut tech_tablet = DetailedEngagementDataChart::default();
+    let mut tech_mobile = DetailedEngagementDataChart::default();
+
+    let mut tech_rows = sqlx::query!(
+        r#"
+SELECT
+  "device_category" AS "device_category!: String",
+  SUM("total_users") AS "unique_users!: i64",
+  SUM("new_users") AS "new_users!: i64",
+  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
+  SUM("views") AS "total_pageviews!: i64",
+  SUM("sessions") AS "unique_pageviews!: i64",
+  AVG("engagement_duration") AS "average_time!: f64"
+FROM c_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "about" = $3
+GROUP BY "device_category"
+"#,
+        state.begin,
+        state.end,
+        opp.exterior.uid,
+    )
+    .fetch_all(db)
+    .await?;
+
+    for row in tech_rows {
+        let chart = match row.device_category.as_ref() {
+            "Desktop" => &mut tech_desktop,
+            "desktop" => &mut tech_desktop,
+            "Tablet" => &mut tech_tablet,
+            "tablet" => &mut tech_tablet,
+            "Mobile" => &mut tech_mobile,
+            "mobile" => &mut tech_mobile,
+            _ => {
+                return Err(anyhow!(
+                    "Unrecognized tech category: {}",
+                    row.device_category
+                ))
+            }
+        };
+
+        *chart = DetailedEngagementDataChart {
+            date: None,
+            unique_users: row.unique_users.try_into().unwrap_or(0),
+            new_users: row.new_users.try_into().unwrap_or(0),
+            returning_users: row.returning_users.try_into().unwrap_or(0),
+            total_pageviews: row.total_pageviews.try_into().unwrap_or(0),
+            unique_pageviews: row.unique_pageviews.try_into().unwrap_or(0),
+            average_time: row.average_time.try_into().unwrap_or(0.0),
+        };
+    }
+
+    let tech_max = DetailedEngagementDataChart {
+        date: None,
+        unique_users: tech_desktop
+            .unique_users
+            .max(tech_tablet.unique_users)
+            .max(tech_mobile.unique_users),
+        new_users: tech_desktop
+            .new_users
+            .max(tech_tablet.new_users)
+            .max(tech_mobile.new_users),
+        returning_users: tech_desktop
+            .returning_users
+            .max(tech_tablet.returning_users)
+            .max(tech_mobile.returning_users),
+        total_pageviews: tech_desktop
+            .total_pageviews
+            .max(tech_tablet.total_pageviews)
+            .max(tech_mobile.total_pageviews),
+        unique_pageviews: tech_desktop
+            .unique_pageviews
+            .max(tech_tablet.unique_pageviews)
+            .max(tech_mobile.unique_pageviews),
+        average_time: tech_desktop
+            .average_time
+            .max(tech_tablet.average_time)
+            .max(tech_mobile.average_time),
+    };
 
     Ok(Opportunity {
         opportunity: opp.exterior.uid,
@@ -167,8 +421,42 @@ pub async fn collect(
                 },
             },
         },
-        states: todo!(),
-        technology: todo!(),
+        states: OpportunityStates {
+            opportunity_statuses: Status::iter().collect(),
+            time_periods: RelativeTimePeriod::iter().collect(),
+            data: OpportunityStatesData {
+                opportunity: opp.exterior.uid,
+                opportunity_status: if opp.current() {
+                    Status::Closed
+                } else {
+                    Status::Live
+                },
+                time_period: state.period,
+                begin: state.begin,
+                end: state.end,
+                max: states_max,
+                states,
+            },
+        },
+        technology: OpportunityTechnology {
+            opportunity_statuses: Status::iter().collect(),
+            time_periods: RelativeTimePeriod::iter().collect(),
+            data: OpportunityTechnologyData {
+                opportunity: opp.exterior.uid,
+                opportunity_status: if opp.current() {
+                    Status::Closed
+                } else {
+                    Status::Live
+                },
+                time_period: state.period,
+                begin: state.begin,
+                end: state.end,
+                max: todo!(),
+                mobile: todo!(),
+                tablet: todo!(),
+                desktop: todo!(),
+            },
+        },
         traffic: todo!(),
         overlap: todo!(),
     })

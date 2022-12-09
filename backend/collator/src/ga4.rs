@@ -114,6 +114,10 @@ pub async fn run_report(
                 ..Default::default()
             },
             Metric {
+                name: Some(String::from("sessions")),
+                ..Default::default()
+            },
+            Metric {
                 name: Some(String::from("eventCount")),
                 ..Default::default()
             },
@@ -173,6 +177,7 @@ pub async fn cache_report(
         let page_path = get_string(&row, "pagePath");
         let region = get_string(&row, "region");
         let views = get_int(&row, "screenPageViews");
+        let sessions = get_int(&row, "sessions");
         let events = get_int(&row, "eventCount");
         let total_users = get_int(&row, "totalUsers");
         let new_users = get_int(&row, "newUsers");
@@ -195,9 +200,10 @@ INSERT INTO c_analytics_cache (
     "events",
     "total_users",
     "new_users",
-    "engagement_duration"
+    "engagement_duration",
+    "sessions"
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 ON CONFLICT ("begin", "end", "about")
 DO UPDATE SET
     "temporary" = EXCLUDED."temporary",
@@ -211,7 +217,8 @@ DO UPDATE SET
     "events" = EXCLUDED."events",
     "total_users" = EXCLUDED."total_users",
     "new_users" = EXCLUDED."new_users",
-    "engagement_duration" = EXCLUDED."engagement_duration"
+    "engagement_duration" = EXCLUDED."engagement_duration",
+    "sessions" = EXCLUDED."sessions"
 "#,
             temporary,
             begin,
@@ -227,7 +234,8 @@ DO UPDATE SET
             events,
             total_users,
             new_users,
-            engagement_duration
+            engagement_duration,
+            sessions,
         )
         .execute(db)
         .await

@@ -11,6 +11,7 @@ create table c_analytics_cache (
        "page_path" text not null,
        "region" text not null,
        "views" bigint not null,
+       "sessions" bigint not null,
        "events" bigint not null,
        "total_users" bigint not null,
        "new_users" bigint not null,
