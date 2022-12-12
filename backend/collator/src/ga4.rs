@@ -99,6 +99,11 @@ pub async fn run_report(
                 name: Some(String::from("firstSessionDate")),
                 ..Default::default()
             },
+            // Primarily sourced from UTM params
+            Dimension {
+                name: Some(String::from("sessionDefaultChannelGroup")),
+                ..Default::default()
+            },
             Dimension {
                 name: Some(String::from("pagePath")),
                 ..Default::default()
@@ -145,7 +150,7 @@ pub async fn run_report(
         .await?;
 
     if response.status() == 200 {
-        Ok(ReportIterator::new(data))
+        Ok(ReportIterator::new(dbg!(data)))
     } else {
         Err(anyhow!(format!(
             "GA4 request received response {}: {:?}",
@@ -174,7 +179,9 @@ pub async fn cache_report(
         let city = get_string(&row, "city");
         let device_category = get_string(&row, "deviceCategory");
         let Ok(first_session_date) = get_date(&row, "firstSessionDate") else { println!("Unable to parse first session date in GA4 response: {:?}", row); continue; };
+        let session_channel_group = get_string(&row, "sessionDefaultChannelGroup");
         let page_path = get_string(&row, "pagePath");
+        let page_referrer = get_string(&row, "pageReferrer");
         let region = get_string(&row, "region");
         let views = get_int(&row, "screenPageViews");
         let sessions = get_int(&row, "sessions");
@@ -201,9 +208,11 @@ INSERT INTO c_analytics_cache (
     "total_users",
     "new_users",
     "engagement_duration",
-    "sessions"
+    "sessions",
+    "session_channel_group",
+    "page_referrer"
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 ON CONFLICT ("begin", "end", "about")
 DO UPDATE SET
     "temporary" = EXCLUDED."temporary",
@@ -218,7 +227,9 @@ DO UPDATE SET
     "total_users" = EXCLUDED."total_users",
     "new_users" = EXCLUDED."new_users",
     "engagement_duration" = EXCLUDED."engagement_duration",
-    "sessions" = EXCLUDED."sessions"
+    "sessions" = EXCLUDED."sessions",
+    "session_channel_group" = EXCLUDED."session_channel_group",
+    "page_referrer" = EXCLUDED."page_referrer"
 "#,
             temporary,
             begin,
@@ -236,6 +247,8 @@ DO UPDATE SET
             new_users,
             engagement_duration,
             sessions,
+            session_channel_group,
+            page_referrer,
         )
         .execute(db)
         .await

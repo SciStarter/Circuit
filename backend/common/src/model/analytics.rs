@@ -318,34 +318,23 @@ pub struct OpportunityTechnology {
 #[serde(default, rename_all = "camelCase")]
 pub struct PieData {
     pub label: String,
-    hover_offset: i8,
-    background_color: Vec<String>,
-    data: Vec<u64>,
+    pub hover_offset: i8,
+    pub background_color: Vec<String>,
+    pub data: Vec<u64>,
 }
 
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct PieChart {
-    labels: Vec<String>,
-    datasets: Vec<PieData>,
-}
-
-#[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
-pub enum TrafficType {
-    #[default]
-    Direct,
-    #[serde(rename = "Payed Search")]
-    PayedSearch,
-    Display,
-    Affiliates,
-    Other,
+    pub labels: Vec<String>,
+    pub datasets: Vec<PieData>,
 }
 
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct TrafficChart {
     pub name: String,
-    pub type_: TrafficType,
+    pub type_: String,
     #[serde(flatten)]
     pub values: DetailedEngagementDataChart,
 }
