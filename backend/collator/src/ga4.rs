@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::env;
+use std::time::Duration;
 
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Days, FixedOffset, LocalResult, NaiveDate, Utc};
@@ -12,8 +13,8 @@ use uuid::Uuid;
 
 use crate::reportiter::ReportIterator;
 
-// Need to rate limit GA4 requests based on
-// property_quota.tokens_per_hour and tokens_per_day in response data
+const HOURLY_SECONDS_PER_TOKEN: f32 = (60.0 * 60.0) / 5000.0;
+const DAILY_SECONDS_PER_TOKEN: f32 = (60.0 * 60.0 * 24.0) / 25000.0;
 
 fn get_date(
     record: &BTreeMap<String, Option<String>>,
@@ -150,6 +151,30 @@ pub async fn run_report(
         .await?;
 
     if response.status() == 200 {
+        if let Some((day_consumed, hour_consumed)) = data.property_quota.as_ref().map(|x| {
+            (
+                x.tokens_per_day
+                    .as_ref()
+                    .map(|d| d.consumed)
+                    .flatten()
+                    .unwrap_or(0),
+                x.tokens_per_hour
+                    .as_ref()
+                    .map(|h| h.consumed)
+                    .flatten()
+                    .unwrap_or(0),
+            )
+        }) {
+            let delay = ((day_consumed as f32) * DAILY_SECONDS_PER_TOKEN)
+                .max((hour_consumed as f32) * HOURLY_SECONDS_PER_TOKEN);
+
+            dbg!(delay);
+            // Throttle requests to fit the limits imposed by
+            // Google. Note that this simple approach will not work if
+            // the requests are being run in parallel.
+            tokio::time::sleep(Duration::from_secs_f32(delay)).await;
+        }
+
         Ok(ReportIterator::new(dbg!(data)))
     } else {
         Err(anyhow!(format!(

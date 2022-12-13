@@ -1,3 +1,7 @@
+drop aggregate if exists public.first (anyelement);
+drop function if exists public.first_agg;
+drop aggregate if exists public.last (anyelement);
+drop function if exists public.last_agg;
 drop index if exists c_log_by_when_this_year;
 drop function if exists c_refresh_log_by_when_this_year;
 drop index if exists c_log_by_action_external;

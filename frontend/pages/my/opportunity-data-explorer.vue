@@ -427,14 +427,15 @@
       <div class="data-head"><h3>Top 50</h3></div>
 
       <div class="bubble-header">
-      <div>
-        <label>Engagement Type</label>
-      <b-select :value="report.overlap.data.engagement_type" @input="log('TBD download from server')">
-        <option v-for="e_type in report.overlap.engagement_types" :key="e_type" :value="e_type">
-          {{e_type}}
-        </option>
-      </b-select>
-    </div>
+      <!-- It turns out that only 'views' is a practicable calculation, so disable the ability to select other criteria -->
+      <!-- <div> -->
+      <!--   <label>Engagement Type</label> -->
+      <!--   <b-select :value="report.overlap.data.engagement_type" @input="log('TBD download from server')"> -->
+      <!--     <option v-for="e_type in report.overlap.engagement_types" :key="e_type" :value="e_type"> -->
+      <!--       {{e_type}} -->
+      <!--     </option> -->
+      <!--   </b-select> -->
+      <!-- </div> -->
 
       <div class="ll-legend">
           <div><span class="gray"></span> {{current_opp.title}} (100% of users)</div>

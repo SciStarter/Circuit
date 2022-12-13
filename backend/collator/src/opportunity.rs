@@ -7,9 +7,10 @@ use common::{
         DetailedEngagementDataChart, DetailedEngagementDataChartWithPoint, EngagementDataBar,
         EngagementDataChart, EngagementType, Opportunity, OpportunityEngagement,
         OpportunityEngagementData, OpportunityEngagementDataBars, OpportunityOverlap,
-        OpportunityOverlapData, OpportunityStates, OpportunityStatesData, OpportunityTechnology,
-        OpportunityTechnologyData, OpportunityTraffic, OpportunityTrafficData, PieChart, PieData,
-        RegionEngagement, RelativeTimePeriod, StateEngagement, Status, TrafficChart,
+        OpportunityOverlapChart, OpportunityOverlapData, OpportunityStates, OpportunityStatesData,
+        OpportunityTechnology, OpportunityTechnologyData, OpportunityTraffic,
+        OpportunityTrafficData, PieChart, PieData, RegionEngagement, RelativeTimePeriod,
+        StateEngagement, Status, TrafficChart,
     },
     Database, ToFixedOffset,
 };
@@ -531,13 +532,68 @@ GROUP BY "page_referrer", "session_channel_group"
     .fetch_all(db)
     .await?;
 
-    // !!!!
     let overlap = sqlx::query!(
         r#"
-"#
+WITH c_neighbors AS (
+  SELECT
+    "other",
+    COUNT(*) AS "views"
+  FROM (
+    SELECT
+      "created" AS "when",
+      "prior" AS "other"
+    FROM c_transit
+    WHERE
+      "postor" = $1::uuid AND
+      "created" >= $2 AND
+      "created" < $3
+    UNION
+    SELECT
+      "created" AS "when",
+      "postor" AS "other"
+    FROM c_transit
+    WHERE
+      "prior" = $1::uuid AND
+      "created" >= $2 AND
+      "created" < $3
+     
+  ) AS "inner"
+  GROUP BY "other"
+)
+SELECT
+  c_neighbors."views"::real / $4::real AS "overlap!",
+  c_opportunity.exterior->>'title' AS "name!",
+  c_opportunity.exterior->>'organization_name' AS "host!",
+  c_opportunity.exterior->'opp_descriptor' AS "activity_types!",
+  CASE
+    WHEN (c_opportunity.exterior->'has_end')::bool THEN 'Event'
+    ELSE 'On Demand'
+  END AS "format!",
+  c_opportunity.exterior->'opp_venue' AS "venue_types!",
+  (c_opportunity.exterior->'min_age')::smallint AS "min_age!",
+  (c_opportunity.exterior->'max_age')::smallint AS "max_age!"
+FROM
+  c_neighbors LEFT JOIN c_opportunity
+  ON c_neighbors."other"::text = c_opportunity."exterior"->>'uid'
+WHERE c_opportunity.exterior->>'entity_type' = 'opportunity'
+ORDER BY "overlap!" DESC;
+"#,
+        opp.exterior.uid,
+        state.begin,
+        state.end,
+        opp_clicks as f32
     )
-    .map(|row| row)
-    .fetch_all()
+    .map(|row| OpportunityOverlapChart {
+        name: row.name,
+        overlap: row.overlap.into(),
+        host: row.host,
+        activity_types: serde_json::from_value(row.activity_types).unwrap_or_default(),
+        format: row.format,
+        venue_types: serde_json::from_value(row.venue_types).unwrap_or_default(),
+        min_age: row.min_age,
+        max_age: row.max_age,
+    })
+    .fetch_all(db)
     .await?;
 
     Ok(Opportunity {
@@ -630,7 +686,7 @@ GROUP BY "page_referrer", "session_channel_group"
         overlap: OpportunityOverlap {
             engagement_types: EngagementType::iter().collect(),
             data: OpportunityOverlapData {
-                engagement_type: "Views".into(),
+                engagement_type: EngagementType::Views,
                 table: overlap,
             },
         },
@@ -762,33 +818,33 @@ OPPORTUNITY DATA EXPLORER
                     "data": {
                         "engagement_type": "Views",
                         "table": [
-                            {"name": "Test Opp 1", "overlap_views": 0.73, "overlap_unique": 0.73, "overlap_clicks": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap_views": 0.21, "overlap_unique": 0.21, "overlap_clicks": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap_views": 0.04, "overlap_unique": 0.04, "overlap_clicks": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap_views": 0.73, "overlap_unique": 0.73, "overlap_clicks": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap_views": 0.21, "overlap_unique": 0.21, "overlap_clicks": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap_views": 0.04, "overlap_unique": 0.04, "overlap_clicks": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap_views": 0.73, "overlap_unique": 0.73, "overlap_clicks": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap_views": 0.21, "overlap_unique": 0.21, "overlap_clicks": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap_views": 0.04, "overlap_unique": 0.04, "overlap_clicks": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap_views": 0.73, "overlap_unique": 0.73, "overlap_clicks": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap_views": 0.21, "overlap_unique": 0.21, "overlap_clicks": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap_views": 0.04, "overlap_unique": 0.04, "overlap_clicks": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap_views": 0.73, "overlap_unique": 0.73, "overlap_clicks": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap_views": 0.21, "overlap_unique": 0.21, "overlap_clicks": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap_views": 0.04, "overlap_unique": 0.04, "overlap_clicks": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap_views": 0.73, "overlap_unique": 0.73, "overlap_clicks": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap_views": 0.21, "overlap_unique": 0.21, "overlap_clicks": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap_views": 0.04, "overlap_unique": 0.04, "overlap_clicks": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap_views": 0.73, "overlap_unique": 0.73, "overlap_clicks": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap_views": 0.21, "overlap_unique": 0.21, "overlap_clicks": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap_views": 0.04, "overlap_unique": 0.04, "overlap_clicks": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap_views": 0.73, "overlap_unique": 0.73, "overlap_clicks": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap_views": 0.21, "overlap_unique": 0.21, "overlap_clicks": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap_views": 0.04, "overlap_unique": 0.04, "overlap_clicks": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap_views": 0.73, "overlap_unique": 0.73, "overlap_clicks": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap_views": 0.21, "overlap_unique": 0.21, "overlap_clicks": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap_views": 0.04, "overlap_unique": 0.04, "overlap_clicks": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
+                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
+                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
+                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
                         ]
                     },
                 },

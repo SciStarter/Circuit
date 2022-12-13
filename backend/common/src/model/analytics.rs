@@ -376,7 +376,7 @@ pub struct OpportunityOverlapChart {
     pub overlap: f64,
     pub host: String,
     pub activity_types: Vec<Descriptor>,
-    pub format: OpportunityFormat,
+    pub format: String,
     pub venue_types: Vec<VenueType>,
     pub min_age: i16,
     pub max_age: i16,
