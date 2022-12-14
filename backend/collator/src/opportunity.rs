@@ -38,11 +38,16 @@ pub async fn cache(
         FilterExpression {
             // https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/FilterExpression
             filter: Some(Filter {
-                field_name: Some(String::from("pagePath")),
+                //field_name: Some(String::from("pagePath")),
+                field_name: Some(String::from("customEvent:entity_uid")),
                 string_filter: Some(StringFilter {
                     case_sensitive: Some(false),
-                    match_type: Some(String::from("ENDS_WITH")),
-                    value: Some(format!("/{}", &opp.exterior.slug)),
+                    match_type: Some(String::from("EXACT")),
+                    value: Some(opp.exterior.uid.to_string()),
+                    //value: Some("c6e5ee2c-56ec-54d3-9b76-83359943ef05".into()),
+                    //match_type: Some(String::from("ENDS_WITH")),
+                    //value: Some(format!("/{}", &opp.exterior.slug)),
+                    //value: Some("/become-a-techgirl-1".into()),
                 }),
                 // in_list_filter: Some(InListFilter {
                 //     values: Some(vec![
