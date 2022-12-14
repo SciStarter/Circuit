@@ -152,7 +152,7 @@ export const actions = {
       near: places.places[0].near,
       longitude: pos.coords.longitude,
       latitude: pos.coords.latitude,
-      proximity: 40233,
+      proximity: 80467,
     };
 
     commit("here", place);

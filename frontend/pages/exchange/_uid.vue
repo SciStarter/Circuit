@@ -81,4 +81,7 @@ export default {
 a {
     color: var(--secondary-color, #087a91)
 }
+.exchange .opp-actions {
+  position: static!important;
+}
 </style>

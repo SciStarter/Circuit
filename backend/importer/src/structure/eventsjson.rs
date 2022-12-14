@@ -77,9 +77,9 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
 
     opp.exterior.partner_opp_url = Some(data.url);
 
-    opp.exterior.organization_name = "Terry Lee Wells Nevada Discovery Museum".to_string();
+    opp.exterior.organization_name = partner.partner_name.clone();
 
-    opp.exterior.organization_website = Some("https://nvdm.org/".to_string());
+    opp.exterior.organization_website = partner.partner_website.clone();
 
     opp.interior.contact_email = String::new();
 
