@@ -90,6 +90,7 @@ export default {
 
     mounted() {
         this.$gtm.push({
+            //event: 'view_entity',
             uid: this.entity.uid,
             title: this.entity.title,
             partner: this.entity.partner,
