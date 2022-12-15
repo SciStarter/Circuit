@@ -6,7 +6,7 @@ use anyhow::{anyhow, Error};
 use chrono::{DateTime, Days, FixedOffset, LocalResult, NaiveDate, Utc};
 use common::{Database, ToFixedOffset};
 use google_analyticsdata1_beta::api::{
-    DateRange, Dimension, FilterExpression, Metric, RunReportRequest,
+    DateRange, Dimension, FilterExpression, Metric, RunReportRequest, RunReportResponse,
 };
 use google_analyticsdata1_beta::{hyper, hyper_rustls, oauth2, AnalyticsData};
 use uuid::Uuid;
@@ -25,6 +25,11 @@ fn get_date(
     let Some(date) = date.and_hms_opt(12, 0, 0) else { return Err(anyhow!("Out of bounds date: {}", date)); };
     let LocalResult::Single(date) = date.and_local_timezone(Utc) else { return Err(anyhow!("Failed setting timezone for date")); };
     Ok(date.to_fixed_offset())
+}
+
+fn get_uuid(record: &BTreeMap<String, Option<String>>, key: &str) -> Result<Uuid, Error> {
+    let Some(Some(uuid)) = record.get(key) else { return Err(anyhow!("Field is missing or empty: {}", key)); };
+    Ok(Uuid::parse_str(&uuid)?)
 }
 
 fn get_int(record: &BTreeMap<String, Option<String>>, key: &str) -> i64 {
@@ -76,7 +81,10 @@ pub async fn run_report(
     let begin = begin.date_naive();
     let Some(end) = end.date_naive().checked_sub_days(Days::new(1)) else { return Err(anyhow!("End date out of range")) };
 
-    let req = RunReportRequest {
+    let limit = 100000;
+    let mut offset = 0;
+
+    let mut req = RunReportRequest {
         date_ranges: Some(vec![DateRange {
             start_date: Some(begin.to_string()),
             end_date: Some(end.to_string()),
@@ -84,6 +92,14 @@ pub async fn run_report(
         }]),
         dimension_filter: Some(dimension_filter),
         dimensions: Some(vec![
+            Dimension {
+                name: Some(String::from("customEvent:entity_uid")),
+                ..Default::default()
+            },
+            Dimension {
+                name: Some(String::from("customEvent:partner_uid")),
+                ..Default::default()
+            },
             Dimension {
                 name: Some(String::from("city")),
                 ..Default::default()
@@ -141,47 +157,83 @@ pub async fn run_report(
             },
         ]),
         return_property_quota: Some(true),
+        limit: Some(limit.to_string()),
+        offset: Some(offset.to_string()),
         ..Default::default()
     };
 
-    let (response, data) = hub
-        .properties()
-        .run_report(req, "properties/322158266")
-        .doit()
-        .await?;
+    let mut cumulative: Option<RunReportResponse> = None;
+    let mut has_more = true;
 
-    if response.status() == 200 {
-        if let Some((day_consumed, hour_consumed)) = data.property_quota.as_ref().map(|x| {
-            (
-                x.tokens_per_day
-                    .as_ref()
-                    .map(|d| d.consumed)
-                    .flatten()
-                    .unwrap_or(0),
-                x.tokens_per_hour
-                    .as_ref()
-                    .map(|h| h.consumed)
-                    .flatten()
-                    .unwrap_or(0),
-            )
-        }) {
-            let delay = ((day_consumed as f32) * DAILY_SECONDS_PER_TOKEN)
-                .max((hour_consumed as f32) * HOURLY_SECONDS_PER_TOKEN);
+    while has_more {
+        let (response, mut data) = hub
+            .properties()
+            .run_report(req.clone(), "properties/322158266")
+            .doit()
+            .await?;
 
-            dbg!(delay);
-            // Throttle requests to fit the limits imposed by
-            // Google. Note that this simple approach will not work if
-            // the requests are being run in parallel.
-            tokio::time::sleep(Duration::from_secs_f32(delay)).await;
+        if response.status() == 200 {
+            if let Some((day_consumed, hour_consumed)) = data.property_quota.as_ref().map(|x| {
+                (
+                    x.tokens_per_day
+                        .as_ref()
+                        .map(|d| d.consumed)
+                        .flatten()
+                        .unwrap_or(0),
+                    x.tokens_per_hour
+                        .as_ref()
+                        .map(|h| h.consumed)
+                        .flatten()
+                        .unwrap_or(0),
+                )
+            }) {
+                let delay = ((day_consumed as f32) * DAILY_SECONDS_PER_TOKEN)
+                    .max((hour_consumed as f32) * HOURLY_SECONDS_PER_TOKEN);
+
+                // Throttle requests to fit the limits imposed by
+                // Google. Note that this simple approach will not work if
+                // the requests are being run in parallel.
+                tokio::time::sleep(Duration::from_secs_f32(delay)).await;
+            }
+        } else {
+            return Err(anyhow!(format!(
+                "GA4 request received response {}: {:?}",
+                response.status(),
+                response.body()
+            )));
         }
 
+        if let Some(cum) = &mut cumulative {
+            if let Some(cum_rows) = &mut cum.rows {
+                if let Some(data_rows) = &mut data.rows {
+                    cum_rows.append(data_rows);
+                }
+            } else {
+                cum.rows = data.rows.take();
+            }
+        } else {
+            cumulative = Some(data);
+        }
+
+        has_more = dbg!(match &cumulative {
+            Some(RunReportResponse {
+                rows: Some(rows),
+                row_count: Some(row_count),
+                ..
+            }) if rows.len() < (*row_count).try_into().unwrap_or(0) => true,
+            _ => false,
+        });
+
+        if has_more {
+            offset += limit;
+            req.offset = Some(offset.to_string());
+        }
+    }
+
+    if let Some(data) = cumulative {
         Ok(ReportIterator::new(dbg!(data)))
     } else {
-        Err(anyhow!(format!(
-            "GA4 request received response {}: {:?}",
-            response.status(),
-            response.body()
-        )))
+        Err(anyhow!("No response received from GA4"))
     }
 }
 
@@ -190,7 +242,7 @@ pub async fn cache_report(
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
     filter: FilterExpression,
-    about: Uuid,
+    opp: &common::model::opportunity::Opportunity,
     temporary: bool,
 ) {
     for row in match run_report(begin, end, filter).await {
@@ -201,6 +253,8 @@ pub async fn cache_report(
         }
     } {
         let Ok(date) = get_date(&row, "date") else { println!("Unable to parse date in GA4 response: {:?}", row); continue; };
+        let Ok(partner) = get_uuid(&row, "customEvent:partner_uid") else { println!("Unable to parse partner uid: {:?}", row); continue };
+        let Ok(opportunity) = get_uuid(&row, "customEvent:entity_uid") else { println!("Unable to parse entity uid: {:?}", row); continue };
         let city = get_string(&row, "city");
         let device_category = get_string(&row, "deviceCategory");
         let Ok(first_session_date) = get_date(&row, "firstSessionDate") else { println!("Unable to parse first session date in GA4 response: {:?}", row); continue; };
@@ -221,7 +275,9 @@ INSERT INTO c_analytics_cache (
     "temporary",
     "begin",
     "end",
-    "about",
+    "current_at_end",
+    "opportunity",
+    "partner",
     "date",
     "city",
     "device_category",
@@ -237,10 +293,12 @@ INSERT INTO c_analytics_cache (
     "session_channel_group",
     "page_referrer"
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-ON CONFLICT ("begin", "end", "about")
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+ON CONFLICT ("begin", "end", "opportunity")
 DO UPDATE SET
+    "current_at_end" = EXCLUDED."current_at_end",
     "temporary" = EXCLUDED."temporary",
+    "partner" = EXCLUDED."partner",
     "date" = EXCLUDED."date",
     "city" = EXCLUDED."city",
     "device_category" = EXCLUDED."device_category",
@@ -259,7 +317,9 @@ DO UPDATE SET
             temporary,
             begin,
             end,
-            about,
+            opp.current_as_of(&end),
+            opportunity,
+            partner,
             date,
             city,
             device_category,
@@ -287,13 +347,13 @@ pub async fn is_cached(
     db: &Database,
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
-    about: Uuid,
+    opp: Uuid,
 ) -> bool {
     sqlx::query_scalar!(
-        r#"SELECT EXISTS(SELECT 1 FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "about" = $3) AS "exists!: bool""#,
+        r#"SELECT EXISTS(SELECT 1 FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "opportunity" = $3) AS "exists!: bool""#,
         begin,
         end,
-        about
+        opp
     )
     .fetch_one(db)
     .await.unwrap_or(false)

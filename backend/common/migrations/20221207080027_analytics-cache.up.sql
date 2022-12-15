@@ -2,8 +2,9 @@ create table c_analytics_cache (
        "temporary" boolean not null,
        "begin" timestamptz not null,
        "end" timestamptz not null,
-       "about" uuid not null,
-
+       "current_at_end" bool not null,
+       "opportunity" uuid not null,
+       "partner" uuid not null,
        "date" timestamptz not null,
        "city" text not null,
        "device_category" text not null,
@@ -22,11 +23,15 @@ create table c_analytics_cache (
 
 create index c_analytics_cache_by_dates on c_analytics_cache ("begin", "end");
 
+create index c_analytics_cache_by_dates_and_current on c_analytics_cache ("begin", "end", "current_at_end");
+
 create index c_analytics_cache_by_temporary on c_analytics_cache ("temporary") where "temporary" = true;
 
-create index c_analytics_cache_by_about on c_analytics_cache ("about");
+create index c_analytics_cache_by_partner on c_analytics_cache ("partner");
 
-create unique index c_analytics_cache_no_duplicates on c_analytics_cache ("begin", "end", "about");
+create index c_analytics_cache_by_opportunity on c_analytics_cache ("opportunity");
+
+create unique index c_analytics_cache_no_duplicates on c_analytics_cache ("begin", "end", "opportunity");
 
 create index c_log_by_action_external on c_log ("action") where "action" = 'external';
 

@@ -17,12 +17,13 @@ use common::{
 use futures_util::TryStreamExt;
 use google_analyticsdata1_beta::api::{Filter, FilterExpression, StringFilter};
 use strum::IntoEnumIterator;
+use uuid::Uuid;
 
 use crate::{ga4, CommonState};
 
 pub async fn cache(
     db: &Database,
-    opp: &common::model::Opportunity,
+    opp: &common::model::opportunity::Opportunity,
     temporary: bool,
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
@@ -43,7 +44,7 @@ pub async fn cache(
                 string_filter: Some(StringFilter {
                     case_sensitive: Some(false),
                     match_type: Some(String::from("EXACT")),
-                    value: Some(opp.exterior.uid.to_string()),
+                    value: Some(opp.to_string()),
                     //value: Some("c6e5ee2c-56ec-54d3-9b76-83359943ef05".into()),
                     //match_type: Some(String::from("ENDS_WITH")),
                     //value: Some(format!("/{}", &opp.exterior.slug)),
@@ -60,7 +61,7 @@ pub async fn cache(
             }),
             ..Default::default()
         },
-        opp.exterior.uid,
+        opp,
         temporary,
     )
     .await;
@@ -80,7 +81,7 @@ pub async fn collect(
     let mut engagement_data_chart = BTreeMap::new();
 
     let mut query = sqlx::query!(
-        r#"SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "about" = $3"#,
+        r#"SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "opportunity" = $3"#,
         state.begin,
         state.end,
         opp.exterior.uid
@@ -132,7 +133,7 @@ pub async fn collect(
         .await?.try_into().unwrap_or(0);
 
     let (opp_views, opp_unique) = sqlx::query!(
-        r#"SELECT SUM("views") AS "views!: i64", SUM("total_users") AS "unique!: i64" FROM c_analytics_cache WHERE "about" = $1 AND "begin" = $2 AND "end" = $3"#,
+        r#"SELECT SUM("views") AS "views!: i64", SUM("total_users") AS "unique!: i64" FROM c_analytics_cache WHERE "opportunity" = $1 AND "begin" = $2 AND "end" = $3"#,
         opp.exterior.uid,
         state.begin,
         state.end
@@ -167,7 +168,7 @@ SELECT
   SUM("sessions") AS "unique_pageviews!: i64",
   AVG("engagement_duration") AS "average_time!: f64"
 FROM c_analytics_cache
-WHERE "begin" = $1 AND "end" = $2 AND "about" = $3
+WHERE "begin" = $1 AND "end" = $2 AND "opportunity" = $3
 GROUP BY "region"
 "#,
         state.begin,
@@ -227,7 +228,7 @@ SELECT
   SUM("sessions") AS "unique_pageviews!: i64",
   AVG("engagement_duration") AS "average_time!: f64"
 FROM c_analytics_cache
-WHERE "begin" = $1 AND "end" = $2 AND "region" = $3 AND "about" = $4
+WHERE "begin" = $1 AND "end" = $2 AND "region" = $3 AND "opportunity" = $4
 GROUP BY "city"
 "#,
             state.begin,
@@ -332,7 +333,7 @@ SELECT
   SUM("sessions") AS "unique_pageviews!: i64",
   AVG("engagement_duration") AS "average_time!: f64"
 FROM c_analytics_cache
-WHERE "begin" = $1 AND "end" = $2 AND "about" = $3
+WHERE "begin" = $1 AND "end" = $2 AND "opportunity" = $3
 GROUP BY "device_category"
 "#,
         state.begin,
@@ -414,7 +415,7 @@ SELECT
       "when"::date = c_analytics_cache."date"::date
   ) AS "clicks!: i64"
 FROM c_analytics_cache
-WHERE "about" = $1 AND "date" >= $2 AND "date" < $3
+WHERE "opportunity" = $1 AND "date" >= $2 AND "date" < $3
 GROUP BY "date"
 "#,
         opp.exterior.uid,
@@ -464,7 +465,7 @@ GROUP BY "date"
                 r#"
 SELECT "session_channel_group" AS "group!", SUM("views") AS "count!: i64"
 FROM c_analytics_cache
-WHERE "about" = $1 AND "date" >= $2 AND "date" < $3
+WHERE "opportunity" = $1 AND "date" >= $2 AND "date" < $3
 GROUP BY "session_channel_group"
 ORDER BY "session_channel_group"
 "#,
@@ -492,7 +493,7 @@ SELECT
   SUM("sessions") AS "unique_pageviews!: i64",
   AVG("engagement_duration") AS "average_time!: f64"
 FROM c_analytics_cache
-WHERE "begin" = $1 AND "end" = $2 AND "about" = $3
+WHERE "begin" = $1 AND "end" = $2 AND "opportunity" = $3
 GROUP BY "page_referrer", "session_channel_group"
 "#,
         state.begin,

@@ -1,7 +1,17 @@
 use anyhow::Error;
-use chrono::{DateTime, FixedOffset};
-use common::{model::analytics::Organization, Database};
+use chrono::{DateTime, FixedOffset, Utc};
+use common::{
+    model::analytics::{
+        OpportunityStatesData, OpportunityTechnology, OpportunityTechnologyData, Organization,
+        OrganizationEngagement, OrganizationEngagementData, OrganizationStates,
+        OrganizationStatesData, OrganizationTechnology, OrganizationTechnologyData,
+        OrganizationTraffic, OrganizationTrafficData, RelativeTimePeriod, Status,
+    },
+    Database, ToFixedOffset,
+};
 use google_analyticsdata1_beta::api::{Filter, FilterExpression, StringFilter};
+use strum::IntoEnumIterator;
+use uuid::Uuid;
 
 use crate::{ga4, CommonState};
 
@@ -12,30 +22,31 @@ pub async fn cache(
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
 ) -> Result<(), Error> {
-    if ga4::is_cached(db, begin, end, org.exterior.uid).await {
-        return Ok(());
-    }
+    // Fetch any data that are still needed for the complete
+    // organization, but no need to fetch redundant information that
+    // was already cached by the opportunity caching stage.
 
-    ga4::cache_report(
-        db,
-        begin,
-        end,
-        FilterExpression {
-            filter: Some(Filter {
-                field_name: Some(String::from("customEvent:partner_uid")),
-                string_filter: Some(StringFilter {
-                    case_sensitive: Some(false),
-                    match_type: Some(String::from("EXACT")),
-                    value: Some(org.exterior.uid.to_string()),
-                }),
-                ..Default::default()
-            }),
-            ..Default::default()
-        },
-        org.exterior.uid,
-        temporary,
-    )
-    .await;
+    // ga4::cache_report(
+    //     db,
+    //     begin,
+    //     end,
+    //     FilterExpression {
+    //         filter: Some(Filter {
+    //             field_name: Some(String::from("customEvent:partner_uid")),
+    //             string_filter: Some(StringFilter {
+    //                 case_sensitive: Some(false),
+    //                 match_type: Some(String::from("EXACT")),
+    //                 value: Some(org.exterior.uid.to_string()),
+    //                 //value: Some("65a73b33-6f39-54b2-a2ee-d42f2d2b63df".into()),
+    //             }),
+    //             ..Default::default()
+    //         }),
+    //         ..Default::default()
+    //     },
+    //     org.exterior.uid,
+    //     temporary,
+    // )
+    // .await;
 
     Ok(())
 }
@@ -45,7 +56,76 @@ pub async fn collect(
     org: &common::model::Partner,
     state: &CommonState,
 ) -> Result<Organization, Error> {
-    Ok(Organization::default())
+    let total_opportunities = org.count_total_opportunities(db).await?;
+    let current_opportunities = org.count_current_opportunities(db).await?;
+
+    Ok(Organization {
+        organization: org.exterior.uid,
+        name: org.exterior.name.clone(),
+        updated: Utc::now().to_fixed_offset(),
+        total_opportunities,
+        current_opportunities,
+        engagement: OrganizationEngagement {
+            opportunity_statuses: Status::iter().collect(),
+            time_periods: RelativeTimePeriod::iter().collect(),
+            data: OrganizationEngagementData {
+                organization: org.exterior.uid,
+                opportunity_status: todo!(),
+                time_period: todo!(),
+                begin: todo!(),
+                end: todo!(),
+                columns: todo!(),
+                totals: todo!(),
+                max: todo!(),
+                chart: todo!(),
+                table: todo!(),
+            },
+        },
+        states: OrganizationStates {
+            opportunity_statuses: Status::iter().collect(),
+            time_periods: RelativeTimePeriod::iter().collect(),
+            data: OpportunityStatesData {
+                opportunity: todo!(),
+                opportunity_status: todo!(),
+                time_period: todo!(),
+                begin: todo!(),
+                end: todo!(),
+                max: todo!(),
+                states: todo!(),
+            },
+        },
+        technology: OrganizationTechnology {
+            opportunity_statuses: Status::iter().collect(),
+            time_periods: RelativeTimePeriod::iter().collect(),
+            data: OrganizationTechnologyData {
+                organization: todo!(),
+                opportunity_status: todo!(),
+                time_period: todo!(),
+                begin: todo!(),
+                end: todo!(),
+                max: todo!(),
+                mobile: todo!(),
+                tablet: todo!(),
+                desktop: todo!(),
+            },
+        },
+        traffic: OrganizationTraffic {
+            opportunity_statuses: Status::iter().collect(),
+            time_periods: RelativeTimePeriod::iter().collect(),
+            data: OrganizationTrafficData {
+                organization: todo!(),
+                opportunity_status: todo!(),
+                time_period: todo!(),
+                begin: todo!(),
+                end: todo!(),
+                columns: todo!(),
+                chart: todo!(),
+                pie: todo!(),
+                max: todo!(),
+                table: todo!(),
+            },
+        },
+    })
 }
 
 /*

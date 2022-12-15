@@ -481,7 +481,7 @@ pub struct OrganizationTechnologyData {
 pub struct OrganizationTechnology {
     pub opportunity_statuses: Vec<Status>,
     pub time_periods: Vec<RelativeTimePeriod>,
-    pub data: OpportunityTechnologyData,
+    pub data: OrganizationTechnologyData,
 }
 
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]

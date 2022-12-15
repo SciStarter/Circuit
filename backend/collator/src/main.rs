@@ -1,10 +1,11 @@
 use chrono::{DateTime, FixedOffset};
 use common::{
-    model::analytics::{AbsoluteTimePeriod, EngagementDataBar, RelativeTimePeriod},
+    model::analytics::{AbsoluteTimePeriod, EngagementDataBar, RelativeTimePeriod, Status},
     Database,
 };
 use sqlx::postgres::PgPoolOptions;
 use strum::IntoEnumIterator;
+use uuid::Uuid;
 
 mod ga4;
 mod hosts;
@@ -18,6 +19,7 @@ pub struct CommonState {
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
     period: RelativeTimePeriod,
+    status: Status,
     engagement_mean: EngagementDataBar,
     engagement_median: EngagementDataBar,
 }
@@ -27,6 +29,7 @@ async fn collect(
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
     period: RelativeTimePeriod,
+    status: Status, // Only used for constructing the result; the collected analytics are universal
 ) -> Result<CommonState, Box<dyn std::error::Error>> {
     let (mean_views, mean_unique, median_views, median_unique) = sqlx::query!(
         r#"
@@ -36,10 +39,10 @@ SELECT
   PERCENTILE_CONT(0.5) WITHIN GROUP (order by "view_count")::bigint AS "median_views!: i64",
   PERCENTILE_CONT(0.5) WITHIN GROUP (order by "unique_count")::bigint AS "median_unique!: i64"
 FROM (
-  SELECT "about", SUM("views") AS "view_count", SUM("total_users") AS "unique_count"
+  SELECT "opportunity", SUM("views") AS "view_count", SUM("total_users") AS "unique_count"
   FROM c_analytics_cache
   WHERE "begin" = $1 AND "end" = $2
-  GROUP BY "about"
+  GROUP BY "opportunity"
 ) AS c_sub
 "#,
         begin,
@@ -84,6 +87,7 @@ FROM (
         begin,
         end,
         period,
+        status,
         engagement_mean: EngagementDataBar {
             views: mean_views,
             unique: mean_unique,
@@ -107,6 +111,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     common::migrate(&pool).await?;
 
+    sqlx::query!("SELECT c_refresh_log_by_when_this_year()")
+        .execute(&pool)
+        .await?;
+
     for period in RelativeTimePeriod::iter() {
         let temporary = match period {
             RelativeTimePeriod::ThisMonth => true,
@@ -122,10 +130,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let AbsoluteTimePeriod { begin, end } = period.absolute();
 
-        // let mut iter = common::model::Opportunity::catalog(&pool).await?;
-        // while let Some(opp) = iter.get_next(&pool).await {
-        //     opportunity::cache(&pool, &opp, temporary, begin, end).await?;
-        // }
+        let mut iter = common::model::Opportunity::catalog(&pool).await?;
+        while let Some(opp) = iter.get_next(&pool).await {
+            opportunity::cache(&pool, &opp, temporary, begin, end).await?;
+        }
 
         for partner_ref in common::model::partner::Partner::catalog(&pool).await? {
             let partner =
@@ -133,22 +141,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             organization::cache(&pool, &partner, temporary, begin, end).await?;
         }
 
-        // overview::cache(&pool, temporary, begin, end).await?;
+        overview::cache(&pool, temporary, begin, end).await?;
 
-        // let state = collect(&pool, begin, end, period).await?;
+        for status in Status::iter() {
+            let state = collect(&pool, begin, end, period, status).await?;
 
-        // let mut iter = common::model::Opportunity::catalog(&pool).await?;
-        // while let Some(opp) = iter.get_next(&pool).await {
-        //     opportunity::collect(&pool, &opp, &state).await?;
-        // }
+            let mut iter = common::model::Opportunity::catalog(&pool).await?;
+            while let Some(opp) = iter.get_next(&pool).await {
+                opportunity::collect(&pool, &opp, &state).await?;
+            }
 
-        // for partner_ref in common::model::partner::Partner::catalog(&pool).await? {
-        //     let partner =
-        //         common::model::partner::Partner::load_by_id(&pool, partner_ref.id).await?;
-        //     organization::collect(&pool, &partner, &state).await?;
-        // }
+            for partner_ref in common::model::partner::Partner::catalog(&pool).await? {
+                let partner =
+                    common::model::partner::Partner::load_by_id(&pool, partner_ref.id).await?;
+                organization::collect(&pool, &partner, &state).await?;
+            }
 
-        // overview::collect(&pool, &state).await?;
+            overview::collect(&pool, &state).await?;
+        }
     }
 
     ga4::clear_cached_temporary(&pool).await?;
