@@ -1,14 +1,19 @@
-use anyhow::Error;
-use chrono::{DateTime, FixedOffset, Utc};
+use std::collections::BTreeMap;
+
+use anyhow::{anyhow, Error};
+use chrono::{DateTime, Datelike, Days, FixedOffset, LocalResult, TimeZone, Utc};
 use common::{
     model::analytics::{
-        OpportunityStatesData, OpportunityTechnology, OpportunityTechnologyData, Organization,
-        OrganizationEngagement, OrganizationEngagementData, OrganizationStates,
-        OrganizationStatesData, OrganizationTechnology, OrganizationTechnologyData,
-        OrganizationTraffic, OrganizationTrafficData, RelativeTimePeriod, Status,
+        DetailedEngagementDataChart, DetailedEngagementDataChartWithPoint, EngagementDataChart,
+        EngagementType, OpportunityChart, Organization, OrganizationEngagement,
+        OrganizationEngagementData, OrganizationStates, OrganizationStatesData,
+        OrganizationTechnology, OrganizationTechnologyData, OrganizationTraffic,
+        OrganizationTrafficData, PieChart, PieData, RegionEngagement, RelativeTimePeriod,
+        StateEngagement, Status, TrafficChart,
     },
     Database, ToFixedOffset,
 };
+use futures_util::TryStreamExt;
 use google_analyticsdata1_beta::api::{Filter, FilterExpression, StringFilter};
 use strum::IntoEnumIterator;
 use uuid::Uuid;
@@ -59,6 +64,563 @@ pub async fn collect(
     let total_opportunities = org.count_total_opportunities(db).await?;
     let current_opportunities = org.count_current_opportunities(db).await?;
 
+    // Note that this function is not safe to run in parallel, due to
+    // the use of a fixed name for x_analytics_cache. It could be made
+    // so, at the cost of losing the compile-time SQL validation
+    // throughout. x_analytics_cache is used to allow static
+    // validation on the later queries while still making them
+    // conditional on status.
+
+    match state.status {
+        Status::LiveAndClosed => sqlx::query(
+            r#"
+CREATE OR REPLACE VIEW x_analytics_cache
+AS
+SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3
+"#,
+        ),
+        Status::Live => sqlx::query(
+            r#"
+CREATE OR REPLACE VIEW x_analytics_cache
+AS
+SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND "current_on_date" = true
+"#,
+        ),
+        Status::Closed => sqlx::query(
+            r#"
+CREATE OR REPLACE VIEW x_analytics_cache
+AS
+SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND "current_on_date" = false
+"#,
+        ),
+    }
+    .bind(state.begin)
+    .bind(state.end)
+    .bind(org.exterior.uid)
+    .execute(db)
+    .await?;
+
+    let mut engagement_totals = EngagementDataChart::default();
+    let mut engagement_max = EngagementDataChart::default();
+    let mut engagement_data_chart = BTreeMap::new();
+    let mut engagement_data_table = BTreeMap::new();
+
+    let mut query = sqlx::query!(
+        r#"
+SELECT
+  "temporary" AS "temporary!",
+  "begin" AS "begin!",
+  "end" AS "end!",
+  "opportunity" AS "opportunity!",
+  "partner" AS "partner!",
+  "date" AS "date!",
+  "current_on_date" AS "current_on_date!",
+  "city" AS "city!",
+  "device_category" AS "device_category!",
+  "first_session_date" AS "first_session_date!",
+  "session_channel_group" AS "session_channel_group!",
+  "page_path" AS "page_path!",
+  "page_referrer" AS "page_referrer!",
+  "region" AS "region!",
+  "views" AS "views!",
+  "sessions" AS "sessions!",
+  "events" AS "events!",
+  "total_users" AS "total_users!",
+  "new_users" AS "new_users!",
+  "engagement_duration" AS "engagement_duration!"
+FROM x_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3"#,
+        state.begin,
+        state.end,
+        org.exterior.uid
+    )
+    .fetch(db);
+
+    while let Ok(Some(entry)) = query.try_next().await {
+        let date = entry.date.to_fixed_offset();
+
+        let row: &mut EngagementDataChart = engagement_data_chart.entry(date).or_default();
+        row.date = date;
+        row.views += entry.views.try_into().unwrap_or(0);
+        row.unique += entry.total_users.try_into().unwrap_or(0);
+        row.new += entry.new_users.try_into().unwrap_or(0);
+        row.returning = row.unique - row.new;
+
+        if let Some(opp_info) = sqlx::query!(
+            r#"
+SELECT
+  exterior->>'title' AS "name!",
+  exterior->>'slug' AS "slug!"
+FROM c_opportunity
+WHERE (exterior->>'uid')::uuid = $1 LIMIT 1
+"#,
+            entry.opportunity
+        )
+        .fetch_optional(db)
+        .await?
+        {
+            let row: &mut OpportunityChart =
+                engagement_data_table.entry(entry.opportunity).or_default();
+            row.name = opp_info.name;
+            row.slug = opp_info.slug;
+            row.values.views += entry.views.try_into().unwrap_or(0);
+            row.values.unique += entry.total_users.try_into().unwrap_or(0);
+            row.values.new += entry.new_users.try_into().unwrap_or(0);
+            row.values.returning = row.values.unique - row.values.new;
+        }
+    }
+
+    for row in engagement_data_chart.values_mut() {
+        let LocalResult::Single(begin) = row.date.timezone().with_ymd_and_hms(
+            row.date.year(),
+            row.date.month(),
+            row.date.day(),
+            0,
+            0,
+            0,
+        ) else { println!("Error calculating beginning of day: {}", row.date); continue; };
+
+        let Some(end) = begin.checked_add_days(Days::new(1)) else { println!("Error calculating end of day: {}", row.date); continue; };
+
+        row.clicks = sqlx::query_scalar!(
+            r#"
+SELECT
+  COUNT(*) AS "count!: i64"
+FROM c_log INNER JOIN c_opportunity ON c_log."object" = (c_opportunity.exterior->>'uid')::uuid
+WHERE
+  "action" = 'external' AND
+  (c_opportunity.exterior->>'partner')::uuid = $1 AND
+  "when" >= $2 AND
+  "when" < $3
+"#,
+            org.exterior.uid,
+            begin,
+            end
+        )
+        .fetch_one(db)
+        .await?
+        .try_into()
+        .unwrap_or(0);
+
+        engagement_totals.views += row.views;
+        engagement_totals.unique += row.unique;
+        engagement_totals.new += row.new;
+        engagement_totals.returning += row.returning;
+        engagement_totals.clicks += row.clicks;
+    }
+
+    for (uid, row) in engagement_data_table.iter_mut() {
+        row.values.clicks = sqlx::query_scalar!(
+            r#"
+SELECT
+  COUNT(*) AS "count!: i64"
+FROM c_log
+WHERE
+  "action" = 'external' AND
+  "object" = $1 AND
+  "when" >= $2 AND
+  "when" < $3
+"#,
+            uid,
+            state.begin,
+            state.end
+        )
+        .fetch_one(db)
+        .await?
+        .try_into()
+        .unwrap_or(0);
+
+        engagement_max.views = engagement_max.views.max(row.values.views);
+        engagement_max.unique = engagement_max.unique.max(row.values.unique);
+        engagement_max.new = engagement_max.new.max(row.values.new);
+        engagement_max.returning = engagement_max.returning.max(row.values.returning);
+        engagement_max.clicks = engagement_max.clicks.max(row.values.clicks);
+    }
+
+    let mut states_max = DetailedEngagementDataChart::default();
+    let mut states = BTreeMap::new();
+
+    let mut states_rows = sqlx::query!(
+        r#"
+SELECT
+  "region" AS "state!: String",
+  SUM("total_users") AS "unique_users!: i64",
+  SUM("new_users") AS "new_users!: i64",
+  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
+  SUM("views") AS "total_pageviews!: i64",
+  SUM("sessions") AS "unique_pageviews!: i64",
+  AVG("engagement_duration") AS "average_time!: f64"
+FROM x_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3
+GROUP BY "region"
+"#,
+        state.begin,
+        state.end,
+        org.exterior.uid,
+    )
+    .fetch(db);
+
+    while let Some(state_row) = states_rows.try_next().await? {
+        let state_name = state_row.state;
+
+        let state_row = DetailedEngagementDataChart {
+            date: None,
+            unique_users: state_row.unique_users.try_into().unwrap_or(0),
+            new_users: state_row.new_users.try_into().unwrap_or(0),
+            returning_users: state_row.returning_users.try_into().unwrap_or(0),
+            total_pageviews: state_row.total_pageviews.try_into().unwrap_or(0),
+            unique_pageviews: state_row.unique_pageviews.try_into().unwrap_or(0),
+            average_time: state_row.average_time.try_into().unwrap_or(0.0),
+        };
+
+        if state_row.unique_users > states_max.unique_users {
+            states_max.unique_users = state_row.unique_users;
+        }
+
+        if state_row.new_users > states_max.new_users {
+            states_max.new_users = state_row.new_users;
+        }
+
+        if state_row.returning_users > states_max.returning_users {
+            states_max.returning_users = state_row.returning_users;
+        }
+
+        if state_row.total_pageviews > states_max.total_pageviews {
+            states_max.total_pageviews = state_row.total_pageviews;
+        }
+
+        if state_row.unique_pageviews > states_max.unique_pageviews {
+            states_max.unique_pageviews = state_row.unique_pageviews;
+        }
+
+        if state_row.average_time > states_max.average_time {
+            states_max.average_time = state_row.average_time;
+        }
+
+        let mut regions_max = DetailedEngagementDataChart::default();
+        let mut regions = BTreeMap::new();
+
+        let mut regions_rows = sqlx::query!(
+            r#"
+SELECT
+  "city" AS "region!: String",
+  SUM("total_users") AS "unique_users!: i64",
+  SUM("new_users") AS "new_users!: i64",
+  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
+  SUM("views") AS "total_pageviews!: i64",
+  SUM("sessions") AS "unique_pageviews!: i64",
+  AVG("engagement_duration") AS "average_time!: f64"
+FROM x_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "region" = $3 AND "partner" = $4
+GROUP BY "city"
+"#,
+            state.begin,
+            state.end,
+            &state_name,
+            org.exterior.uid,
+        )
+        .fetch(db);
+
+        while let Some(region_row) = regions_rows.try_next().await? {
+            let region_name = region_row.region;
+
+            let region_row = DetailedEngagementDataChart {
+                date: None,
+                unique_users: region_row.unique_users.try_into().unwrap_or(0),
+                new_users: region_row.new_users.try_into().unwrap_or(0),
+                returning_users: region_row.returning_users.try_into().unwrap_or(0),
+                total_pageviews: region_row.total_pageviews.try_into().unwrap_or(0),
+                unique_pageviews: region_row.unique_pageviews.try_into().unwrap_or(0),
+                average_time: region_row.average_time.try_into().unwrap_or(0.0),
+            };
+
+            if region_row.unique_users > regions_max.unique_users {
+                regions_max.unique_users = region_row.unique_users;
+            }
+
+            if region_row.new_users > regions_max.new_users {
+                regions_max.new_users = region_row.new_users;
+            }
+
+            if region_row.returning_users > regions_max.returning_users {
+                regions_max.returning_users = region_row.returning_users;
+            }
+
+            if region_row.total_pageviews > regions_max.total_pageviews {
+                regions_max.total_pageviews = region_row.total_pageviews;
+            }
+
+            if region_row.unique_pageviews > regions_max.unique_pageviews {
+                regions_max.unique_pageviews = region_row.unique_pageviews;
+            }
+
+            if region_row.average_time > regions_max.average_time {
+                regions_max.average_time = region_row.average_time;
+            }
+
+            let point =
+                common::geo::Query::new(format!("{}, {}", &region_name, &state_name), false)
+                    .lookup_one()
+                    .await
+                    .map(|m| (m.geometry.longitude as f64, m.geometry.latitude as f64));
+
+            regions.insert(
+                region_name,
+                DetailedEngagementDataChartWithPoint {
+                    values: DetailedEngagementDataChart {
+                        date: None,
+                        unique_users: region_row.unique_users,
+                        new_users: region_row.new_users,
+                        returning_users: region_row.returning_users,
+                        total_pageviews: region_row.total_pageviews,
+                        unique_pageviews: region_row.unique_pageviews,
+                        average_time: region_row.average_time,
+                    },
+                    point,
+                },
+            );
+        }
+
+        states.insert(
+            state_name,
+            StateEngagement {
+                values: DetailedEngagementDataChart {
+                    date: None,
+                    unique_users: state_row.unique_users,
+                    new_users: state_row.new_users,
+                    returning_users: state_row.returning_users,
+                    total_pageviews: state_row.total_pageviews,
+                    unique_pageviews: state_row.unique_pageviews,
+                    average_time: state_row.average_time,
+                },
+                regional: RegionEngagement {
+                    max: regions_max,
+                    regions,
+                },
+            },
+        );
+    }
+
+    let mut tech_desktop = DetailedEngagementDataChart::default();
+    let mut tech_tablet = DetailedEngagementDataChart::default();
+    let mut tech_mobile = DetailedEngagementDataChart::default();
+
+    let mut tech_rows = sqlx::query!(
+        r#"
+SELECT
+  "device_category" AS "device_category!: String",
+  SUM("total_users") AS "unique_users!: i64",
+  SUM("new_users") AS "new_users!: i64",
+  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
+  SUM("views") AS "total_pageviews!: i64",
+  SUM("sessions") AS "unique_pageviews!: i64",
+  AVG("engagement_duration") AS "average_time!: f64"
+FROM x_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3
+GROUP BY "device_category"
+"#,
+        state.begin,
+        state.end,
+        org.exterior.uid,
+    )
+    .fetch_all(db)
+    .await?;
+
+    for row in tech_rows {
+        let chart = match row.device_category.as_ref() {
+            "Desktop" => &mut tech_desktop,
+            "desktop" => &mut tech_desktop,
+            "Tablet" => &mut tech_tablet,
+            "tablet" => &mut tech_tablet,
+            "Mobile" => &mut tech_mobile,
+            "mobile" => &mut tech_mobile,
+            _ => {
+                return Err(anyhow!(
+                    "Unrecognized tech category: {}",
+                    row.device_category
+                ))
+            }
+        };
+
+        *chart = DetailedEngagementDataChart {
+            date: None,
+            unique_users: row.unique_users.try_into().unwrap_or(0),
+            new_users: row.new_users.try_into().unwrap_or(0),
+            returning_users: row.returning_users.try_into().unwrap_or(0),
+            total_pageviews: row.total_pageviews.try_into().unwrap_or(0),
+            unique_pageviews: row.unique_pageviews.try_into().unwrap_or(0),
+            average_time: row.average_time.try_into().unwrap_or(0.0),
+        };
+    }
+
+    let tech_max = DetailedEngagementDataChart {
+        date: None,
+        unique_users: tech_desktop
+            .unique_users
+            .max(tech_tablet.unique_users)
+            .max(tech_mobile.unique_users),
+        new_users: tech_desktop
+            .new_users
+            .max(tech_tablet.new_users)
+            .max(tech_mobile.new_users),
+        returning_users: tech_desktop
+            .returning_users
+            .max(tech_tablet.returning_users)
+            .max(tech_mobile.returning_users),
+        total_pageviews: tech_desktop
+            .total_pageviews
+            .max(tech_tablet.total_pageviews)
+            .max(tech_mobile.total_pageviews),
+        unique_pageviews: tech_desktop
+            .unique_pageviews
+            .max(tech_tablet.unique_pageviews)
+            .max(tech_mobile.unique_pageviews),
+        average_time: tech_desktop
+            .average_time
+            .max(tech_tablet.average_time)
+            .max(tech_mobile.average_time),
+    };
+
+    let traffic_chart = sqlx::query!(
+        r#"
+SELECT
+  "date" AS "date!: DateTime<FixedOffset>",
+  SUM("views") AS "views!: i64",
+  SUM("sessions") AS "unique!: i64",
+  SUM("new_users") AS "new!: i64",
+  SUM("sessions") - SUM("new_users") AS "returning!: i64",
+  (
+    SELECT COUNT(*)
+    FROM c_log INNER JOIN c_opportunity ON c_log."object" = (c_opportunity.exterior->>'uid')::uuid
+    WHERE
+      "action" = 'external' AND
+      (c_opportunity.exterior->>'partner')::uuid = $1 AND
+      "when"::date = x_analytics_cache."date"::date
+  ) AS "clicks!: i64"
+FROM x_analytics_cache
+WHERE "partner" = $1 AND "date" >= $2 AND "date" < $3
+GROUP BY "date"
+"#,
+        org.exterior.uid,
+        state.begin,
+        state.end,
+    )
+    .map(|row| EngagementDataChart {
+        date: row.date,
+        views: row.views.try_into().unwrap_or(0),
+        unique: row.unique.try_into().unwrap_or(0),
+        new: row.new.try_into().unwrap_or(0),
+        returning: row.returning.try_into().unwrap_or(0),
+        clicks: row.clicks.try_into().unwrap_or(0),
+    })
+    .fetch_all(db)
+    .await?;
+
+    let traffic_pie = PieChart {
+        labels: vec![
+            "Affiliates".into(),
+            "Direct".into(),
+            "Display".into(),
+            "Email".into(),
+            "Organic Search".into(),
+            "Organic Social".into(),
+            "Paid Search".into(),
+            "Paid Social".into(),
+            "Referral".into(),
+            "Video".into(),
+        ],
+        datasets: vec![PieData {
+            label: "Referrals by Type".into(),
+            hover_offset: 4,
+            background_color: vec![
+                "#e7e93c".into(),
+                "#387ab5".into(),
+                "#cd4c24".into(),
+                "#5abdda".into(),
+                "#5a8cda".into(),
+                "#625ada".into(),
+                "#5da136".into(),
+                "#365ba1".into(),
+                "#5bbd08".into(),
+                "#a15e36".into(),
+            ],
+            data: sqlx::query!(
+                r#"
+SELECT "session_channel_group" AS "group!", SUM("views") AS "count!: i64"
+FROM x_analytics_cache
+WHERE "partner" = $1 AND "date" >= $2 AND "date" < $3
+GROUP BY "session_channel_group"
+ORDER BY "session_channel_group"
+"#,
+                org.exterior.uid,
+                state.begin,
+                state.end,
+            )
+            .map(|row| row.count.try_into().unwrap_or(0))
+            .fetch_all(db)
+            .await?,
+        }],
+    };
+
+    let mut traffic_max = DetailedEngagementDataChart::default();
+
+    let traffic_table = sqlx::query!(
+        r#"
+SELECT
+  "page_referrer" AS "page_referrer!",
+  "session_channel_group" AS "type_!",
+  SUM("total_users") AS "unique_users!: i64",
+  SUM("new_users") AS "new_users!: i64",
+  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
+  SUM("views") AS "total_pageviews!: i64",
+  SUM("sessions") AS "unique_pageviews!: i64",
+  AVG("engagement_duration") AS "average_time!: f64"
+FROM x_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3
+GROUP BY "page_referrer", "session_channel_group"
+"#,
+        state.begin,
+        state.end,
+        org.exterior.uid,
+    )
+    .map(|row| {
+        let chart = TrafficChart {
+            name: row.page_referrer,
+            type_: row.type_,
+            values: DetailedEngagementDataChart {
+                date: None,
+                unique_users: row.unique_users.try_into().unwrap_or(0),
+                new_users: row.new_users.try_into().unwrap_or(0),
+                returning_users: row.returning_users.try_into().unwrap_or(0),
+                total_pageviews: row.total_pageviews.try_into().unwrap_or(0),
+                unique_pageviews: row.unique_pageviews.try_into().unwrap_or(0),
+                average_time: row.average_time.try_into().unwrap_or(0.0),
+            },
+        };
+
+        traffic_max.unique_users = traffic_max.unique_users.max(chart.values.unique_users);
+
+        traffic_max.new_users = traffic_max.new_users.max(chart.values.new_users);
+
+        traffic_max.returning_users = traffic_max
+            .returning_users
+            .max(chart.values.returning_users);
+
+        traffic_max.total_pageviews = traffic_max
+            .total_pageviews
+            .max(chart.values.total_pageviews);
+
+        traffic_max.unique_pageviews = traffic_max
+            .unique_pageviews
+            .max(chart.values.unique_pageviews);
+
+        traffic_max.average_time = traffic_max.average_time.max(chart.values.average_time);
+
+        chart
+    })
+    .fetch_all(db)
+    .await?;
+
     Ok(Organization {
         organization: org.exterior.uid,
         name: org.exterior.name.clone(),
@@ -70,59 +632,59 @@ pub async fn collect(
             time_periods: RelativeTimePeriod::iter().collect(),
             data: OrganizationEngagementData {
                 organization: org.exterior.uid,
-                opportunity_status: todo!(),
-                time_period: todo!(),
-                begin: todo!(),
-                end: todo!(),
-                columns: todo!(),
-                totals: todo!(),
-                max: todo!(),
-                chart: todo!(),
-                table: todo!(),
+                opportunity_status: state.status,
+                time_period: state.period,
+                begin: state.begin,
+                end: state.end,
+                columns: EngagementType::iter().collect(),
+                totals: engagement_totals,
+                max: engagement_max,
+                chart: engagement_data_chart.into_values().collect(),
+                table: engagement_data_table.into_values().collect(),
             },
         },
         states: OrganizationStates {
             opportunity_statuses: Status::iter().collect(),
             time_periods: RelativeTimePeriod::iter().collect(),
-            data: OpportunityStatesData {
-                opportunity: todo!(),
-                opportunity_status: todo!(),
-                time_period: todo!(),
-                begin: todo!(),
-                end: todo!(),
-                max: todo!(),
-                states: todo!(),
+            data: OrganizationStatesData {
+                organization: org.exterior.uid,
+                opportunity_status: state.status,
+                time_period: state.period,
+                begin: state.begin,
+                end: state.end,
+                max: states_max,
+                states,
             },
         },
         technology: OrganizationTechnology {
             opportunity_statuses: Status::iter().collect(),
             time_periods: RelativeTimePeriod::iter().collect(),
             data: OrganizationTechnologyData {
-                organization: todo!(),
-                opportunity_status: todo!(),
-                time_period: todo!(),
-                begin: todo!(),
-                end: todo!(),
-                max: todo!(),
-                mobile: todo!(),
-                tablet: todo!(),
-                desktop: todo!(),
+                organization: org.exterior.uid,
+                opportunity_status: state.status,
+                time_period: state.period,
+                begin: state.begin,
+                end: state.end,
+                max: tech_max,
+                mobile: tech_mobile,
+                tablet: tech_tablet,
+                desktop: tech_desktop,
             },
         },
         traffic: OrganizationTraffic {
             opportunity_statuses: Status::iter().collect(),
             time_periods: RelativeTimePeriod::iter().collect(),
             data: OrganizationTrafficData {
-                organization: todo!(),
-                opportunity_status: todo!(),
-                time_period: todo!(),
-                begin: todo!(),
-                end: todo!(),
-                columns: todo!(),
-                chart: todo!(),
-                pie: todo!(),
-                max: todo!(),
-                table: todo!(),
+                organization: org.exterior.uid,
+                opportunity_status: state.status,
+                time_period: state.period,
+                begin: state.begin,
+                end: state.end,
+                columns: EngagementType::iter().collect(),
+                chart: traffic_chart,
+                pie: traffic_pie,
+                max: traffic_max,
+                table: traffic_table,
             },
         },
     })

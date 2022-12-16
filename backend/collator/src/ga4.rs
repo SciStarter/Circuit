@@ -242,7 +242,6 @@ pub async fn cache_report(
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
     filter: FilterExpression,
-    opp: &common::model::opportunity::Opportunity,
     temporary: bool,
 ) {
     for row in match run_report(begin, end, filter).await {
@@ -275,7 +274,6 @@ INSERT INTO c_analytics_cache (
     "temporary",
     "begin",
     "end",
-    "current_at_end",
     "opportunity",
     "partner",
     "date",
@@ -291,33 +289,23 @@ INSERT INTO c_analytics_cache (
     "engagement_duration",
     "sessions",
     "session_channel_group",
-    "page_referrer"
+    "page_referrer",
+
+    "current_on_date"
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
-ON CONFLICT ("begin", "end", "opportunity")
-DO UPDATE SET
-    "current_at_end" = EXCLUDED."current_at_end",
-    "temporary" = EXCLUDED."temporary",
-    "partner" = EXCLUDED."partner",
-    "date" = EXCLUDED."date",
-    "city" = EXCLUDED."city",
-    "device_category" = EXCLUDED."device_category",
-    "first_session_date" = EXCLUDED."first_session_date",
-    "page_path" = EXCLUDED."page_path",
-    "region" = EXCLUDED."region",
-    "views" = EXCLUDED."views",
-    "events" = EXCLUDED."events",
-    "total_users" = EXCLUDED."total_users",
-    "new_users" = EXCLUDED."new_users",
-    "engagement_duration" = EXCLUDED."engagement_duration",
-    "sessions" = EXCLUDED."sessions",
-    "session_channel_group" = EXCLUDED."session_channel_group",
-    "page_referrer" = EXCLUDED."page_referrer"
+VALUES (
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
+  (
+    SELECT c_opportunity_is_current_as_of(c_opportunity."interior", c_opportunity."exterior", $6)
+    FROM c_opportunity
+    WHERE (c_opportunity."exterior"->>'uid')::uuid = $4
+    LIMIT 1
+  )
+)
 "#,
             temporary,
             begin,
             end,
-            opp.current_as_of(&end),
             opportunity,
             partner,
             date,

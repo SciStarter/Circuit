@@ -240,7 +240,6 @@ pub struct OpportunityEngagementDataBars {
 #[serde(default)]
 pub struct OpportunityEngagementData {
     pub opportunity: Uuid,
-    pub opportunity_status: Status,
     pub time_period: RelativeTimePeriod,
     pub begin: DateTime<FixedOffset>,
     pub end: DateTime<FixedOffset>,
@@ -252,7 +251,6 @@ pub struct OpportunityEngagementData {
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct OpportunityEngagement {
-    pub opportunity_statuses: Vec<Status>,
     pub time_periods: Vec<RelativeTimePeriod>,
     pub data: OpportunityEngagementData,
 }
@@ -276,7 +274,6 @@ pub struct StateEngagement {
 #[serde(default)]
 pub struct OpportunityStatesData {
     pub opportunity: Uuid,
-    pub opportunity_status: Status,
     pub time_period: RelativeTimePeriod,
     pub begin: DateTime<FixedOffset>,
     pub end: DateTime<FixedOffset>,
@@ -287,7 +284,6 @@ pub struct OpportunityStatesData {
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct OpportunityStates {
-    pub opportunity_statuses: Vec<Status>,
     pub time_periods: Vec<RelativeTimePeriod>,
     pub data: OpportunityStatesData,
 }
@@ -296,7 +292,6 @@ pub struct OpportunityStates {
 #[serde(default)]
 pub struct OpportunityTechnologyData {
     pub opportunity: Uuid,
-    pub opportunity_status: Status,
     pub time_period: RelativeTimePeriod,
     pub begin: DateTime<FixedOffset>,
     pub end: DateTime<FixedOffset>,
@@ -309,7 +304,6 @@ pub struct OpportunityTechnologyData {
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct OpportunityTechnology {
-    pub opportunity_statuses: Vec<Status>,
     pub time_periods: Vec<RelativeTimePeriod>,
     pub data: OpportunityTechnologyData,
 }
@@ -343,7 +337,6 @@ pub struct TrafficChart {
 #[serde(default)]
 pub struct OpportunityTrafficData {
     pub opportunity: Uuid,
-    pub opportunity_status: Status,
     pub time_period: RelativeTimePeriod,
     pub begin: DateTime<FixedOffset>,
     pub end: DateTime<FixedOffset>,
@@ -357,7 +350,6 @@ pub struct OpportunityTrafficData {
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct OpportunityTraffic {
-    pub opportunity_statuses: Vec<Status>,
     pub time_periods: Vec<RelativeTimePeriod>,
     pub data: OpportunityTrafficData,
 }
@@ -401,8 +393,6 @@ pub struct OpportunityOverlap {
 pub struct Opportunity {
     pub opportunity: Uuid,
     pub updated: DateTime<FixedOffset>,
-    pub total_opportunities: u32,
-    pub current_opportunities: u32,
     pub engagement: OpportunityEngagement,
     pub states: OpportunityStates,
     pub technology: OpportunityTechnology,
@@ -413,10 +403,10 @@ pub struct Opportunity {
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct OpportunityChart {
-    name: String,
-    slug: String,
+    pub name: String,
+    pub slug: String,
     #[serde(flatten)]
-    values: EngagementDataChart,
+    pub values: EngagementDataChart,
 }
 
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -459,7 +449,7 @@ pub struct OrganizationStatesData {
 pub struct OrganizationStates {
     pub opportunity_statuses: Vec<Status>,
     pub time_periods: Vec<RelativeTimePeriod>,
-    pub data: OpportunityStatesData,
+    pub data: OrganizationStatesData,
 }
 
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]

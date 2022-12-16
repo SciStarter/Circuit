@@ -44,7 +44,7 @@ pub async fn cache(
                 string_filter: Some(StringFilter {
                     case_sensitive: Some(false),
                     match_type: Some(String::from("EXACT")),
-                    value: Some(opp.to_string()),
+                    value: Some(opp.exterior.uid.to_string()),
                     //value: Some("c6e5ee2c-56ec-54d3-9b76-83359943ef05".into()),
                     //match_type: Some(String::from("ENDS_WITH")),
                     //value: Some(format!("/{}", &opp.exterior.slug)),
@@ -61,7 +61,6 @@ pub async fn cache(
             }),
             ..Default::default()
         },
-        opp,
         temporary,
     )
     .await;
@@ -74,10 +73,6 @@ pub async fn collect(
     opp: &common::model::opportunity::Opportunity,
     state: &CommonState,
 ) -> Result<Opportunity, Error> {
-    let org = common::model::partner::Partner::load_by_uid(db, &opp.exterior.partner).await?;
-    let total_opportunities = org.count_total_opportunities(db).await?;
-    let current_opportunities = org.count_current_opportunities(db).await?;
-
     let mut engagement_data_chart = BTreeMap::new();
 
     let mut query = sqlx::query!(
@@ -97,8 +92,6 @@ pub async fn collect(
         row.unique += entry.total_users.try_into().unwrap_or(0);
         row.new += entry.new_users.try_into().unwrap_or(0);
         row.returning = row.unique - row.new;
-
-        dbg!(entry);
     }
 
     for row in engagement_data_chart.values_mut() {
@@ -579,7 +572,7 @@ SELECT
   (c_opportunity.exterior->'min_age')::smallint AS "min_age!",
   (c_opportunity.exterior->'max_age')::smallint AS "max_age!"
 FROM
-  c_neighbors LEFT JOIN c_opportunity
+  c_neighbors INNER JOIN c_opportunity
   ON c_neighbors."other"::text = c_opportunity."exterior"->>'uid'
 WHERE c_opportunity.exterior->>'entity_type' = 'opportunity'
 ORDER BY "overlap!" DESC;
@@ -605,18 +598,10 @@ ORDER BY "overlap!" DESC;
     Ok(Opportunity {
         opportunity: opp.exterior.uid,
         updated: Utc::now().to_fixed_offset(),
-        total_opportunities,
-        current_opportunities,
         engagement: OpportunityEngagement {
-            opportunity_statuses: Status::iter().collect(),
             time_periods: RelativeTimePeriod::iter().collect(),
             data: OpportunityEngagementData {
                 opportunity: opp.exterior.uid,
-                opportunity_status: if opp.current() {
-                    Status::Closed
-                } else {
-                    Status::Live
-                },
                 time_period: state.period,
                 begin: state.begin,
                 end: state.end,
@@ -634,15 +619,9 @@ ORDER BY "overlap!" DESC;
             },
         },
         states: OpportunityStates {
-            opportunity_statuses: Status::iter().collect(),
             time_periods: RelativeTimePeriod::iter().collect(),
             data: OpportunityStatesData {
                 opportunity: opp.exterior.uid,
-                opportunity_status: if opp.current() {
-                    Status::Closed
-                } else {
-                    Status::Live
-                },
                 time_period: state.period,
                 begin: state.begin,
                 end: state.end,
@@ -651,15 +630,9 @@ ORDER BY "overlap!" DESC;
             },
         },
         technology: OpportunityTechnology {
-            opportunity_statuses: Status::iter().collect(),
             time_periods: RelativeTimePeriod::iter().collect(),
             data: OpportunityTechnologyData {
                 opportunity: opp.exterior.uid,
-                opportunity_status: if opp.current() {
-                    Status::Closed
-                } else {
-                    Status::Live
-                },
                 time_period: state.period,
                 begin: state.begin,
                 end: state.end,
@@ -670,15 +643,9 @@ ORDER BY "overlap!" DESC;
             },
         },
         traffic: OpportunityTraffic {
-            opportunity_statuses: Status::iter().collect(),
             time_periods: RelativeTimePeriod::iter().collect(),
             data: OpportunityTrafficData {
                 opportunity: opp.exterior.uid,
-                opportunity_status: if opp.current() {
-                    Status::Closed
-                } else {
-                    Status::Live
-                },
                 time_period: state.period,
                 begin: state.begin,
                 end: state.end,
