@@ -16,6 +16,16 @@ pub enum Status {
     Closed,
 }
 
+impl Status {
+    pub const fn discriminate(self) -> i32 {
+        match self {
+            Status::LiveAndClosed => 0,
+            Status::Live => 1,
+            Status::Closed => 2,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct AbsoluteTimePeriod {
     pub begin: DateTime<FixedOffset>,

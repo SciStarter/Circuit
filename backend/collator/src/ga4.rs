@@ -289,18 +289,10 @@ INSERT INTO c_analytics_cache (
     "engagement_duration",
     "sessions",
     "session_channel_group",
-    "page_referrer",
-
-    "current_on_date"
+    "page_referrer"
 )
 VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
-  (
-    SELECT c_opportunity_is_current_as_of(c_opportunity."interior", c_opportunity."exterior", $6)
-    FROM c_opportunity
-    WHERE (c_opportunity."exterior"->>'uid')::uuid = $4
-    LIMIT 1
-  )
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
 )
 "#,
             temporary,

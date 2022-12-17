@@ -1,3 +1,8 @@
+drop function if exists c_opportunity_by_uid_is_status;
+drop function if exists c_opportunity_by_uid_is_current;
+drop function if exists c_opportunity_by_uid_is_current_as_of;
+drop function if exists c_opportunity_is_current_as_of;
+
 create or replace function c_opportunity_is_current(interior jsonb, exterior jsonb) returns boolean as
 $func$
 BEGIN

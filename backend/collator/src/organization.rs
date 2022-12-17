@@ -64,42 +64,6 @@ pub async fn collect(
     let total_opportunities = org.count_total_opportunities(db).await?;
     let current_opportunities = org.count_current_opportunities(db).await?;
 
-    // Note that this function is not safe to run in parallel, due to
-    // the use of a fixed name for x_analytics_cache. It could be made
-    // so, at the cost of losing the compile-time SQL validation
-    // throughout. x_analytics_cache is used to allow static
-    // validation on the later queries while still making them
-    // conditional on status.
-
-    match state.status {
-        Status::LiveAndClosed => sqlx::query(
-            r#"
-CREATE OR REPLACE VIEW x_analytics_cache
-AS
-SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3
-"#,
-        ),
-        Status::Live => sqlx::query(
-            r#"
-CREATE OR REPLACE VIEW x_analytics_cache
-AS
-SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND "current_on_date" = true
-"#,
-        ),
-        Status::Closed => sqlx::query(
-            r#"
-CREATE OR REPLACE VIEW x_analytics_cache
-AS
-SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND "current_on_date" = false
-"#,
-        ),
-    }
-    .bind(state.begin)
-    .bind(state.end)
-    .bind(org.exterior.uid)
-    .execute(db)
-    .await?;
-
     let mut engagement_totals = EngagementDataChart::default();
     let mut engagement_max = EngagementDataChart::default();
     let mut engagement_data_chart = BTreeMap::new();
@@ -107,32 +71,13 @@ SELECT * FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "partner" 
 
     let mut query = sqlx::query!(
         r#"
-SELECT
-  "temporary" AS "temporary!",
-  "begin" AS "begin!",
-  "end" AS "end!",
-  "opportunity" AS "opportunity!",
-  "partner" AS "partner!",
-  "date" AS "date!",
-  "current_on_date" AS "current_on_date!",
-  "city" AS "city!",
-  "device_category" AS "device_category!",
-  "first_session_date" AS "first_session_date!",
-  "session_channel_group" AS "session_channel_group!",
-  "page_path" AS "page_path!",
-  "page_referrer" AS "page_referrer!",
-  "region" AS "region!",
-  "views" AS "views!",
-  "sessions" AS "sessions!",
-  "events" AS "events!",
-  "total_users" AS "total_users!",
-  "new_users" AS "new_users!",
-  "engagement_duration" AS "engagement_duration!"
-FROM x_analytics_cache
-WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3"#,
+SELECT *
+FROM c_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND c_opportunity_by_uid_is_status("opportunity", $4)"#,
         state.begin,
         state.end,
-        org.exterior.uid
+        org.exterior.uid,
+        state.status.discriminate()
     )
     .fetch(db);
 
@@ -250,13 +195,14 @@ SELECT
   SUM("views") AS "total_pageviews!: i64",
   SUM("sessions") AS "unique_pageviews!: i64",
   AVG("engagement_duration") AS "average_time!: f64"
-FROM x_analytics_cache
-WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3
+FROM c_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND c_opportunity_by_uid_is_status("opportunity", $4)
 GROUP BY "region"
 "#,
         state.begin,
         state.end,
         org.exterior.uid,
+        state.status.discriminate()
     )
     .fetch(db);
 
@@ -310,14 +256,15 @@ SELECT
   SUM("views") AS "total_pageviews!: i64",
   SUM("sessions") AS "unique_pageviews!: i64",
   AVG("engagement_duration") AS "average_time!: f64"
-FROM x_analytics_cache
-WHERE "begin" = $1 AND "end" = $2 AND "region" = $3 AND "partner" = $4
+FROM c_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "region" = $3 AND "partner" = $4 AND c_opportunity_by_uid_is_status("opportunity", $5)
 GROUP BY "city"
 "#,
             state.begin,
             state.end,
             &state_name,
             org.exterior.uid,
+            state.status.discriminate()
         )
         .fetch(db);
 
@@ -415,13 +362,14 @@ SELECT
   SUM("views") AS "total_pageviews!: i64",
   SUM("sessions") AS "unique_pageviews!: i64",
   AVG("engagement_duration") AS "average_time!: f64"
-FROM x_analytics_cache
-WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3
+FROM c_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND c_opportunity_by_uid_is_status("opportunity", $4)
 GROUP BY "device_category"
 "#,
         state.begin,
         state.end,
         org.exterior.uid,
+        state.status.discriminate()
     )
     .fetch_all(db)
     .await?;
@@ -495,15 +443,16 @@ SELECT
     WHERE
       "action" = 'external' AND
       (c_opportunity.exterior->>'partner')::uuid = $1 AND
-      "when"::date = x_analytics_cache."date"::date
+      "when"::date = c_analytics_cache."date"::date
   ) AS "clicks!: i64"
-FROM x_analytics_cache
-WHERE "partner" = $1 AND "date" >= $2 AND "date" < $3
+FROM c_analytics_cache
+WHERE "partner" = $1 AND "date" >= $2 AND "date" < $3 AND c_opportunity_by_uid_is_status("opportunity", $4)
 GROUP BY "date"
 "#,
         org.exterior.uid,
         state.begin,
         state.end,
+        state.status.discriminate()
     )
     .map(|row| EngagementDataChart {
         date: row.date,
@@ -547,14 +496,15 @@ GROUP BY "date"
             data: sqlx::query!(
                 r#"
 SELECT "session_channel_group" AS "group!", SUM("views") AS "count!: i64"
-FROM x_analytics_cache
-WHERE "partner" = $1 AND "date" >= $2 AND "date" < $3
+FROM c_analytics_cache
+WHERE "partner" = $1 AND "date" >= $2 AND "date" < $3 AND c_opportunity_by_uid_is_status("opportunity", $4)
 GROUP BY "session_channel_group"
 ORDER BY "session_channel_group"
 "#,
                 org.exterior.uid,
                 state.begin,
                 state.end,
+                state.status.discriminate()
             )
             .map(|row| row.count.try_into().unwrap_or(0))
             .fetch_all(db)
@@ -575,13 +525,14 @@ SELECT
   SUM("views") AS "total_pageviews!: i64",
   SUM("sessions") AS "unique_pageviews!: i64",
   AVG("engagement_duration") AS "average_time!: f64"
-FROM x_analytics_cache
-WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3
+FROM c_analytics_cache
+WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND c_opportunity_by_uid_is_status("opportunity", $4)
 GROUP BY "page_referrer", "session_channel_group"
 "#,
         state.begin,
         state.end,
         org.exterior.uid,
+        state.status.discriminate()
     )
     .map(|row| {
         let chart = TrafficChart {

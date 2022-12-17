@@ -5,7 +5,6 @@ create table c_analytics_cache (
        "opportunity" uuid not null,
        "partner" uuid not null,
        "date" timestamptz not null,
-       "current_on_date" boolean not null,
        "city" text not null,
        "device_category" text not null,
        "first_session_date" timestamptz not null,
@@ -28,8 +27,6 @@ create index c_analytics_cache_by_dates_and_partner on c_analytics_cache ("begin
 create index c_analytics_cache_by_temporary on c_analytics_cache ("temporary") where "temporary" = true;
 
 create index c_log_by_action_external on c_log ("action") where "action" = 'external';
-
-CREATE OR REPLACE VIEW x_analytics_cache AS SELECT *FROM c_analytics_cache;
 
 create function c_refresh_log_by_when_this_year () returns void as $$
 begin
@@ -79,6 +76,40 @@ create or replace function c_opportunity_is_current(interior jsonb, exterior jso
 $func$
 BEGIN
  RETURN c_opportunity_is_current_as_of(interior, exterior, CURRENT_TIMESTAMP);
+END
+$func$ language plpgsql stable;
+
+create or replace function c_opportunity_by_uid_is_current_as_of(uid uuid, stamp timestamptz) returns boolean as
+$func$
+DECLARE
+ opp c_opportunity%ROWTYPE;
+BEGIN
+ SELECT * INTO opp FROM c_opportunity WHERE ("exterior"->>'uid')::uuid = uid LIMIT 1;
+ RETURN c_opportunity_is_current_as_of(opp.interior, opp.exterior, stamp);
+END
+$func$ language plpgsql stable;
+
+create or replace function c_opportunity_by_uid_is_current(uid uuid) returns boolean as
+$func$
+DECLARE
+ opp c_opportunity%ROWTYPE;
+BEGIN
+ SELECT * INTO opp FROM c_opportunity WHERE ("exterior"->>'uid')::uuid = uid LIMIT 1;
+ RETURN c_opportunity_is_current(opp.interior, opp.exterior);
+END
+$func$ language plpgsql stable;
+
+create or replace function c_opportunity_by_uid_is_status(uid uuid, status integer) returns boolean as
+$func$
+DECLARE
+ opp c_opportunity%ROWTYPE;
+BEGIN
+ SELECT * INTO opp FROM c_opportunity WHERE ("exterior"->>'uid')::uuid = uid LIMIT 1;
+ CASE status
+  WHEN 2 THEN RETURN c_opportunity_is_current(opp.interior, opp.exterior) = false;
+  WHEN 1 THEN RETURN c_opportunity_is_current(opp.interior, opp.exterior) = true;
+  ELSE RETURN true;
+ END CASE;
 END
 $func$ language plpgsql stable;
 
