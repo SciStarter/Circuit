@@ -28,7 +28,7 @@ create index c_analytics_cache_by_temporary on c_analytics_cache ("temporary") w
 
 create index c_log_by_action_external on c_log ("action") where "action" = 'external';
 
-create function c_refresh_log_by_when_this_year () returns void as $$
+create or replace function c_refresh_log_by_when_this_year () returns void as $$
 begin
        execute 'drop index if exists c_log_by_when_this_year';
        execute format('create index c_log_by_when_this_year on c_log ("when") where "when" > %L', NOW() - interval '1 year');
@@ -109,6 +109,22 @@ BEGIN
   WHEN 2 THEN RETURN c_opportunity_is_current(opp.interior, opp.exterior) = false;
   WHEN 1 THEN RETURN c_opportunity_is_current(opp.interior, opp.exterior) = true;
   ELSE RETURN true;
+ END CASE;
+END
+$func$ language plpgsql stable;
+
+create or replace function c_opportunity_by_uid_domain(uid uuid) returns text as
+$func$
+DECLARE
+ opp c_opportunity%ROWTYPE;
+ partner c_partner%ROWTYPE;
+BEGIN
+ SELECT * INTO opp FROM c_opportunity WHERE ("exterior"->>'uid')::uuid = uid LIMIT 1;
+ CASE opp."exterior"->>'pes_domain'
+  WHEN 'unspecified' THEN
+   SELECT * INTO partner FROM c_partner WHERE ("exterior"->'uid') = (opp."exterior"->'partner') LIMIT 1;
+   RETURN partner."exterior"->>'pes_domain';
+  ELSE RETURN opp."exterior"->>'pes_domain';
  END CASE;
 END
 $func$ language plpgsql stable;

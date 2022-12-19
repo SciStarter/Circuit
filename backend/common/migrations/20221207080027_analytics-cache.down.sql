@@ -1,3 +1,4 @@
+drop function if exists c_opportunity_by_uid_domain;
 drop function if exists c_opportunity_by_uid_is_status;
 drop function if exists c_opportunity_by_uid_is_current;
 drop function if exists c_opportunity_by_uid_is_current_as_of;

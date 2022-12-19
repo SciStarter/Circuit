@@ -27,32 +27,9 @@ pub async fn cache(
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
 ) -> Result<(), Error> {
-    // Fetch any data that are still needed for the complete
+    // Here's where we fetch any data that are still needed for the complete
     // organization, but no need to fetch redundant information that
     // was already cached by the opportunity caching stage.
-
-    // ga4::cache_report(
-    //     db,
-    //     begin,
-    //     end,
-    //     FilterExpression {
-    //         filter: Some(Filter {
-    //             field_name: Some(String::from("customEvent:partner_uid")),
-    //             string_filter: Some(StringFilter {
-    //                 case_sensitive: Some(false),
-    //                 match_type: Some(String::from("EXACT")),
-    //                 value: Some(org.exterior.uid.to_string()),
-    //                 //value: Some("65a73b33-6f39-54b2-a2ee-d42f2d2b63df".into()),
-    //             }),
-    //             ..Default::default()
-    //         }),
-    //         ..Default::default()
-    //     },
-    //     org.exterior.uid,
-    //     temporary,
-    // )
-    // .await;
-
     Ok(())
 }
 

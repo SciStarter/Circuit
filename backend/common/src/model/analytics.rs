@@ -794,6 +794,8 @@ pub struct OverviewCrossoverDataChart {
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct OverviewCrossoverData {
+    pub opportunity_status: Status,
+    pub time_period: RelativeTimePeriod,
     pub engagement_type: EngagementType,
     pub chart: OverviewCrossoverDataChart,
 }
@@ -801,6 +803,8 @@ pub struct OverviewCrossoverData {
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct OverviewCrossover {
+    pub opportunity_statuses: Vec<Status>,
+    pub time_periods: Vec<RelativeTimePeriod>,
     pub engagement_types: Vec<EngagementType>,
     pub data: OverviewCrossoverData,
 }

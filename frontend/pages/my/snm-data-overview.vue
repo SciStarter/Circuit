@@ -513,13 +513,14 @@
   </div>
   <div v-else-if="state=='domain'">
     <h2>Engagement Overlap</h2>
-    <div>
-      <b-select :value="report.crossover.data.engagement_type" @input="log('TBD download from server')" v-model="e_type">
-        <option v-for="e_type in report.crossover.engagement_types" :key="e_type" :value="e_type">
-          {{e_type}}
-        </option>
-      </b-select>
-    </div>
+    <!-- views are the only interaction we can practicably collect -->
+    <!-- <div> -->
+    <!--   <b-select :value="report.crossover.data.engagement_type" @input="log('TBD download from server')" v-model="e_type"> -->
+    <!--     <option v-for="e_type in report.crossover.engagement_types" :key="e_type" :value="e_type"> -->
+    <!--       {{e_type}} -->
+    <!--     </option> -->
+    <!--   </b-select> -->
+    <!-- </div> -->
 
     <chord-diagram :chart_data="report.crossover.data.chart" :metric="e_type" />
 

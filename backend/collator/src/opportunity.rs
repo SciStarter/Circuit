@@ -657,7 +657,7 @@ ORDER BY "overlap!" DESC;
             },
         },
         overlap: OpportunityOverlap {
-            engagement_types: EngagementType::iter().collect(),
+            engagement_types: vec![EngagementType::Views],
             data: OpportunityOverlapData {
                 engagement_type: EngagementType::Views,
                 table: overlap,
