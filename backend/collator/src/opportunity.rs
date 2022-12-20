@@ -10,14 +10,13 @@ use common::{
         OpportunityOverlapChart, OpportunityOverlapData, OpportunityStates, OpportunityStatesData,
         OpportunityTechnology, OpportunityTechnologyData, OpportunityTraffic,
         OpportunityTrafficData, PieChart, PieData, RegionEngagement, RelativeTimePeriod,
-        StateEngagement, Status, TrafficChart,
+        StateEngagement, TrafficChart,
     },
     Database, ToFixedOffset,
 };
 use futures_util::TryStreamExt;
 use google_analyticsdata1_beta::api::{Filter, FilterExpression, StringFilter};
 use strum::IntoEnumIterator;
-use uuid::Uuid;
 
 use crate::{ga4, CommonState};
 
@@ -315,7 +314,7 @@ GROUP BY "city"
     let mut tech_tablet = DetailedEngagementDataChart::default();
     let mut tech_mobile = DetailedEngagementDataChart::default();
 
-    let mut tech_rows = sqlx::query!(
+    let tech_rows = sqlx::query!(
         r#"
 SELECT
   "device_category" AS "device_category!: String",

@@ -401,10 +401,10 @@
           {{ pair[0].toLocaleString() }}
         </label>
         <ul class="calendar-add">
-          <li><calendar-add calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
-          <li><calendar-add calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
-          <li><calendar-add calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
-          <li><calendar-add calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+          <li><calendar-add @before="calendar('google')" calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+          <li><calendar-add @before="calendar('outlook')" calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+          <li><calendar-add @before="calendar('365')" calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+          <li><calendar-add @before="calendar('yahoo')" calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
         </ul>
       </div>
     </div>
@@ -441,10 +441,10 @@
     <div class="card share-modal">
       <h2>Share <span class="close" @click="show_share = false">&times;</span></h2>
       <div>
-        <social-button mode="facebook" :opportunity="opportunity" />
-        <social-button mode="twitter" :opportunity="opportunity" />
-        <social-button mode="linkedin" :opportunity="opportunity" />
-        <social-button mode="link" :opportunity="opportunity" />
+        <social-button @click="shared('facebook')" mode="facebook" :opportunity="opportunity" />
+        <social-button @click="shared('twitter')" mode="twitter" :opportunity="opportunity" />
+        <social-button @click="shared('linkedin')" mode="linkedin" :opportunity="opportunity" />
+        <social-button @click="shared('link')" mode="link" :opportunity="opportunity" />
       </div>
     </div>
   </b-modal>
@@ -884,6 +884,14 @@ export default {
     },
 
     methods: {
+        async shared(network) {
+            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/shared', {network: network}, this.$store.state.auth);
+        },
+
+        async calendar(network) {
+            await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/calendar', {network: network}, this.$store.state.auth);
+        },
+
         async set_review_status(status) {
             await this.$axios.$put('/api/ui/entity/' + this.opportunity.slug + '/status', {status: status}, this.$store.state.auth);
             this.entity.review_status = status;

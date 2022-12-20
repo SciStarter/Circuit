@@ -15,9 +15,11 @@ use common::{
     Database, ToFixedOffset,
 };
 use futures_util::TryStreamExt;
+use google_analyticsdata1_beta::api::{Dimension, Filter, FilterExpression, Metric, StringFilter};
 use strum::IntoEnumIterator;
+use uuid::Uuid;
 
-use crate::CommonState;
+use crate::{ga4, CommonState};
 
 pub async fn cache(
     db: &Database,
@@ -29,18 +31,232 @@ pub async fn cache(
     // complete organization, but no need to fetch redundant
     // information that was already cached by the opportunity or
     // organization caching stages.
+
+    let mut unique_visitors = 0;
+
+    if !ga4::is_overview_cached(db, begin, end).await {
+        for row in ga4::run_report(
+            begin,
+            end,
+            None,
+            vec![],
+            vec![Metric {
+                name: Some("sessions".into()),
+                ..Default::default()
+            }],
+        )
+        .await?
+        {
+            unique_visitors += row.get_int("sessions");
+        }
+
+        sqlx::query!(
+            r#"
+INSERT INTO c_analytics_overview_cache (
+  "temporary",
+  "begin",
+  "end",
+  "unique_visitors",
+
+  "shares",
+  "calendar_adds",
+  "likes",
+  "saves",
+  "didits",
+  "opportunity_views",
+  "opportunity_unique",
+  "opportunity_exits",
+  "accounts"
+)
+VALUES (
+  $1, $2, $3, $4,
+
+  (SELECT COUNT(*) FROM c_log WHERE "action" LIKE 'shared:%' AND "when" >= $2 AND "when" < $3),
+  (SELECT COUNT(*) FROM c_log WHERE "action" LIKE 'calendar:%' AND "when" >= $2 AND "when" < $3),
+  (SELECT COUNT(*) FROM c_opportunity_like WHERE "when" >= $2 AND "when" < $3),
+  (SELECT COUNT(*) FROM c_involvement WHERE ("exterior"->'mode')::integer = 20 AND "updated" >= $2 AND "updated" < $3),
+  (SELECT COUNT(*) FROM c_involvement WHERE ("exterior"->'mode')::integer >= 30 AND "updated" >= $2 AND "updated" < $3),
+  (SELECT SUM("views") FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3),
+  (SELECT SUM("sessions") FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3) - (SELECT COUNT(*) FROM c_transit WHERE "created" >= $2 AND "created" < $3),
+  (SELECT COUNT(*) FROM c_log WHERE "action" = 'external' AND "when" >= $2 AND "when" < $3),
+  (SELECT COUNT(*) FROM c_person WHERE "created" >= $2 AND "created" < $3)
+)
+    "#,
+            temporary,
+            begin,
+            end,
+            unique_visitors,
+        )
+        .execute(db)
+        .await?;
+    }
+
+    if !ga4::is_search_terms_cached(db, begin, end).await {
+        let mut search_counts = BTreeMap::new();
+
+        for row in ga4::run_report(
+            begin,
+            end,
+            Some(FilterExpression {
+                filter: Some(Filter {
+                    field_name: Some("pagePathPlusQueryString".into()),
+                    string_filter: Some(StringFilter {
+                        match_type: Some("BEGINS_WITH".into()),
+                        value: Some("/find".into()),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+            vec![Dimension {
+                name: Some("pagePathPlusQueryString".into()),
+                ..Default::default()
+            }],
+            vec![Metric {
+                name: Some("screenPageViews".into()),
+                ..Default::default()
+            }],
+        )
+        .await?
+        {
+            if let Some((_, qs)) = row.get_string("pagePathPlusQueryString").split_once('?') {
+                let query: BTreeMap<String, String> = serde_qs::from_str(qs).unwrap_or_default();
+
+                if let Some(text) = query.get("text") {
+                    let text = text.trim().to_lowercase();
+
+                    if text.is_empty() {
+                        continue;
+                    }
+
+                    let views = row.get_int("screenPageViews");
+
+                    search_counts
+                        .entry(text)
+                        .and_modify(|v| *v += views)
+                        .or_insert(views);
+                }
+            }
+        }
+
+        for (term, times) in search_counts {
+            sqlx::query!(
+                r#"
+INSERT INTO c_analytics_search_term_cache (
+  "temporary",
+  "begin",
+  "end",
+  "term",
+  "times"
+)
+VALUES (
+  $1, $2, $3, $4, $5
+)
+"#,
+                temporary,
+                begin,
+                end,
+                term,
+                times
+            )
+            .execute(db)
+            .await?;
+        }
+    }
+
     Ok(())
 }
 
 pub async fn collect(db: &Database, state: &CommonState) -> Result<Overview, Error> {
-    let demographics = OverviewDemographics {
-        sex: todo!(),
-        age: todo!(),
-        education: todo!(),
-        income: todo!(),
-        children: todo!(),
-        ethnicity: todo!(),
+    let engagement = OverviewEngagementData {
+        begin: state.begin,
+        end: state.end,
+        search_max: sqlx::query_scalar!(
+            r#"
+SELECT MAX("times") AS "times!"
+FROM c_analytics_search_term_cache
+WHERE "begin" = $1 AND "end" = $2
+"#,
+            state.begin,
+            state.end,
+        )
+        .fetch_one(db)
+        .await?
+        .try_into()
+        .unwrap_or(0),
+        stats: sqlx::query!(
+            r#"
+SELECT
+  "unique_visitors" AS "unique_visitors!",
+  "shares" AS "shares!",
+  "calendar_adds" AS "calendar_adds!",
+  "likes" AS "likes!",
+  "saves" AS "saves!",
+  "didits" AS "didits!",
+  "opportunity_views" AS "opportunity_views!",
+  "opportunity_unique" AS "opportunity_unique!",
+  "opportunity_exits" AS "opportunity_exits!",
+  "accounts" AS "accounts!"
+FROM c_analytics_overview_cache
+WHERE
+  "begin" = $1 AND
+  "end" = $2
+LIMIT 1
+"#,
+            state.begin,
+            state.end,
+        )
+        .map(|row| OverviewEngagementDataStats {
+            unique_visitors: row.unique_visitors.try_into().unwrap_or(0),
+            accounts: row.accounts.try_into().unwrap_or(0),
+            opportunity_views: row.opportunity_views.try_into().unwrap_or(0),
+            opportunity_unique: row.opportunity_unique.try_into().unwrap_or(0),
+            opportunity_exits: row.opportunity_exits.try_into().unwrap_or(0),
+            didits: row.didits.try_into().unwrap_or(0),
+            saves: row.saves.try_into().unwrap_or(0),
+            likes: row.likes.try_into().unwrap_or(0),
+            shares: row.shares.try_into().unwrap_or(0),
+            calendar_adds: row.calendar_adds.try_into().unwrap_or(0),
+        })
+        .fetch_one(db)
+        .await?,
+        searches: sqlx::query!(
+            r#"
+SELECT
+  "term" AS "term!",
+  "times" AS "times!"
+FROM c_analytics_search_term_cache
+WHERE
+  "begin" = $1 AND
+  "end" = $2
+ORDER BY "times" DESC
+LIMIT 30
+"#,
+            state.begin,
+            state.end
+        )
+        .map(|row| OverviewEngagementDataSearch {
+            phrase: row.term,
+            searches: row.times.try_into().unwrap_or(0),
+        })
+        .fetch_all(db)
+        .await?
+        .into_iter()
+        .collect(),
     };
+
+    // !!!! demographics upload
+    let demographics: OverviewDemographics = serde_json::from_value(
+        sqlx::query_scalar!(
+            r#"
+SELECT "data" AS "data!" FROM c_demographics WHERE "about" = $1
+"#,
+            Uuid::nil()
+        )
+        .fetch_one(db)
+        .await?,
+    )?;
 
     let mut states_max = DetailedEngagementDataChart::default();
     let mut states = BTreeMap::new();
@@ -210,7 +426,7 @@ GROUP BY "city"
     let mut tech_tablet = DetailedEngagementDataChart::default();
     let mut tech_mobile = DetailedEngagementDataChart::default();
 
-    let mut tech_rows = sqlx::query!(
+    let tech_rows = sqlx::query!(
         r#"
 SELECT
   "device_category" AS "device_category!: String",
@@ -428,7 +644,7 @@ GROUP BY "page_referrer", "session_channel_group"
     let mut crossover_data: BTreeMap<(String, String), EngagementDataChart> = BTreeMap::new();
     let mut crossover_involve: BTreeMap<String, u64> = BTreeMap::new();
 
-    let query = sqlx::query!(
+    let mut query = sqlx::query!(
         r#"
 SELECT
   c_opportunity_by_uid_domain("prior") AS "prior_domain!",
@@ -477,29 +693,7 @@ WHERE
 
     Ok(Overview {
         updated: Utc::now().to_fixed_offset(),
-        engagement: OverviewEngagement {
-            data: OverviewEngagementData {
-                begin: state.begin,
-                end: state.end,
-                search_max: todo!(),
-                stats: OverviewEngagementDataStats {
-                    unique_visitors: todo!(),
-                    accounts: todo!(),
-                    opportunity_views: todo!(),
-                    opportunity_unique: todo!(),
-                    opportunity_exits: todo!(),
-                    didits: todo!(),
-                    saves: todo!(),
-                    likes: todo!(),
-                    shares: todo!(),
-                    calendar_adds: todo!(),
-                },
-                searches: OverviewEngagementDataSearch {
-                    phrase: todo!(),
-                    searches: todo!(),
-                },
-            },
-        },
+        engagement: OverviewEngagement { data: engagement },
         demographics,
         states: OverviewStates {
             opportunity_statuses: Status::iter().collect(),

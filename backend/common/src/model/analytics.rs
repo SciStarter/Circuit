@@ -24,6 +24,15 @@ impl Status {
             Status::Closed => 2,
         }
     }
+
+    pub const fn from_discriminated(discriminated: i32) -> Status {
+        match discriminated {
+            0 => Status::LiveAndClosed,
+            1 => Status::Live,
+            2 => Status::Closed,
+            _ => Status::LiveAndClosed,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -53,6 +62,37 @@ pub enum RelativeTimePeriod {
     LastYear,
     #[serde(rename = "All Time")]
     AllTime,
+}
+
+impl RelativeTimePeriod {
+    pub const fn discriminate(self) -> i32 {
+        match self {
+            RelativeTimePeriod::ThisMonth => 0,
+            RelativeTimePeriod::LastMonth => 1,
+            RelativeTimePeriod::ThisQuarter => 2,
+            RelativeTimePeriod::LastQuarter => 3,
+            RelativeTimePeriod::ThisSemiannum => 4,
+            RelativeTimePeriod::LastSemiannum => 5,
+            RelativeTimePeriod::ThisYear => 6,
+            RelativeTimePeriod::LastYear => 7,
+            RelativeTimePeriod::AllTime => 8,
+        }
+    }
+
+    pub const fn from_discriminated(discriminated: i32) -> RelativeTimePeriod {
+        match discriminated {
+            0 => RelativeTimePeriod::ThisMonth,
+            1 => RelativeTimePeriod::LastMonth,
+            2 => RelativeTimePeriod::ThisQuarter,
+            3 => RelativeTimePeriod::LastQuarter,
+            4 => RelativeTimePeriod::ThisSemiannum,
+            5 => RelativeTimePeriod::LastSemiannum,
+            6 => RelativeTimePeriod::ThisYear,
+            7 => RelativeTimePeriod::LastYear,
+            8 => RelativeTimePeriod::AllTime,
+            _ => RelativeTimePeriod::ThisMonth,
+        }
+    }
 }
 
 fn beginning_of_month<Tz: TimeZone>(day: &Date<Tz>) -> DateTime<Tz> {

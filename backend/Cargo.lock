@@ -764,6 +764,7 @@ dependencies = [
  "reqwest",
  "rusty-s3",
  "serde_json",
+ "serde_qs 0.10.1",
  "sqlx",
  "strum",
  "tokio",

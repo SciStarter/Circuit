@@ -1,10 +1,9 @@
-use std::collections::BTreeMap;
 use std::env;
 use std::time::Duration;
 
 use anyhow::{anyhow, Error};
-use chrono::{DateTime, Days, FixedOffset, LocalResult, NaiveDate, Utc};
-use common::{Database, ToFixedOffset};
+use chrono::{DateTime, Days, FixedOffset};
+use common::Database;
 use google_analyticsdata1_beta::api::{
     DateRange, Dimension, FilterExpression, Metric, RunReportRequest, RunReportResponse,
 };
@@ -16,43 +15,12 @@ use crate::reportiter::ReportIterator;
 const HOURLY_SECONDS_PER_TOKEN: f32 = (60.0 * 60.0) / 5000.0;
 const DAILY_SECONDS_PER_TOKEN: f32 = (60.0 * 60.0 * 24.0) / 25000.0;
 
-fn get_date(
-    record: &BTreeMap<String, Option<String>>,
-    key: &str,
-) -> Result<DateTime<FixedOffset>, Error> {
-    let Some(Some(date)) = record.get(key) else { return Err(anyhow!("Field is missing or empty: {}", key)); };
-    let Ok(date) = NaiveDate::parse_from_str(&*date, "%Y%m%d") else { return Err(anyhow!("Unparsable date: {}", date)); };
-    let Some(date) = date.and_hms_opt(12, 0, 0) else { return Err(anyhow!("Out of bounds date: {}", date)); };
-    let LocalResult::Single(date) = date.and_local_timezone(Utc) else { return Err(anyhow!("Failed setting timezone for date")); };
-    Ok(date.to_fixed_offset())
-}
-
-fn get_uuid(record: &BTreeMap<String, Option<String>>, key: &str) -> Result<Uuid, Error> {
-    let Some(Some(uuid)) = record.get(key) else { return Err(anyhow!("Field is missing or empty: {}", key)); };
-    Ok(Uuid::parse_str(&uuid)?)
-}
-
-fn get_int(record: &BTreeMap<String, Option<String>>, key: &str) -> i64 {
-    let Some(Some(val)) = record.get(key) else { return 0 };
-    let Ok(val) = val.parse() else { return 0 };
-    val
-}
-
-fn get_float(record: &BTreeMap<String, Option<String>>, key: &str) -> f64 {
-    let Some(Some(val)) = record.get(key) else { return 0.0 };
-    let Ok(val) = val.parse() else { return 0.0 };
-    val
-}
-
-fn get_string(record: &BTreeMap<String, Option<String>>, key: &str) -> String {
-    let Some(Some(val)) = record.get(key) else { return String::new(); };
-    val.clone()
-}
-
 pub async fn run_report(
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
-    dimension_filter: FilterExpression,
+    dimension_filter: Option<FilterExpression>,
+    dimensions: Vec<Dimension>,
+    metrics: Vec<Metric>,
 ) -> Result<ReportIterator, Error> {
     let secret = oauth2::read_service_account_key(
         env::var("SNM_ANALYTICS_SECRET")
@@ -90,72 +58,17 @@ pub async fn run_report(
             end_date: Some(end.to_string()),
             name: Some(String::from("date_range")),
         }]),
-        dimension_filter: Some(dimension_filter),
-        dimensions: Some(vec![
-            Dimension {
-                name: Some(String::from("customEvent:entity_uid")),
-                ..Default::default()
-            },
-            Dimension {
-                name: Some(String::from("customEvent:partner_uid")),
-                ..Default::default()
-            },
-            Dimension {
-                name: Some(String::from("city")),
-                ..Default::default()
-            },
-            Dimension {
-                name: Some(String::from("date")),
-                ..Default::default()
-            },
-            Dimension {
-                name: Some(String::from("deviceCategory")),
-                ..Default::default()
-            },
-            Dimension {
-                name: Some(String::from("firstSessionDate")),
-                ..Default::default()
-            },
-            // Primarily sourced from UTM params
-            Dimension {
-                name: Some(String::from("sessionDefaultChannelGroup")),
-                ..Default::default()
-            },
-            Dimension {
-                name: Some(String::from("pagePath")),
-                ..Default::default()
-            },
-            Dimension {
-                name: Some(String::from("region")),
-                ..Default::default()
-            },
-        ]),
-        metrics: Some(vec![
-            Metric {
-                name: Some(String::from("screenPageViews")),
-                ..Default::default()
-            },
-            Metric {
-                name: Some(String::from("sessions")),
-                ..Default::default()
-            },
-            Metric {
-                name: Some(String::from("eventCount")),
-                ..Default::default()
-            },
-            Metric {
-                name: Some(String::from("totalUsers")),
-                ..Default::default()
-            },
-            Metric {
-                name: Some(String::from("newUsers")),
-                ..Default::default()
-            },
-            Metric {
-                name: Some(String::from("userEngagementDuration")),
-                ..Default::default()
-            },
-        ]),
+        dimension_filter,
+        dimensions: if !dimensions.is_empty() {
+            Some(dimensions)
+        } else {
+            None
+        },
+        metrics: if !metrics.is_empty() {
+            Some(metrics)
+        } else {
+            None
+        },
         return_property_quota: Some(true),
         limit: Some(limit.to_string()),
         offset: Some(offset.to_string()),
@@ -215,14 +128,14 @@ pub async fn run_report(
             cumulative = Some(data);
         }
 
-        has_more = dbg!(match &cumulative {
+        has_more = match &cumulative {
             Some(RunReportResponse {
                 rows: Some(rows),
                 row_count: Some(row_count),
                 ..
             }) if rows.len() < (*row_count).try_into().unwrap_or(0) => true,
             _ => false,
-        });
+        };
 
         if has_more {
             offset += limit;
@@ -244,29 +157,100 @@ pub async fn cache_report(
     filter: FilterExpression,
     temporary: bool,
 ) {
-    for row in match run_report(begin, end, filter).await {
+    for row in match run_report(
+        begin,
+        end,
+        Some(filter),
+        vec![
+            Dimension {
+                name: Some(String::from("customEvent:entity_uid")),
+                ..Default::default()
+            },
+            Dimension {
+                name: Some(String::from("customEvent:partner_uid")),
+                ..Default::default()
+            },
+            Dimension {
+                name: Some(String::from("city")),
+                ..Default::default()
+            },
+            Dimension {
+                name: Some(String::from("date")),
+                ..Default::default()
+            },
+            Dimension {
+                name: Some(String::from("deviceCategory")),
+                ..Default::default()
+            },
+            Dimension {
+                name: Some(String::from("firstSessionDate")),
+                ..Default::default()
+            },
+            // Primarily sourced from UTM params
+            Dimension {
+                name: Some(String::from("sessionDefaultChannelGroup")),
+                ..Default::default()
+            },
+            Dimension {
+                name: Some(String::from("pagePath")),
+                ..Default::default()
+            },
+            Dimension {
+                name: Some(String::from("region")),
+                ..Default::default()
+            },
+        ],
+        vec![
+            Metric {
+                name: Some(String::from("screenPageViews")),
+                ..Default::default()
+            },
+            Metric {
+                name: Some(String::from("sessions")),
+                ..Default::default()
+            },
+            Metric {
+                name: Some(String::from("eventCount")),
+                ..Default::default()
+            },
+            Metric {
+                name: Some(String::from("totalUsers")),
+                ..Default::default()
+            },
+            Metric {
+                name: Some(String::from("newUsers")),
+                ..Default::default()
+            },
+            Metric {
+                name: Some(String::from("userEngagementDuration")),
+                ..Default::default()
+            },
+        ],
+    )
+    .await
+    {
         Ok(iter) => iter,
         Err(err) => {
             println!("Error attempting to run GA4 report: {:?}", err);
             return;
         }
     } {
-        let Ok(date) = get_date(&row, "date") else { println!("Unable to parse date in GA4 response: {:?}", row); continue; };
-        let Ok(partner) = get_uuid(&row, "customEvent:partner_uid") else { println!("Unable to parse partner uid: {:?}", row); continue };
-        let Ok(opportunity) = get_uuid(&row, "customEvent:entity_uid") else { println!("Unable to parse entity uid: {:?}", row); continue };
-        let city = get_string(&row, "city");
-        let device_category = get_string(&row, "deviceCategory");
-        let Ok(first_session_date) = get_date(&row, "firstSessionDate") else { println!("Unable to parse first session date in GA4 response: {:?}", row); continue; };
-        let session_channel_group = get_string(&row, "sessionDefaultChannelGroup");
-        let page_path = get_string(&row, "pagePath");
-        let page_referrer = get_string(&row, "pageReferrer");
-        let region = get_string(&row, "region");
-        let views = get_int(&row, "screenPageViews");
-        let sessions = get_int(&row, "sessions");
-        let events = get_int(&row, "eventCount");
-        let total_users = get_int(&row, "totalUsers");
-        let new_users = get_int(&row, "newUsers");
-        let engagement_duration = get_float(&row, "userEngagementDuration");
+        let Ok(date) = row.get_date("date") else { println!("Unable to parse date in GA4 response: {:?}", row); continue; };
+        let Ok(partner) = row.get_uuid("customEvent:partner_uid") else { println!("Unable to parse partner uid: {:?}", row); continue };
+        let Ok(opportunity) = row.get_uuid("customEvent:entity_uid") else { println!("Unable to parse entity uid: {:?}", row); continue };
+        let city = row.get_string("city");
+        let device_category = row.get_string("deviceCategory");
+        let Ok(first_session_date) = row.get_date("firstSessionDate") else { println!("Unable to parse first session date in GA4 response: {:?}", row); continue; };
+        let session_channel_group = row.get_string("sessionDefaultChannelGroup");
+        let page_path = row.get_string("pagePath");
+        let page_referrer = row.get_string("pageReferrer");
+        let region = row.get_string("region");
+        let views = row.get_int("screenPageViews");
+        let sessions = row.get_int("sessions");
+        let events = row.get_int("eventCount");
+        let total_users = row.get_int("totalUsers");
+        let new_users = row.get_int("newUsers");
+        let engagement_duration = row.get_float("userEngagementDuration");
 
         if let Err(err) = sqlx::query!(
             r#"
@@ -339,8 +323,42 @@ pub async fn is_cached(
     .await.unwrap_or(false)
 }
 
+pub async fn is_overview_cached(
+    db: &Database,
+    begin: DateTime<FixedOffset>,
+    end: DateTime<FixedOffset>,
+) -> bool {
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(SELECT 1 FROM c_analytics_overview_cache WHERE "begin" = $1 AND "end" = $2) AS "exists!: bool""#,
+        begin,
+        end,
+    )
+    .fetch_one(db)
+    .await.unwrap_or(false)
+}
+
+pub async fn is_search_terms_cached(
+    db: &Database,
+    begin: DateTime<FixedOffset>,
+    end: DateTime<FixedOffset>,
+) -> bool {
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(SELECT 1 FROM c_analytics_search_term_cache WHERE "begin" = $1 AND "end" = $2) AS "exists!: bool""#,
+        begin,
+        end,
+    )
+    .fetch_one(db)
+    .await.unwrap_or(false)
+}
+
 pub async fn clear_cached_temporary(db: &Database) -> Result<(), Error> {
     sqlx::query!(r#"DELETE FROM c_analytics_cache WHERE "temporary" = true"#)
+        .execute(db)
+        .await?;
+    sqlx::query!(r#"DELETE FROM c_analytics_overview_cache WHERE "temporary" = true"#)
+        .execute(db)
+        .await?;
+    sqlx::query!(r#"DELETE FROM c_analytics_search_term_cache WHERE "temporary" = true"#)
         .execute(db)
         .await?;
     Ok(())

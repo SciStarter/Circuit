@@ -14,22 +14,21 @@ use common::{
     Database, ToFixedOffset,
 };
 use futures_util::TryStreamExt;
-use google_analyticsdata1_beta::api::{Filter, FilterExpression, StringFilter};
 use strum::IntoEnumIterator;
-use uuid::Uuid;
 
-use crate::{ga4, CommonState};
+use crate::CommonState;
 
 pub async fn cache(
-    db: &Database,
-    org: &common::model::Partner,
-    temporary: bool,
-    begin: DateTime<FixedOffset>,
-    end: DateTime<FixedOffset>,
+    _db: &Database,
+    _org: &common::model::Partner,
+    _temporary: bool,
+    _begin: DateTime<FixedOffset>,
+    _end: DateTime<FixedOffset>,
 ) -> Result<(), Error> {
     // Here's where we fetch any data that are still needed for the complete
     // organization, but no need to fetch redundant information that
     // was already cached by the opportunity caching stage.
+
     Ok(())
 }
 
@@ -329,7 +328,7 @@ GROUP BY "city"
     let mut tech_tablet = DetailedEngagementDataChart::default();
     let mut tech_mobile = DetailedEngagementDataChart::default();
 
-    let mut tech_rows = sqlx::query!(
+    let tech_rows = sqlx::query!(
         r#"
 SELECT
   "device_category" AS "device_category!: String",

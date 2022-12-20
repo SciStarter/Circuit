@@ -1,3 +1,11 @@
+delete from c_transit
+where exists(
+  select 1 from c_opportunity
+  where
+    ("exterior"->>'uid')::uuid in (c_transit."prior", c_transit."postor") and
+    "exterior"->>'entity_type' != 'opportunity'
+);
+
 create table c_analytics_cache (
        "temporary" boolean not null,
        "begin" timestamptz not null,
@@ -18,6 +26,63 @@ create table c_analytics_cache (
        "total_users" bigint not null,
        "new_users" bigint not null,
        "engagement_duration" double precision not null
+);
+
+create table c_analytics_overview_cache (
+       "temporary" boolean not null,
+       "begin" timestamptz not null,
+       "end" timestamptz not null,
+       "unique_visitors" bigint not null,
+       "accounts" bigint not null,
+       "opportunity_views" bigint not null,
+       "opportunity_unique" bigint not null,
+       "opportunity_exits" bigint not null,
+       "didits" bigint not null,
+       "saves" bigint not null,
+       "likes" bigint not null,
+       "shares" bigint not null,
+       "calendar_adds" bigint not null
+);
+
+create table c_analytics_search_term_cache (
+       "temporary" boolean not null,
+       "begin" timestamptz not null,
+       "end" timestamptz not null,
+       "term" text not null,
+       "times" bigint not null
+);
+
+create table c_analytics_compiled (
+       "about" uuid not null,
+       "period" integer not null,
+       "status" integer not null,
+       "data" jsonb not null,
+       PRIMARY KEY ("about", "period", "status")
+);
+
+create table c_demographics (
+       "about" uuid primary key,
+       "data" jsonb not null
+);
+
+create table c_misc_str (
+       "key" varchar(32) primary key,
+       "value" text not null
+);
+
+create table c_misc_int (
+       "key" varchar(32) primary key,
+       "value" bigint not null
+);
+
+create table c_misc_json (
+       "key" varchar(32) primary key,
+       "value" jsonb not null
+);
+
+create table c_misc_uuid (
+       "key" varchar(32) primary key,
+       "value" uuid not null
 );
 
 create index c_analytics_cache_by_dates_and_opportunity on c_analytics_cache ("begin", "end", "opportunity");

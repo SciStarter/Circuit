@@ -25,6 +25,8 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         r.get(entity)
             .put(save_entity)
             .at("me", |r| r.get(get_me))
+            .at("shared", |r| r.post(shared))
+            .at("calendar", |r| r.post(calendar))
             .at("interest", |r| r.post(register_interest))
             .at("likes", |r| {
                 r.get(get_likes).post(add_like).delete(remove_like)
@@ -431,6 +433,49 @@ pub async fn get_me(mut req: tide::Request<Database>) -> tide::Result {
             "didit": false,
         }))
     }
+}
+
+#[derive(Deserialize)]
+struct SharedForm {
+    network: String,
+}
+
+pub async fn shared(mut req: tide::Request<Database>) -> tide::Result {
+    let db = req.state();
+
+    let opp = Opportunity::load_by_slug(db, req.param("slug")?).await?;
+    let person = request_person(&mut req).await?;
+    let form: SharedForm = req.body_json().await?;
+
+    sqlx::query!(
+        r#"INSERT INTO c_log ("action", "subject", "object") VALUES ($1, $2, $3)"#,
+        format!("shared:{}", form.network),
+        person.map(|p| p.exterior.uid),
+        opp.exterior.uid
+    )
+    .execute(db)
+    .await?;
+
+    okay_empty()
+}
+
+pub async fn calendar(mut req: tide::Request<Database>) -> tide::Result {
+    let db = req.state();
+
+    let opp = Opportunity::load_by_slug(db, req.param("slug")?).await?;
+    let person = request_person(&mut req).await?;
+    let form: SharedForm = req.body_json().await?;
+
+    sqlx::query!(
+        r#"INSERT INTO c_log ("action", "subject", "object") VALUES ($1, $2, $3)"#,
+        format!("calendar:{}", form.network),
+        person.map(|p| p.exterior.uid),
+        opp.exterior.uid
+    )
+    .execute(db)
+    .await?;
+
+    okay_empty()
 }
 
 pub async fn register_interest(mut req: tide::Request<Database>) -> tide::Result {

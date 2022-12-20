@@ -1,4 +1,4 @@
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, Duration, FixedOffset, Utc};
 use common::{
     model::analytics::{AbsoluteTimePeriod, EngagementDataBar, RelativeTimePeriod, Status},
     Database,
@@ -101,18 +101,9 @@ FROM (
     })
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let pool = PgPoolOptions::new()
-        .min_connections(1)
-        .connect(&std::env::var("DATABASE_URL").expect("environment variable DATABASE_URL"))
-        .await
-        .expect("connect to database");
-
-    common::migrate(&pool).await?;
-
+async fn process(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
     sqlx::query!("SELECT c_refresh_log_by_when_this_year()")
-        .execute(&pool)
+        .execute(db)
         .await?;
 
     for period in RelativeTimePeriod::iter() {
@@ -130,40 +121,126 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let AbsoluteTimePeriod { begin, end } = period.absolute();
 
-        let mut iter = common::model::Opportunity::catalog(&pool).await?;
-        while let Some(opp) = iter.get_next(&pool).await {
-            opportunity::cache(&pool, &opp, temporary, begin, end).await?;
+        let mut iter = common::model::Opportunity::catalog(db).await?;
+        while let Some(opp) = iter.get_next(db).await {
+            opportunity::cache(db, &opp, temporary, begin, end).await?;
         }
 
-        for partner_ref in common::model::partner::Partner::catalog(&pool).await? {
-            let partner =
-                common::model::partner::Partner::load_by_id(&pool, partner_ref.id).await?;
-            organization::cache(&pool, &partner, temporary, begin, end).await?;
+        for partner_ref in common::model::partner::Partner::catalog(db).await? {
+            let partner = common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
+            organization::cache(db, &partner, temporary, begin, end).await?;
         }
 
-        overview::cache(&pool, temporary, begin, end).await?;
+        overview::cache(db, temporary, begin, end).await?;
 
         for status in Status::iter() {
-            let state = collect(&pool, begin, end, period, status).await?;
+            let state = collect(db, begin, end, period, status).await?;
 
-            let mut iter = common::model::Opportunity::catalog(&pool).await?;
-            while let Some(opp) = iter.get_next(&pool).await {
-                opportunity::collect(&pool, &opp, &state).await?;
+            let mut iter = common::model::Opportunity::catalog(db).await?;
+            while let Some(opp) = iter.get_next(db).await {
+                let data = opportunity::collect(db, &opp, &state).await?;
+
+                sqlx::query!(
+                    r#"
+INSERT INTO c_analytics_compiled (
+  "about",
+  "period",
+  "status",
+  "data"
+) VALUES (
+  $1, $2, $3, $4
+)
+"#,
+                    opp.exterior.uid,
+                    period.discriminate(),
+                    status.discriminate(),
+                    serde_json::to_value(data)?,
+                )
+                .execute(db)
+                .await?;
             }
 
-            for partner_ref in common::model::partner::Partner::catalog(&pool).await? {
+            for partner_ref in common::model::partner::Partner::catalog(db).await? {
                 let partner =
-                    common::model::partner::Partner::load_by_id(&pool, partner_ref.id).await?;
-                organization::collect(&pool, &partner, &state).await?;
+                    common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
+
+                let data = organization::collect(db, &partner, &state).await?;
+
+                sqlx::query!(
+                    r#"
+INSERT INTO c_analytics_compiled (
+  "about",
+  "period",
+  "status",
+  "data"
+) VALUES (
+  $1, $2, $3, $4
+)
+"#,
+                    partner.exterior.uid,
+                    period.discriminate(),
+                    status.discriminate(),
+                    serde_json::to_value(data)?,
+                )
+                .execute(db)
+                .await?;
             }
 
-            overview::collect(&pool, &state).await?;
+            let data = overview::collect(db, &state).await?;
+
+            sqlx::query!(
+                r#"
+INSERT INTO c_analytics_compiled (
+  "about",
+  "period",
+  "status",
+  "data"
+) VALUES (
+  $1, $2, $3, $4
+)
+"#,
+                Uuid::nil(),
+                period.discriminate(),
+                status.discriminate(),
+                serde_json::to_value(data)?,
+            )
+            .execute(db)
+            .await?;
         }
     }
 
-    ga4::clear_cached_temporary(&pool).await?;
+    ga4::clear_cached_temporary(db).await?;
 
     Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let pool = PgPoolOptions::new()
+        .min_connections(1)
+        .connect(&std::env::var("DATABASE_URL").expect("environment variable DATABASE_URL"))
+        .await
+        .expect("connect to database");
+
+    common::migrate(&pool).await?;
+
+    loop {
+        let began = Utc::now();
+
+        process(&pool).await?;
+
+        let finished = Utc::now();
+
+        let took = finished - began;
+
+        println!("Completed one analytics pass in {}", took);
+
+        let throttle = Duration::days(7);
+
+        if took < throttle {
+            tokio::time::sleep((throttle - took).to_std()?).await;
+        }
+    }
 }
 
 /*
