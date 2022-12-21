@@ -144,7 +144,7 @@ pub async fn run_report(
     }
 
     if let Some(data) = cumulative {
-        Ok(ReportIterator::new(dbg!(data)))
+        Ok(ReportIterator::new(data))
     } else {
         Err(anyhow!("No response received from GA4"))
     }

@@ -50,6 +50,20 @@
     },
     "query": "SELECT substring(interior ->> 'joined_at' FROM 0 FOR 8) AS month FROM c_person"
   },
+  "b6f1a444cdd6a8bc7b81f7a09a7ff87f05b56f705ec76882475c96b0de65f4a6": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "INSERT INTO c_log (\"action\", \"subject\", \"object\") VALUES ($1, $2, $3)"
+  },
   "db04257b8088331e65c5655e3055242977bec70d994261f1de66383b9f700fab": {
     "describe": {
       "columns": [],

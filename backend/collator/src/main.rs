@@ -34,10 +34,10 @@ async fn collect(
     let (mean_views, mean_unique, median_views, median_unique) = sqlx::query!(
         r#"
 SELECT
-  AVG("view_count")::bigint AS "mean_views!: i64",
-  AVG("unique_count")::bigint AS "mean_unique!: i64",
-  PERCENTILE_CONT(0.5) WITHIN GROUP (order by "view_count")::bigint AS "median_views!: i64",
-  PERCENTILE_CONT(0.5) WITHIN GROUP (order by "unique_count")::bigint AS "median_unique!: i64"
+  AVG("view_count")::bigint AS "mean_views: i64",
+  AVG("unique_count")::bigint AS "mean_unique: i64",
+  PERCENTILE_CONT(0.5) WITHIN GROUP (order by "view_count")::bigint AS "median_views: i64",
+  PERCENTILE_CONT(0.5) WITHIN GROUP (order by "unique_count")::bigint AS "median_unique: i64"
 FROM (
   SELECT "opportunity", SUM("views") AS "view_count", SUM("total_users") AS "unique_count"
   FROM c_analytics_cache
@@ -50,10 +50,10 @@ FROM (
     )
     .map(|row| {
         (
-            row.mean_views.try_into().unwrap_or(0),
-            row.mean_unique.try_into().unwrap_or(0),
-            row.median_views.try_into().unwrap_or(0),
-            row.median_unique.try_into().unwrap_or(0),
+            row.mean_views.unwrap_or(0).try_into().unwrap_or(0),
+            row.mean_unique.unwrap_or(0).try_into().unwrap_or(0),
+            row.median_views.unwrap_or(0).try_into().unwrap_or(0),
+            row.median_unique.unwrap_or(0).try_into().unwrap_or(0),
         )
     })
     .fetch_one(db)
@@ -62,8 +62,8 @@ FROM (
     let (mean_clicks, median_clicks) = sqlx::query!(
         r#"
 SELECT
-  AVG("clicks")::bigint AS "mean_clicks!: i64",
-  PERCENTILE_CONT(0.5) WITHIN GROUP (order by "clicks")::bigint AS "median_clicks!: i64"
+  AVG("clicks")::bigint AS "mean_clicks: i64",
+  PERCENTILE_CONT(0.5) WITHIN GROUP (order by "clicks")::bigint AS "median_clicks: i64"
 FROM (
   SELECT "object", COUNT(*) AS "clicks"
   FROM c_log
@@ -76,8 +76,8 @@ FROM (
     )
     .map(|row| {
         (
-            row.mean_clicks.try_into().unwrap_or(0),
-            row.median_clicks.try_into().unwrap_or(0),
+            row.mean_clicks.unwrap_or(0).try_into().unwrap_or(0),
+            row.median_clicks.unwrap_or(0).try_into().unwrap_or(0),
         )
     })
     .fetch_one(db)
@@ -107,6 +107,8 @@ async fn process(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     for period in RelativeTimePeriod::iter() {
+        println!("{} Starting period {:?}", Utc::now(), &period);
+
         let temporary = match period {
             RelativeTimePeriod::ThisMonth => true,
             RelativeTimePeriod::LastMonth => false,
@@ -123,21 +125,34 @@ async fn process(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
 
         let mut iter = common::model::Opportunity::catalog(db).await?;
         while let Some(opp) = iter.get_next(db).await {
+            println!("{}   Caching opp {:?}", Utc::now(), &opp.exterior.title);
             opportunity::cache(db, &opp, temporary, begin, end).await?;
         }
 
         for partner_ref in common::model::partner::Partner::catalog(db).await? {
             let partner = common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
+            println!(
+                "{}   Caching partner {:?}",
+                Utc::now(),
+                &partner.exterior.name
+            );
             organization::cache(db, &partner, temporary, begin, end).await?;
         }
 
+        println!("{}   Caching overview", Utc::now());
         overview::cache(db, temporary, begin, end).await?;
 
         for status in Status::iter() {
+            println!("{}   Starting status {:?}", Utc::now(), &status);
             let state = collect(db, begin, end, period, status).await?;
 
             let mut iter = common::model::Opportunity::catalog(db).await?;
             while let Some(opp) = iter.get_next(db).await {
+                println!(
+                    "{}     Collecting opp {:?}",
+                    Utc::now(),
+                    &opp.exterior.title
+                );
                 let data = opportunity::collect(db, &opp, &state).await?;
 
                 sqlx::query!(
@@ -150,6 +165,8 @@ INSERT INTO c_analytics_compiled (
 ) VALUES (
   $1, $2, $3, $4
 )
+ON CONFLICT ("about", "period", "status") DO UPDATE SET
+  "data" = EXCLUDED."data"
 "#,
                     opp.exterior.uid,
                     period.discriminate(),
@@ -163,6 +180,11 @@ INSERT INTO c_analytics_compiled (
             for partner_ref in common::model::partner::Partner::catalog(db).await? {
                 let partner =
                     common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
+                println!(
+                    "{}     Collecting partner {:?}",
+                    Utc::now(),
+                    &partner.exterior.name
+                );
 
                 let data = organization::collect(db, &partner, &state).await?;
 
@@ -176,6 +198,8 @@ INSERT INTO c_analytics_compiled (
 ) VALUES (
   $1, $2, $3, $4
 )
+ON CONFLICT ("about", "period", "status") DO UPDATE SET
+  "data" = EXCLUDED."data"
 "#,
                     partner.exterior.uid,
                     period.discriminate(),
@@ -186,6 +210,7 @@ INSERT INTO c_analytics_compiled (
                 .await?;
             }
 
+            println!("{}     Collecting overview", Utc::now());
             let data = overview::collect(db, &state).await?;
 
             sqlx::query!(
@@ -198,6 +223,8 @@ INSERT INTO c_analytics_compiled (
 ) VALUES (
   $1, $2, $3, $4
 )
+ON CONFLICT ("about", "period", "status") DO UPDATE SET
+  "data" = EXCLUDED."data"
 "#,
                 Uuid::nil(),
                 period.discriminate(),
@@ -233,7 +260,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let took = finished - began;
 
-        println!("Completed one analytics pass in {}", took);
+        println!(
+            "Completed one analytics pass in {} days, {:02} hours, {:02} minutues, {:02} seconds",
+            took.num_days(),
+            took.num_hours(),
+            took.num_minutes(),
+            took.num_seconds()
+        );
 
         let throttle = Duration::days(7);
 

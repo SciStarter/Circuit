@@ -14,6 +14,7 @@ use tide_fluent_routes::prelude::*;
 use uuid::Uuid;
 
 pub mod content;
+pub mod data;
 pub mod emails;
 pub mod opportunities;
 
@@ -70,6 +71,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("content/", content::routes)
         .at("emails/", emails::routes)
         .at("opportunities/", opportunities::routes)
+        .at("data/", data::routes)
         .at("health/", |r| r.get(health))
 }
 

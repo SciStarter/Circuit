@@ -71,15 +71,15 @@ INSERT INTO c_analytics_overview_cache (
 VALUES (
   $1, $2, $3, $4,
 
-  (SELECT COUNT(*) FROM c_log WHERE "action" LIKE 'shared:%' AND "when" >= $2 AND "when" < $3),
-  (SELECT COUNT(*) FROM c_log WHERE "action" LIKE 'calendar:%' AND "when" >= $2 AND "when" < $3),
-  (SELECT COUNT(*) FROM c_opportunity_like WHERE "when" >= $2 AND "when" < $3),
-  (SELECT COUNT(*) FROM c_involvement WHERE ("exterior"->'mode')::integer = 20 AND "updated" >= $2 AND "updated" < $3),
-  (SELECT COUNT(*) FROM c_involvement WHERE ("exterior"->'mode')::integer >= 30 AND "updated" >= $2 AND "updated" < $3),
-  (SELECT SUM("views") FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3),
-  (SELECT SUM("sessions") FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3) - (SELECT COUNT(*) FROM c_transit WHERE "created" >= $2 AND "created" < $3),
-  (SELECT COUNT(*) FROM c_log WHERE "action" = 'external' AND "when" >= $2 AND "when" < $3),
-  (SELECT COUNT(*) FROM c_person WHERE "created" >= $2 AND "created" < $3)
+  (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE "action" LIKE 'shared:%' AND "when" >= $2 AND "when" < $3),
+  (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE "action" LIKE 'calendar:%' AND "when" >= $2 AND "when" < $3),
+  (SELECT COALESCE(COUNT(*), 0) FROM c_opportunity_like WHERE "when" >= $2 AND "when" < $3),
+  (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE ("exterior"->'mode')::integer = 20 AND "updated" >= $2 AND "updated" < $3),
+  (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE ("exterior"->'mode')::integer >= 30 AND "updated" >= $2 AND "updated" < $3),
+  (SELECT COALESCE(SUM("views"), 0) FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3),
+  (SELECT COALESCE(SUM("sessions"), 0) FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3) - (SELECT COUNT(*) FROM c_transit WHERE "created" >= $2 AND "created" < $3),
+  (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE "action" = 'external' AND "when" >= $2 AND "when" < $3),
+  (SELECT COALESCE(COUNT(*), 0) FROM c_person WHERE "created" >= $2 AND "created" < $3)
 )
     "#,
             temporary,
@@ -174,7 +174,7 @@ pub async fn collect(db: &Database, state: &CommonState) -> Result<Overview, Err
         end: state.end,
         search_max: sqlx::query_scalar!(
             r#"
-SELECT MAX("times") AS "times!"
+SELECT MAX("times") AS "times"
 FROM c_analytics_search_term_cache
 WHERE "begin" = $1 AND "end" = $2
 "#,
@@ -183,6 +183,7 @@ WHERE "begin" = $1 AND "end" = $2
         )
         .fetch_one(db)
         .await?
+        .unwrap_or(0)
         .try_into()
         .unwrap_or(0),
         stats: sqlx::query!(
@@ -246,7 +247,6 @@ LIMIT 30
         .collect(),
     };
 
-    // !!!! demographics upload
     let demographics: OverviewDemographics = serde_json::from_value(
         sqlx::query_scalar!(
             r#"
@@ -265,12 +265,12 @@ SELECT "data" AS "data!" FROM c_demographics WHERE "about" = $1
         r#"
 SELECT
   "region" AS "state!: String",
-  SUM("total_users") AS "unique_users!: i64",
-  SUM("new_users") AS "new_users!: i64",
-  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
-  SUM("views") AS "total_pageviews!: i64",
-  SUM("sessions") AS "unique_pageviews!: i64",
-  AVG("engagement_duration") AS "average_time!: f64"
+  SUM("total_users") AS "unique_users: i64",
+  SUM("new_users") AS "new_users: i64",
+  COALESCE(SUM("total_users"), 0) - COALESCE(SUM("new_users"), 0) AS "returning_users: i64",
+  SUM("views") AS "total_pageviews: i64",
+  SUM("sessions") AS "unique_pageviews: i64",
+  AVG("engagement_duration") AS "average_time: f64"
 FROM c_analytics_cache
 WHERE "begin" = $1 AND "end" = $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
 GROUP BY "region"
@@ -286,12 +286,28 @@ GROUP BY "region"
 
         let state_row = DetailedEngagementDataChart {
             date: None,
-            unique_users: state_row.unique_users.try_into().unwrap_or(0),
-            new_users: state_row.new_users.try_into().unwrap_or(0),
-            returning_users: state_row.returning_users.try_into().unwrap_or(0),
-            total_pageviews: state_row.total_pageviews.try_into().unwrap_or(0),
-            unique_pageviews: state_row.unique_pageviews.try_into().unwrap_or(0),
-            average_time: state_row.average_time.try_into().unwrap_or(0.0),
+            unique_users: state_row.unique_users.unwrap_or(0).try_into().unwrap_or(0),
+            new_users: state_row.new_users.unwrap_or(0).try_into().unwrap_or(0),
+            returning_users: state_row
+                .returning_users
+                .unwrap_or(0)
+                .try_into()
+                .unwrap_or(0),
+            total_pageviews: state_row
+                .total_pageviews
+                .unwrap_or(0)
+                .try_into()
+                .unwrap_or(0),
+            unique_pageviews: state_row
+                .unique_pageviews
+                .unwrap_or(0)
+                .try_into()
+                .unwrap_or(0),
+            average_time: state_row
+                .average_time
+                .unwrap_or(0.0)
+                .try_into()
+                .unwrap_or(0.0),
         };
 
         if state_row.unique_users > states_max.unique_users {
@@ -325,12 +341,12 @@ GROUP BY "region"
             r#"
 SELECT
   "city" AS "region!: String",
-  SUM("total_users") AS "unique_users!: i64",
-  SUM("new_users") AS "new_users!: i64",
-  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
-  SUM("views") AS "total_pageviews!: i64",
-  SUM("sessions") AS "unique_pageviews!: i64",
-  AVG("engagement_duration") AS "average_time!: f64"
+  SUM("total_users") AS "unique_users: i64",
+  SUM("new_users") AS "new_users: i64",
+  COALESCE(SUM("total_users"), 0) - COALESCE(SUM("new_users"), 0) AS "returning_users: i64",
+  SUM("views") AS "total_pageviews: i64",
+  SUM("sessions") AS "unique_pageviews: i64",
+  AVG("engagement_duration") AS "average_time: f64"
 FROM c_analytics_cache
 WHERE "begin" = $1 AND "end" = $2 AND "region" = $3 AND c_opportunity_by_uid_is_status("opportunity", $4)
 GROUP BY "city"
@@ -347,12 +363,28 @@ GROUP BY "city"
 
             let region_row = DetailedEngagementDataChart {
                 date: None,
-                unique_users: region_row.unique_users.try_into().unwrap_or(0),
-                new_users: region_row.new_users.try_into().unwrap_or(0),
-                returning_users: region_row.returning_users.try_into().unwrap_or(0),
-                total_pageviews: region_row.total_pageviews.try_into().unwrap_or(0),
-                unique_pageviews: region_row.unique_pageviews.try_into().unwrap_or(0),
-                average_time: region_row.average_time.try_into().unwrap_or(0.0),
+                unique_users: region_row.unique_users.unwrap_or(0).try_into().unwrap_or(0),
+                new_users: region_row.new_users.unwrap_or(0).try_into().unwrap_or(0),
+                returning_users: region_row
+                    .returning_users
+                    .unwrap_or(0)
+                    .try_into()
+                    .unwrap_or(0),
+                total_pageviews: region_row
+                    .total_pageviews
+                    .unwrap_or(0)
+                    .try_into()
+                    .unwrap_or(0),
+                unique_pageviews: region_row
+                    .unique_pageviews
+                    .unwrap_or(0)
+                    .try_into()
+                    .unwrap_or(0),
+                average_time: region_row
+                    .average_time
+                    .unwrap_or(0.0)
+                    .try_into()
+                    .unwrap_or(0.0),
             };
 
             if region_row.unique_users > regions_max.unique_users {
@@ -430,12 +462,12 @@ GROUP BY "city"
         r#"
 SELECT
   "device_category" AS "device_category!: String",
-  SUM("total_users") AS "unique_users!: i64",
-  SUM("new_users") AS "new_users!: i64",
-  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
-  SUM("views") AS "total_pageviews!: i64",
-  SUM("sessions") AS "unique_pageviews!: i64",
-  AVG("engagement_duration") AS "average_time!: f64"
+  SUM("total_users") AS "unique_users: i64",
+  SUM("new_users") AS "new_users: i64",
+  COALESCE(SUM("total_users"), 0) - COALESCE(SUM("new_users"), 0) AS "returning_users: i64",
+  SUM("views") AS "total_pageviews: i64",
+  SUM("sessions") AS "unique_pageviews: i64",
+  AVG("engagement_duration") AS "average_time: f64"
 FROM c_analytics_cache
 WHERE "begin" = $1 AND "end" = $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
 GROUP BY "device_category"
@@ -465,12 +497,12 @@ GROUP BY "device_category"
 
         *chart = DetailedEngagementDataChart {
             date: None,
-            unique_users: row.unique_users.try_into().unwrap_or(0),
-            new_users: row.new_users.try_into().unwrap_or(0),
-            returning_users: row.returning_users.try_into().unwrap_or(0),
-            total_pageviews: row.total_pageviews.try_into().unwrap_or(0),
-            unique_pageviews: row.unique_pageviews.try_into().unwrap_or(0),
-            average_time: row.average_time.try_into().unwrap_or(0.0),
+            unique_users: row.unique_users.unwrap_or(0).try_into().unwrap_or(0),
+            new_users: row.new_users.unwrap_or(0).try_into().unwrap_or(0),
+            returning_users: row.returning_users.unwrap_or(0).try_into().unwrap_or(0),
+            total_pageviews: row.total_pageviews.unwrap_or(0).try_into().unwrap_or(0),
+            unique_pageviews: row.unique_pageviews.unwrap_or(0).try_into().unwrap_or(0),
+            average_time: row.average_time.unwrap_or(0.0).try_into().unwrap_or(0.0),
         };
     }
 
@@ -506,17 +538,17 @@ GROUP BY "device_category"
         r#"
 SELECT
   "date" AS "date!: DateTime<FixedOffset>",
-  SUM("views") AS "views!: i64",
-  SUM("sessions") AS "unique!: i64",
-  SUM("new_users") AS "new!: i64",
-  SUM("sessions") - SUM("new_users") AS "returning!: i64",
+  SUM("views") AS "views: i64",
+  SUM("sessions") AS "unique: i64",
+  SUM("new_users") AS "new: i64",
+  COALESCE(SUM("sessions"), 0) - COALESCE(SUM("new_users"), 0) AS "returning: i64",
   (
     SELECT COUNT(*)
     FROM c_log INNER JOIN c_opportunity ON c_log."object" = (c_opportunity.exterior->>'uid')::uuid
     WHERE
       "action" = 'external' AND
       "when"::date = c_analytics_cache."date"::date
-  ) AS "clicks!: i64"
+  ) AS "clicks: i64"
 FROM c_analytics_cache
 WHERE "date" >= $1 AND "date" < $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
 GROUP BY "date"
@@ -527,11 +559,11 @@ GROUP BY "date"
     )
     .map(|row| EngagementDataChart {
         date: row.date,
-        views: row.views.try_into().unwrap_or(0),
-        unique: row.unique.try_into().unwrap_or(0),
-        new: row.new.try_into().unwrap_or(0),
-        returning: row.returning.try_into().unwrap_or(0),
-        clicks: row.clicks.try_into().unwrap_or(0),
+        views: row.views.unwrap_or(0).try_into().unwrap_or(0),
+        unique: row.unique.unwrap_or(0).try_into().unwrap_or(0),
+        new: row.new.unwrap_or(0).try_into().unwrap_or(0),
+        returning: row.returning.unwrap_or(0).try_into().unwrap_or(0),
+        clicks: row.clicks.unwrap_or(0).try_into().unwrap_or(0),
     })
     .fetch_all(db)
     .await?;
@@ -566,7 +598,7 @@ GROUP BY "date"
             ],
             data: sqlx::query!(
                 r#"
-SELECT "session_channel_group" AS "group!", SUM("views") AS "count!: i64"
+SELECT "session_channel_group" AS "group!", SUM("views") AS "count: i64"
 FROM c_analytics_cache
 WHERE "date" >= $1 AND "date" < $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
 GROUP BY "session_channel_group"
@@ -576,7 +608,7 @@ ORDER BY "session_channel_group"
                 state.end,
                 state.status.discriminate()
             )
-            .map(|row| row.count.try_into().unwrap_or(0))
+            .map(|row| row.count.unwrap_or(0).try_into().unwrap_or(0))
             .fetch_all(db)
             .await?,
         }],
@@ -589,12 +621,12 @@ ORDER BY "session_channel_group"
 SELECT
   "page_referrer" AS "page_referrer!",
   "session_channel_group" AS "type_!",
-  SUM("total_users") AS "unique_users!: i64",
-  SUM("new_users") AS "new_users!: i64",
-  SUM("total_users") - SUM("new_users") AS "returning_users!: i64",
-  SUM("views") AS "total_pageviews!: i64",
-  SUM("sessions") AS "unique_pageviews!: i64",
-  AVG("engagement_duration") AS "average_time!: f64"
+  SUM("total_users") AS "unique_users: i64",
+  SUM("new_users") AS "new_users: i64",
+  COALESCE(SUM("total_users"), 0) - COALESCE(SUM("new_users"), 0) AS "returning_users: i64",
+  SUM("views") AS "total_pageviews: i64",
+  SUM("sessions") AS "unique_pageviews: i64",
+  AVG("engagement_duration") AS "average_time: f64"
 FROM c_analytics_cache
 WHERE "begin" = $1 AND "end" = $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
 GROUP BY "page_referrer", "session_channel_group"
@@ -609,12 +641,12 @@ GROUP BY "page_referrer", "session_channel_group"
             type_: row.type_,
             values: DetailedEngagementDataChart {
                 date: None,
-                unique_users: row.unique_users.try_into().unwrap_or(0),
-                new_users: row.new_users.try_into().unwrap_or(0),
-                returning_users: row.returning_users.try_into().unwrap_or(0),
-                total_pageviews: row.total_pageviews.try_into().unwrap_or(0),
-                unique_pageviews: row.unique_pageviews.try_into().unwrap_or(0),
-                average_time: row.average_time.try_into().unwrap_or(0.0),
+                unique_users: row.unique_users.unwrap_or(0).try_into().unwrap_or(0),
+                new_users: row.new_users.unwrap_or(0).try_into().unwrap_or(0),
+                returning_users: row.returning_users.unwrap_or(0).try_into().unwrap_or(0),
+                total_pageviews: row.total_pageviews.unwrap_or(0).try_into().unwrap_or(0),
+                unique_pageviews: row.unique_pageviews.unwrap_or(0).try_into().unwrap_or(0),
+                average_time: row.average_time.unwrap_or(0.0).try_into().unwrap_or(0.0),
             },
         };
 

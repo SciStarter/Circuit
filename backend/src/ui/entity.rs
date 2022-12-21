@@ -441,9 +441,7 @@ struct SharedForm {
 }
 
 pub async fn shared(mut req: tide::Request<Database>) -> tide::Result {
-    let db = req.state();
-
-    let opp = Opportunity::load_by_slug(db, req.param("slug")?).await?;
+    let opp = Opportunity::load_by_slug(req.state(), req.param("slug")?).await?;
     let person = request_person(&mut req).await?;
     let form: SharedForm = req.body_json().await?;
 
@@ -453,16 +451,14 @@ pub async fn shared(mut req: tide::Request<Database>) -> tide::Result {
         person.map(|p| p.exterior.uid),
         opp.exterior.uid
     )
-    .execute(db)
+    .execute(req.state())
     .await?;
 
     okay_empty()
 }
 
 pub async fn calendar(mut req: tide::Request<Database>) -> tide::Result {
-    let db = req.state();
-
-    let opp = Opportunity::load_by_slug(db, req.param("slug")?).await?;
+    let opp = Opportunity::load_by_slug(req.state(), req.param("slug")?).await?;
     let person = request_person(&mut req).await?;
     let form: SharedForm = req.body_json().await?;
 
@@ -472,7 +468,7 @@ pub async fn calendar(mut req: tide::Request<Database>) -> tide::Result {
         person.map(|p| p.exterior.uid),
         opp.exterior.uid
     )
-    .execute(db)
+    .execute(req.state())
     .await?;
 
     okay_empty()

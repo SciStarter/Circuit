@@ -88,7 +88,7 @@ pub async fn record_external(mut req: tide::Request<Database>) -> tide::Result {
         .unwrap_or_else(|_| Uuid::nil())
     )
     .execute(req.state())
-    .await;
+    .await?;
 
     if cfg!(not(debug_assertions)) {
         async_std::task::spawn(surf::post(&*CLICK_ENDPOINT).body(body).send());

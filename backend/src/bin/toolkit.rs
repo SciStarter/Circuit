@@ -5,9 +5,11 @@ use counter::Counter;
 use http_types::Method;
 use serde::Deserialize;
 use serde_json::json;
+#[allow(unused_imports)]
 use shellfish::{async_fn, handler::default, Command, Shell};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::Row;
+#[allow(unused_imports)]
 use std::io::Write;
 use uuid::Uuid;
 
@@ -509,7 +511,7 @@ async fn refresh_geo_opportunities(state: &mut State, _args: Vec<String>) -> Res
     Ok(())
 }
 
-async fn geoquery(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+async fn geoquery(_state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     let query = args.join(" ");
 
     println!(
@@ -520,7 +522,7 @@ async fn geoquery(state: &mut State, args: Vec<String>) -> Result<(), DynError> 
     Ok(())
 }
 
-async fn geomquery(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+async fn _geomquery(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     let query = args.join(" ");
 
     println!(
@@ -770,18 +772,18 @@ async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
 
 #[derive(Deserialize, Debug)]
 struct UnsubscribeItem {
-    address: String,
-    code: String,
-    error: String,
+    _address: String,
+    _code: String,
+    _error: String,
     created_at: String,
 }
 
 #[derive(Deserialize, Debug)]
 struct UnsubscribePaging {
-    first: String,
+    _first: String,
     next: String,
-    previous: String,
-    last: String,
+    _previous: String,
+    _last: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -842,6 +844,7 @@ async fn unsubscribes(_state: &mut State, _args: Vec<String>) -> Result<(), DynE
     Ok(())
 }
 
+#[allow(unused, unreachable_code)]
 async fn new_accounts(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     #[cfg(not(feature = "container"))]
     panic!("Run this command in a production environment");
@@ -872,6 +875,7 @@ async fn new_accounts(state: &mut State, _args: Vec<String>) -> Result<(), DynEr
     Ok(())
 }
 
+#[allow(unused, unreachable_code)]
 async fn new_opportunities(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     #[cfg(not(feature = "container"))]
     panic!("Run this command in a production environment");
@@ -904,14 +908,14 @@ async fn new_opportunities(state: &mut State, _args: Vec<String>) -> Result<(), 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct TimezoneItem {
-    zone_name: String,
+    _zone_name: String,
 }
 
 #[derive(Deserialize, Debug)]
 struct TimezoneResponse {
-    status: String,
-    message: String,
-    zones: Vec<TimezoneItem>,
+    _status: String,
+    _message: String,
+    _zones: Vec<TimezoneItem>,
 }
 
 async fn run_shell(state: State) -> Result<(), DynError> {

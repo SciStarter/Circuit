@@ -401,10 +401,10 @@
           {{ pair[0].toLocaleString() }}
         </label>
         <ul class="calendar-add">
-          <li><calendar-add @before="calendar('google')" calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
-          <li><calendar-add @before="calendar('outlook')" calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
-          <li><calendar-add @before="calendar('365')" calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
-          <li><calendar-add @before="calendar('yahoo')" calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" @before="register_interest" /></li>
+          <li><calendar-add @before="calendar('google')" calendar="google" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" /></li>
+          <li><calendar-add @before="calendar('outlook')" calendar="outlook" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" /></li>
+          <li><calendar-add @before="calendar('365')" calendar="365" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" /></li>
+          <li><calendar-add @before="calendar('yahoo')" calendar="yahoo" :title="opportunity.title" :location="opportunity.location_name" :begin="pair[0]" :end="pair[1]" :description="opportunity.partner_opp_url" /></li>
         </ul>
       </div>
     </div>
@@ -886,10 +886,12 @@ export default {
     methods: {
         async shared(network) {
             await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/shared', {network: network}, this.$store.state.auth);
+            await this.register_interest();
         },
 
         async calendar(network) {
             await this.$axios.$post('/api/ui/entity/' + this.opportunity.slug + '/calendar', {network: network}, this.$store.state.auth);
+            await this.register_interest();
         },
 
         async set_review_status(status) {

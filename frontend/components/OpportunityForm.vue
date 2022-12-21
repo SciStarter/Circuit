@@ -105,7 +105,7 @@
               <transition name="slide">
                 <div v-if="location=='physical'" class="add">
                   <b-field label="Name of the location, if applicable">
-                    <b-input type="text" v-model="location_name">
+                    <b-input type="text" v-model="location_name" />
                   </b-field>
                   <b-field :type="validation.location_name" message="Begin typing and select location">
                     <template #label>
@@ -131,7 +131,7 @@
               <transition name="slide">
                 <div v-if="location=='both'" class="add">
                   <b-field label="Name of the location, if applicable">
-                    <b-input type="text" v-model="location_name">
+                    <b-input type="text" v-model="location_name" />
                   </b-field>
                   <b-field :type="validation.location_name" message="Begin typing and select location">
                     <template #label>
