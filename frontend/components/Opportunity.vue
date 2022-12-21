@@ -69,7 +69,7 @@
 
   <div class="snm-container">
     <div class="opportunity-left">
-      <div v-if="fromSearch">
+      <div v-if="fromSearch"  class="opp-breadcrumbs">
           <a @click="$router.push({ name: 'find', query: $store.state.last_search })">&laquo; Back to Search</a>
       </div>
       <div v-else-if="exchange !== null" class="opp-breadcrumbs">
@@ -256,15 +256,8 @@
       </div>
 
       <div class="partner-and-org">
-        <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
-          <figcaption>Provided By</figcaption>
-          <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on">
-            <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name" :title="opportunity.partner_name">
-            <span v-else>{{ opportunity.partner_name }}</span>
-          </component>
-        </figure>
         <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
-          <figcaption>Hosted By</figcaption>
+          <figcaption>Hosted by</figcaption>
           <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" campaign="opp-page" content="hosted-by">
             <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name" :title="opportunity.organization_name">
             <span v-else>{{ opportunity.organization_name }}</span>
@@ -294,6 +287,15 @@
           <span class="opp-label">Languages:</span> {{ languages }}
         </p>
 
+        <div class="partner-and-org">
+          <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
+          <figcaption>Provided to SNM by</figcaption>
+          <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on">
+            <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name" :title="opportunity.partner_name">
+            <span v-else>{{ opportunity.partner_name }}</span>
+          </component>
+        </figure>
+        </div>
 
       </div>
 
@@ -1322,7 +1324,7 @@ img.opportunity-image {
     line-height: 22px;
     letter-spacing: 0.16px;
     color: $snm-color-glance;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
     margin-top:1rem;
 }
 
@@ -1402,6 +1404,7 @@ img.opportunity-image {
         display: block;
         margin-left: 2rem;
         flex-grow: 0;
+        line-height: 1.2;
     }
     &.weblink > a {
       margin-left:0;
@@ -1494,9 +1497,11 @@ img.opportunity-image {
     // justify-content: space-around;
     margin-top:1.5rem;
     margin-bottom:0.5rem;
+    text-align: left;
+    line-height: 1;
     figure {
 
-        text-align: center;
+        text-align: left;
         display: flex;
         align-items: baseline;
         padding:0 1rem;
@@ -1508,6 +1513,7 @@ img.opportunity-image {
             letter-spacing: 0px;
             color: $snm-color-caption;
             margin-right:6px;
+            min-width: 70px;
         }
 
         span {
@@ -1546,6 +1552,18 @@ img.opportunity-image {
         line-height: 22px;
         letter-spacing: 0px;
         color: $snm-color-background-dark;
+    }
+    .partner-and-org {
+      padding:0;
+      
+      figure {
+        flex-direction: column;
+        padding: 1rem;
+        align-items: center;
+      }
+      figcaption {
+        margin-bottom: 3px;
+      }
     }
 }
 
@@ -1744,6 +1762,8 @@ img.opportunity-image {
     font-weight: bold;
   }
 }
+
+
 
 .involvement .reviews-likes .quick-label {
   font-weight: bold;
@@ -2202,6 +2222,12 @@ ul.calendar-add li {
     width:100%;
   }
 }
+
+.opp-breadcrumbs {
+    margin-top:0.7rem;
+}
+
+
 
 #owner-view {
   margin: 1rem 2rem 2rem;
