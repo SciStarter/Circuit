@@ -105,7 +105,7 @@
               <transition name="slide">
                 <div v-if="location=='physical'" class="add">
                   <b-field label="Name of the location, if applicable">
-                    <b-input type="text" v-model="location_name">
+                    <b-input type="text" v-model="location_name" />
                   </b-field>
                   <b-field :type="validation.location_name" message="Begin typing and select location">
                     <template #label>
@@ -131,7 +131,7 @@
               <transition name="slide">
                 <div v-if="location=='both'" class="add">
                   <b-field label="Name of the location, if applicable">
-                    <b-input type="text" v-model="location_name">
+                    <b-input type="text" v-model="location_name" />
                   </b-field>
                   <b-field :type="validation.location_name" message="Begin typing and select location">
                     <template #label>
@@ -390,8 +390,8 @@
         <label class="label">Image URL<span class="required">*</span></label>
         <div class="flex display-image-wrapper" :class="{'is-danger': validation.image_url}">
           <div>
-            <img v-if="value.image_url" :src="value.image_url" class="display-image">
-            <img v-else src="~/assets/img/no-image.jpg" class="display-image"></img>
+            <img v-if="value.image_url" :src="value.image_url" class="display-image" />
+            <img v-else src="~/assets/img/no-image.jpg" class="display-image" />
           </div>
           <b-field :type="validation.image_url" message="Must start with http:// or https://">
             <small>What is the optimal image size
@@ -1423,7 +1423,7 @@ export default {
     }
 }
 
-.exchange-submit .form-actions,  {
+.exchange-submit .form-actions  {
   width:100%;
   .snm-container {
     max-width:1280px;
