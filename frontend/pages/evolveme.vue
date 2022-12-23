@@ -64,11 +64,11 @@
                         <p>Use the search bar below. You may want to allow your browser to find your location.</p>
                         <general-filters
                             :text="search_text"
+                            search-button
                             :place="search_place"
                             :beginning="search_beginning"
                             :ending="search_ending"
                             :include-online="search_online"
-                            search-button
                             @text="search_text=$event"
                             @place="search_place=$event"
                             @beginning="search_beginning=$event"
@@ -84,9 +84,25 @@
                         <h1>Congratulations!<br />You did it! You've earned points in EvolveMe.</h1>
                         <h2>You've Found Science Near You and Completed Your EvolveMe Task!</h2>
                         <p>You can look through the list of science near you below or you can visit your <a href="/">Science Near Me Dashboard</a> to find more projects.</p>
+                        <!-- <general-filters
+                            :text="search_text"
+                            :place="search_place"
+                            :beginning="search_beginning"
+                            :ending="search_ending"
+                            :include-online="search_online"
+                            @text="search_text=$event"
+                            @place="search_place=$event"
+                            @beginning="search_beginning=$event"
+                            @ending="search_ending=$event"
+                            @include-online="search_online=$event"
+                            /> -->
+            
+                          <find-results />
 
 
                       <p style="margin-top:4rem;"><b>Below here is basically the finder page. I see you rebuilt it for the exchange. Would this be eaiser to make something like FinderFilter.vue and FinderResults.vue so we can update in one place if there are any design changes that are more global?</b></p>
+
+
 
 
                     </div>
@@ -115,6 +131,7 @@ import SubFooter from "~/components/SubFooter"
 import ActionButton from "~/components/ActionButton"
 import SignupForm from "~/components/SignupForm"
 import GeneralFilters from "~/components/GeneralFilters"
+import FindResults from "~/components/FindResults"
 export default {
   layout: "empty",
   components: {
@@ -122,7 +139,8 @@ export default {
     SubFooter,
     ActionButton,
     SignupForm,
-    GeneralFilters
+    GeneralFilters,
+    FindResults
   },
   data(){
     return {
