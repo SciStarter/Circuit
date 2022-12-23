@@ -101,13 +101,13 @@ FROM (
     })
 }
 
-async fn process(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
+async fn process(db: &Database, cycle: u64) -> Result<(), Box<dyn std::error::Error>> {
     sqlx::query!("SELECT c_refresh_log_by_when_this_year()")
         .execute(db)
         .await?;
 
     for period in RelativeTimePeriod::iter() {
-        println!("{} [{:?}]", Utc::now(), &period);
+        println!("{} [{}][{:?}]", Utc::now(), cycle, &period);
 
         let temporary = match period {
             RelativeTimePeriod::ThisMonth => true,
@@ -126,8 +126,9 @@ async fn process(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
         let mut iter = common::model::Opportunity::catalog(db).await?;
         while let Some(opp) = iter.get_next(db).await {
             println!(
-                "{} [{:?}][{:?}] Caching opp",
+                "{} [{}][{:?}][{:?}] Caching opp",
                 Utc::now(),
+                cycle,
                 &period,
                 &opp.exterior.title
             );
@@ -137,21 +138,23 @@ async fn process(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
         for partner_ref in common::model::partner::Partner::catalog(db).await? {
             let partner = common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
             println!(
-                "{} [{:?}][{:?}] Caching partner",
+                "{} [{}][{:?}][{:?}] Caching partner",
                 Utc::now(),
+                cycle,
                 &period,
                 &partner.exterior.name
             );
             organization::cache(db, &partner, temporary, begin, end).await?;
         }
 
-        println!("{} [{:?}] Caching overview", Utc::now(), &period);
+        println!("{} [{}][{:?}] Caching overview", Utc::now(), cycle, &period);
         overview::cache(db, temporary, begin, end).await?;
 
         for status in Status::iter() {
             println!(
-                "{} [{:?}][{:?}] Collecting status",
+                "{} [{}][{:?}][{:?}] Collecting status",
                 Utc::now(),
+                cycle,
                 &period,
                 &status
             );
@@ -160,8 +163,9 @@ async fn process(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
             let mut iter = common::model::Opportunity::catalog(db).await?;
             while let Some(opp) = iter.get_next(db).await {
                 println!(
-                    "{} [{:?}][{:?}][{:?}] Collecting opportunity",
+                    "{} [{}][{:?}][{:?}][{:?}] Collecting opportunity",
                     Utc::now(),
+                    cycle,
                     &period,
                     &status,
                     &opp.exterior.title
@@ -195,8 +199,9 @@ ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
                 let partner =
                     common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
                 println!(
-                    "{} [{:?}][{:?}][{:?}] Collecting partner",
+                    "{} [{}][{:?}][{:?}][{:?}] Collecting partner",
                     Utc::now(),
+                    cycle,
                     &period,
                     &status,
                     &partner.exterior.name
@@ -227,8 +232,9 @@ ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
                 .await?;
 
                 println!(
-                    "{} [{:?}][{:?}][{:?}] Collecting hosts",
+                    "{} [{}][{:?}][{:?}][{:?}] Collecting hosts",
                     Utc::now(),
+                    cycle,
                     &period,
                     &status,
                     &partner.exterior.name
@@ -259,8 +265,9 @@ ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
             }
 
             println!(
-                "{} [{:?}][{:?}] Collecting overview",
+                "{} [{}][{:?}][{:?}] Collecting overview",
                 Utc::now(),
+                cycle,
                 &period,
                 &status,
             );
@@ -305,10 +312,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     common::migrate(&pool).await?;
 
+    let mut cycle = 0;
+
     loop {
         let began = Utc::now();
 
-        if let Err(err) = process(&pool).await {
+        if let Err(err) = process(&pool, cycle).await {
             println!("{:?}", err);
         };
 
@@ -323,6 +332,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             took.num_minutes() % 60,
             took.num_seconds() % 60
         );
+
+        cycle += 1;
 
         let throttle = Duration::days(7);
 
