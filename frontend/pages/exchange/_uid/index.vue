@@ -248,7 +248,7 @@ export default {
     
     async asyncData(context) {
         let partner = await context.$axios.$get(
-            'https://sciencenearme.org/api/ui/organization/' + context.params.uid + '/public'
+            '/api/ui/organization/' + context.params.uid + '/public'
         );
         
         let default_query = !!partner.default_query ? Object.fromEntries(new URLSearchParams(partner.default_query).entries()) : {};
