@@ -50,6 +50,29 @@
     },
     "query": "SELECT substring(interior ->> 'joined_at' FROM 0 FOR 8) AS month FROM c_person"
   },
+  "70d1a9251685218927e915d1a9ff2728708ac53d8a075397846cdb2635625fd9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "data!",
+          "ordinal": 0,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Int4",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "\nSELECT\n  \"data\" as \"data!\"\nFROM\n  c_analytics_compiled\nWHERE\n  \"about\" = $1 AND\n  \"kind\" = $2 AND\n  \"period\" = $3 AND\n  \"status\" = $4\n"
+  },
   "b6f1a444cdd6a8bc7b81f7a09a7ff87f05b56f705ec76882475c96b0de65f4a6": {
     "describe": {
       "columns": [],

@@ -13,14 +13,6 @@
         </option>
       </b-select>
     </div>
-    <div class="stack">
-      <label>Time Period</label>
-      <b-select :value="report.engagement.data.time_period" @input="log('TBD download from server')">
-        <option v-for="period in report.engagement.time_periods" :key="period" :value="period">
-          {{period}}
-        </option>
-      </b-select>
-    </div>
   </div>
 
   <div class="nav-mobile-wrapper">
@@ -40,6 +32,17 @@
 
 
     <h2>{{current_opp.title}}</h2>
+    <div class="filters">
+      <div class="stack">
+        <label>Time Period</label>
+        <b-select :value="report.engagement.data.time_period" @input="load_data_into(current_opp.uid, 0, $event, 'Live and Closed', 'engagement')">
+          <option v-for="period in report.engagement.time_periods" :key="period" :value="period">
+            {{period}}
+          </option>
+        </b-select>
+      </div>
+    </div>
+
     <div class="data-wrapper">
       <div class="data-header">
       <div class="big-legend bl-blue">
@@ -48,11 +51,11 @@
             <h2>{{ report.engagement.data.bars.self["Views"] }}</h2>
             <h3>Page Views</h3>
           </div>
-         
+
       </div>
       <div class="ll-legend">
               <div><span class="dark-blue"></span> Total</div>
-              <div><span class="light-blue"></span> Unique</div> 
+              <div><span class="light-blue"></span> Unique</div>
             </div>
         </div>
         <line-chart
@@ -99,7 +102,7 @@
         </div>
       </div>
   </div>
-  
+
   </div>
 
   <div v-else-if="state=='states'">
@@ -111,17 +114,17 @@
     </div>
 
     <div class="filters">
-      <div class="stack">
-        <label>Opportunity Status</label>
-        <b-select :value="report.states.data.opportunity_status" @input="log('TBD download from server')">
-          <option v-for="status in report.states.opportunity_statuses" :key="status" :value="status">
-            {{status}}
-          </option>
-        </b-select>
-      </div>
+      <!-- <div class="stack"> -->
+      <!--   <label>Opportunity Status</label> -->
+      <!--   <b-select :value="report.states.data.opportunity_status" @input="log('TBD download from server')"> -->
+      <!--     <option v-for="status in report.states.opportunity_statuses" :key="status" :value="status"> -->
+      <!--       {{status}} -->
+      <!--     </option> -->
+      <!--   </b-select> -->
+      <!-- </div> -->
       <div class="stack">
         <label>Time Period</label>
-        <b-select :value="report.states.data.time_period" @input="log('TBD download from server')">
+        <b-select :value="report.states.data.time_period" @input="load_data_into(current_opp.uid, 0, $event, 'Live and Closed', 'states')">
           <option v-for="period in report.states.time_periods" :key="period" :value="period">
             {{period}}
           </option>
@@ -211,82 +214,86 @@
         </tr>
       </tbody>
     </table>
-  </div>
+    </div>
 
     <div class="data-wrapper crush">
       <div class="data-head">
-          <h3>Technology</h3>
-        </div>
-    
-    <pie-chart :data="technology_pie" doughnut />
+        <h3>Technology</h3>
+        <b-select :value="report.technology.data.time_period" @input="load_data_into(current_opp.uid, 0, $event, 'Live and Closed', 'technology')">
+          <option v-for="period in report.technology.time_periods" :key="period" :value="period">
+            {{period}}
+          </option>
+        </b-select>
       </div>
-<div class="data-table-wrapper">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Engagement By Device Type</th>
-          <th colspan="2">Unique Users <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="technology_top_order == 'unique_users_desc'" @click="technology_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="technology_top_order == 'unique_users_asc'" @click="technology_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="technology_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">New Users <b-tooltip label="First time visitors." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="technology_top_order == 'new_users_desc'" @click="technology_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="technology_top_order == 'new_users_asc'" @click="technology_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="technology_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Returning Users <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="technology_top_order == 'returning_users_desc'" @click="technology_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="technology_top_order == 'returning_users_asc'" @click="technology_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="technology_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Total Pageviews <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="technology_top_order == 'total_pageviews_desc'" @click="technology_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="technology_top_order == 'total_pageviews_asc'" @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Unique Pageviews <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="technology_top_order == 'unique_pageviews_desc'" @click="technology_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="technology_top_order == 'unique_pageviews_asc'" @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Avg. Time <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="technology_top_order == 'average_time_desc'" @click="technology_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="technology_top_order == 'average_time_asc'" @click="technology_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="technology_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in technology_top_sorted">
-          <td>{{row['name']}}</td>
-          <td class="table-num">{{row['Unique Users']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Unique Users']" :max="report.technology.data.max['Unique Users']" color="#268699" /></td>
-          <td class="table-num">{{row['New Users']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['New Users']" :max="report.technology.data.max['New Users']" color="#268699" /></td>
-          <td class="table-num">{{row['Returning Users']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Returning Users']" :max="report.technology.data.max['Returning Users']" color="#268699" /></td>
-          <td class="table-num">{{row['Total Pageviews']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="report.technology.data.max['Total Pageviews']" color="#268699" /></td>
-          <td class="table-num">{{row['Unique Pageviews']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="report.technology.data.max['Unique Pageviews']" color="#268699" /></td>
-          <td class="table-num">{{row['Avg. Time']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="report.technology.data.max['Avg. Time']" color="#268699" /></td>
-        </tr>
-      </tbody>
-    </table>
+      <pie-chart :data="technology_pie" doughnut />
+    </div>
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Engagement By Device Type</th>
+            <th colspan="2">Unique Users <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined>
+                <b-button label="?" />
+              </b-tooltip>
+              <a v-if="technology_top_order == 'unique_users_desc'" @click="technology_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+              <a v-else-if="technology_top_order == 'unique_users_asc'" @click="technology_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+              <a v-else @click="technology_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
+            </th>
+            <th colspan="2">New Users <b-tooltip label="First time visitors." position="is-top" append-to-body multilined>
+                <b-button label="?" />
+              </b-tooltip>
+              <a v-if="technology_top_order == 'new_users_desc'" @click="technology_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+              <a v-else-if="technology_top_order == 'new_users_asc'" @click="technology_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+              <a v-else @click="technology_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
+            </th>
+            <th colspan="2">Returning Users <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined>
+                <b-button label="?" />
+              </b-tooltip>
+              <a v-if="technology_top_order == 'returning_users_desc'" @click="technology_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+              <a v-else-if="technology_top_order == 'returning_users_asc'" @click="technology_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+              <a v-else @click="technology_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
+            </th>
+            <th colspan="2">Total Pageviews <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
+                <b-button label="?" />
+              </b-tooltip>
+              <a v-if="technology_top_order == 'total_pageviews_desc'" @click="technology_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+              <a v-else-if="technology_top_order == 'total_pageviews_asc'" @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+              <a v-else @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
+            </th>
+            <th colspan="2">Unique Pageviews <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined>
+                <b-button label="?" />
+              </b-tooltip>
+              <a v-if="technology_top_order == 'unique_pageviews_desc'" @click="technology_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+              <a v-else-if="technology_top_order == 'unique_pageviews_asc'" @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+              <a v-else @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
+            </th>
+            <th colspan="2">Avg. Time <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined>
+                <b-button label="?" />
+              </b-tooltip>
+              <a v-if="technology_top_order == 'average_time_desc'" @click="technology_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
+              <a v-else-if="technology_top_order == 'average_time_asc'" @click="technology_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
+              <a v-else @click="technology_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in technology_top_sorted">
+            <td>{{row['name']}}</td>
+            <td class="table-num">{{row['Unique Users']}}</td>
+            <td class="table-bar"><comparison-bar :value="row['Unique Users']" :max="report.technology.data.max['Unique Users']" color="#268699" /></td>
+            <td class="table-num">{{row['New Users']}}</td>
+            <td class="table-bar"><comparison-bar :value="row['New Users']" :max="report.technology.data.max['New Users']" color="#268699" /></td>
+            <td class="table-num">{{row['Returning Users']}}</td>
+            <td class="table-bar"><comparison-bar :value="row['Returning Users']" :max="report.technology.data.max['Returning Users']" color="#268699" /></td>
+            <td class="table-num">{{row['Total Pageviews']}}</td>
+            <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="report.technology.data.max['Total Pageviews']" color="#268699" /></td>
+            <td class="table-num">{{row['Unique Pageviews']}}</td>
+            <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="report.technology.data.max['Unique Pageviews']" color="#268699" /></td>
+            <td class="table-num">{{row['Avg. Time']}}</td>
+            <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="report.technology.data.max['Avg. Time']" color="#268699" /></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -294,18 +301,18 @@
     <h2>Traffic</h2>
 
     <div class="filters">
-      <div class="stack">
-        <label>Opportunity Status</label>
-        <b-select :value="report.engagement.data.opportunity_status" @input="log('TBD download from server')">
-          <option v-for="status in report.engagement.opportunity_statuses" :key="status" :value="status">
-            {{status}}
-          </option>
-        </b-select>
-      </div>
+      <!-- <div class="stack"> -->
+      <!--   <label>Opportunity Status</label> -->
+      <!--   <b-select :value="report.engagement.data.opportunity_status" @input="log('TBD download from server')"> -->
+      <!--     <option v-for="status in report.engagement.opportunity_statuses" :key="status" :value="status"> -->
+      <!--       {{status}} -->
+      <!--     </option> -->
+      <!--   </b-select> -->
+      <!-- </div> -->
       <div class="stack">
         <label>Time Period</label>
-        <b-select :value="report.engagement.data.time_period" @input="log('TBD download from server')">
-          <option v-for="period in report.engagement.time_periods" :key="period" :value="period">
+        <b-select :value="report.traffic.data.time_period" @input="load_data_into(current_opp.uid, 0, $event, 'Live and Closed', 'traffic')">
+          <option v-for="period in report.traffic.time_periods" :key="period" :value="period">
             {{period}}
           </option>
         </b-select>
@@ -322,13 +329,13 @@
           <div>
             <h2># (Total Unique Users during time period)</h2>
             <h3>Users</h3>
-            
+
           </div>
         </div>
         <div class="ll-legend">
               <div><span class="dark-blue"></span> Unique</div>
-              <div><span class="light-blue"></span> New</div> 
-              <div><span class="light-blue"></span> Returning</div> 
+              <div><span class="light-blue"></span> New</div>
+              <div><span class="light-blue"></span> Returning</div>
             </div>
         </div>
     <line-chart
@@ -421,7 +428,7 @@
     <small>See what people who engage with your Science Near Me page tend to engage with. </small>
 
     </div>
-    
+
     <div class="data-wrapper">
 
       <div class="data-head"><h3>Top 50</h3></div>
@@ -439,12 +446,12 @@
 
       <div class="ll-legend">
           <div><span class="gray"></span> {{current_opp.title}} (100% of users)</div>
-          <div><span class="dark-blue"></span> Opportunity Owned By You</div> 
-          <div><span class="light-blue"></span> Opportunity Owned By Someone Else</div> 
+          <div><span class="dark-blue"></span> Opportunity Owned By You</div>
+          <div><span class="light-blue"></span> Opportunity Owned By Someone Else</div>
         </div>
       </div>
 
-      <bubble-chart :chart_data="report.overlap.data" :org="org" :current_opp="current_opp" />
+      <bubble-chart :chart_data="report.overlap.data" :org="current_opp.title" :current_opp="current_opp" />
     </div>
 
 
@@ -498,7 +505,7 @@
       </tbody>
     </table>
     </div>
-      
+
   </div>
 </div>
 </template>
@@ -564,8 +571,6 @@ export default {
 
         const current_opp = opps[0];
 
-        console.log(current_opp);
-
         const report = await context.$axios.$get("/api/ui/organization/analytics", {
             params: {
                 about: current_opp.uid,
@@ -575,8 +580,6 @@ export default {
             },
             ...context.store.state.auth
         });
-
-        console.log(report);
 
         return {
             opps,
@@ -817,7 +820,8 @@ export default {
         },
 
         async load_opp(opp) {
-            await context.$axios.$get("/api/ui/organization/analytics", {
+            const loading = this.$buefy.loading.open({container: null});
+            const info = await this.$axios.$get("/api/ui/organization/analytics", {
                 params: {
                     about: opp.uid,
                     kind: 0,
@@ -826,13 +830,15 @@ export default {
                 },
                 ...this.$store.state.auth
             });
+            this.report = info;
             this.current_opp = opp;
+            loading.close();
         },
 
         async load_data_into(about, kind, period, status, field) {
             const loading = this.$buefy.loading.open({container: null});
             const info = await this.$axios.$get("/api/ui/organization/analytics", {params: {about, kind, period, status, field}, ...this.$store.state.auth});
-            this.report[this.org][field].data = info;
+            this.report[field].data = info;
             loading.close();
         },
 
@@ -868,7 +874,7 @@ export default {
             }
 
             this.$save_table_csv(
-                this.org + ' engagement ' + this.report.engagement.data.begin + ' - ' + this.report.engagement.data.end,
+                this.cirrent_opp.title + ' engagement ' + this.report.engagement.data.begin + ' - ' + this.report.engagement.data.end,
                 ['date', ...this.report.engagement.data.columns],
                 structured
             );
@@ -893,7 +899,7 @@ export default {
             }
 
             this.$save_table_csv(
-                this.org + ' traffic ' + this.report.traffic.data.begin + ' - ' + this.report.traffic.data.end,
+                this.current_opp.title + ' traffic ' + this.report.traffic.data.begin + ' - ' + this.report.traffic.data.end,
                 ['date', ...this.report.traffic.data.columns],
                 structured
             );

@@ -43,13 +43,13 @@ ORDER BY
 SELECT
   COALESCE(COUNT(*), 0) AS "total!: i64",
   COALESCE(SUM(c_opportunity_by_uid_is_current("opportunity")::int), 0) AS "live!: i64",
-  COALESCE(SUM("views"), 0) AS "views!: i64",
-  COALESCE(SUM(c_opportunity_by_uid_clicks_during("opportunity", $3, $4)), 0) AS "opportunity_exits!: i64",
-  COALESCE(SUM(c_opportunity_by_uid_didits_during("opportunity", $3, $4)), 0) AS "didits!: i64",
-  COALESCE(SUM(c_opportunity_by_uid_saves_during("opportunity", $3, $4)), 0) AS "saves!: i64",
-  COALESCE(SUM(c_opportunity_by_uid_likes_during("opportunity", $3, $4)), 0) AS "likes!: i64",
-  COALESCE(SUM(c_opportunity_by_uid_shares_during("opportunity", $3, $4)), 0) AS "shares!: i64",
-  COALESCE(SUM(c_opportunity_by_uid_calendar_adds_during("opportunity", $3, $4)), 0) AS "calendar_adds!: i64"
+  COALESCE(SUM("views")::bigint, 0) AS "views!: i64",
+  COALESCE(SUM(c_opportunity_by_uid_clicks_during("opportunity", $3, $4))::bigint, 0) AS "opportunity_exits!: i64",
+  COALESCE(SUM(c_opportunity_by_uid_didits_during("opportunity", $3, $4))::bigint, 0) AS "didits!: i64",
+  COALESCE(SUM(c_opportunity_by_uid_saves_during("opportunity", $3, $4))::bigint, 0) AS "saves!: i64",
+  COALESCE(SUM(c_opportunity_by_uid_likes_during("opportunity", $3, $4))::bigint, 0) AS "likes!: i64",
+  COALESCE(SUM(c_opportunity_by_uid_shares_during("opportunity", $3, $4))::bigint, 0) AS "shares!: i64",
+  COALESCE(SUM(c_opportunity_by_uid_calendar_adds_during("opportunity", $3, $4))::bigint, 0) AS "calendar_adds!: i64"
 FROM
   c_analytics_cache INNER JOIN c_opportunity ON
     "opportunity" = ("exterior"->>'uid')::uuid

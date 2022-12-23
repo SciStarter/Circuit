@@ -62,7 +62,12 @@
                                 a.push(0);
                             } else {
                                 // a.push(data[d][e][metric]);
-                                a.push(data[d][e][metric] * data[d].proportion);
+                                if(data[d][e]) {
+                                    a.push(data[d][e][metric] * data[d].proportion);
+                                }
+                                else {
+                                    a.push(10);
+                                }
                             }
                         });
                     arr.push(a);

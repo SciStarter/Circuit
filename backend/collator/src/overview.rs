@@ -76,8 +76,8 @@ VALUES (
   (SELECT COALESCE(COUNT(*), 0) FROM c_opportunity_like WHERE "when" >= $2 AND "when" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE ("exterior"->'mode')::integer = 20 AND "updated" >= $2 AND "updated" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE ("exterior"->'mode')::integer >= 30 AND "updated" >= $2 AND "updated" < $3),
-  (SELECT COALESCE(SUM("views"), 0) FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3),
-  (SELECT COALESCE(SUM("sessions"), 0) FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3) - (SELECT COUNT(*) FROM c_transit WHERE "created" >= $2 AND "created" < $3),
+  (SELECT COALESCE(SUM("views")::bigint, 0) FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3),
+  (SELECT COALESCE(SUM("sessions")::bigint, 0) FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3) - (SELECT COUNT(*) FROM c_transit WHERE "created" >= $2 AND "created" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE "action" = 'external' AND "when" >= $2 AND "when" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_person WHERE "created" >= $2 AND "created" < $3)
 )
@@ -264,11 +264,11 @@ SELECT "data" AS "data!" FROM c_demographics WHERE "about" = $1
         r#"
 SELECT
   "region" AS "state!: String",
-  SUM("total_users") AS "unique_users: i64",
-  SUM("new_users") AS "new_users: i64",
-  COALESCE(SUM("total_users"), 0) - COALESCE(SUM("new_users"), 0) AS "returning_users: i64",
-  SUM("views") AS "total_pageviews: i64",
-  SUM("sessions") AS "unique_pageviews: i64",
+  SUM("total_users")::bigint AS "unique_users: i64",
+  SUM("new_users")::bigint AS "new_users: i64",
+  COALESCE(SUM("total_users")::bigint, 0) - COALESCE(SUM("new_users")::bigint, 0) AS "returning_users: i64",
+  SUM("views")::bigint AS "total_pageviews: i64",
+  SUM("sessions")::bigint AS "unique_pageviews: i64",
   AVG("engagement_duration") AS "average_time: f64"
 FROM c_analytics_cache
 WHERE "begin" = $1 AND "end" = $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
@@ -340,11 +340,11 @@ GROUP BY "region"
             r#"
 SELECT
   "city" AS "region!: String",
-  SUM("total_users") AS "unique_users: i64",
-  SUM("new_users") AS "new_users: i64",
-  COALESCE(SUM("total_users"), 0) - COALESCE(SUM("new_users"), 0) AS "returning_users: i64",
-  SUM("views") AS "total_pageviews: i64",
-  SUM("sessions") AS "unique_pageviews: i64",
+  SUM("total_users")::bigint AS "unique_users: i64",
+  SUM("new_users")::bigint AS "new_users: i64",
+  COALESCE(SUM("total_users")::bigint, 0) - COALESCE(SUM("new_users")::bigint, 0) AS "returning_users: i64",
+  SUM("views")::bigint AS "total_pageviews: i64",
+  SUM("sessions")::bigint AS "unique_pageviews: i64",
   AVG("engagement_duration") AS "average_time: f64"
 FROM c_analytics_cache
 WHERE "begin" = $1 AND "end" = $2 AND "region" = $3 AND c_opportunity_by_uid_is_status("opportunity", $4)
@@ -461,11 +461,11 @@ GROUP BY "city"
         r#"
 SELECT
   "device_category" AS "device_category!: String",
-  SUM("total_users") AS "unique_users: i64",
-  SUM("new_users") AS "new_users: i64",
-  COALESCE(SUM("total_users"), 0) - COALESCE(SUM("new_users"), 0) AS "returning_users: i64",
-  SUM("views") AS "total_pageviews: i64",
-  SUM("sessions") AS "unique_pageviews: i64",
+  SUM("total_users")::bigint AS "unique_users: i64",
+  SUM("new_users")::bigint AS "new_users: i64",
+  COALESCE(SUM("total_users")::bigint, 0) - COALESCE(SUM("new_users")::bigint, 0) AS "returning_users: i64",
+  SUM("views")::bigint AS "total_pageviews: i64",
+  SUM("sessions")::bigint AS "unique_pageviews: i64",
   AVG("engagement_duration") AS "average_time: f64"
 FROM c_analytics_cache
 WHERE "begin" = $1 AND "end" = $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
@@ -537,10 +537,10 @@ GROUP BY "device_category"
         r#"
 SELECT
   "date" AS "date!: DateTime<FixedOffset>",
-  SUM("views") AS "views: i64",
-  SUM("sessions") AS "unique: i64",
-  SUM("new_users") AS "new: i64",
-  COALESCE(SUM("sessions"), 0) - COALESCE(SUM("new_users"), 0) AS "returning: i64",
+  SUM("views")::bigint AS "views: i64",
+  SUM("sessions")::bigint AS "unique: i64",
+  SUM("new_users")::bigint AS "new: i64",
+  COALESCE(SUM("sessions")::bigint, 0) - COALESCE(SUM("new_users")::bigint, 0) AS "returning: i64",
   (
     SELECT COUNT(*)
     FROM c_log INNER JOIN c_opportunity ON c_log."object" = (c_opportunity.exterior->>'uid')::uuid
@@ -597,7 +597,7 @@ GROUP BY "date"
             ],
             data: sqlx::query!(
                 r#"
-SELECT "session_channel_group" AS "group!", SUM("views") AS "count: i64"
+SELECT "session_channel_group" AS "group!", SUM("views")::bigint AS "count: i64"
 FROM c_analytics_cache
 WHERE "date" >= $1 AND "date" < $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
 GROUP BY "session_channel_group"
@@ -620,11 +620,11 @@ ORDER BY "session_channel_group"
 SELECT
   "page_referrer" AS "page_referrer!",
   "session_channel_group" AS "type_!",
-  SUM("total_users") AS "unique_users: i64",
-  SUM("new_users") AS "new_users: i64",
-  COALESCE(SUM("total_users"), 0) - COALESCE(SUM("new_users"), 0) AS "returning_users: i64",
-  SUM("views") AS "total_pageviews: i64",
-  SUM("sessions") AS "unique_pageviews: i64",
+  SUM("total_users")::bigint AS "unique_users: i64",
+  SUM("new_users")::bigint AS "new_users: i64",
+  COALESCE(SUM("total_users")::bigint, 0) - COALESCE(SUM("new_users")::bigint, 0) AS "returning_users: i64",
+  SUM("views")::bigint AS "total_pageviews: i64",
+  SUM("sessions")::bigint AS "unique_pageviews: i64",
   AVG("engagement_duration") AS "average_time: f64"
 FROM c_analytics_cache
 WHERE "begin" = $1 AND "end" = $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
