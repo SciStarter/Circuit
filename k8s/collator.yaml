@@ -14,51 +14,25 @@ spec:
       labels:
         app: circuit-collator
     spec:
-      volumes:
-      - name: ga4
-        secret:
-          secretName: ga4
-          optional: false
       containers:
       - name: circuit-collator
-        image: scistarter/circuit-collator:0.1.1
+        image: scistarter/circuit-collator:0.1.11
         ports:
         - containerPort: 9000
         volumeMounts:
-        - name: ga4
+        - name: ga4-access
           mountPath: "/etc/ga4"
           readOnly: true
         env:
-        - name: LOGGER_ENDPOINT
+        - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: logger-beta
-              key: LOGGER_ENDPOINT
-        - name: LOGGER_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: logger-beta
-              key: LOGGER_ACCESS_KEY
-        - name: LOGGER_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: logger-beta
-              key: LOGGER_SECRET
-        - name: CLICK_ENDPOINT
-          valueFrom:
-            secretKeyRef:
-              name: logger-beta
-              key: CLICK_ENDPOINT
-        - name: CLICK_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: logger-beta
-              key: CLICK_ACCESS_KEY
-        - name: CLICK_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: logger-beta
-              key: CLICK_SECRET
+              name: db-secret-beta
+              key: DATABASE_URL
+      volumes:
+      - name: ga4-access
+        secret:
+          secretName: ga4
 ---
 apiVersion: v1
 kind: Service

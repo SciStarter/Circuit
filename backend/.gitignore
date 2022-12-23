@@ -1,4 +1,5 @@
 /secrets
 /vendor
+/vendor-deb
 /.cargo
 
