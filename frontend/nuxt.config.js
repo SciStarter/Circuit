@@ -77,6 +77,8 @@ export default {
           "'unsafe-inline'",
           "fonts.googleapis.com",
           "cdn.jsdelivr.net",
+          "use.typekit.net",
+          "p.typekit.net"
         ],
         "img-src": [
           "'self'",
@@ -100,7 +102,7 @@ export default {
           "region1.google-analytics.com",
           "region1.analytics.google.com",
         ],
-        "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net", "circuit-media.s3.amazonaws.com"],
+        "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net", "circuit-media.s3.amazonaws.com", "use.typekit.net"],
         "object-src": ["'self'", "circuit-media.s3.amazonaws.com"],
         "media-src": ["'self'", "circuit-media.s3.amazonaws.com"],
         "frame-src": ["'self'"], // Overridden by child-src if the browser supports CSP 3 (Safari doesn't yet)

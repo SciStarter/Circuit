@@ -1,5 +1,5 @@
 <template>
-<div class="signup-form">
+<div class="signup-form" :class="{'evolveme':partner=='evolveme'}">
   <slot />
   <div class="form-header" v-if="!hideExtras">
     <p>Already have an account?
@@ -61,7 +61,12 @@
         </b-checkbox>
       </b-field>
     </div>
-    <div class="flex flex-justify-sb">
+    <div v-if="partner=='evolveme'" class="center">
+      <action-button :loading="working" principal @click="triggerSuccess">
+        Create My Account
+      </action-button>
+    </div>
+    <div v-else class="flex flex-justify-sb">
       <action-button :loading="working" type="is-primary" primary @click="sign_up">
         Sign up
       </action-button>
@@ -107,6 +112,7 @@ export default {
             required: false,
             default: false,
         },
+        triggerSuccess: Function
     },
 
     data() {
@@ -251,6 +257,23 @@ export default {
   font-weight: 400;
   color: $snm-color-border;
   font-size: 12px;
+}
+.center {
+  margin:0 auto;
+}
+
+.evolveme .form-header p {
+  border-top:0;
+  margin-bottom:3rem;
+  padding-top: 0;
+  padding-bottom: 1.5rem;
+}
+
+.evolveme .center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin:2rem 0;
 }
 
 </style>
