@@ -1,7 +1,7 @@
 pub mod for_slug;
 
 use super::person::PermitAction;
-use super::{Error, Person};
+use super::Error;
 use crate::model::involvement;
 use crate::{geo, Database, ToFixedOffset};
 
@@ -13,7 +13,7 @@ use serde_json::{json, Value};
 use sqlx::postgres::PgArguments;
 use sqlx::query::Query;
 use sqlx::{prelude::*, Postgres};
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::convert::AsRef;
 use strum::IntoEnumIterator;
 use strum_macros::{AsRefStr, EnumIter, EnumString};
@@ -626,6 +626,18 @@ pub struct OpportunityExterior {
     pub opp_hashtags: Vec<String>,
     pub opp_social_handles: HashMap<String, String>,
     pub partner: Uuid, // uid of the Partner entry which controls this entry
+}
+
+impl OpportunityExterior {
+    pub fn into_reference(self) -> OpportunityReference {
+        OpportunityReference {
+            uid: self.uid,
+            slug: self.slug,
+            title: self.title,
+            image_url: self.image_url,
+            short_desc: self.short_desc,
+        }
+    }
 }
 
 impl std::fmt::Debug for OpportunityExterior {
@@ -1509,7 +1521,28 @@ impl OpportunityImportRecord {
     }
 }
 
+pub struct OpportunityPseudoIter {
+    uids: VecDeque<Uuid>,
+}
+
+impl OpportunityPseudoIter {
+    pub async fn get_next(&mut self, db: &Database) -> Option<Opportunity> {
+        let Some(uid) = self.uids.pop_front() else { return None; };
+        Opportunity::load_by_uid(db, &uid).await.ok()
+    }
+}
+
 impl Opportunity {
+    pub async fn catalog(db: &Database) -> Result<OpportunityPseudoIter, Error> {
+        Ok(OpportunityPseudoIter {
+            uids: sqlx::query!(r#"SELECT ("exterior"->>'uid')::uuid AS "uid!" FROM c_opportunity"#)
+                .map(|row| row.uid)
+                .fetch_all(db)
+                .await?
+                .into(),
+        })
+    }
+
     pub fn into_annotated_exterior(self, authorized: PermitAction) -> AnnotatedOpportunityExterior {
         let current = self.current();
         AnnotatedOpportunityExterior {

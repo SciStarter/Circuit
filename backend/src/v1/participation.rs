@@ -58,7 +58,7 @@ async fn participation_new(mut req: tide::Request<Database>) -> tide::Result {
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
 
-    common::log("participation", &part);
+    common::log(Some(&auth), "participation", &part);
 
     let res = Response::builder(StatusCode::Created)
         .content_type(mime::JSON)

@@ -142,7 +142,7 @@ pub async fn save_profile(mut req: tide::Request<Database>) -> tide::Result {
 
     person.store(req.state()).await?;
 
-    common::log("ui-save-profile", &json!({"person": person.exterior.uid}));
+    common::log(Some(&person.exterior.uid), "ui-save-profile", "");
 
     okay_empty()
 }
@@ -157,7 +157,7 @@ pub async fn delete_profile(mut req: tide::Request<Database>) -> tide::Result {
             .bind(id)
             .execute(req.state())
             .await?;
-        common::log("ui-delete-profile", &json!({"person": person.exterior.uid}));
+        common::log(Some(&person.exterior.uid), "ui-delete-profile", "");
     }
 
     okay_empty()
@@ -192,7 +192,7 @@ pub async fn delete_old_saved(mut req: tide::Request<Database>) -> tide::Result 
             }
         }
     }
-    common::log("ui-delete-old-saved", &person.exterior.uid);
+    common::log(Some(&person.exterior.uid), "ui-delete-old-saved", "");
 
     Ok(tide::Response::builder(StatusCode::NoContent).build())
 }
@@ -217,8 +217,9 @@ pub async fn delete_saved(mut req: tide::Request<Database>) -> tide::Result {
     inv.store(req.state()).await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-delete-saved",
-        &json!({"person": person.exterior.uid, "opportunity": target}),
+        &json!({ "opportunity": target }),
     );
 
     Ok(tide::Response::builder(StatusCode::NoContent).build())
@@ -241,8 +242,9 @@ pub async fn add_saved(mut req: tide::Request<Database>) -> tide::Result {
     .await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-add-saved",
-        &json!({"person": person.exterior.uid, "opportunity": target}),
+        &json!({ "opportunity": target }),
     );
 
     Ok(tide::Response::builder(StatusCode::NoContent).build())
@@ -345,8 +347,9 @@ pub async fn set_involvement(mut req: tide::Request<Database>) -> tide::Result {
     inv.store(req.state()).await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-set-involvement",
-        &json!({"person": person.exterior.uid, "opportunity": inv.exterior.opportunity, "mode": target.mode}),
+        &json!({"opportunity": inv.exterior.opportunity, "mode": target.mode}),
     );
 
     okay_empty()
@@ -464,6 +467,7 @@ pub async fn add_goal(mut req: tide::Request<Database>) -> tide::Result {
     let goal_id = person.add_goal(req.state(), goal).await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-add-goal",
         &json!({"person": person.exterior.uid, "goal": goal_id}),
     );
@@ -486,6 +490,7 @@ pub async fn save_goal(mut req: tide::Request<Database>) -> tide::Result {
         .with_status(|| StatusCode::BadRequest)?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-save-goal",
         &json!({"person": person.exterior.uid, "goal": goal_id}),
     );
@@ -511,6 +516,7 @@ pub async fn cancel_goal(mut req: tide::Request<Database>) -> tide::Result {
     person.save_goal(req.state(), goal).await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-cancel-goal",
         &json!({"person": person.exterior.uid, "goal": goal_id}),
     );

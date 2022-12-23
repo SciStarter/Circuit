@@ -40,6 +40,41 @@
   border-color: #dee2e6 #dee2e6 #fff;
 }
 
+.nav-tabs.nav-tabs-alt {
+
+  .tab-link {
+    background-color:#F0FCFF;
+    min-height: 67px;
+    margin-right: 8px;
+    border-color: #e9ecef #e9ecef #dee2e6;
+    &.active {
+      background-color: #fff;
+      border-bottom-color: #fff;
+    }
+  }
+
+  li {
+    max-width: 200px;
+  }
+}
+
+.nav-tabs-alt a small {
+  text-decoration: none;
+  font-weight: normal;
+  font-size: 12px;
+  display:block;
+  line-height: 1;
+  color: rgb(33, 33, 33);
+}
+
+.nav-tabs-alt a {
+  text-decoration: none;
+}
+.nav-tabs-alt a span {
+  text-decoration: underline;
+}
+
+
 .tab-panel {
   margin-bottom:4rem;
 }

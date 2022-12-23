@@ -346,7 +346,7 @@
                     },
                     "max_age": {
                         "type": "integer",
-                        "description": "The oldest age, in years, that the opportunity is suitable for. 999 means no uper age limit",
+                        "description": "The oldest age, in years, that the opportunity is suitable for. 999 means no upper age limit",
                         "default": 999
                     },
                     "pes_domain": {

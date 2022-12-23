@@ -124,7 +124,7 @@ pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
         let mut p_json = person_json(&person, &jwt);
         p_json["num_partners"] = person.count_partners(db).await?.into();
 
-        common::log("ui-login", &jwt);
+        common::log(Some(&person.exterior.uid), "ui-login", &jwt);
         person.log(db, LogEvent::Login).await?;
 
         okay_with_cookie(&p_json, token_cookie(jwt))
@@ -234,7 +234,7 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
             let mut p_json = person_json(&person, &jwt);
             p_json["num_partners"] = person.count_partners(req.state()).await?.into();
 
-            common::log("ui-login-via-scistarter", &jwt);
+            common::log(Some(&person.exterior.uid), "ui-login-via-scistarter", &jwt);
             person.log(req.state(), LogEvent::Login).await?;
 
             okay_with_cookie(
@@ -316,7 +316,7 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
     let mut p_json = person_json(&person, &jwt);
     p_json["num_partners"] = 0.into();
 
-    common::log("ui-signup", &jwt);
+    common::log(Some(&person.exterior.uid), "ui-signup", &jwt);
     person.log(db, LogEvent::Signup).await?;
 
     let message = common::emails::EmailMessage::load(db, "welcome-new-user")
@@ -391,8 +391,10 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
     }
 }
 
-pub async fn logout(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-logout", "");
+pub async fn logout(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req).await?;
+
+    common::log(person.as_ref().map(|p| &p.exterior.uid), "ui-logout", "");
 
     okay_with_cookie(
         &json!({"authenticated": false}),

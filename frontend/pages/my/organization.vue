@@ -1,5 +1,5 @@
 <template>
-<div v-if="selected_partner.uid" class="organizations snm-container">
+<div v-if="selected_partner.uid" class="organizations">
   <p v-if="choose_partner">
     <b-select v-model="partner_index" size="is-large" aria-role="list">
       <option v-for="(partner, idx) in partners" :key="partner.uid" :value="idx" aria-role="listitem">{{partner.name}}</option>
@@ -117,11 +117,11 @@ h1 {
     margin-bottom:2rem;
 }
 
-@media (max-width:1159px) {
-  .snm-container {
-    padding:1rem;
-  }
-}
+// @media (max-width:1159px) {
+//   .snm-container {
+//     padding:1rem;
+//   }
+// }
 
 .nav-tab-wrapper {
   width:100%;

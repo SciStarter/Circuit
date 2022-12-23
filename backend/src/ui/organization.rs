@@ -1,5 +1,8 @@
+use std::collections::BTreeMap;
+
 use common::{
     model::{
+        analytics::{RelativeTimePeriod, Status as AnayticsStatus},
         invitation::{Invitation, InvitationMode},
         person::PersonPrivilegedReference,
         Partner, Person, SelectOption,
@@ -20,6 +23,7 @@ use super::{okay, okay_empty, request_person};
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .post(add_organization)
+        .at("analytics", |r| r.get(my_analytics))
         .at("all", |r| r.get(my_organizations))
         .at("exists", |r| r.post(check_organization))
         .at("types", |r| r.get(organization_types))
@@ -116,8 +120,9 @@ pub async fn add_organization(mut req: tide::Request<Database>) -> tide::Result 
     .await;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-add-organization-request",
-        &json!({"person": person.exterior.uid, "subject": form.partner}),
+        &json!({"subject": form.partner}),
     );
 
     okay_empty()
@@ -227,8 +232,9 @@ pub async fn save_organization(mut req: tide::Request<Database>) -> tide::Result
     incoming.store(req.state()).await?;
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-save-organization",
-        &json!({"person": person.exterior.uid, "partner": partner.exterior.uid}),
+        &json!({"partner": partner.exterior.uid}),
     );
 
     okay_empty()
@@ -265,8 +271,9 @@ pub async fn invite_managers(mut req: tide::Request<Database>) -> tide::Result {
     }
 
     common::log(
+        Some(&person.exterior.uid),
         "ui-invite-organization-managers",
-        &json!({"person": person.exterior.uid, "partner": partner.exterior.uid, "emails": form.emails}),
+        &json!({"partner": partner.exterior.uid, "emails": form.emails}),
     );
 
     okay_empty()
@@ -287,13 +294,15 @@ pub async fn get_pending_managers(mut req: tide::Request<Database>) -> tide::Res
     )
 }
 
-pub async fn add_pending_manager(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-add-pending-manager", "");
+pub async fn add_pending_manager(mut req: tide::Request<Database>) -> tide::Result {
+    let (person, _partner) = authorized_partner(&mut req).await?;
+    common::log(Some(&person.exterior.uid), "ui-add-pending-manager", "");
     todo!()
 }
 
-pub async fn remove_pending_manager(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-remove-pending-manager", "");
+pub async fn remove_pending_manager(mut req: tide::Request<Database>) -> tide::Result {
+    let (person, _partner) = authorized_partner(&mut req).await?;
+    common::log(Some(&person.exterior.uid), "ui-remove-pending-manager", "");
     todo!()
 }
 
@@ -312,12 +321,113 @@ pub async fn get_managers(mut req: tide::Request<Database>) -> tide::Result {
     )
 }
 
-pub async fn add_manager(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-add-manager", "");
+pub async fn add_manager(mut req: tide::Request<Database>) -> tide::Result {
+    let (person, _partner) = authorized_partner(&mut req).await?;
+    common::log(Some(&person.exterior.uid), "ui-add-manager", "");
     todo!()
 }
 
-pub async fn remove_manager(_req: tide::Request<Database>) -> tide::Result {
-    common::log("ui-remove-manager", "");
+pub async fn remove_manager(mut req: tide::Request<Database>) -> tide::Result {
+    let (person, _partner) = authorized_partner(&mut req).await?;
+    common::log(Some(&person.exterior.uid), "ui-remove-manager", "");
     todo!()
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct AnalyticsRequest {
+    about: Uuid,
+    kind: i32,
+    period: RelativeTimePeriod,
+    status: AnayticsStatus,
+    field: Option<String>,
+}
+
+pub async fn my_analytics(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req).await?.ok_or_else(|| {
+        tide::Error::from_str(tide::StatusCode::Forbidden, "Authorization required")
+    })?;
+
+    if let Ok(params) = req.query::<AnalyticsRequest>() {
+        // if params.about != Uuid::nil() {
+        //     todo!() // auth check
+        // }
+
+        let data: serde_json::Value = sqlx::query!(
+            r#"
+SELECT
+  "data" as "data!"
+FROM
+  c_analytics_compiled
+WHERE
+  "about" = $1 AND
+  "kind" = $2 AND
+  "period" = $3 AND
+  "status" = $4
+"#,
+            params.about,
+            params.kind,
+            params.period.discriminate(),
+            params.status.discriminate(),
+        )
+        .map(|row| row.data)
+        .fetch_optional(req.state())
+        .await?
+        .unwrap_or_default();
+
+        if let Some(field) = params.field {
+            okay(&data[field]["data"])
+        } else {
+            okay(&data)
+        }
+    } else {
+        let mut partners = person
+            .load_partners(req.state())
+            .await?
+            .into_iter()
+            .flatten();
+
+        let mut toplevel: BTreeMap<String, serde_json::Value> = BTreeMap::new();
+
+        let Some(first) = partners.next() else { return okay(&toplevel); };
+
+        toplevel.insert(
+            "initial".into(),
+            serde_json::Value::String(first.exterior.name.clone()),
+        );
+
+        toplevel.insert(
+            first.exterior.name,
+            serde_json::to_value(
+                sqlx::query!(
+                    r#"
+SELECT
+  "data" as "data!"
+FROM
+  c_analytics_compiled
+WHERE
+  "about" = $1 AND
+  "kind" = $2 AND
+  "period" = $3 AND
+  "status" = $4
+"#,
+                    first.exterior.uid,
+                    0,
+                    0,
+                    0,
+                )
+                .map(|row| row.data)
+                .fetch_one(req.state())
+                .await?,
+            )?,
+        );
+
+        for part in partners {
+            toplevel.insert(
+                part.exterior.name,
+                json!({"organization": part.exterior.uid}),
+            );
+        }
+
+        okay(&toplevel)
+    }
 }

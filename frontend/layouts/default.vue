@@ -55,7 +55,7 @@
         </div>
         </aside>
 
-        <aside :class="{toggled: menu}" class="menu-box" @click="menu = !menu">
+        <aside :class="{toggled: menu}" class="menu-box mobile-menu" @click="menu = !menu">
           <div v-if="authenticated" class="authenticated">
             <span class="no-mobile" data-context="header-username">{{ username }}</span>
             <ul>
@@ -97,6 +97,22 @@
                   <my-organization-icon class="menu-icon" /> Your Partner Organization
                 </nuxt-link>
               </li>
+
+              <li class="mobile-only" v-if="owner">
+                <nuxt-link to="/my/data-overview">
+                  <my-data-icon class="menu-icon" /> Data Insights
+                </nuxt-link>
+
+                <ul class="subnav">
+                  <li><nuxt-link v-if="owner" to="/my/data-overview">Your Data Overview</nuxt-link></li>
+                  <li><nuxt-link v-if="owner" to="/my/hosts-explorer">Hosts Explorer</nuxt-link></li>
+                  <li><nuxt-link v-if="owner" to="/my/opportunity-data-explorer">Opportunity Data Explorer</nuxt-link></li>
+                  <li><nuxt-link v-if="owner" to="/my/snm-data-overview"> SNM Data Overview</nuxt-link></li>
+                </ul>
+
+              </li>
+
+             
               <li class="mobile-only">
                 <nuxt-link v-if="owner" to="/my/submit-opportunity">
                   <submit-opportunity-icon class="menu-icon" /> Add an Opportunity
@@ -198,6 +214,18 @@
               <nuxt-link v-if="owner" to="/my/organization">
                 <my-organization-icon /> Your Partner Organization
               </nuxt-link>
+
+              <nuxt-link v-if="owner" to="/my/data-overview" :class="{'nuxt-link-active': $route.name == 'my-hosts-explorer' ||  $route.name == 'my-opportunity-data-explorer' || $route.name == 'my-snm-data-overview'}">
+                <my-data-icon class="menu-icon" /> Data Insights
+              </nuxt-link>
+
+                <ul v-if="owner && ($route.name == 'my-data-overview' || $route.name == 'my-hosts-explorer' ||  $route.name == 'my-opportunity-data-explorer' || $route.name == 'my-snm-data-overview')" class="subnav">
+                  <li><nuxt-link v-if="owner" to="/my/data-overview">Your Data Overview</nuxt-link></li>
+                  <li><nuxt-link v-if="owner" to="/my/hosts-explorer">Hosts Explorer</nuxt-link></li>
+                  <li><nuxt-link v-if="owner" to="/my/opportunity-data-explorer">Opportunity Data Explorer</nuxt-link></li>
+                  <li><nuxt-link v-if="owner" to="/my/snm-data-overview"> SNM Data Overview</nuxt-link></li>
+                </ul>
+
 
               <nuxt-link v-if="owner" to="/my/submit-opportunity">
                 <submit-opportunity-icon /> Add an Opportunity
@@ -322,6 +350,7 @@ import MyOpportunitiesIcon from '~/assets/img/current-opportunities.svg?inline'
 import MyPastOpportunitiesIcon from '~/assets/img/past-opportunities.svg?inline'
 import MyOrganizationIcon from '~/assets/img/your-organization.svg?inline'
 import SubmitOpportunityIcon from '~/assets/img/submit-opportunity.svg?inline'
+import MyDataIcon from '~/assets/img/data-insights.svg?inline'
 
 export default {
     components: {
@@ -343,6 +372,7 @@ export default {
         MyPastOpportunitiesIcon,
         MyOrganizationIcon,
         SubmitOpportunityIcon,
+        MyDataIcon
     },
 
     data () {
@@ -640,6 +670,9 @@ header {
         text-align: left;
         box-shadow: 0px 3px 6px $snm-color-shadow;
         width: 100%;
+        
+
+        
 
         .not-authenticated {
             display: flex;
@@ -698,7 +731,7 @@ header {
 
         .authenticated {
             li {
-                border: 1px solid $snm-color-border-ondark;
+                // border: 1px solid $snm-color-border-ondark;
                 line-height: 48px;
 
                 a {
@@ -708,6 +741,12 @@ header {
                         color: $snm-color-background-medium;
                     }
                 }
+            }
+
+            .subnav li {
+              padding-left: 56px;
+              background-color: #5694a2;
+
             }
         }
     }
@@ -1151,6 +1190,16 @@ footer {
             a:hover,a:active {
               color: $snm-color-background-meddark;
             }
+
+            .subnav a {
+              padding-left: 56px;
+              &.nuxt-link-active {
+                background-color: #5694a2;
+              }
+            }
+            .subnav li:last-child {
+                border-bottom: 1px solid #5694a2;
+              }
         }
     }
 
@@ -1311,6 +1360,13 @@ footer {
     .no-mobile {
         display: none !important;
     }
+}
+
+@media (max-width: 959px) {
+  .mobile-menu {
+          overflow: auto!important;;
+        max-height: calc(100vh - 52px)!important;
+        }
 }
 
 @media (min-width: $tablet-screen) {

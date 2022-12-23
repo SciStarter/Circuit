@@ -110,7 +110,11 @@ impl Participation {
 
             self.id = Some(rec.id);
 
-            crate::log("recorded participation", self);
+            crate::log(
+                self.interior.participant.as_ref(),
+                "recorded participation",
+                self,
+            );
         };
 
         Ok(())

@@ -97,11 +97,19 @@ starting from the place where you ran the git clone command)
 
 # Step 11
 
-Set up the database schema (the cd command assumes you’re starting
-from the place where you ran the git clone command)
+Set up the database schema. The cd command assumes you’re starting
+from the place where you ran the git clone command. The 7z command
+assumes you have the command-line 7zip program installed. You can use
+a different 7zip program to uncompress the file if you prefer.
 
     cd Circuit/common
-    sqlx migrate run
+    curl https://orrery-static.s3.us-west-2.amazonaws.com/zcta.7z -o zcta.7z
+    7z x zcta.7z
+    psql "$DATABASE_URL" -f zcta.sql
+    cargo sqlx migrate run
+    
+You can delete zcta.7z and zcta.sql at this point, if you prefer. They
+won’t be needed again until/unless you create a new database.
 
 # Step 12
 

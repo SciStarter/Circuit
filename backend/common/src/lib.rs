@@ -180,14 +180,14 @@ pub async fn migrate(db: &Database) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn log<M, T>(tag: &T, msg: &M)
+pub fn log<M, T>(who: Option<&Uuid>, tag: &T, msg: &M)
 where
     M: Serialize + ?Sized,
     T: AsRef<str> + ?Sized,
 {
     async_std::task::spawn(
         surf::post(&*LOG_ENDPOINT)
-            .body(serde_json::json!({"at": chrono::Local::now(), "tag": tag.as_ref(), "msg": msg}))
+            .body(serde_json::json!({"at": chrono::Local::now(), "who": who, "tag": tag.as_ref(), "msg": msg}))
             .send(),
     );
 }

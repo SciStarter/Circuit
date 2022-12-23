@@ -102,5 +102,6 @@ li {
     letter-spacing: 0px;
     color: var(--primary-color, $snm-color-element-dark);
     font-size: $snm-font-smaller;
+    line-height: 1.2;
 }
 </style>
