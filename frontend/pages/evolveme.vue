@@ -1,7 +1,11 @@
 <template>
     <div id="evolve">
+
+      <div class="evolve-bg">
+            <div class="stars-container">
         
         <div class="snm-wrapper">
+            
             <div class="snm-container">
 
                 <div class="logo-lockup">
@@ -29,6 +33,7 @@
                           </div>
                         </li>
                         <li class="step" :class="{'current':state==4}">
+                          <div v-if="state==4" class="checkmark"><img src="~assets/img/evolve-me/checkmark.svg" /></div>
                           <div>
                             <strong>Step Three</strong>
                             <small>View the science opportunities near you!</small>
@@ -76,16 +81,26 @@
 
                 <div class="content-card" v-if="state==4">
                     <div class="center">
-                        <h1>Congratulations &mdash; You did it! You've earned points in EvolveMe</h1>
+                        <h1>Congratulations!<br />You did it! You've earned points in EvolveMe.</h1>
                         <h2>You've Found Science Near You and Completed Your EvolveMe Task!</h2>
-                        <p>You can look through the list of science near you below or you can visit your <a href="/">Science Near Me Dashboard</a>to save and find more projects.</p>
+                        <p>You can look through the list of science near you below or you can visit your <a href="/">Science Near Me Dashboard</a> to find more projects.</p>
+
+
+                      <p style="margin-top:4rem;"><b>Below here is basically the finder page. I see you rebuilt it for the exchange. Would this be eaiser to make something like FinderFilter.vue and FinderResults.vue so we can update in one place if there are any design changes that are more global?</b></p>
+
+
                     </div>
                 </div>
 
 
             </div>
-        </div>
+          </div>
+          </div>
 
+          <img id="tele-left" class="telescope" src="~assets/img/evolve-me/telescope.svg" />
+          <img id="tele-right" class="telescope" src="~assets/img/evolve-me/telescope.svg" />
+
+        </div>
 
 
         <Footer />
@@ -174,8 +189,99 @@ $tan: #F2F1EF;
 
 #evolve {
     border-top: 10px solid $purple;
-    background-color: $tan;
+   
+    .evolve-bg {
+
+    background: linear-gradient(
+        $tan 0%, 
+        $tan 50%, 
+        $purple 50%, 
+        $purple 100%
+      );
+      background-size: 100% 1080px;
+      background-repeat: no-repeat;
+      background-color: $purple;
+      min-height: 550px;
+
+        .snm-container {
+          position: relative;
+          z-index: 9999;
+        }
+
+    }
+
+
 }
+
+.stars-container {
+  background-image: url(~assets/img/evolve-me/stars.svg),url(~assets/img/evolve-me/stars.svg);
+  background-repeat: no-repeat, no-repeat;
+  background-size: 800px 350px, 800px 350px;
+  background-position: calc(50% - 600px) 0, calc(50% + 580px) 0;
+}
+@media (max-width:600px) {
+  .stars-container {
+    background-size: 300px 145px, 300px 145px;
+    background-position: calc(50% - 270px) 0, calc(50% + 270px) 0;
+    }
+}
+
+.telescope {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  top: 453px;
+}
+
+#tele-left {
+  left: 10px;
+}
+
+#tele-right {
+  right: 10px;
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+}
+
+@media (max-width:1314px) {
+  .evolve-bg .snm-container {
+    padding: 0 100px;
+  }
+}
+
+@media (max-width:1199px) {
+  .evolve-bg .snm-container {
+    padding: 0 50px;
+  }
+  .telescope {
+    top:502px;
+    position: absolute;
+    width: 50px;
+    height: 50px;
+  }
+}
+
+@media (max-width:800px) {
+  .evolve-bg .snm-container {
+    padding: 0 0;
+  }
+  #evolve .evolve-bg {
+    background:$tan;
+    border-bottom: 10px solid $purple;
+    position: relative;
+  }
+  .telescope {
+    top: auto;
+    bottom:-1px;
+  }
+  .content-card {
+    margin-bottom: 50px!important;
+  }
+}
+
+
+
+
 
   ::v-deep(footer) {
     background-color: $dark_purple;
@@ -235,12 +341,29 @@ $tan: #F2F1EF;
         color: $purple;
         @include proxima-extrabold;
         font-size: 2rem;
+        line-height: 1.1;
+        margin-bottom:.75rem;
+    }
+
+    h2 {
+      color: $dark;
+      @include proxima-bold;
+      font-size: 1.4rem;
+      line-height: 1.2;
+      margin-bottom:.75rem;
     }
 
     p {
         @include proxima;
         max-width: 780px;
         margin:0 auto 1rem;
+        line-height: 1.2;
+        a {
+          @include proxima-bold;
+          color: $purple;
+          text-decoration: underline;
+        }
+       
     }
   }
   .center {
@@ -398,6 +521,12 @@ $tan: #F2F1EF;
       }
     }
 
+    @media (max-width:700px) {
+      .steps small {
+        display:none;
+      }
+    }
+
     @media (max-width:600px) {
       .steps {
         height: 32px;
@@ -433,6 +562,12 @@ $tan: #F2F1EF;
           width: 12px;
            top: -2px;
         }
+      }
+    }
+
+    @media (max-width:450px) {
+      .steps .step strong {
+        font-size: 12px;
       }
     }
 
