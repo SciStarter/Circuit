@@ -110,6 +110,8 @@
   </div>
 </div>
 
+
+
   <div v-if="!username" id="benefits" class="snm-wrapper">
     <div class="snm-container">
     <h2>Benefits of Creating an Account</h2>
@@ -960,4 +962,6 @@ export default {
     }
   }
 }
+
+
 </style>
