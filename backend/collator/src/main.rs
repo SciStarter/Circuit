@@ -107,7 +107,7 @@ async fn process(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     for period in RelativeTimePeriod::iter() {
-        println!("{} Starting period {:?}", Utc::now(), &period);
+        println!("{} [{:?}]", Utc::now(), &period);
 
         let temporary = match period {
             RelativeTimePeriod::ThisMonth => true,
@@ -125,32 +125,45 @@ async fn process(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
 
         let mut iter = common::model::Opportunity::catalog(db).await?;
         while let Some(opp) = iter.get_next(db).await {
-            println!("{}   Caching opp {:?}", Utc::now(), &opp.exterior.title);
+            println!(
+                "{} [{:?}][{:?}] Caching opp",
+                Utc::now(),
+                &period,
+                &opp.exterior.title
+            );
             opportunity::cache(db, &opp, temporary, begin, end).await?;
         }
 
         for partner_ref in common::model::partner::Partner::catalog(db).await? {
             let partner = common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
             println!(
-                "{}   Caching partner {:?}",
+                "{} [{:?}][{:?}] Caching partner",
                 Utc::now(),
+                &period,
                 &partner.exterior.name
             );
             organization::cache(db, &partner, temporary, begin, end).await?;
         }
 
-        println!("{}   Caching overview", Utc::now());
+        println!("{} [{:?}] Caching overview", Utc::now(), &period);
         overview::cache(db, temporary, begin, end).await?;
 
         for status in Status::iter() {
-            println!("{}   Starting status {:?}", Utc::now(), &status);
+            println!(
+                "{} [{:?}][{:?}] Collecting status",
+                Utc::now(),
+                &period,
+                &status
+            );
             let state = collect(db, begin, end, period, status).await?;
 
             let mut iter = common::model::Opportunity::catalog(db).await?;
             while let Some(opp) = iter.get_next(db).await {
                 println!(
-                    "{}     Collecting opp {:?}",
+                    "{} [{:?}][{:?}][{:?}] Collecting opportunity",
                     Utc::now(),
+                    &period,
+                    &status,
                     &opp.exterior.title
                 );
                 let data = opportunity::collect(db, &opp, &state).await?;
@@ -159,13 +172,14 @@ async fn process(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
                     r#"
 INSERT INTO c_analytics_compiled (
   "about",
+  "kind",
   "period",
   "status",
   "data"
 ) VALUES (
-  $1, $2, $3, $4
+  $1, 0, $2, $3, $4
 )
-ON CONFLICT ("about", "period", "status") DO UPDATE SET
+ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
   "data" = EXCLUDED."data"
 "#,
                     opp.exterior.uid,
@@ -181,8 +195,10 @@ ON CONFLICT ("about", "period", "status") DO UPDATE SET
                 let partner =
                     common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
                 println!(
-                    "{}     Collecting partner {:?}",
+                    "{} [{:?}][{:?}][{:?}] Collecting partner",
                     Utc::now(),
+                    &period,
+                    &status,
                     &partner.exterior.name
                 );
 
@@ -192,13 +208,45 @@ ON CONFLICT ("about", "period", "status") DO UPDATE SET
                     r#"
 INSERT INTO c_analytics_compiled (
   "about",
+  "kind",
   "period",
   "status",
   "data"
 ) VALUES (
-  $1, $2, $3, $4
+  $1, 0, $2, $3, $4
 )
-ON CONFLICT ("about", "period", "status") DO UPDATE SET
+ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
+  "data" = EXCLUDED."data"
+"#,
+                    partner.exterior.uid,
+                    period.discriminate(),
+                    status.discriminate(),
+                    serde_json::to_value(data)?,
+                )
+                .execute(db)
+                .await?;
+
+                println!(
+                    "{} [{:?}][{:?}][{:?}] Collecting hosts",
+                    Utc::now(),
+                    &period,
+                    &status,
+                    &partner.exterior.name
+                );
+                let data = hosts::collect(db, &partner, &state).await?;
+
+                sqlx::query!(
+                    r#"
+INSERT INTO c_analytics_compiled (
+  "about",
+  "kind",
+  "period",
+  "status",
+  "data"
+) VALUES (
+  $1, 1, $2, $3, $4
+)
+ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
   "data" = EXCLUDED."data"
 "#,
                     partner.exterior.uid,
@@ -210,20 +258,26 @@ ON CONFLICT ("about", "period", "status") DO UPDATE SET
                 .await?;
             }
 
-            println!("{}     Collecting overview", Utc::now());
+            println!(
+                "{} [{:?}][{:?}] Collecting overview",
+                Utc::now(),
+                &period,
+                &status,
+            );
             let data = overview::collect(db, &state).await?;
 
             sqlx::query!(
                 r#"
 INSERT INTO c_analytics_compiled (
   "about",
+  "kind",
   "period",
   "status",
   "data"
 ) VALUES (
-  $1, $2, $3, $4
+  $1, 0, $2, $3, $4
 )
-ON CONFLICT ("about", "period", "status") DO UPDATE SET
+ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
   "data" = EXCLUDED."data"
 "#,
                 Uuid::nil(),
@@ -254,18 +308,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         let began = Utc::now();
 
-        process(&pool).await?;
+        if let Err(err) = process(&pool).await {
+            println!("{:?}", err);
+        };
 
         let finished = Utc::now();
 
         let took = finished - began;
 
         println!(
-            "Completed one analytics pass in {} days, {:02} hours, {:02} minutues, {:02} seconds",
+            "Analytics pass took {} days, {:02} hours, {:02} minutes, {:02} seconds",
             took.num_days(),
-            took.num_hours(),
-            took.num_minutes(),
-            took.num_seconds()
+            took.num_hours() % 24,
+            took.num_minutes() % 60,
+            took.num_seconds() % 60
         );
 
         let throttle = Duration::days(7);
@@ -275,62 +331,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 }
-
-/*
-HOSTS EXPLORER
-            {
-                "updated": "2022-07-28T14:33:27.12343242-07:00",
-                "data": {
-                    "total_hosts": 43,
-                    "total_opportunities": 4212,
-                    "max": {"total": 10345, "live": 10345, "views": 23442, "opportunity_exits": 2313, "didits": 1321, "saves": 1332, "likes": 1331, "shares": 433, "calendar_adds": 132},
-                    "hosts": [
-                        {"name": "Nerd Nite Atlanta", "total": 10345, "live": 10345, "views": 23442, "opportunity_exits": 2313, "didits": 1321, "saves": 1332, "likes": 1331, "shares": 433, "calendar_adds": 132},
-                        {"name": "ASDF 01", "total": 10332, "live": 10331, "views": 23397, "opportunity_exits": 2290, "didits": 1298, "saves": 1219, "likes": 1208, "shares": 400, "calendar_adds": 109},
-                        {"name": "ASDF 02", "total": 10332, "live": 10332, "views": 23429, "opportunity_exits": 2300, "didits": 1308, "saves": 1319, "likes": 1318, "shares": 420, "calendar_adds": 119},
-                        {"name": "ASDF 03", "total": 10332, "live": 10332, "views": 23429, "opportunity_exits": 2300, "didits": 1308, "saves": 1319, "likes": 1318, "shares": 420, "calendar_adds": 119},
-                        {"name": "ASDF 04", "total": 10332, "live": 10332, "views": 23429, "opportunity_exits": 2300, "didits": 1308, "saves": 1319, "likes": 1318, "shares": 420, "calendar_adds": 119},
-                        {"name": "ASDF 05", "total": 10332, "live": 10332, "views": 23429, "opportunity_exits": 2300, "didits": 1308, "saves": 1319, "likes": 1318, "shares": 420, "calendar_adds": 119},
-                        {"name": "ASDF 06", "total": 10332, "live": 10332, "views": 23429, "opportunity_exits": 2300, "didits": 1308, "saves": 1319, "likes": 1318, "shares": 420, "calendar_adds": 119},
-                        {"name": "ASDF 07", "total": 10332, "live": 10332, "views": 23429, "opportunity_exits": 2300, "didits": 1308, "saves": 1319, "likes": 1318, "shares": 420, "calendar_adds": 119},
-                        {"name": "ASDF 08", "total": 10332, "live": 10332, "views": 23429, "opportunity_exits": 2300, "didits": 1308, "saves": 1319, "likes": 1318, "shares": 420, "calendar_adds": 119},
-                        {"name": "ASDF 09", "total": 10332, "live": 10332, "views": 23429, "opportunity_exits": 2300, "didits": 1308, "saves": 1319, "likes": 1318, "shares": 420, "calendar_adds": 119},
-                        {"name": "ASDF 10", "total": 10332, "live": 10332, "views": 23429, "opportunity_exits": 2300, "didits": 1308, "saves": 1319, "likes": 1318, "shares": 420, "calendar_adds": 119},
-                        {"name": "ASDF 11", "total": 10332, "live": 10332, "views": 23429, "opportunity_exits": 2300, "didits": 1308, "saves": 1319, "likes": 1318, "shares": 420, "calendar_adds": 119},
-                        {"name": "ASDF 12", "total": 10319, "live": 10319, "views": 23416, "opportunity_exits": 2287, "didits": 1295, "saves": 1306, "likes": 1305, "shares": 407, "calendar_adds": 106},
-                        {"name": "ASDF 13", "total": 10319, "live": 10319, "views": 23416, "opportunity_exits": 2287, "didits": 1295, "saves": 1306, "likes": 1305, "shares": 407, "calendar_adds": 106},
-                        {"name": "ASDF 14", "total": 10319, "live": 10319, "views": 23416, "opportunity_exits": 2287, "didits": 1295, "saves": 1306, "likes": 1305, "shares": 407, "calendar_adds": 106},
-                        {"name": "ASDF 15", "total": 10319, "live": 10319, "views": 23416, "opportunity_exits": 2287, "didits": 1295, "saves": 1306, "likes": 1305, "shares": 407, "calendar_adds": 106},
-                        {"name": "ASDF 16", "total": 10319, "live": 10319, "views": 23416, "opportunity_exits": 2287, "didits": 1295, "saves": 1306, "likes": 1305, "shares": 407, "calendar_adds": 106},
-                        {"name": "ASDF 17", "total": 10306, "live": 10306, "views": 23403, "opportunity_exits": 2274, "didits": 1282, "saves": 1293, "likes": 1292, "shares": 394, "calendar_adds": 93},
-                        {"name": "ASDF 18", "total": 10306, "live": 10306, "views": 23403, "opportunity_exits": 2274, "didits": 1282, "saves": 1293, "likes": 1292, "shares": 394, "calendar_adds": 93},
-                        {"name": "ASDF 19", "total": 10306, "live": 10306, "views": 23403, "opportunity_exits": 2274, "didits": 1282, "saves": 1293, "likes": 1292, "shares": 394, "calendar_adds": 93},
-                        {"name": "ASDF 20", "total": 10306, "live": 10306, "views": 23403, "opportunity_exits": 2274, "didits": 1282, "saves": 1293, "likes": 1292, "shares": 394, "calendar_adds": 93},
-                        {"name": "ASDF 21", "total": 10306, "live": 10306, "views": 23403, "opportunity_exits": 2274, "didits": 1282, "saves": 1293, "likes": 1292, "shares": 394, "calendar_adds": 93},
-                        {"name": "ASDF 22", "total": 10293, "live": 10293, "views": 23390, "opportunity_exits": 2261, "didits": 1269, "saves": 1280, "likes": 1279, "shares": 381, "calendar_adds": 80},
-                        {"name": "ASDF 23", "total": 10293, "live": 10293, "views": 23390, "opportunity_exits": 2261, "didits": 1269, "saves": 1280, "likes": 1279, "shares": 381, "calendar_adds": 80},
-                        {"name": "ASDF 24", "total": 10293, "live": 10293, "views": 23390, "opportunity_exits": 2261, "didits": 1269, "saves": 1280, "likes": 1279, "shares": 381, "calendar_adds": 80},
-                        {"name": "ASDF 25", "total": 10293, "live": 10293, "views": 23390, "opportunity_exits": 2261, "didits": 1269, "saves": 1280, "likes": 1279, "shares": 381, "calendar_adds": 80},
-                        {"name": "ASDF 26", "total": 10293, "live": 10293, "views": 23390, "opportunity_exits": 2261, "didits": 1269, "saves": 1280, "likes": 1279, "shares": 381, "calendar_adds": 80},
-                        {"name": "ASDF 27", "total": 10280, "live": 10280, "views": 23377, "opportunity_exits": 2248, "didits": 1256, "saves": 1267, "likes": 1266, "shares": 368, "calendar_adds": 67},
-                        {"name": "ASDF 28", "total": 10280, "live": 10280, "views": 23377, "opportunity_exits": 2248, "didits": 1256, "saves": 1267, "likes": 1266, "shares": 368, "calendar_adds": 67},
-                        {"name": "ASDF 29", "total": 10280, "live": 10280, "views": 23377, "opportunity_exits": 2248, "didits": 1256, "saves": 1267, "likes": 1266, "shares": 368, "calendar_adds": 67},
-                        {"name": "ASDF 30", "total": 10280, "live": 10280, "views": 23377, "opportunity_exits": 2248, "didits": 1256, "saves": 1267, "likes": 1266, "shares": 368, "calendar_adds": 67},
-                        {"name": "ASDF 31", "total": 10280, "live": 10280, "views": 23377, "opportunity_exits": 2248, "didits": 1256, "saves": 1267, "likes": 1266, "shares": 368, "calendar_adds": 67},
-                        {"name": "ASDF 32", "total": 10267, "live": 10267, "views": 23364, "opportunity_exits": 2235, "didits": 1243, "saves": 1254, "likes": 1253, "shares": 355, "calendar_adds": 54},
-                        {"name": "ASDF 33", "total": 10267, "live": 10267, "views": 23364, "opportunity_exits": 2235, "didits": 1243, "saves": 1254, "likes": 1253, "shares": 355, "calendar_adds": 54},
-                        {"name": "ASDF 34", "total": 10267, "live": 10267, "views": 23364, "opportunity_exits": 2235, "didits": 1243, "saves": 1254, "likes": 1253, "shares": 355, "calendar_adds": 54},
-                        {"name": "ASDF 35", "total": 10267, "live": 10267, "views": 23364, "opportunity_exits": 2235, "didits": 1243, "saves": 1254, "likes": 1253, "shares": 355, "calendar_adds": 54},
-                        {"name": "ASDF 36", "total": 10267, "live": 10267, "views": 23364, "opportunity_exits": 2235, "didits": 1243, "saves": 1254, "likes": 1253, "shares": 355, "calendar_adds": 54},
-                        {"name": "ASDF 37", "total": 10254, "live": 10254, "views": 23351, "opportunity_exits": 2222, "didits": 1230, "saves": 1241, "likes": 1240, "shares": 342, "calendar_adds": 41},
-                        {"name": "ASDF 38", "total": 10254, "live": 10254, "views": 23351, "opportunity_exits": 2222, "didits": 1230, "saves": 1241, "likes": 1240, "shares": 342, "calendar_adds": 41},
-                        {"name": "ASDF 39", "total": 10254, "live": 10254, "views": 23351, "opportunity_exits": 2222, "didits": 1230, "saves": 1241, "likes": 1240, "shares": 342, "calendar_adds": 41},
-                        {"name": "ASDF 40", "total": 10254, "live": 10254, "views": 23351, "opportunity_exits": 2222, "didits": 1230, "saves": 1241, "likes": 1240, "shares": 342, "calendar_adds": 41},
-                        {"name": "ASDF 41", "total": 10254, "live": 10254, "views": 23351, "opportunity_exits": 2222, "didits": 1230, "saves": 1241, "likes": 1240, "shares": 342, "calendar_adds": 41},
-                        {"name": "ASDF 42", "total": 10254, "live": 10254, "views": 23351, "opportunity_exits": 2222, "didits": 1230, "saves": 1241, "likes": 1240, "shares": 342, "calendar_adds": 41},
-                    ],
-                },
-            },
-
-
- */

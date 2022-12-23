@@ -174,7 +174,7 @@ pub async fn collect(db: &Database, state: &CommonState) -> Result<Overview, Err
         end: state.end,
         search_max: sqlx::query_scalar!(
             r#"
-SELECT MAX("times") AS "times"
+SELECT COALESCE(MAX("times"), 0) AS "times!"
 FROM c_analytics_search_term_cache
 WHERE "begin" = $1 AND "end" = $2
 "#,
@@ -183,7 +183,6 @@ WHERE "begin" = $1 AND "end" = $2
         )
         .fetch_one(db)
         .await?
-        .unwrap_or(0)
         .try_into()
         .unwrap_or(0),
         stats: sqlx::query!(

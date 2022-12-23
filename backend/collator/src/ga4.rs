@@ -2,8 +2,8 @@ use std::env;
 use std::time::Duration;
 
 use anyhow::{anyhow, Error};
-use chrono::{DateTime, Days, FixedOffset};
-use common::Database;
+use chrono::{DateTime, Days, FixedOffset, Utc};
+use common::{Database, ToFixedOffset};
 use google_analyticsdata1_beta::api::{
     DateRange, Dimension, FilterExpression, Metric, RunReportRequest, RunReportResponse,
 };
@@ -240,7 +240,9 @@ pub async fn cache_report(
         let Ok(opportunity) = row.get_uuid("customEvent:entity_uid") else { println!("Unable to parse entity uid: {:?}", row); continue };
         let city = row.get_string("city");
         let device_category = row.get_string("deviceCategory");
-        let Ok(first_session_date) = row.get_date("firstSessionDate") else { println!("Unable to parse first session date in GA4 response: {:?}", row); continue; };
+        let first_session_date = row
+            .get_date("firstSessionDate")
+            .unwrap_or_else(|_| Utc::now().to_fixed_offset());
         let session_channel_group = row.get_string("sessionDefaultChannelGroup");
         let page_path = row.get_string("pagePath");
         let page_referrer = row.get_string("pageReferrer");

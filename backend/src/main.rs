@@ -40,6 +40,7 @@ async fn initialize(db: &Database) -> tide::Result {
                 Err(_) => {
                     log::info!("Creating anonymous user...");
                     let mut anonymous = model::person::Person::default();
+                    anonymous.exterior.uid = *common::ANONYMOUS_UID;
                     anonymous.exterior.username = Some(String::from("Not Logged In"));
                     anonymous.interior.email = String::from("logged-out");
                     anonymous.store(db).await?;

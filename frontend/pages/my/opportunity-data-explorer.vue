@@ -7,7 +7,7 @@
   <div class="filters">
     <div class="stack">
       <label>Opportunity</label>
-      <b-select :value="current_opp" @input="log('TBD download from server')">
+      <b-select :value="current_opp" @input="load_opp($event)">
         <option v-for="opp in opps" :key="opp.id" :value="opp">
           {{opp.title}}
         </option>
@@ -542,7 +542,6 @@ export default {
 
     async asyncData(context) {
         const user = await context.store.dispatch('get_user');
-        const opps = await context.$axios.$get('/api/ui/finder/search?mine=true&sort=alphabetical&per_page=4294967295&refs=true', context.store.state.auth);
 
         if(!user.authenticated) {
             context.error({
@@ -551,170 +550,44 @@ export default {
             });
         }
 
-        return {
-            opps: opps.matches,
-            current_opp: opps.matches.length ? opps.matches[0] : {},
-            report: {
-                "uid": 'c36bd22f-f530-4469-8c9e-b919951e3486',
-                "updated": "2022-07-28T14:33:27.12343242-07:00",
-                "total_opportunities": 23,
-                "current_opportunities": 18,
-                "engagement": {
-                    "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
-                    "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
-                    "data": {
-                        "opportunity_status": "Live and Closed",
-                        "time_period": "This Month",
-                        "begin": "2022-07-27",
-                        "end": "2022-07-29",
-                        "columns": ["Views" , "Unique", "Clicks to Website"],
-                        "chart": [
-                            {"date": "2022-07-29", "Views": 15, "Unique": 8, "Clicks to Website": 4},
-                            {"date": "2022-07-28", "Views": 8, "Unique": 2, "Clicks to Website": 7},
-                            {"date": "2022-07-27", "Views": 13, "Unique": 11, "Clicks to Website": 1},
-                        ],
-                        "bars": {
-                            "self": {"Views": 432, "Unique": 234, "Clicks to Website": 119},
-                            "mean": {"Views": 321, "Unique": 78, "Clicks to Website": 210},
-                            "median": {"Views": 210, "Unique": 112, "Clicks to Website": 87},
-                        },
-                    },
-                },
+        const opps = (await context.$axios.$get('/api/ui/finder/search?mine=true&current=true&sort=alphabetical&per_page=4294967295&refs=true', context.store.state.auth))
+              .matches
+              .concat((await context.$axios.$get('/api/ui/finder/search?mine=true&current=false&sort=alphabetical&per_page=4294967295&refs=true', context.store.state.auth))
+                      .matches);
 
-                "states": {
-                    "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
-                    "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
-                    "data": {
-                        "opportunity_status": "Live and Closed",
-                        "time_period": "This Month",
-                        "begin": "2022-07-27",
-                        "end": "2022-07-29",
-                        "max": {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                        "states": {
-                            'Texas': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "regional": {
-                                'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                                "regions": {
-                                    'Agua Dulce': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-97.910833, 27.7825]},
-                                    'Bear Creek': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-97.932778, 30.181944]},
-                                    'Blackwell': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-100.319722, 32.085556]},
-                                    'Buffalo Springs': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-101.709167, 33.532222]},
-                                },
-                            }},
-                            'California': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "regional": {
-                                'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                                "regions": {
-                                    'Arcata': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-124.090556, 40.868056]},
-                                    'Buellton': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-120.193889, 34.614167]},
-                                    'Cotati': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-122.709167, 38.327778]},
-                                    'Eastvale': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-117.564167, 33.963611]},
-                                },
-                            }},
-                            'Oregon': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "regional": {
-                                'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                                "regions": {
-                                    'Keizer': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-123.021944, 45.000556]},
-                                    'Monmouth': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332, "point": [-123.23, 44.849167]},
-                                    'Winston': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132, "point": [-123.4175, 43.121667]},
-                                    'Nyssa': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432, "point": [-116.996944, 43.879167]},
-                                },
-                            }},
-                        },
-                    },
-                },
+        if(opps.length == 0) {
+            context.error({
+                statusCode: 404,
+                message: "No opportunities"
+            });
+        }
 
-                "technology": {
-                    "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
-                    "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
-                    "data": {
-                        "opportunity_status": "Live and Closed",
-                        "time_period": "This Month",
-                        "begin": "2022-07-27",
-                        "end": "2022-07-29",
-                        'max': {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                        'mobile': {"Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
-                        'tablet': {"Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
-                        'desktop': {"Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                    },
-                },
+        const current_opp = opps[0];
 
-                "traffic": {
-                    "opportunity_statuses": ["Live and Closed", "Live", "Closed"],
-                    "time_periods": ["This Month", "Last Month", "This Quarter", "Last Quarter", "This Semiannum", "Last Semiannum", "This Year", "Last Year", "All Time"],
-                    "data": {
-                        "opportunity_status": "Live and Closed",
-                        "time_period": "This Month",
-                        "begin": "2022-07-27",
-                        "end": "2022-07-29",
-                        "columns": ["Unique", "New", "Returning"],
-                        "max": {"Unique Users": 112, "New Users": 334, "Returning Users": 332, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                        "chart": [
-                            {"date": "2022-07-29", "Unique": 15, "New": 8, "Returning": 4},
-                            {"date": "2022-07-28", "Unique": 8, "New": 2, "Returning": 7},
-                            {"date": "2022-07-27", "Unique": 13, "New": 11, "Returning": 1},
-                        ],
-                        "pie": {
-                            "labels": ["Direct", "Payed Search", "Display", "Affiliates", "Other"],
-                            "datasets": [{
-                                "label": "Referrers by Type",
-                                "hoverOffset": 4,
-                                "backgroundColor": ["#387ab5", "#5da136", "#cd4c24", "#e7e93c", "#5abdda"],
-                                "data": [202, 15, 11, 0, 0],
-                            }],
-                        },
-                        "table": [
-                            {"name": "Test Ref 1", "type": "Direct", "Unique Users": 57, "New Users": 234, "Returning Users": 232, "Total Pageviews": 123, "Unique Pageviews": 222, "Avg. Time": 332},
-                            {"name": "Test Ref 2", "type": "Direct", "Unique Users": 112, "New Users": 134, "Returning Users": 332, "Total Pageviews": 223, "Unique Pageviews": 322, "Avg. Time": 132},
-                            {"name": "Test Ref 3", "type": "Direct", "Unique Users": 33, "New Users": 334, "Returning Users": 132, "Total Pageviews": 323, "Unique Pageviews": 422, "Avg. Time": 432},
-                            {"name": "Test Ref 4", "type": "Paid Search", "Unique Users": 3, "New Users": 34, "Returning Users": 32, "Total Pageviews": 23, "Unique Pageviews": 22, "Avg. Time": 32},
-                            {"name": "Test Ref 5", "type": "Paid Search", "Unique Users": 12, "New Users": 14, "Returning Users": 32, "Total Pageviews": 23, "Unique Pageviews": 32, "Avg. Time": 12},
-                            {"name": "Test Ref 6", "type": "Display", "Unique Users": 11, "New Users": 13, "Returning Users": 33, "Total Pageviews": 22, "Unique Pageviews": 32, "Avg. Time": 13},
-                        ],
-                    },
-                },
+        console.log(current_opp);
 
-                "overlap": {
-                    "engagement_types": ["Views", "Unique", "Clicks to Website"],
-                    "data": {
-                        "engagement_type": "Views",
-                        "table": [
-                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                            {"name": "Test Opp 1", "overlap": 0.73, "host": "Moocow Projects", "activity_types": ["science_slam", "service"], "format": "Event", "venue_types": ["indoors"], "min_age": 16, "max_age": 999},
-                            {"name": "Test Opp 2", "overlap": 0.21, "host": "Demo Org", "activity_types": ["science_slam", "service"], "format": "On Demand", "venue_types": ["indoors"], "min_age": 16, "max_age": 18},
-                            {"name": "Test Opp 3", "overlap": 0.04, "host": "Bonzo McBean", "activity_types": ["service"], "format": "On Demand", "venue_types": ["outdoors"], "min_age": 0, "max_age": 999},
-                        ]
-                    },
-                },
+        const report = await context.$axios.$get("/api/ui/organization/analytics", {
+            params: {
+                about: current_opp.uid,
+                kind: 0,
+                period: "This Month",
+                status: "Live and Closed"
             },
+            ...context.store.state.auth
+        });
+
+        console.log(report);
+
+        return {
+            opps,
+            current_opp,
+            report,
         };
     },
 
     data() {
         return {
             state: 'engagement',
-            org: "Demo Org",
             states_top_order: 'unique_users_desc',
             technology_top_order: 'unique_users_desc',
             traffic_top_order: 'unique_users_desc',
@@ -726,10 +599,6 @@ export default {
     computed: {
         user() {
             return this.$store.state.user;
-        },
-
-        available_orgs() {
-            return Object.getOwnPropertyNames(this.report).filter(n => !n.startsWith('_'));
         },
 
         updated_local() {
@@ -945,6 +814,26 @@ export default {
     methods: {
         log(msg) {
             console.log(msg);
+        },
+
+        async load_opp(opp) {
+            await context.$axios.$get("/api/ui/organization/analytics", {
+                params: {
+                    about: opp.uid,
+                    kind: 0,
+                    period: "This Month",
+                    status: "Live and Closed"
+                },
+                ...this.$store.state.auth
+            });
+            this.current_opp = opp;
+        },
+
+        async load_data_into(about, kind, period, status, field) {
+            const loading = this.$buefy.loading.open({container: null});
+            const info = await this.$axios.$get("/api/ui/organization/analytics", {params: {about, kind, period, status, field}, ...this.$store.state.auth});
+            this.report[this.org][field].data = info;
+            loading.close();
         },
 
         friendly(list) {

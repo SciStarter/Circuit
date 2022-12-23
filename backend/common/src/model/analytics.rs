@@ -579,8 +579,8 @@ pub struct HostsDataChart {
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct HostsData {
-    pub total_hosts: u32,
-    pub total_opportunities: u32,
+    pub total_hosts: u64,
+    pub total_opportunities: u64,
     pub max: HostsDataChart,
     pub hosts: Vec<HostsDataChart>,
 }

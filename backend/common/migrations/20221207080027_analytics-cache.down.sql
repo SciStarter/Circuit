@@ -1,3 +1,9 @@
+drop function if exists c_opportunity_by_uid_calendar_adds_during;
+drop function if exists c_opportunity_by_uid_shares_during;
+drop function if exists c_opportunity_by_uid_likes_during;
+drop function if exists c_opportunity_by_uid_saves_during;
+drop function if exists c_opportunity_by_uid_didits_during;
+drop function if exists c_opportunity_by_uid_clicks_during;
 drop function if exists c_opportunity_by_uid_domain;
 drop function if exists c_opportunity_by_uid_is_status;
 drop function if exists c_opportunity_by_uid_is_current;

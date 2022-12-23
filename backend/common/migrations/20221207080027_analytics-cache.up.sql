@@ -54,10 +54,11 @@ create table c_analytics_search_term_cache (
 
 create table c_analytics_compiled (
        "about" uuid not null,
+       "kind" integer not null,
        "period" integer not null,
        "status" integer not null,
        "data" jsonb not null,
-       PRIMARY KEY ("about", "period", "status")
+       PRIMARY KEY ("about", "kind", "period", "status")
 );
 
 create table c_demographics (
@@ -193,6 +194,70 @@ BEGIN
  END CASE;
 END
 $func$ language plpgsql stable;
+
+create or replace function c_opportunity_by_uid_clicks_during("uid" uuid, "begin" timestamptz, "end" timestamptz) returns bigint as
+$func$
+DECLARE
+ val bigint;
+BEGIN
+ SELECT COALESCE(COUNT(*), 0) INTO val FROM c_log WHERE "action" = 'external' AND "object" = "uid" AND "when" >= "begin" AND "when" < "end";
+ RETURN val;
+END
+$func$ language plpgsql stable;
+
+create or replace function c_opportunity_by_uid_didits_during("uid" uuid, "begin" timestamptz, "end" timestamptz) returns bigint as
+$func$
+DECLARE
+ val bigint;
+BEGIN
+ SELECT COALESCE(COUNT(*), 0) INTO val FROM c_involvement WHERE ("exterior"->>'opportunity')::uuid = "uid" AND ("exterior"->'mode')::integer >= 30 AND "updated" >= "begin" AND "updated" < "end";
+ RETURN val;
+END
+$func$ language plpgsql stable;
+
+create or replace function c_opportunity_by_uid_saves_during("uid" uuid, "begin" timestamptz, "end" timestamptz) returns bigint as
+$func$
+DECLARE
+ val bigint;
+BEGIN
+ SELECT COALESCE(COUNT(*), 0) INTO val FROM c_involvement WHERE ("exterior"->>'opportunity')::uuid = "uid" AND ("exterior"->'mode')::integer = 20 AND "updated" >= "begin" AND "updated" < "end";
+ RETURN val;
+END
+$func$ language plpgsql stable;
+
+create or replace function c_opportunity_by_uid_likes_during("uid" uuid, "begin" timestamptz, "end" timestamptz) returns bigint as
+$func$
+DECLARE
+ opp c_opportunity%ROWTYPE;
+ val bigint;
+BEGIN
+ SELECT * INTO opp FROM c_opportunity WHERE ("exterior"->>'uid')::uuid = "uid" LIMIT 1;
+ SELECT COALESCE(COUNT(*), 0) INTO val FROM c_opportunity_like WHERE "opportunity_id" = opp."id" AND "when" >= "begin" AND "when" < "end";
+ RETURN val;
+END
+$func$ language plpgsql stable;
+
+create or replace function c_opportunity_by_uid_shares_during("uid" uuid, "begin" timestamptz, "end" timestamptz) returns bigint as
+$func$
+DECLARE
+ val bigint;
+BEGIN
+ SELECT COALESCE(COUNT(*), 0) INTO val FROM c_log WHERE c_log."object" = "uid" AND "action" LIKE 'shared:%' AND "when" >= "begin" AND "when" < "end";
+ RETURN val;
+END
+$func$ language plpgsql stable;
+
+create or replace function c_opportunity_by_uid_calendar_adds_during("uid" uuid, "begin" timestamptz, "end" timestamptz) returns bigint as
+$func$
+DECLARE
+ val bigint;
+BEGIN
+ SELECT COALESCE(COUNT(*), 0) INTO val FROM c_log WHERE c_log."object" = "uid" AND "action" LIKE 'calendar:%' AND "when" >= "begin" AND "when" < "end";
+ RETURN val;
+END
+$func$ language plpgsql stable;
+
+
 
 -- first and last aggregates from https://wiki.postgresql.org/wiki/First/last_%28aggregate%29
 
