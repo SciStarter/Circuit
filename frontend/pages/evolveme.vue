@@ -47,6 +47,9 @@
                     <div class="center">
                         <h1>Welcome to Science Near Me</h1>
                         <p>Science Near Me has partnered with EvolveMe to help you complete tasks, earn points, and build skills in discovering and connecting with opportunities to engage with science near you!</p>
+
+                        <iframe class="video" src="https://www.youtube.com/embed/cGvq4Uu_IUY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
                         <action-button principal @click="begin()">Begin by Creating Your Account</action-button>
                     </div>
                 </div>
@@ -100,7 +103,7 @@
                           <find-results />
 
 
-                      <p style="margin-top:4rem;"><b>Below here is basically the finder page. I see you rebuilt it for the exchange. Would this be eaiser to make something like FinderFilter.vue and FinderResults.vue so we can update in one place if there are any design changes that are more global?</b></p>
+                      <p style="margin-top:4rem;"><b>Below here is basically the finder page. I see you rebuilt it for the exchange. Would this be eaiser to make a common component so we can update in one place if there are any design changes that are more global?</b></p>
 
 
 
@@ -353,7 +356,7 @@ $tan: #F2F1EF;
     border-radius: 8px;
     max-width: 1075px;
     margin:2rem auto;
-    padding: 1rem;
+    padding: 2rem 1rem;
 
     h1 {
         color: $purple;
@@ -621,6 +624,14 @@ $tan: #F2F1EF;
       flex-direction: column;
     }
   }
+}
+
+.video {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  max-width: 750px;
+  display: block;
+  margin: 2rem auto;
 }
   
 </style>
