@@ -15,6 +15,13 @@
           scientists learn how people engage in science.
         </p>
       <!-- </section> -->
+      <b-message 
+            title="Thanks for Letting Us Know!" 
+            type="is-warning" 
+            aria-close-label="Close message"
+            v-model="show_activity">
+            You'll find this in your activity log (in the tab above)!
+        </b-message>
       <section class="results">
         <div v-for="inv in report.matches" :key="inv.id" class="reportable">
           <opportunity-card :opportunity="inv.opportunity" :rule="false" />
@@ -69,6 +76,12 @@ export default {
     components: {
         OpportunityCard,
         ActionButton,
+    },
+
+    data(){
+      return {
+        show_activity: false
+      }
     },
 
     httpHeaders() {
@@ -137,6 +150,7 @@ export default {
             }, this.$store.state.auth);
 
             await this.reload_report();
+            this.show_activity = true;
         },
 
         async did_not(inv) {
@@ -367,5 +381,21 @@ export default {
         width: auto;
       }
     }
+}
+
+.bubble {
+    position: relative;
+    top: -0.25em;
+    display: inline-flex;
+    font-size: 8pt;
+    color: #fff;
+    background-color: #991b08;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    min-width: 1rem;
+    height: 1rem;
+    line-height: 1rem;
+    margin-left: 0.5em;
 }
 </style>
