@@ -591,7 +591,7 @@ WITH c_neighbors AS (
   GROUP BY "other"
 )
 SELECT
-  c_neighbors."views"::real / $4::real AS "overlap!",
+  CASE WHEN $4::real > 0 THEN c_neighbors."views"::real / $4::real ELSE 0.0 END AS "overlap!",
   c_opportunity.exterior->>'title' AS "name!",
   c_opportunity.exterior->>'organization_name' AS "host!",
   c_opportunity.exterior->'opp_descriptor' AS "activity_types!",

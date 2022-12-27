@@ -780,9 +780,12 @@ WHERE
                     // crossover_data.get() matters. They must always
                     // be in aphabetical order.
                     citizen_science: OverviewCrossoverDataChartSegment {
-                        proportion: (*crossover_involve.get("citizen_science").unwrap_or(&0)
-                            as f64)
-                            / crossover_total,
+                        proportion: if crossover_total > 0.0 {
+                            (*crossover_involve.get("citizen_science").unwrap_or(&0) as f64)
+                                / crossover_total
+                        } else {
+                            0.0
+                        },
                         citizen_science: None,
                         live_science: crossover_data
                             .get(&("citizen_science".into(), "live_science".into()))
@@ -813,8 +816,12 @@ WHERE
                             .cloned(),
                     },
                     live_science: OverviewCrossoverDataChartSegment {
-                        proportion: (*crossover_involve.get("live_science").unwrap_or(&0) as f64)
-                            / crossover_total,
+                        proportion: if crossover_total > 0.0 {
+                            (*crossover_involve.get("live_science").unwrap_or(&0) as f64)
+                                / crossover_total
+                        } else {
+                            0.0
+                        },
                         citizen_science: crossover_data
                             .get(&("citizen_science".into(), "live_science".into()))
                             .cloned(),
@@ -842,10 +849,14 @@ WHERE
                             .cloned(),
                     },
                     museum_or_science_center: OverviewCrossoverDataChartSegment {
-                        proportion: (*crossover_involve
-                            .get("museum_or_science_center")
-                            .unwrap_or(&0) as f64)
-                            / crossover_total,
+                        proportion: if crossover_total > 0.0 {
+                            (*crossover_involve
+                                .get("museum_or_science_center")
+                                .unwrap_or(&0) as f64)
+                                / crossover_total
+                        } else {
+                            0.0
+                        },
                         citizen_science: crossover_data
                             .get(&("citizen_science".into(), "museum_or_science_center".into()))
                             .cloned(),
@@ -879,8 +890,11 @@ WHERE
                             .cloned(),
                     },
                     maker: OverviewCrossoverDataChartSegment {
-                        proportion: (*crossover_involve.get("maker").unwrap_or(&0) as f64)
-                            / crossover_total,
+                        proportion: if crossover_total > 0.0 {
+                            (*crossover_involve.get("maker").unwrap_or(&0) as f64) / crossover_total
+                        } else {
+                            0.0
+                        },
                         citizen_science: crossover_data
                             .get(&("citizen_science".into(), "maker".into()))
                             .cloned(),
@@ -908,8 +922,12 @@ WHERE
                             .cloned(),
                     },
                     policy: OverviewCrossoverDataChartSegment {
-                        proportion: (*crossover_involve.get("policy").unwrap_or(&0) as f64)
-                            / crossover_total,
+                        proportion: if crossover_total > 0.0 {
+                            (*crossover_involve.get("policy").unwrap_or(&0) as f64)
+                                / crossover_total
+                        } else {
+                            0.0
+                        },
                         citizen_science: crossover_data
                             .get(&("citizen_science".into(), "policy".into()))
                             .cloned(),
@@ -937,10 +955,14 @@ WHERE
                             .cloned(),
                     },
                     out_of_school_time_program: OverviewCrossoverDataChartSegment {
-                        proportion: (*crossover_involve
-                            .get("out_of_school_time_program")
-                            .unwrap_or(&0) as f64)
-                            / crossover_total,
+                        proportion: if crossover_total > 0.0 {
+                            (*crossover_involve
+                                .get("out_of_school_time_program")
+                                .unwrap_or(&0) as f64)
+                                / crossover_total
+                        } else {
+                            0.0
+                        },
                         citizen_science: crossover_data
                             .get(&(
                                 "citizen_science".into(),
@@ -980,9 +1002,12 @@ WHERE
                             .cloned(),
                     },
                     formal_education: OverviewCrossoverDataChartSegment {
-                        proportion: (*crossover_involve.get("formal_education").unwrap_or(&0)
-                            as f64)
-                            / crossover_total,
+                        proportion: if crossover_total > 0.0 {
+                            (*crossover_involve.get("formal_education").unwrap_or(&0) as f64)
+                                / crossover_total
+                        } else {
+                            0.0
+                        },
                         citizen_science: crossover_data
                             .get(&("citizen_science".into(), "formal_education".into()))
                             .cloned(),
@@ -1013,10 +1038,14 @@ WHERE
                             .cloned(),
                     },
                     science_communications: OverviewCrossoverDataChartSegment {
-                        proportion: (*crossover_involve
-                            .get("science_communications")
-                            .unwrap_or(&0) as f64)
-                            / crossover_total,
+                        proportion: if crossover_total > 0.0 {
+                            (*crossover_involve
+                                .get("science_communications")
+                                .unwrap_or(&0) as f64)
+                                / crossover_total
+                        } else {
+                            0.0
+                        },
                         citizen_science: crossover_data
                             .get(&("citizen_science".into(), "science_communications".into()))
                             .cloned(),
@@ -1050,8 +1079,12 @@ WHERE
                             .cloned(),
                     },
                     unspecified: OverviewCrossoverDataChartSegment {
-                        proportion: (*crossover_involve.get("unspecified").unwrap_or(&0) as f64)
-                            / crossover_total,
+                        proportion: if crossover_total > 0.0 {
+                            (*crossover_involve.get("unspecified").unwrap_or(&0) as f64)
+                                / crossover_total
+                        } else {
+                            0.0
+                        },
                         citizen_science: crossover_data
                             .get(&("citizen_science".into(), "unspecified".into()))
                             .cloned(),

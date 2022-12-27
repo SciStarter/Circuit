@@ -678,71 +678,6 @@
     },
     "query": "\nSELECT *\nFROM c_analytics_cache\nWHERE \"begin\" = $1 AND \"end\" = $2 AND \"partner\" = $3 AND c_opportunity_by_uid_is_status(\"opportunity\", $4)"
   },
-  "4ac0106103ba135e8205bf77f2ad943b59214c671aeaec16c3db5ab57709acae": {
-    "describe": {
-      "columns": [
-        {
-          "name": "overlap!",
-          "ordinal": 0,
-          "type_info": "Float4"
-        },
-        {
-          "name": "name!",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "host!",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "activity_types!",
-          "ordinal": 3,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "format!",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "venue_types!",
-          "ordinal": 5,
-          "type_info": "Jsonb"
-        },
-        {
-          "name": "min_age!",
-          "ordinal": 6,
-          "type_info": "Int2"
-        },
-        {
-          "name": "max_age!",
-          "ordinal": 7,
-          "type_info": "Int2"
-        }
-      ],
-      "nullable": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Timestamptz",
-          "Timestamptz",
-          "Float4"
-        ]
-      }
-    },
-    "query": "\nWITH c_neighbors AS (\n  SELECT\n    \"other\",\n    COUNT(*) AS \"views\"\n  FROM (\n    SELECT\n      \"created\" AS \"when\",\n      \"prior\" AS \"other\"\n    FROM c_transit\n    WHERE\n      \"postor\" = $1::uuid AND\n      \"created\" >= $2 AND\n      \"created\" < $3\n    UNION\n    SELECT\n      \"created\" AS \"when\",\n      \"postor\" AS \"other\"\n    FROM c_transit\n    WHERE\n      \"prior\" = $1::uuid AND\n      \"created\" >= $2 AND\n      \"created\" < $3\n     \n  ) AS \"inner\"\n  GROUP BY \"other\"\n)\nSELECT\n  c_neighbors.\"views\"::real / $4::real AS \"overlap!\",\n  c_opportunity.exterior->>'title' AS \"name!\",\n  c_opportunity.exterior->>'organization_name' AS \"host!\",\n  c_opportunity.exterior->'opp_descriptor' AS \"activity_types!\",\n  CASE\n    WHEN (c_opportunity.exterior->'has_end')::bool THEN 'Event'\n    ELSE 'On Demand'\n  END AS \"format!\",\n  c_opportunity.exterior->'opp_venue' AS \"venue_types!\",\n  (c_opportunity.exterior->'min_age')::smallint AS \"min_age!\",\n  (c_opportunity.exterior->'max_age')::smallint AS \"max_age!\"\nFROM\n  c_neighbors INNER JOIN c_opportunity\n  ON c_neighbors.\"other\"::text = c_opportunity.\"exterior\"->>'uid'\nWHERE c_opportunity.exterior->>'entity_type' = 'opportunity'\nORDER BY \"overlap!\" DESC;\n"
-  },
   "4c01f8f7ac13c9dcf356a5f4575483773d735c1ef3301682be78517a2ae4d779": {
     "describe": {
       "columns": [
@@ -1218,6 +1153,71 @@
       }
     },
     "query": "DELETE FROM c_analytics_overview_cache WHERE \"temporary\" = true"
+  },
+  "93dd5c26145a04b4e376a906717ca63d0bdef7f3c84db9f4306e6c520207778d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "overlap!",
+          "ordinal": 0,
+          "type_info": "Float4"
+        },
+        {
+          "name": "name!",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "host!",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "activity_types!",
+          "ordinal": 3,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "format!",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "venue_types!",
+          "ordinal": 5,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "min_age!",
+          "ordinal": 6,
+          "type_info": "Int2"
+        },
+        {
+          "name": "max_age!",
+          "ordinal": 7,
+          "type_info": "Int2"
+        }
+      ],
+      "nullable": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Timestamptz",
+          "Timestamptz",
+          "Float4"
+        ]
+      }
+    },
+    "query": "\nWITH c_neighbors AS (\n  SELECT\n    \"other\",\n    COUNT(*) AS \"views\"\n  FROM (\n    SELECT\n      \"created\" AS \"when\",\n      \"prior\" AS \"other\"\n    FROM c_transit\n    WHERE\n      \"postor\" = $1::uuid AND\n      \"created\" >= $2 AND\n      \"created\" < $3\n    UNION\n    SELECT\n      \"created\" AS \"when\",\n      \"postor\" AS \"other\"\n    FROM c_transit\n    WHERE\n      \"prior\" = $1::uuid AND\n      \"created\" >= $2 AND\n      \"created\" < $3\n     \n  ) AS \"inner\"\n  GROUP BY \"other\"\n)\nSELECT\n  CASE WHEN $4::real > 0 THEN c_neighbors.\"views\"::real / $4::real ELSE 0.0 END AS \"overlap!\",\n  c_opportunity.exterior->>'title' AS \"name!\",\n  c_opportunity.exterior->>'organization_name' AS \"host!\",\n  c_opportunity.exterior->'opp_descriptor' AS \"activity_types!\",\n  CASE\n    WHEN (c_opportunity.exterior->'has_end')::bool THEN 'Event'\n    ELSE 'On Demand'\n  END AS \"format!\",\n  c_opportunity.exterior->'opp_venue' AS \"venue_types!\",\n  (c_opportunity.exterior->'min_age')::smallint AS \"min_age!\",\n  (c_opportunity.exterior->'max_age')::smallint AS \"max_age!\"\nFROM\n  c_neighbors INNER JOIN c_opportunity\n  ON c_neighbors.\"other\"::text = c_opportunity.\"exterior\"->>'uid'\nWHERE c_opportunity.exterior->>'entity_type' = 'opportunity'\nORDER BY \"overlap!\" DESC;\n"
   },
   "99441fcbd5170903f325919091600e312f49987af60c937688d9e6afeb95c273": {
     "describe": {
