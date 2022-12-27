@@ -120,6 +120,14 @@ export default {
 .exchange-wrapper {
   padding:1rem;
 }
+
+::v-deep(.card) {
+  padding: 1rem;
+}
+
+::v-deep(.modal .modal-content){
+  overflow-y: auto;
+}
   .exchange .form-actions {
     width:100%!important;
   }

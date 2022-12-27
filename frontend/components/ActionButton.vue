@@ -327,6 +327,16 @@ button.action-button {
           fill: #fff;
         }
       }
+      &.subdued.primary {
+        background-color: #efefef;
+        color: #333;
+        font-size: 12px;
+        border-color: #e3e3e3;
+        &:hover {
+            color: #fff;
+            background-color: $snm-color-background-meddark;
+        }
+      }
     }
 
     &.primary.red {

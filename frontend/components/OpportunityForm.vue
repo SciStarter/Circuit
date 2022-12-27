@@ -651,6 +651,8 @@
               <div class="flex">
                 <h2>{{ pair[0] ? pair[0].toLocaleDateString() : '' }}</h2>
               </div>
+
+              <!-- repeat this for each time -->
               <div class="flex">
                 <b-timepicker
                   :value="pair[0]"
@@ -668,6 +670,9 @@
                   @input="time_periods_set(idx, 1, $event)">
                 </b-timepicker>
               </div>
+               <!-- end repeat-->
+               
+              <button data-v-6a9e7be3="" data-v-4b9103a8="" type="button" class="action-button primary tight subdued">+ Add another time period for this day</button>
             </div>
           </div>
         </div><!-- #time-periods -->
