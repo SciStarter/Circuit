@@ -7,7 +7,7 @@
   </b-select>
 
   <div class="flex-header">
-    <h1>Data Overview</h1>
+    <h1>Your Data Overview</h1>
   </div>
 
   <div id="current-proportion" class="labeled-gauge-ends">
@@ -131,7 +131,7 @@
 
     <div class="notification">
       <label>Demographics Coming Soon!</label>
-      We are working on getting demographic data at the opportunity level. Right now you can view <nuxt-link to="/">site-wide demographic data</nuxt-link>.
+      We are working on getting demographic data at the opportunity level. Right now you can view <nuxt-link to="/my/snm-data-overview">site-wide demographic data</nuxt-link>.
     </div>
 
     <div class="filters">

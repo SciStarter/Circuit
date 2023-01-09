@@ -710,6 +710,7 @@ header {
                 margin:0;
                 background-color: $snm-color-background-meddark;
                 border: 1px solid var(--background-color, #fff);
+                text-align: center;
 
                 &:hover,&:active {
                     color: var(--secondary-color, $snm-color-element-med);
@@ -1444,6 +1445,7 @@ footer {
   text-align: center;
   padding: 0.5rem!important;
   border-bottom: 1px solid #efefef;
+  z-index: 100;
   img {
     height: 20px;
     vertical-align:middle;
