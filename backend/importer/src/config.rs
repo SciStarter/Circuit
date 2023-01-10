@@ -126,9 +126,11 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     }));
 
     importers.push(Box::new(Import {
-        source: source::EventsQL::new("https://mods.org/graphql"),
+        source: source::WordPressRest::new(
+            "https://mods.org/wp-json/tribe/events/v1/events/?status=publish&per_page=50",
+        ),
         format: format::Json,
-        structure: structure::EventsQL(PartnerInfo {
+        structure: structure::EventsJson(PartnerInfo {
             partner: "b1f10e01-ad75-5a84-8efc-04003af9e202".parse().unwrap(),
             partner_name: "Museum of Discovery and Science".to_string(),
             partner_website: Some("https://mods.org/".to_string()),
@@ -174,9 +176,9 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     }));
 
     importers.push(Box::new(Import {
-        source: source::EventsQLWithCustom::new("https://www.mi-sci.org/graphql"),
+        source: source::WordPressRest::new("https://www.mi-sci.org/wp-json/tribe/events/v1/events/?status=publish&per_page=50"),
         format: format::Json,
-        structure: structure::EventsQL(PartnerInfo {
+        structure: structure::EventsJson(PartnerInfo {
             partner: "020aa009-8225-5fd3-95e9-42c29067f4c8".parse().unwrap(),
             partner_name: "Michigan Science Center".to_string(),
             partner_website: Some("https://mi-sci.org/".to_string()),
