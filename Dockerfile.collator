@@ -1,0 +1,12 @@
+FROM rust:1-bullseye as builder
+ADD backend/ /usr/src/backend/
+WORKDIR /usr/src/backend/
+RUN mv vendor.cargo .cargo
+RUN cargo install --path collator --features container
+
+FROM debian:bullseye
+EXPOSE 9000
+COPY --from=builder /usr/src/backend/vendor-deb/* .
+RUN dpkg -i libssl1.1_1.1.1n-0+deb11u3_amd64.deb && dpkg -i openssl_1.1.1n-0+deb11u3_amd64.deb && dpkg -i ca-certificates_20210119_all.deb && update-ca-certificates
+COPY --from=builder /usr/local/cargo/bin/collator /usr/local/bin/collator
+CMD ["collator"]

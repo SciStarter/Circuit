@@ -74,7 +74,7 @@ export default {
 
     mounted() {
         this.$gtm.push({
-            event: 'view_entity',
+            //event: 'view_entity',
             uid: this.entity.uid,
             title: this.entity.title,
             partner: this.entity.partner,
@@ -86,7 +86,7 @@ export default {
         let prior = window.localStorage.getItem('last-opportunity');
         let postor = this.entity.uid;
 
-        if(!!postor) {
+        if(!!postor && this.entity.entity_type == 'opportunity') {
             if(!!prior) {
                 this.$axios.$post('/api/ui/activity/transit', {prior, postor}, this.$store.state.auth);
             }

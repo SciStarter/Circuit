@@ -262,7 +262,7 @@ struct SearchQuery {
     pub mine: Option<bool>,
     pub sort: Option<OpportunityQueryOrdering>,
     pub page: Option<u32>,
-    pub per_page: Option<u8>,
+    pub per_page: Option<u32>,
     pub saved: Option<bool>,
     pub participated: Option<bool>,
     pub reviewing: Option<bool>,
@@ -273,10 +273,12 @@ struct SearchQuery {
     pub adults_only: Option<bool>,
     pub year: Option<u32>,
     pub month: Option<u8>,
+    pub refs: Option<bool>,
 }
 
 pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req).await?;
+    let person_uid = person.as_ref().map(|p| p.exterior.uid.clone());
 
     let db = req.state();
 
@@ -414,15 +416,27 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
 
     let (page_index, last_page, per_page) = pagination.expand(total);
 
-    common::log("ui-search", &req.url().query());
+    common::log(person_uid.as_ref(), "ui-search", &req.url().query());
 
-    okay(&json!({
-        "pagination": {
-            "page_index": page_index,
-            "per_page": per_page,
-            "last_page": last_page,
-            "total": total,
-        },
-        "matches": matches
-    }))
+    if search.refs.unwrap_or(false) {
+        okay(&json!({
+            "pagination": {
+                "page_index": page_index,
+                "per_page": per_page,
+                "last_page": last_page,
+                "total": total,
+            },
+            "matches": matches.into_iter().map(|x| x.into_reference()).collect::<Vec<_>>()
+        }))
+    } else {
+        okay(&json!({
+            "pagination": {
+                "page_index": page_index,
+                "per_page": per_page,
+                "last_page": last_page,
+                "total": total,
+            },
+            "matches": matches
+        }))
+    }
 }

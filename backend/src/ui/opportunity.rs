@@ -125,9 +125,9 @@ pub async fn add_opp(mut req: tide::Request<Database>) -> tide::Result {
     opp.store(req.state()).await?;
 
     common::log(
+        person.as_ref().map(|p| &p.exterior.uid),
         "add-opportunity",
         &json!({
-            "who": person.as_ref().map(|p| p.exterior.uid),
             "opp": opp.exterior.uid}),
     );
 
@@ -236,10 +236,10 @@ pub async fn save_opportunity(
     opp.store(req.state()).await?;
 
     common::log(
+        person.as_ref().map(|p| &p.exterior.uid),
         "save-opportunity",
         &json!({
-            "who": person.as_ref().map(|p| p.exterior.uid),
-            "opp": opp.exterior.uid}),
+            "opportunity": opp.exterior.uid}),
     );
 
     if let Some(person) = person {

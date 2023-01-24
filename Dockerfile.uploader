@@ -6,7 +6,9 @@ RUN cargo install --path uploader --features container
 
 FROM debian:bullseye
 EXPOSE 9001
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
-RUN update-ca-certificates
+#RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
+#RUN update-ca-certificates
+COPY --from=builder /usr/src/backend/vendor-deb/* .
+RUN dpkg -i libssl1.1_1.1.1n-0+deb11u3_amd64.deb && dpkg -i openssl_1.1.1n-0+deb11u3_amd64.deb && dpkg -i ca-certificates_20210119_all.deb && update-ca-certificates
 COPY --from=builder /usr/local/cargo/bin/uploader /usr/local/bin/uploader
 CMD ["uploader"]

@@ -6,218 +6,228 @@
       <p>There are two ways to display STEM engagement opportunities on your website:</p>
 
       <div class="flex promo-wrap">
-          <div class="promo">
-              <h2>Science Near Me Exchange <span class="tag">recommended</span></h2>
-              <p>Customize the SNM Opportunity Finder and Search Results to display opportunities in an iFrame, aligned with your community's location and interests! Include an optional "Add Opportunity" feature to add your opportunities and/or invite local organizers to add their programs and events to SNM and your site without leaving your site. Access on-demand analytics and download all opportunities added through your site anytime!</p>
-              <p>
-        To set up an Exchange on your site, <a href="mailto:info@sciencenearme.org?subject=Exchange Info Request">contact us</a> for more information.
-      </p>
-          </div>
-          <div class="promo">
-              <h2>Science Near Me Widget</h2>
-              <p>Display up to 10 SNM Opportunities on your website through our simple plug and play tool. Follow the instructions below.</p>
-              <p>For customizable and more comprehensive options, see <q>Science Near Me Exchange</q>.</p>
-          </div>
+        <div class="promo">
+          <h2>Science Near Me Exchange <span class="tag">recommended</span></h2>
+          <p>
+            Customize the SNM Opportunity Finder and Search Results to
+            display opportunities in an iFrame, aligned with your
+            community's location and interests! Include an optional
+            "Add Opportunity" feature to add your opportunities and/or
+            invite local organizers to add their programs and events
+            to SNM and your site without leaving your site. Access
+            on-demand analytics and download all opportunities added
+            through your site anytime!
+          </p>
+          <p>
+            To set up an Exchange on your site, <a href="mailto:info@sciencenearme.org?subject=Exchange Info Request">contact us</a> for more information.
+          </p>
+        </div>
+        <div class="promo">
+          <h2>Science Near Me Widget</h2>
+          <p>Display up to 10 SNM Opportunities on your website through our simple plug and play tool. Follow the instructions below.</p>
+          <p>For customizable and more comprehensive options, see <q>Science Near Me Exchange</q>.</p>
+        </div>
       </div>
     </div>
 
-  <div class="nav-tab-wrapper">
-    <ul class="nav-tabs">
-       <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Get the Exchange</a></li>
-        <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Get the Widget</a></li> 
-    </ul>
-  </div>
+    <div class="nav-tab-wrapper">
+      <ul class="nav-tabs">
+        <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Get the Exchange</a></li>
+        <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Get the Widget</a></li>
+      </ul>
+    </div>
 
-<div v-if="state==1">
-    <div class="flex">
-      <div class="flex1">
-        <section>
-          <h2>Select Which Type of Widget You'd Like</h2>
-          <div>
-            <b-field>
-              <b-radio v-model="widgetType" native-value="project">
-                Show one or more science opportunities
-              </b-radio>
-            </b-field>
-            <b-field>
-              <b-radio v-model="widgetType" native-value="finder">
-                Show the finder to allow people to search science opportunities
-              </b-radio>
-            </b-field>
-          </div>
-        </section>
+    <div v-if="state==1">
+      <div class="flex">
+        <div class="flex1">
+          <section>
+            <h2>Select Which Type of Widget You'd Like</h2>
+            <div>
+              <b-field>
+                <b-radio v-model="widgetType" native-value="project">
+                  Show one or more science opportunities
+                </b-radio>
+              </b-field>
+              <b-field>
+                <b-radio v-model="widgetType" native-value="finder">
+                  Show the finder to allow people to search science opportunities
+                </b-radio>
+              </b-field>
+            </div>
+          </section>
 
-        <section v-if="widgetType=='project'">
-          <h2>Select Your Widget Style</h2>
-          <p>Make selections below on how to display science opportunities.</p>
-          <div class="radio-selects">
-            <h3>Header</h3>
-            <b-field>
-              <b-radio v-model="header" native-value="header">
-                With Header
-              </b-radio>
-            </b-field>
-            <b-field>
-              <b-radio v-model="header" native-value="no-header">
-                Without a Header
-              </b-radio>
-            </b-field>
-          </div>
+          <section v-if="widgetType=='project'">
+            <h2>Select Your Widget Style</h2>
+            <p>Make selections below on how to display science opportunities.</p>
+            <div class="radio-selects">
+              <h3>Header</h3>
+              <b-field>
+                <b-radio v-model="header" native-value="header">
+                  With Header
+                </b-radio>
+              </b-field>
+              <b-field>
+                <b-radio v-model="header" native-value="no-header">
+                  Without a Header
+                </b-radio>
+              </b-field>
+            </div>
 
-          <div class="radio-selects">
-            <h3>How many opportunities should be displayed?</h3>
-            <p>You may display up to 10 science opportunities.</p>
-            <b-field>
-              <b-numberinput v-model="max" min="1" max="10"  controls-position="compact"></b-numberinput>
-            </b-field>
-          </div>
+            <div class="radio-selects">
+              <h3>How many opportunities should be displayed?</h3>
+              <p>You may display up to 10 science opportunities.</p>
+              <b-field>
+                <b-numberinput v-model="max" min="1" max="10"  controls-position="compact"></b-numberinput>
+              </b-field>
+            </div>
 
-          <div class="radio-selects">
-            <h3>Widget Size</h3>
-            <b-field>
-              <b-radio v-model="projectSize"
-                       native-value="short-thin">
-                Short and Thin
-              </b-radio>
-            </b-field>
-            <b-field>
-              <b-radio v-model="projectSize"
-                       native-value="tall-thin">
-                Tall and Thin
-              </b-radio>
-            </b-field>
-            <b-field>
-              <b-radio v-model="projectSize"
-                       native-value="short-wide">
-                Short and Wide
-              </b-radio>
-            </b-field>
-            <b-field>
-              <b-radio v-model="projectSize"
-                       native-value="tall-wide">
-                Tall and Wide
-              </b-radio>
-            </b-field>
-          </div>
+            <div class="radio-selects">
+              <h3>Widget Size</h3>
+              <b-field>
+                <b-radio v-model="projectSize"
+                         native-value="short-thin">
+                  Short and Thin
+                </b-radio>
+              </b-field>
+              <b-field>
+                <b-radio v-model="projectSize"
+                         native-value="tall-thin">
+                  Tall and Thin
+                </b-radio>
+              </b-field>
+              <b-field>
+                <b-radio v-model="projectSize"
+                         native-value="short-wide">
+                  Short and Wide
+                </b-radio>
+              </b-field>
+              <b-field>
+                <b-radio v-model="projectSize"
+                         native-value="tall-wide">
+                  Tall and Wide
+                </b-radio>
+              </b-field>
+            </div>
 
-          <div class="radio-selects">
-            <h3>Customization</h3>
-            <b-field>
-              <b-radio v-model="customize" native-value="no">
-                Select from all available opportunities on Science Near Me
-              </b-radio>
-            </b-field>
-            <b-field>
-              <b-radio v-model="customize" native-value="yes">
-                Filter and customize opportunities
-              </b-radio>
-            </b-field>
+            <div class="radio-selects">
+              <h3>Customization</h3>
+              <b-field>
+                <b-radio v-model="customize" native-value="no">
+                  Select from all available opportunities on Science Near Me
+                </b-radio>
+              </b-field>
+              <b-field>
+                <b-radio v-model="customize" native-value="yes">
+                  Filter and customize opportunities
+                </b-radio>
+              </b-field>
 
-            <div v-if="customize=='yes'">
-              <div class="nested">
-                <h4>Kid-Friendly Only</h4>
-                <b-field>
-                  <b-checkbox v-model="filters.kid">Show only kid-friendly opportunities</b-checkbox>
-                </b-field>
-              </div>
-
-              <div class="nested">
-                <h4>Location</h4>
-                <b-field>
-                  <b-radio v-model="filters.location" native-value="global">
-                    Global
-                  </b-radio>
-                </b-field>
-                <b-field>
-                  <b-radio v-model="filters.location" native-value="near">
-                    In the vicinity of a specific place
-                  </b-radio>
-                </b-field>
-                <div v-if="filters.location=='near'" class="nested">
-                  <form>
+              <div v-if="customize=='yes'">
+                <div class="nested">
+                  <h4>Kid-Friendly Only</h4>
                   <b-field>
-                    <b-autocomplete
-                      :loading="place_loading"
-                      :data="place_matches"
-                      field="near"
-                      :value="filters.near"
-                      :name="'new-' + Math.random()"
-                      :clearable="true"
-                      placeholder="e.g. Iowa City, IA"
-                      @typing="place_completions"
-                      @select="place_select"
-                      autocomplete="off"
-                      label="Place"
-                      />
-                  </b-field>
-                </form>
-                  <label style="margin-top:10px;display:block">Allowed distance, in miles</label>
-                  <b-field>
-                    <b-numberinput v-model="proximity_miles" min="1" max="100" controls-position="compact"></b-numberinput>
+                    <b-checkbox v-model="filters.kid">Show only kid-friendly opportunities</b-checkbox>
                   </b-field>
                 </div>
-              </div>
-              <!-- <div class="nested">
-                <h4>Include Online Only Opportunities</h4>
-                <b-field>
-                  <b-radio v-model="filters.online" native-value="yes">
-                    Include online only opportunities
-                  </b-radio>
-                </b-field>
-                <b-field>
-                  <b-radio v-model="filters.online" native-value="no">
-                    Do not include online only opportunities
-                  </b-radio>
-                </b-field>
-              </div> -->
-              <div class="nested check-grid" v-if="descriptors && descriptors.length">
-                <h4>Activity Type</h4>
-                <b-field v-for="desc in descriptors" :key="desc[0]">
-                  <b-checkbox v-model="filters.activities" :native-value="desc[0]">
-                    {{desc[1]}}
-                  </b-checkbox>
-                </b-field>
-              </div>
-              <div class="nested">
-                <h4>Organization</h4>
-                <p>Limit your results to one partner organization. Begin typing the organization name and select when it displays in the dropdown menu.</p>
 
-                <b-autocomplete
-                  v-model="filters.partner_text"
-                  :data="suggested_partners"
-                  :name="'new-' + Math.random()"
-                  field="name"
-                  clearable
-                  keep-first
-                  select-on-click-outside
-                  @select="filters.partner = $event ? $event.uid : ''"
-                  />
+                <div class="nested">
+                  <h4>Location</h4>
+                  <b-field>
+                    <b-radio v-model="filters.location" native-value="global">
+                      Global
+                    </b-radio>
+                  </b-field>
+                  <b-field>
+                    <b-radio v-model="filters.location" native-value="near">
+                      In the vicinity of a specific place
+                    </b-radio>
+                  </b-field>
+                  <div v-if="filters.location=='near'" class="nested">
+                    <form>
+                      <b-field>
+                        <b-autocomplete
+                          :loading="place_loading"
+                          :data="place_matches"
+                          field="near"
+                          :value="filters.near"
+                          :name="'new-' + Math.random()"
+                          :clearable="true"
+                          placeholder="e.g. Iowa City, IA"
+                          @typing="place_completions"
+                          @select="place_select"
+                          autocomplete="off"
+                          label="Place"
+                          />
+                      </b-field>
+                    </form>
+                    <label style="margin-top:10px;display:block">Allowed distance, in miles</label>
+                    <b-field>
+                      <b-numberinput v-model="proximity_miles" min="1" max="100" controls-position="compact"></b-numberinput>
+                    </b-field>
+                  </div>
+                </div>
+                <!-- <div class="nested">
+                     <h4>Include Online Only Opportunities</h4>
+                     <b-field>
+                       <b-radio v-model="filters.online" native-value="yes">
+                         Include online only opportunities
+                       </b-radio>
+                     </b-field>
+                     <b-field>
+                       <b-radio v-model="filters.online" native-value="no">
+                         Do not include online only opportunities
+                       </b-radio>
+                     </b-field>
+                </div> -->
+                <div class="nested check-grid" v-if="descriptors && descriptors.length">
+                  <h4>Activity Type</h4>
+                  <b-field v-for="desc in descriptors" :key="desc[0]">
+                    <b-checkbox v-model="filters.activities" :native-value="desc[0]">
+                      {{desc[1]}}
+                    </b-checkbox>
+                  </b-field>
+                </div>
+                <div class="nested">
+                  <h4>Organization</h4>
+                  <p>Limit your results to one partner organization. Begin typing the organization name and select when it displays in the dropdown menu.</p>
+                  
+                  <b-autocomplete
+                    v-model="filters.partner_text"
+                    :data="suggested_partners"
+                    :name="'new-' + Math.random()"
+                    field="name"
+                    clearable
+                    keep-first
+                    select-on-click-outside
+                    @select="filters.partner = $event ? $event.uid : ''"
+                    />
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+          
+          <section v-if="widgetType=='finder'">
+            <h2>Select Your Widget Style</h2>
+            <div class="radio-selects">
+              <h3>Widget Size</h3>
+              <b-field>
+                <b-radio v-model="finderSize" native-value="finder-thin">
+                  Thin
+                </b-radio>
+              </b-field>
+              <b-field>
+                <b-radio v-model="finderSize" native-value="finder-wide">
+                  Wide
+                </b-radio>
+              </b-field>
+            </div>
+          </section>
 
-        <section v-if="widgetType=='finder'">
-          <h2>Select Your Widget Style</h2>
-          <div class="radio-selects">
-            <h3>Widget Size</h3>
-            <b-field>
-              <b-radio v-model="finderSize" native-value="finder-thin">
-                Thin
-              </b-radio>
-            </b-field>
-            <b-field>
-              <b-radio v-model="finderSize" native-value="finder-wide">
-                Wide
-              </b-radio>
-            </b-field>
-          </div>
-        </section>
-
-      </div>
-      <div class="flex2">
-        <iframe :src="'/'+URLparams" referrerpolicy="origin" :width="width" :height="height" scrolling="no"></iframe>
-        <textarea>&lt;iframe src="{{link}}" referrerpolicy="origin" width="{{width}}" height="{{height}}" scrolling="no"&gt;&lt;/iframe&gt;</textarea>
+        </div>
+        <div class="flex2">
+          <iframe :src="'/'+URLparams" referrerpolicy="origin" :width="width" :height="height" scrolling="no"></iframe>
+          <textarea>&lt;iframe src="{{link}}" referrerpolicy="origin" width="{{width}}" height="{{height}}" scrolling="no"&gt;&lt;/iframe&gt;</textarea>
+        </div>
       </div>
     </div>
   </div>
@@ -255,7 +265,41 @@
     </ol>
   </div>
 
-
+    <div v-if="state==2" class="about-exchange">
+      <p>
+        An exchange is intended to be embedded on your site inside an
+        iframe. It has no effect on the look of your site outside the
+        iframe. The exchange is a high-level integration which
+        provides a user interface which you can use and offer to your
+        members. As a side-effect of offering the user interface
+        directly, the exchange is also able to enforce data entry
+        requirements which guarantee nice-looking records on Science
+        Near Me.
+      </p>
+      <p>
+        If you have many existing opportunities you'd like to display
+        on SNM and your Exchange, please select one of the options to
+        share your opportunities on
+        our <a href="/add-opportunities">add opportuities page</a>.
+        That way all those opportunities will appear on SNM and on
+        your Exchange, in addition to any others available to your
+        community from SNM! You'll still have the option to use the
+        Add Opportunity Form on your site to add future opportunities.
+      </p>
+      <h2 class="h3" style="margin-top:20px">Request an Exchange</h2>
+      <ol>
+        <li>Create a Science Near Me account, if you haven't done so already</li>
+        <li>Send an email request to <a href="mailto:info@sciencenearme.org">info@sciencenearme.org</a>
+          <p>Please include:</p>
+          <ul>
+            <li>The email address associated with your Science Near Me account</li>
+            <li>The name of your organization</li>
+            <li>Your organization's contact info (address, phone)</li>
+            <li>The URL or website on which you plan to host the exchange.</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
   </div>
 </div>
 </template>
@@ -593,7 +637,7 @@ section {
 .about-exchange {
   ol {
     list-style-position: inside;
-    
+
     li {
       margin-bottom: 16px;
       p {

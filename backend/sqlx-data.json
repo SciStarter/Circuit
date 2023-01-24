@@ -113,6 +113,26 @@
     },
     "query": "SELECT substring(created::text from 0 for 8) AS month FROM c_opportunity"
   },
+  "22abed5d07e437b28c26864dffff2933e07e8255d70b04ae186820719576ebd5": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count!: i64",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "\n            SELECT COUNT(*) AS \"count!: i64\"\n            FROM c_opportunity\n            WHERE exterior -> 'partner' @> $1::jsonb\n            AND c_opportunity_is_current(interior, exterior) = true\n            "
+  },
   "232db60cfb4ba3a2fd8869075ca90f615000a51968582c00b28f66aa687e63e7": {
     "describe": {
       "columns": [
@@ -323,6 +343,26 @@
       }
     },
     "query": "insert into c_partner (exterior, interior) values ($1, $2) returning id;\n"
+  },
+  "39d676200361761ee8fbc31b0acd809efad238cda2f9c38bc3aa274039b06074": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count!: i64",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "\n            SELECT COUNT(*) AS \"count!: i64\"\n            FROM c_opportunity\n            WHERE exterior -> 'partner' @> $1::jsonb\n            "
   },
   "3a5fe5a398cd6ba3fce8b29dd91e547c991617fce2a7e8c4ca978149377add97": {
     "describe": {
@@ -896,6 +936,29 @@
       }
     },
     "query": "select id, exterior, interior from c_opportunity where id = $1 limit 1;\n"
+  },
+  "70d1a9251685218927e915d1a9ff2728708ac53d8a075397846cdb2635625fd9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "data!",
+          "ordinal": 0,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Int4",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "\nSELECT\n  \"data\" as \"data!\"\nFROM\n  c_analytics_compiled\nWHERE\n  \"about\" = $1 AND\n  \"kind\" = $2 AND\n  \"period\" = $3 AND\n  \"status\" = $4\n"
   },
   "7101a5bb43a1d4c208985f3edbeec8dfa3f03fc325ed9ada8a2061a32ab129dc": {
     "describe": {
@@ -1509,6 +1572,20 @@
     },
     "query": "select count(*) likes\nfrom c_opportunity_like L inner join c_opportunity O on L.opportunity_id = O.id\nwhere (O.exterior ->> 'slug') = $1 and L.person = $2;\n"
   },
+  "b6f1a444cdd6a8bc7b81f7a09a7ff87f05b56f705ec76882475c96b0de65f4a6": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "INSERT INTO c_log (\"action\", \"subject\", \"object\") VALUES ($1, $2, $3)"
+  },
   "b97509b1d3ee44f0afd7fc8664bb753b5f7598cf4031bab7bf637bfc5dc02d2d": {
     "describe": {
       "columns": [
@@ -1901,6 +1978,18 @@
     },
     "query": "select exists(select 1 from c_partner where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n"
   },
+  "db04257b8088331e65c5655e3055242977bec70d994261f1de66383b9f700fab": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "INSERT INTO c_log (\"action\", \"object\") values ('external', $1)"
+  },
   "db2d6322979f071f919119e42c4ebcffd92abff51b7b4ab5a2d1ac8b57fed5bf": {
     "describe": {
       "columns": [
@@ -1973,6 +2062,19 @@
       }
     },
     "query": "SELECT DISTINCT \"item\" FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 ORDER BY \"item\";\n"
+  },
+  "e5e6faf12a5eb84b42b7ba756ef11f1094fa6c30ac87014bdb3e5edf523086e3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO c_demographics (\n  \"about\",\n   \"data\"\n) VALUES (\n  $1,\n  $2\n)\nON CONFLICT (\"about\") DO UPDATE SET\n  \"data\" = EXCLUDED.\"data\"\n        "
   },
   "e831e96bf898cecd31483a504415204c2e5d6cddf1105963d6046e87afc0ad52": {
     "describe": {
@@ -2103,6 +2205,24 @@
       }
     },
     "query": "select id, exterior, interior from c_participation where id = $1 limit 1;\n"
+  },
+  "f06f8c1213739431aca8bf3f46956b4457e5c99f29ddd37ea0f45161057fb19d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "uid!",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT (\"exterior\"->>'uid')::uuid AS \"uid!\" FROM c_opportunity"
   },
   "f6f4075f2a6e539d490b730364c608936865aa275e126a84899f8674dfb8a2dd": {
     "describe": {

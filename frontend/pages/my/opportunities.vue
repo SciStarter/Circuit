@@ -1,5 +1,5 @@
 <template>
-<div class="your-opportunities snm-container">
+<div class="your-opportunities">
   <div class="flex-header">
     <h1>Your Opportunities</h1>
     <action-button primary @click="$router.push({name: 'my-submit-opportunity'})" class="add-btn"><div class="icon"><add-icon /></div>Add a new opportunity</action-button>
@@ -7,9 +7,9 @@
 
   <div class="nav-tab-wrapper">
   <ul class="nav-tabs">
-      <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Current, Live Opportunities</a></li>
-      <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Draft or Unpublished</a></li>
-      <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Expired or Trashed</a></li>
+      <li><a class="tab-link" :class="{'active':state==1}" @click="state=1">Current, Live Opportunities</a></li>
+      <li><a class="tab-link" :class="{'active':state==2}" @click="state=2">Draft or Unpublished</a></li>
+      <li><a class="tab-link" :class="{'active':state==3}" @click="state=3">Expired or Trashed</a></li>
       <li class="push-right"><action-button text2 @click="export_records">Export Records</action-button></li>
   </ul>
   </div>
@@ -367,9 +367,9 @@ h1 {
 }
 
 @media (max-width:1159px) {
-  .snm-container {
-    padding:1rem;
-  }
+  // .snm-container {
+  //   padding:1rem;
+  // }
   .flex-header.filter-actions {
     flex-direction:column;
     align-items: flex-start;

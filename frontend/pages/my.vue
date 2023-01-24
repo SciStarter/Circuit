@@ -1,5 +1,5 @@
 <template>
-  <div class="my">
+  <div class="my snm-wrapper">
     <div class="snm-container">
       <nuxt-child />
     </div>
@@ -27,9 +27,20 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@media (min-width: $fullsize-screen) {
-    div.my {
-        padding: 2rem 2rem 0;
-    }
+// @media (min-width: 1280px) {
+//     div.my {
+//         padding: 2rem 2rem 0;
+//     }
+// }
+
+@media (max-width:1159px) {
+  .snm-wrapper {
+    padding:0;
+  }
+
+  .snm-container {
+    padding:1rem;
+  }
 }
+
 </style>

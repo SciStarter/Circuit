@@ -76,12 +76,22 @@ pub async fn record_click(mut req: tide::Request<Database>) -> tide::Result {
 /// Record an instance of a user clicking on an external link. No-op
 /// when compiled in debug mode.
 pub async fn record_external(mut req: tide::Request<Database>) -> tide::Result {
+    let body = req.body_json::<serde_json::Value>().await?;
+
+    sqlx::query!(
+        r#"INSERT INTO c_log ("action", "object") values ('external', $1)"#,
+        Uuid::try_parse(
+            body["object"]
+                .as_str()
+                .unwrap_or("00000000-0000-0000-0000-000000000000")
+        )
+        .unwrap_or_else(|_| Uuid::nil())
+    )
+    .execute(req.state())
+    .await?;
+
     if cfg!(not(debug_assertions)) {
-        async_std::task::spawn(
-            surf::post(&*CLICK_ENDPOINT)
-                .body(req.body_json::<serde_json::Value>().await?)
-                .send(),
-        );
+        async_std::task::spawn(surf::post(&*CLICK_ENDPOINT).body(body).send());
     }
 
     Ok(Response::builder(StatusCode::Ok).build())
