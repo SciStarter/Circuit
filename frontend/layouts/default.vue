@@ -303,7 +303,7 @@ export default {
         SubmitOpportunityIcon,
 
         Footer,
-        SubFooter
+        SubFooter,
         MyDataIcon
     },
 

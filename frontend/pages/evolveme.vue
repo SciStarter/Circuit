@@ -3,10 +3,14 @@
 
       <div class="evolve-bg">
             <div class="stars-container">
+              <div id="strawberry" class="fruit"><img src="~assets/img/evolve-me/strawberry.svg" /></div>
+              <div id="fruit" class="fruit"><img src="~assets/img/evolve-me/fruit.svg" /></div>
         
         <div class="snm-wrapper">
             
             <div class="snm-container">
+
+             
 
                 <div class="logo-lockup">
                     <img src="~assets/img/evolve-me/evolveme-logo.svg" id="evolve-logo" />
@@ -236,19 +240,32 @@ $tan: #F2F1EF;
     }
 }
 
+.fruit {
+  position: absolute;
+  top:10px;
+  width: 130px;
+  height: 100px;
+}
+#strawberry {
+  left:0;
+}
+#fruit {
+  right:0;
+}
+
 .telescope {
   position: absolute;
-  width: 100px;
-  height: 100px;
-  top: 453px;
+  width: 120px;
+  height: 160px;
+  top: 400px;
 }
 
 #tele-left {
-  left: 10px;
+  left: 5px;
 }
 
 #tele-right {
-  right: 10px;
+  right: 5px;
   -webkit-transform: scaleX(-1);
   transform: scaleX(-1);
 }
@@ -264,10 +281,10 @@ $tan: #F2F1EF;
     padding: 0 50px;
   }
   .telescope {
-    top:502px;
+    top:471px;
     position: absolute;
-    width: 50px;
-    height: 50px;
+    width: 70px;
+    height: 80px;
   }
 }
 
