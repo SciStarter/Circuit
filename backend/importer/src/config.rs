@@ -107,23 +107,24 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
         period: 24 * hours,
     }));
 
-    importers.push(Box::new(Import {
-        source: source::EventsQLWithCustom::new("https://astronomyontap.org/graphql"),
-        format: format::Json,
-        structure: structure::EventsQL(PartnerInfo {
-            partner: "784f3316-bdc0-5855-8a44-2044cbb23788".parse().unwrap(),
-            partner_name: "Astronomy On Tap".to_string(),
-            partner_website: Some("https://astronomyontap.org/".to_string()),
-            partner_logo_url: Some("".to_string()),
-            domain: Domain::LiveScience,
-            topics: vec![Topic::AstronomyAndSpace],
-            descriptor: vec![Descriptor::Community],
-            flags: vec![],
-            address: None,
-            timezone: Some(chrono::Utc),
-        }),
-        period: 24 * hours,
-    }));
+    // 403 error, requires investigation
+    // importers.push(Box::new(Import {
+    //     source: source::EventsQLWithCustom::new("https://astronomyontap.org/graphql"),
+    //     format: format::Json,
+    //     structure: structure::EventsQL(PartnerInfo {
+    //         partner: "784f3316-bdc0-5855-8a44-2044cbb23788".parse().unwrap(),
+    //         partner_name: "Astronomy On Tap".to_string(),
+    //         partner_website: Some("https://astronomyontap.org/".to_string()),
+    //         partner_logo_url: Some("".to_string()),
+    //         domain: Domain::LiveScience,
+    //         topics: vec![Topic::AstronomyAndSpace],
+    //         descriptor: vec![Descriptor::Community],
+    //         flags: vec![],
+    //         address: None,
+    //         timezone: Some(chrono::Utc),
+    //     }),
+    //     period: 24 * hours,
+    // }));
 
     importers.push(Box::new(Import {
         source: source::WordPressRest::new(
