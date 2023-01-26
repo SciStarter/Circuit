@@ -117,7 +117,7 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
         None => vec![],
     };
 
-    opp.exterior.has_end = false;
+    opp.exterior.has_end = !opp.exterior.end_datetimes.is_empty();
 
     opp.exterior.attraction_hours = None;
 

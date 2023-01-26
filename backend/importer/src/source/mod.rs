@@ -6,12 +6,14 @@ pub mod eventsql;
 pub mod eventsql_custom;
 pub mod http;
 pub mod neoncrm;
+pub mod wp_rest;
 
 pub use airtable::Airtable;
 pub use eventsql::EventsQL;
 pub use eventsql_custom::EventsQLWithCustom;
 pub use http::HttpGet;
 pub use neoncrm::NeonCRM;
+pub use wp_rest::WordPressRest;
 
 pub trait Source: std::fmt::Debug {
     fn load(&self) -> Result<Bytes, Error>;

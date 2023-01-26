@@ -252,6 +252,10 @@ div.profile-item {
         .radio-stack {
             display: flex;
             flex-direction: column;
+
+            .b-radio {
+                margin-bottom: 0.75rem;
+            }
         }
     }
 

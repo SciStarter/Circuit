@@ -60,6 +60,7 @@
 
 
   <div class="global-actions">
+    <a href="https://sciencenearme.org/my/organization" target="_blank">Edit on Science Near Me</a>
   </div>
 
   <b-modal
