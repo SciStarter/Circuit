@@ -1,484 +1,55 @@
 <template>
-<div id="page" :style="custom_props" :class="[$route.name,{'authenticated': authenticated, 'not-authenticated': !authenticated}]">
-  <div class="beta-banner snm-wrapper">
+<footer class="snm-wrapper" :class="{'homepage': $route.path == '/'}">
     <div class="snm-container">
-    <p><img src="~assets/img/atom.svg?data"><b>We're in beta!</b> If you find a bug or have feedback, you can email <a href="mailto:info@sciencenearme.org">info@sciencenearme.org</a>.</p>
-  </div>
-  </div>
-  <header class="flex flex-align-center flex-justify-sb">
-    <button class="toggle-menu mobile-only" title="Toggle menu" :aria-pressed="String(menu)" data-context="header-menu" @click="menu = !menu">
-      <img v-if="alert" src="~assets/img/hamburger-alert.svg?data">
-      <img v-else src="~assets/img/hamburger.svg?data">
-    </button>
-
-    <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
-      <img src="~assets/img/logo-beta.svg?data" title="return to home page">
-    </nuxt-link>
-
-    <div class="flex">
-        <nuxt-link :to="'/find' + search_query" class="toggle-search" data-context="header-search">
-          <img src="~assets/img/search.svg?data"> <span class="no-mobile">Search Opportunities</span>
+    <ul>
+      <li><h1>For Everyone</h1></li>
+      <li>
+        <nuxt-link to="/about">
+          About Us
         </nuxt-link>
+      </li>
+      <li>
+        <nuxt-link to="/contact">
+          Contact Us
+        </nuxt-link>
+      </li>
+    </ul>
 
-        <aside :class="{toggled: search}" class="search-box">
-          <div class="search-box-container">
-            <div class="full-only sbc-header flex flex-justify-sb">
-              <h2>Search</h2>
-              <button type="button" @click="toggle_search">
-                &#10005;
-              </button>
-            </div>
-          <b-field>
-            <b-input ref="search_keywords" v-model="query.keywords" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
-          </b-field>
-          <lookup-place v-model="query.place" @input="store_here" />
-          <div class="centered-row">
-            <b-field>
-              <b-checkbox v-model="query.include_online">
-                Include Online Opportunities
-              </b-checkbox>
-            </b-field>
-          </div>
-          <div class="centered-row flex-justify-sb">
-            <b-field label="From" label-position="on-border">
-              <input v-model="query.date_from" class="control" type="date">
-            </b-field>
-            <b-field label="Until" label-position="on-border">
-              <input v-model="query.date_until" class="control" type="date">
-            </b-field>
-          </div>
-          <div class="centered-row">
-            <action-button primary arrow @click="find">
-              <search-icon class="button-icon" /> Search
-            </action-button>
-          </div>
-        </div>
-        </aside>
+    <ul>
+      <li><h1>For Providers</h1></li>
+      <li>
+        <nuxt-link to="/add-opportunities">
+          Add Your Opportunities to Science Near Me
+        </nuxt-link>
+      </li>
+      <li>
+        <nuxt-link to="/display-opportunities">
+          Display Science Near Me Opportunities on Your Website
+        </nuxt-link>
+      </li>
+      <li>
+        <external-link href="/api/docs/v1.html" content="footer-link">
+          API Documentation
+        </external-link>
+      </li>
+    </ul>
 
-        <aside :class="{toggled: menu}" class="menu-box mobile-menu" @click="menu = !menu">
-          <div v-if="authenticated" class="authenticated">
-            <span class="no-mobile" data-context="header-username">{{ username }}</span>
-            <ul>
-              <li class="mobile-only">
-                <nuxt-link to="/find">
-                  <find-icon class="menu-icon" /> Find Opportunities
-                </nuxt-link>
-              </li>
-              <li class="mobile-only">
-                <nuxt-link to="/my/saved">
-                  <saved-icon class="menu-icon" /> Saved Opportunities
-                </nuxt-link>
-              </li>
-              <li class="mobile-only">
-                <nuxt-link to="/my/science">
-                  <science-icon class="menu-icon" /> My Activity Log<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
-                </nuxt-link>
-              </li>
-              <li class="mobile-only">
-                <nuxt-link to="/my/goals">
-                  <goals-icon class="menu-icon" /> My Goals
-                </nuxt-link>
-              </li>
-              <li class="mobile-only">
-                <nuxt-link to="/my/profile">
-                  <profile-icon class="menu-icon" /> My Profile &amp; Settings
-                </nuxt-link>
-              </li>
-              <!-- <li class="mobile-only">
-                <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
-              </li> -->
-              <li class="mobile-only">
-                <nuxt-link v-if="owner" to="/my/opportunities">
-                  <my-opportunities-icon class="menu-icon" /> Your Opportunities
-                </nuxt-link>
-              </li>
-              <li class="mobile-only">
-                <nuxt-link v-if="owner" to="/my/organization">
-                  <my-organization-icon class="menu-icon" /> Your Partner Organization
-                </nuxt-link>
-              </li>
-
-              <li class="mobile-only" v-if="owner">
-                <nuxt-link to="/my/data-overview">
-                  <my-data-icon class="menu-icon" /> Data Insights
-                </nuxt-link>
-
-                <ul class="subnav">
-                  <li><nuxt-link v-if="owner" to="/my/data-overview">Your Data Overview</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/hosts-explorer">Hosts Explorer</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/opportunity-data-explorer">Opportunity Data Explorer</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/snm-data-overview"> SNM Data Overview</nuxt-link></li>
-                </ul>
-
-              </li>
-
-             
-              <li class="mobile-only">
-                <nuxt-link v-if="owner" to="/my/submit-opportunity">
-                  <submit-opportunity-icon class="menu-icon" /> Add an Opportunity
-                </nuxt-link>
-              </li>
-
-              <li><span class="no-icon" /><a @click="logout">Log Out</a></li>
-            </ul>
-          </div>
-          <div v-else class="not-authenticated">
-            <nuxt-link class="action-button primary" :to="{name: 'login', query: {next: $route.fullPath}}">Login</nuxt-link>
-            <nuxt-link class="action-button primary" :to="{name: 'signup', query: {next: $route.fullPath}}">Create Account</nuxt-link>
-            <!-- <action-button primary @click="show_login = true">
-              Login
-            </action-button>
-            <action-button primary @click="show_signup = true">
-              Create Account
-            </action-button> -->
-          </div>
-        </aside>
+    <div class="partner">
+      <div class="nsf-logo">
+        <img src="~assets/img/NSF-small.png">
       </div>
-      </header>
-
-      <section id="main">
-        <div id="content">
-          <nuxt @login="show_login=true;show_signup=false;" @signup="show_signup=true;show_login=false;" />
-          <aside v-if="show_cookie" id="cookie-notice">
-            <div>
-              <h1>We Care About Your Privacy</h1>
-              <p>
-                We and
-
-                <nuxt-link to="/about#our-partners">
-                  our partners
-                </nuxt-link>
-
-                store and/or access information on a device, such as
-                unique IDs in cookies to process personal data. Find
-                the details on our
-
-                <nuxt-link to="/privacy">
-                  privacy policy
-                </nuxt-link>
-
-                page.
-              </p>
-              <b-button type="is-primary" @click="cookie_consent">
-                Accept All
-              </b-button>
-            </div>
-            <div>
-              <h2>We and our partners process data to provide:</h2>
-              <p>
-                Geolocation data, personalized content, audience
-                insights, product development and
-
-                <nuxt-link to="/research-participant">
-                  research participant studies.
-                </nuxt-link>
-              </p>
-            </div>
-          </aside>
-        </div>
-
-        <div id="authenticated-nav">
-          <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
-            <img src="~assets/img/logo-beta.svg?data" title="return to home page">
-          </nuxt-link>
-          <div class="an-overflow">
-            <nav>
-              <strong v-if="owner">My Participation</strong>
-
-              <nuxt-link to="/find">
-                <find-icon /> Find Opportunities
-              </nuxt-link>
-
-              <nuxt-link to="/my/saved">
-                <saved-icon /> Saved Opportunities
-              </nuxt-link>
-
-              <nuxt-link to="/my/science">
-                <science-icon /> My Activity Log<span v-if="user.reports_pending > 0" class="bubble">{{ user.reports_pending }}</span>
-              </nuxt-link>
-
-              <nuxt-link to="/my/goals">
-                <goals-icon /> My Goals
-              </nuxt-link>
-
-              <nuxt-link to="/my/profile">
-                <profile-icon /> My Profile &amp; Settings
-              </nuxt-link>
-
-              <strong v-if="owner" class="nav-separate">Manage Opportunities</strong>
-
-              <nuxt-link v-if="owner" to="/my/opportunities">
-                <my-opportunities-icon /> Your Opportunities
-              </nuxt-link>
-
-              <nuxt-link v-if="owner" to="/my/organization">
-                <my-organization-icon /> Your Partner Organization
-              </nuxt-link>
-
-              <nuxt-link v-if="owner" to="/my/data-overview" :class="{'nuxt-link-active': $route.name == 'my-hosts-explorer' ||  $route.name == 'my-opportunity-data-explorer' || $route.name == 'my-snm-data-overview'}">
-                <my-data-icon class="menu-icon" /> Data Insights
-              </nuxt-link>
-
-                <ul v-if="owner && ($route.name == 'my-data-overview' || $route.name == 'my-hosts-explorer' ||  $route.name == 'my-opportunity-data-explorer' || $route.name == 'my-snm-data-overview')" class="subnav">
-                  <li><nuxt-link v-if="owner" to="/my/data-overview">Your Data Overview</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/hosts-explorer">Hosts Explorer</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/opportunity-data-explorer">Opportunity Data Explorer</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/snm-data-overview"> SNM Data Overview</nuxt-link></li>
-                </ul>
-
-
-              <nuxt-link v-if="owner" to="/my/submit-opportunity">
-                <submit-opportunity-icon /> Add an Opportunity
-              </nuxt-link>
-            </nav>
-          </div>
-        </div>
-      </section>
-
-      <Footer />
-      <SubFooter />
-
-      <b-modal v-model="show_login" :width="640" aria-role="dialog" aria-label="Log in" aria-modal>
-        <div class="card">
-          <login-form @close="show_login=false" @signup="show_login=false;show_signup=true;" :next="$route.path == 'slug' ? $route.params.slug : $route.path" :next_query="$route.query" in-modal>
-            <dynamic-block group="login-modal" item="standard" class="content" />
-          </login-form>
-        </div>
-      </b-modal>
-
-      <b-modal v-model="show_signup" :width="640" aria-role="dialog" aria-label="Sign up" aria-modal>
-        <div class="card">
-          <signup-form @close="show_signup=false" @login="show_signup=false;show_login=true;" :next="$route.path == 'slug' ? $route.params.slug : $route.path" :next_query="$route.query" in-modal>
-            <dynamic-block group="signup-modal" item="standard" class="content" />
-          </signup-form>
-        </div>
-      </b-modal>
-
+      <div class="description">
+        This project is based upon work supported, in part, by the
+        National Science Foundation under Grant DRL-1906998. Any
+        opinions, findings, and conclusions or recommendations
+        expressed in this material are those of the authors and do not
+        necessarily reflect the view of the National Science
+        Foundation.
+      </div>
     </div>
+    </div>
+  </footer>
 </template>
-
-<script>
-// import Card from '~/components/Card'
-import LoginForm from '~/components/LoginForm'
-import SignupForm from '~/components/SignupForm'
-import ExternalLink from '~/components/ExternalLink'
-import DynamicBlock from '~/components/DynamicBlock'
-import LookupPlace from '~/components/LookupPlace'
-import ActionButton from '~/components/ActionButton'
-
-import Footer from "~/components/Footer"
-import SubFooter from "~/components/SubFooter"
-
-import FindIcon from '~/assets/img/find-science-opportunities.svg?inline'
-import SavedIcon from '~/assets/img/saved-science-opportunities.svg?inline'
-import ScienceIcon from '~/assets/img/my-science.svg?inline'
-import GoalsIcon from '~/assets/img/my-goals.svg?inline'
-import ProfileIcon from '~/assets/img/my-profile-and-settings.svg?inline'
-import SearchIcon from '~/assets/img/search.svg?inline'
-import MyOpportunitiesIcon from '~/assets/img/current-opportunities.svg?inline'
-import MyPastOpportunitiesIcon from '~/assets/img/past-opportunities.svg?inline'
-import MyOrganizationIcon from '~/assets/img/your-organization.svg?inline'
-import SubmitOpportunityIcon from '~/assets/img/submit-opportunity.svg?inline'
-import MyDataIcon from '~/assets/img/data-insights.svg?inline'
-
-export default {
-    components: {
-        // Card,
-        LoginForm,
-        SignupForm,
-        ExternalLink,
-        DynamicBlock,
-        LookupPlace,
-        ActionButton,
-
-        FindIcon,
-        SavedIcon,
-        ScienceIcon,
-        GoalsIcon,
-        ProfileIcon,
-        SearchIcon,
-        MyOpportunitiesIcon,
-        MyPastOpportunitiesIcon,
-        MyOrganizationIcon,
-        SubmitOpportunityIcon,
-
-        Footer,
-        SubFooter,
-        MyDataIcon
-    },
-
-    data () {
-        const now = new Date();
-        return {
-            menu: false,
-            search: false,
-            show_login: false,
-            show_signup: false,
-            show_person_dropdown: false,
-            show_cookie: false,
-            show_location_modal: false,
-
-            query: {
-                keywords: '',
-                place: {
-                    near: '',
-                    longitude: 0,
-                    latitude: 0,
-                    proximity: 0
-                },
-                include_online: true,
-                date_from: now.toISOString().split('T')[0],
-                date_until: null,
-                sort: 'closest'
-            }
-        }
-    },
-
-    async fetch () {
-        await this.$store.dispatch('get_user')
-    },
-
-    computed: {
-        custom_props() {
-            return {
-                '--background-color': null,
-                '--primary-color': null,
-                '--secondary-color': null,
-                '--tertiary-color': null,
-                '--logo-url': null,
-            };
-        },
-
-        user() {
-            return this.$store.state.user;
-        },
-
-        alert() {
-            if(!this.user || !this.user.authenticated) {
-                return false;
-            }
-
-            return this.user.reports_pending > 0;
-        },
-
-        search_query() {
-            let joint = '?';
-            let ret = '';
-
-            if (this.query.keywords) {
-                ret += joint + 'text=' + encodeURIComponent(this.query.keywords);
-                joint = '&';
-            }
-
-            if (this.query.place.near) {
-                ret += joint + 'near=' + encodeURIComponent(this.query.place.near);
-                joint = '&';
-            }
-
-            if (this.query.place.longitude) {
-                ret += joint + 'longitude=' + encodeURIComponent(this.query.place.longitude);
-                joint = '&';
-            }
-
-            if (this.query.place.latitude) {
-                ret += joint + 'latitude=' + encodeURIComponent(this.query.place.latitude);
-                joint = '&';
-            }
-
-            if (this.query.place.proximity) {
-                ret += joint + 'proximity=' + encodeURIComponent(this.query.place.proximity);
-                joint = '&';
-            }
-
-            if (!this.query.include_online) {
-                ret += joint + 'physical=in-person';
-                joint = '&';
-            }
-
-            if (this.query.date_from !== null) {
-                let date = this.query.date_from;
-                if(date.constructor !== Date) {
-                    date = new Date(date);
-                }
-                ret += joint + 'beginning=' + encodeURIComponent(date.toISOString());
-                joint = '&';
-            }
-
-            if (this.query.date_until !== null) {
-                let date = this.query.date_until;
-                if(date.constructor !== Date) {
-                    date = new Date(date);
-                }
-                ret += joint + 'ending=' + encodeURIComponent(date.toISOString());
-                joint = '&';
-            }
-
-            if (this.query.sort !== null) {
-                ret += joint + 'sort=' + this.query.sort;
-                joint = '&';
-            }
-
-            return ret
-        },
-
-        authenticated() {
-            return !!this.$store.state.user.authenticated;
-        },
-
-        owner() {
-            if(!this.authenticated) {
-                return false;
-            }
-
-            return this.$store.state.user.num_partners > 0;
-        },
-
-        username() {
-            return this.$store.state.user.username;
-        },
-
-        show_location_cue() {
-            return !(this.query.place.latitude || this.query.place.longitude);
-        },
-
-    },
-
-    async mounted() {
-        await this.$store.dispatch('sync_local_to_server');
-        if(!window.localStorage.getItem("cookie-consent")) {
-            this.show_cookie = true;
-        }
-    },
-
-    methods: {
-        cookie_consent() {
-            this.show_cookie = false;
-            window.localStorage.setItem("cookie-consent", "true");
-        },
-
-        toggle_search() {
-            this.search = !this.search;
-
-            if(this.search) {
-                this.$refs.search_keywords.focus();
-            }
-        },
-
-        find() {
-            this.search = false;
-            this.$router.push('/find' + this.search_query);
-        },
-
-        logout() {
-            this.$store.dispatch('logout');
-        },
-
-        store_here(place) {
-            this.$store.commit('here', place);
-        },
-    }
-}
-</script>
 
 <style lang="scss" scoped>
 
@@ -602,9 +173,6 @@ header {
         text-align: left;
         box-shadow: 0px 3px 6px $snm-color-shadow;
         width: 100%;
-        
-
-        
 
         .not-authenticated {
             display: flex;
@@ -663,7 +231,7 @@ header {
 
         .authenticated {
             li {
-                // border: 1px solid $snm-color-border-ondark;
+                border: 1px solid $snm-color-border-ondark;
                 line-height: 48px;
 
                 a {
@@ -673,12 +241,6 @@ header {
                         color: $snm-color-background-medium;
                     }
                 }
-            }
-
-            .subnav li {
-              padding-left: 56px;
-              background-color: #5694a2;
-
             }
         }
     }
@@ -1122,16 +684,6 @@ footer {
             a:hover,a:active {
               color: $snm-color-background-meddark;
             }
-
-            .subnav a {
-              padding-left: 56px;
-              &.nuxt-link-active {
-                background-color: #5694a2;
-              }
-            }
-            .subnav li:last-child {
-                border-bottom: 1px solid #5694a2;
-              }
         }
     }
 
@@ -1292,13 +844,6 @@ footer {
     .no-mobile {
         display: none !important;
     }
-}
-
-@media (max-width: 959px) {
-  .mobile-menu {
-          overflow: auto!important;;
-        max-height: calc(100vh - 52px)!important;
-        }
 }
 
 @media (min-width: $tablet-screen) {
