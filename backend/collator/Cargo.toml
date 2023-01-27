@@ -15,7 +15,7 @@ common = { version = "0.1.0", path = "../common", default-features = false, feat
 futures-util = "0.3.25"
 google-analyticsdata1_beta = "4.0.1"
 reqwest = { version = "0.11.14", features = ["rustls-tls", "brotli", "gzip", "deflate"] }
-rusty-s3 = "0.3.3"
+rusty-s3 = "0.4.1"
 serde_json = "1.0.91"
 serde_qs = "0.11.0"
 sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "chrono", "postgres", "json", "uuid", "macros", "offline", "tls", "migrate"] }
