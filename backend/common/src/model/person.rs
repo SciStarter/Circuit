@@ -1,3 +1,5 @@
+use std::{collections::BTreeMap, ops::IndexMut};
+
 use super::{partner::Partner, Error, Opportunity, OpportunityExterior, Pagination};
 use crate::{Database, ToFixedOffset};
 
@@ -11,6 +13,15 @@ use sqlx::prelude::*;
 use uuid::Uuid;
 
 pub const ANONYMOUS: OnceCell<Person> = OnceCell::new();
+
+#[derive(
+    Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+pub enum MiscPermission {
+    ClientReadWrite,
+    ClientReadOnly,
+    Server,
+}
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -356,6 +367,7 @@ pub struct PersonInterior {
     pub allow_emails: bool,
     pub recent_point: Option<serde_json::Value>,
     pub last_used_people_recruiter: Option<DateTime<Utc>>,
+    pub extra: Option<BTreeMap<String, (serde_json::Value, MiscPermission)>>,
 }
 
 impl Default for PersonInterior {
@@ -389,6 +401,7 @@ impl Default for PersonInterior {
             allow_emails: true,
             recent_point: Default::default(),
             last_used_people_recruiter: Default::default(),
+            extra: None,
         }
     }
 }
@@ -815,6 +828,73 @@ SELECT EXISTS(
     pub async fn note_activity(&mut self, db: &Database) -> Result<(), Error> {
         self.interior.active_at = Utc::now().to_fixed_offset();
         self.store(db).await
+    }
+
+    pub fn has_extra(&self, key: &str) -> bool {
+        if let Some(map) = &self.interior.extra {
+            map.contains_key(key)
+        } else {
+            false
+        }
+    }
+
+    pub fn set_extra<V: Into<serde_json::Value>>(
+        &mut self,
+        key: &str,
+        value: V,
+        perm: MiscPermission,
+    ) {
+        if let Some(map) = &mut self.interior.extra {
+            match map.entry(key.to_owned()) {
+                std::collections::btree_map::Entry::Vacant(e) => {
+                    e.insert((value.into(), perm));
+                }
+                std::collections::btree_map::Entry::Occupied(mut e) if perm >= e.get().1 => {
+                    e.insert((value.into(), perm));
+                }
+                std::collections::btree_map::Entry::Occupied(e) => {}
+            }
+        } else {
+            self.interior.extra = Some(
+                [(key.to_owned(), (value.into(), perm))]
+                    .into_iter()
+                    .collect(),
+            );
+        }
+    }
+
+    pub fn get_extra_json(&self, key: &str, perm: MiscPermission) -> Option<serde_json::Value> {
+        if let Some(map) = &self.interior.extra {
+            if let Some((value, has_perm)) = map.get(key) {
+                if perm >= *has_perm {
+                    Some(value.to_owned())
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn get_extra<V: DeserializeOwned>(&self, key: &str, perm: MiscPermission) -> Option<V> {
+        if let Some(value) = self.get_extra_json(key, perm) {
+            serde_json::from_value(value).ok()
+        } else {
+            None
+        }
+    }
+
+    pub fn del_extra(&mut self, key: &str, perm: MiscPermission) {
+        if let Some(map) = &mut self.interior.extra {
+            if let Some((_, has_perm)) = map.get(key) {
+                if perm >= *has_perm {
+                    map.remove(key);
+                }
+            }
+        }
     }
 
     pub async fn load_by_id(db: &Database, id: i32) -> Result<Person, Error> {

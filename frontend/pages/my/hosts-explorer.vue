@@ -263,7 +263,7 @@ export default {
                     period: "This Month",
                     status: "Live and Closed"
                 },
-                ...context.store.state.auth
+                ...this.$store.state.auth
             });
             this.org = org;
             loading.close();

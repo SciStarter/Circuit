@@ -112,7 +112,12 @@ export default {
             required: false,
             default: false,
         },
-        triggerSuccess: Function
+
+        triggerSuccess: {
+            type: Function,
+            required: false,
+            default: () => {}
+        },
     },
 
     data() {

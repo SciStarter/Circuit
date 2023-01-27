@@ -1,124 +1,128 @@
 <template>
-    <div id="evolve">
+<div id="evolve">
 
-      <div class="evolve-bg">
-            <div class="stars-container">
-              <div id="strawberry" class="fruit"><img src="~assets/img/evolve-me/strawberry.svg" /></div>
-              <div id="fruit" class="fruit"><img src="~assets/img/evolve-me/fruit.svg" /></div>
-        
-        <div class="snm-wrapper">
-            
-            <div class="snm-container">
+  <div class="evolve-bg">
+    <div class="stars-container">
+      <div id="strawberry" class="fruit"><img src="~assets/img/evolve-me/strawberry.svg" /></div>
+      <div id="fruit" class="fruit"><img src="~assets/img/evolve-me/fruit.svg" /></div>
 
-             
+      <div class="snm-wrapper">
 
-                <div class="logo-lockup">
-                    <img src="~assets/img/evolve-me/evolveme-logo.svg" id="evolve-logo" />
-                    <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
-                        <img src="~assets/img/logo.svg" title="return to home page" />
-                    </nuxt-link>
+        <div class="snm-container">
+
+
+
+          <div class="logo-lockup">
+            <img src="~assets/img/evolve-me/evolveme-logo.svg" id="evolve-logo" />
+            <nuxt-link to="/" class="logo" data-context="Science Near Me logo">
+              <img src="~assets/img/logo.svg" title="return to home page" />
+            </nuxt-link>
+          </div>
+
+
+          <div v-if="state > 1">
+            <ul class="steps">
+              <li class="step" :class="{'current':state==2,'past':state>2}">
+                <div v-if="state>2" class="checkmark"><img src="~assets/img/evolve-me/checkmark.svg" /></div>
+                <div>
+                  <strong>Step One</strong>
+                  <small>Create a Science Near Me Account</small>
                 </div>
-
-
-                <div v-if="state > 1">
-                    <ul class="steps">
-                        <li class="step" :class="{'current':state==2,'past':state>2}">
-                          <div v-if="state>2" class="checkmark"><img src="~assets/img/evolve-me/checkmark.svg" /></div>
-                          <div>
-                            <strong>Step One</strong>
-                            <small>Create a Science Near Me Account</small>
-                          </div>
-                        </li>
-                        <li class="step" :class="{'current':state==3,'past':state>3}">
-                          <div v-if="state>3" class="checkmark"><img src="~assets/img/evolve-me/checkmark.svg" /></div>
-                          <div>
-                            <strong>Step Two</strong>
-                            <small>Search for a science opportunity near you</small>
-                          </div>
-                        </li>
-                        <li class="step" :class="{'current':state==4}">
-                          <div v-if="state==4" class="checkmark"><img src="~assets/img/evolve-me/checkmark.svg" /></div>
-                          <div>
-                            <strong>Step Three</strong>
-                            <small>View the science opportunities near you!</small>
-                          </div>
-                        </li>
-                    </ul>
+              </li>
+              <li class="step" :class="{'current':state==3,'past':state>3}">
+                <div v-if="state>3" class="checkmark"><img src="~assets/img/evolve-me/checkmark.svg" /></div>
+                <div>
+                  <strong>Step Two</strong>
+                  <small>Search for a science opportunity near you</small>
                 </div>
-
-
-                <div class="content-card" v-if="state==1">
-                    <div class="center">
-                        <h1>Welcome to Science Near Me</h1>
-                        <p>Science Near Me has partnered with EvolveMe to help you complete tasks, earn points, and build skills in discovering and connecting with opportunities to engage with science near you!</p>
-
-                        <iframe class="video" src="https://www.youtube.com/embed/cGvq4Uu_IUY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-                        <action-button principal @click="begin()">Begin by Creating Your Account</action-button>
-                    </div>
+              </li>
+              <li class="step" :class="{'current':state==4}">
+                <div v-if="state==4" class="checkmark"><img src="~assets/img/evolve-me/checkmark.svg" /></div>
+                <div>
+                  <strong>Step Three</strong>
+                  <small>View the science opportunities near you!</small>
                 </div>
-
-                <div class="content-card" v-if="state==2">
-                    <div class="center">
-                        <h1>Create Your Account</h1>
-                        <div id="evolve-signup"><signup-form partner="evolveme" :triggerSuccess="completeAccountCreation" /></div>
-                    </div>
-                </div>
-
-                <div class="content-card" v-if="state==3">
-                    <div class="center">
-                        <h1>Find Science Near You!</h1>
-                        <p>Use the search bar below. You may want to allow your browser to find your location.</p>
-                        <general-filters
-                            :text="search_text"
-                            search-button
-                            :place="search_place"
-                            :beginning="search_beginning"
-                            :ending="search_ending"
-                            :include-online="search_online"
-                            @text="search_text=$event"
-                            @place="search_place=$event"
-                            @beginning="search_beginning=$event"
-                            @ending="search_ending=$event"
-                            @include-online="search_online=$event"
-                            />
-                        <button @click="state=4">go to step 4</button>
-                    </div>
-                </div>
-
-                <div class="content-card" v-if="state==4">
-                    <div class="center">
-                        <h1>Congratulations!<br />You did it! You've earned points in EvolveMe.</h1>
-                        <h2>You've Found Science Near You and Completed Your EvolveMe Task!</h2>
-                        <p>You can look through the list of science near you below or you can visit your <a href="/">Science Near Me Dashboard</a> to find more projects.</p>
-                   
-            
-                          <!-- <find-results /> -->
+              </li>
+            </ul>
+          </div>
 
 
-                      <p style="margin-top:4rem;"><b>Below here is basically the finder page. I see you rebuilt it for the exchange. Would this be eaiser to make a common component so we can update in one place if there are any design changes that are more global?</b></p>
+          <div class="content-card" v-if="state==1">
+            <div class="center">
+              <h1>Welcome to Science Near Me</h1>
+              <p>Science Near Me has partnered with EvolveMe to help you complete tasks, earn points, and build skills in discovering and connecting with opportunities to engage with science near you!</p>
 
+              <iframe class="video" src="https://www.youtube.com/embed/cGvq4Uu_IUY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-
-
-                    </div>
-                </div>
-
-
+              <action-button principal @click="begin()">Begin by Creating Your Account</action-button>
             </div>
           </div>
+
+          <div class="content-card" v-if="state==2">
+            <div class="center">
+              <h1>Create Your Account</h1>
+              <div id="evolve-signup"><signup-form partner="evolveme" /></div>
+            </div>
           </div>
 
-          <img id="tele-left" class="telescope" src="~assets/img/evolve-me/telescope.svg" />
-          <img id="tele-right" class="telescope" src="~assets/img/evolve-me/telescope.svg" />
+          <div class="content-card" v-if="state==3">
+            <div class="center">
+              <h1>Find Science Near You!</h1>
+              <p>Use the search bar below. You may want to allow your browser to find your location.</p>
+              <general-filters
+                :text="search_text"
+                search-button
+                :place="search_place"
+                :beginning="search_beginning"
+                :ending="search_ending"
+                :include-online="search_online"
+                @text="search_text=$event"
+                @place="search_place=$event"
+                @beginning="search_beginning=$event"
+                @ending="search_ending=$event"
+                @include-online="search_online=$event"
+                />
+              <button @click="completeSearch">search</button>
+            </div>
+          </div>
+
+          <div class="content-card" v-if="state==4">
+            <div class="center">
+              <h1>Congratulations!<br />You did it! You've earned points in EvolveMe.</h1>
+              <h2>You've Found Science Near You and Completed Your EvolveMe Task!</h2>
+              <p>You can look through the list of science near you below or you can visit your <nuxt-link to="/">Science Near Me Dashboard</nuxt-link> to find more projects.</p>
+
+
+              <section id="results">
+                <template v-if="matches.length > 0">
+                  <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" previous-page="find" />
+                </template>
+                <template v-else>
+                  <div class="alert no-results">
+                    <p>No results.</p>
+                  </div>
+                </template>
+              </section>
+
+              <nuxt-link to="/find">Check out our full opportunity finder for more!</nuxt-link>
+            </div>
+          </div>
+
 
         </div>
-
-
-        <Footer />
-        <SubFooter />
-
+      </div>
     </div>
+
+    <img id="tele-left" class="telescope" src="~assets/img/evolve-me/telescope.svg" />
+    <img id="tele-right" class="telescope" src="~assets/img/evolve-me/telescope.svg" />
+
+  </div>
+
+
+  <Footer />
+  <SubFooter />
+
+</div>
 </template>
 
 <script>
@@ -128,40 +132,100 @@ import ActionButton from "~/components/ActionButton"
 import SignupForm from "~/components/SignupForm"
 import GeneralFilters from "~/components/GeneralFilters"
 import FindResults from "~/components/FindResults"
+
 export default {
-  layout: "empty",
-  components: {
-    Footer,
-    SubFooter,
-    ActionButton,
-    SignupForm,
-    GeneralFilters,
-    FindResults
-  },
-  data(){
-    return {
-        state:1,
-    }
-  },
-  methods: {
-
-    begin(){
-        this.state = 2;
+    layout: "empty",
+    components: {
+        Footer,
+        SubFooter,
+        ActionButton,
+        SignupForm,
+        GeneralFilters,
+        FindResults
     },
-    completeStepOne(){
 
+    data() {
+        return {
+            begun: false,
+            matches: [],
+            search_place: {near: "", longitude: 0, latitude: 0, proximity: 0},
+            search_text: "",
+            search_beginning: new Date().toISOString().slice(0, 10),
+            search_ending: null,
+            search_online: true,
+        }
     },
-    completeStepTwo(){
 
+    async asyncData() {
+        await context.store.dispatch('get_user');
+
+        const step = await context.$axios.$get("/api/ui/misc/extra/evolveme-step", context.store.state.auth);
+
+        return {
+            searched: step >= 2,
+        };
     },
-    completeStepThree(){
 
+    computed: {
+        user() {
+            return this.$store.state.user;
+        },
+
+        state() {
+            if(this.user.authenticated) {
+                if(this.searched) {
+                    return 4;
+                }
+                else {
+                    this.$axios.$post("/api/ui/misc/evolveme", {
+                        step: 1,
+                        user_id: context.route.query['user_id'],
+                        unique_task_key: context.route.query['unique_task_key'],
+                    }, this.$store.state.auth);
+
+                    return 3;
+                }
+            }
+            else if(this.begun) {
+                return 2;
+            }
+            else {
+                return 1;
+            }
+        },
     },
-    completeAccountCreation(){
-        this.state = 3;
-    }
 
-  }
+    methods: {
+        begin() {
+            this.begun = true;
+        },
+
+        async completeSearch() {
+            this.matches = await context.$axios.$get('/api/ui/finder/search', {
+                params: {
+                    text: this.search_text,
+                    longitude: this.search_place.longitude,
+                    latitude: this.search_place.latitude,
+                    proximity: this.search_place.proximity,
+                    beginning: this.search_beginning,
+                    ending: this.search_ending,
+                    physical: this.search_online,
+                    min_age: 0,
+                    max_age: 99,
+                    near: this.search_place.near,
+                    page: 0
+                }
+            });
+
+            this.searched = true;
+
+            this.$axios.$post("/api/ui/misc/evolveme", {
+                step: 2,
+                user_id: context.route.query['user_id'],
+                unique_task_key: context.route.query['unique_task_key'],
+            }, this.$store.state.auth);
+        },
+    },
 };
 </script>
 
@@ -203,13 +267,13 @@ $tan: #F2F1EF;
 
 #evolve {
     border-top: 10px solid $purple;
-   
+
     .evolve-bg {
 
     background: linear-gradient(
-        $tan 0%, 
-        $tan 50%, 
-        $purple 50%, 
+        $tan 0%,
+        $tan 50%,
+        $purple 50%,
         $purple 100%
       );
       background-size: 100% 1080px;
@@ -390,7 +454,7 @@ $tan: #F2F1EF;
           color: $purple;
           text-decoration: underline;
         }
-       
+
     }
   }
   .center {
@@ -639,5 +703,5 @@ $tan: #F2F1EF;
   display: block;
   margin: 2rem auto;
 }
-  
+
 </style>

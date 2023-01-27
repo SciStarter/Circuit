@@ -3,6 +3,7 @@ pub mod auth;
 pub mod entity;
 pub mod finder;
 pub mod invitation;
+pub mod misc;
 pub mod opportunity;
 pub mod organization;
 pub mod profile;
@@ -31,6 +32,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("organization/", organization::routes)
         .at("opportunity/", opportunity::routes)
         .at("invitation/", invitation::routes)
+        .at("misc/", misc::routes)
         .at("content", |r| r.get(content))
         .at("timezone", |r| r.get(timezone))
 }
