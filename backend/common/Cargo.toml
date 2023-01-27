@@ -17,7 +17,7 @@ aho-corasick = "0.7.20"
 ammonia = "3.3.0"
 async-std = { version = "1.12.0", features = ["attributes"] }
 chrono = { version = "0.4.23", features = ["serde"] }
-chrono-tz = "0.6.3"
+chrono-tz = "0.8.1"
 djangohashers = "1.6.0"
 futures = "0.3.25"
 hex = "0.4.3"
