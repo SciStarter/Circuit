@@ -25,6 +25,11 @@ spec:
             secretKeyRef:
               name: mapbox
               key: MAPBOX_TOKEN
+        - name: EVOLVEME_KEY
+          valueFrom:
+            secretKeyRef:
+              name: evolveme
+              key: EVOLVEME_KEY
         - name: DOMAIN
           value: "beta.sciencenearme.org"
 ---
