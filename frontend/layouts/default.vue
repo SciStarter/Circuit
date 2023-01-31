@@ -98,19 +98,21 @@
                 </nuxt-link>
               </li>
 
-              <li class="mobile-only" v-if="owner">
-                <nuxt-link to="/my/data-overview">
-                  <my-data-icon class="menu-icon" /> Data Insights
-                </nuxt-link>
+              <!-- Disabled temporarily -->
 
-                <ul class="subnav">
-                  <li><nuxt-link v-if="owner" to="/my/data-overview">Your Data Overview</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/hosts-explorer">Hosts Explorer</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/opportunity-data-explorer">Opportunity Data Explorer</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/snm-data-overview"> SNM Data Overview</nuxt-link></li>
-                </ul>
+              <!-- <li class="mobile-only" v-if="owner"> -->
+              <!--   <nuxt-link to="/my/data-overview"> -->
+              <!--     <my-data-icon class="menu-icon" /> Data Insights -->
+              <!--   </nuxt-link> -->
 
-              </li>
+              <!--   <ul class="subnav"> -->
+              <!--     <li><nuxt-link v-if="owner" to="/my/data-overview">Your Data Overview</nuxt-link></li> -->
+              <!--     <li><nuxt-link v-if="owner" to="/my/hosts-explorer">Hosts Explorer</nuxt-link></li> -->
+              <!--     <li><nuxt-link v-if="owner" to="/my/opportunity-data-explorer">Opportunity Data Explorer</nuxt-link></li> -->
+              <!--     <li><nuxt-link v-if="owner" to="/my/snm-data-overview"> SNM Data Overview</nuxt-link></li> -->
+              <!--   </ul> -->
+
+              <!-- </li> -->
 
              
               <li class="mobile-only">
