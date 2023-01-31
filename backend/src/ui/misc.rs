@@ -1,6 +1,8 @@
 use common::{model::person::MiscPermission, Database};
+use hmac::{Hmac, Mac};
 use once_cell::sync::Lazy;
 use serde::Deserialize;
+use sha2::Sha256;
 use tide::{Response, StatusCode};
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
@@ -14,9 +16,11 @@ static EVOLVEME_ENDPOINT: Lazy<String> = Lazy::new(|| {
     format!(
         "{}/user/tasks/steps",
         std::env::var("EVOLVEME_HOST")
-            .unwrap_or_else(|_| "https://asa-apps-evolveme-api-dev.alliants.net/".into())
+            .unwrap_or_else(|_| "https://evolveme-api-stage.asa.org".into())
     )
 });
+
+static EVOLVEME_KEY: Lazy<Option<String>> = Lazy::new(|| std::env::var("EVOLVEME_KEY").ok());
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
@@ -92,18 +96,28 @@ pub async fn evolveme(mut req: tide::Request<Database>) -> tide::Result {
             .unwrap_or(0);
 
         if step > current {
-            println!(
-                "EvolveMe response: {:?}",
-                surf::post(&*EVOLVEME_ENDPOINT)
-                    .header("X-EM-Signature", "")
-                    .body_json(&serde_json::json!({
-                        "stepNumber": step,
-                        "uniqueTaskKey": unique_task_key,
-                        "userid": user_id
-                    }))?
+            if let Some(key) = &*EVOLVEME_KEY {
+                let body = serde_json::to_vec(&serde_json::json!({
+                    "stepNumber": step,
+                    "uniqueTaskKey": unique_task_key,
+                    "userId": user_id
+                }))?;
+
+                let sig = {
+                    let mut mac: Hmac<Sha256> = Hmac::new_from_slice(key.as_bytes())?;
+                    mac.update(&body);
+                    hex::encode(mac.finalize().into_bytes())
+                };
+
+                println!(
+                    "EvolveMe response: {:?}",
+                    dbg!(surf::post(&*EVOLVEME_ENDPOINT)
+                        .header("X-EM-Signature", sig)
+                        .body_bytes(body))
                     .recv_string()
                     .await
-            );
+                );
+            }
 
             person.set_extra("evolveme-step", current, MiscPermission::ClientReadOnly);
             person.store(req.state()).await?;

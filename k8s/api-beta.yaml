@@ -59,6 +59,11 @@ spec:
             secretKeyRef:
               name: scistarter
               key: SCI_PUB
+        - name: EVOLVEME_KEY
+          valueFrom:
+            secretKeyRef:
+              name: evolveme
+              key: EVOLVEME_KEY
 ---
 apiVersion: v1
 kind: Service
