@@ -35,7 +35,7 @@
           Soonest
         </option>
       </mini-select>
-      <span>{{ pagination.total }} opportunities found! <small>use fewer search filter criteria to find more opportunities</small></span>
+      <span class="pag-total">{{ pagination.total }} opportunities found! <small>use fewer search filter criteria to find more opportunities</small></span>
       <!-- <action-button id="filter-trigger" text @click="filtering = true">
            Refine search
            </action-button> -->
@@ -729,6 +729,13 @@ export default {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid $snm-color-border;
+    .pag-total {
+      font-weight: bold;
+      margin-left: 8px;
+      small {
+        font-weight: normal;
+      }
+    }
 }
 
 #filter-physical {
