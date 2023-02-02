@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-frontend
-        image: scistarter/circuit-frontend:master-0.1.281
+        image: scistarter/circuit-frontend:master-0.1.290
         ports:
         - containerPort: 3000
         env:
@@ -25,11 +25,6 @@ spec:
             secretKeyRef:
               name: mapbox
               key: MAPBOX_TOKEN
-        - name: EVOLVEME_KEY
-          valueFrom:
-            secretKeyRef:
-              name: evolveme
-              key: EVOLVEME_KEY
         - name: DOMAIN
           value: "sciencenearme.org"
 ---

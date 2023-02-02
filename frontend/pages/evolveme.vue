@@ -61,7 +61,10 @@
           <div class="content-card" v-if="state==2">
             <div class="center">
               <h1>Create Your Account</h1>
-              <div id="evolve-signup"><signup-form partner="evolveme" /></div>
+              <div id="evolve-signup">
+                <signup-form v-if="!login_mode" in-modal not-cancelable next="manual" partner="evolveme" />
+                <login-form v-if="login_mode" in-modal not-cancelable next="manual" partner="evolveme" />
+              </div>
             </div>
           </div>
 
@@ -70,8 +73,9 @@
               <h1>Find Science Near You!</h1>
               <p>Use the search bar below. You may want to allow your browser to find your location.</p>
               <general-filters
-                :text="search_text"
                 search-button
+                disable-full-search
+                :text="search_text"
                 :place="search_place"
                 :beginning="search_beginning"
                 :ending="search_ending"
@@ -81,8 +85,8 @@
                 @beginning="search_beginning=$event"
                 @ending="search_ending=$event"
                 @include-online="search_online=$event"
+                @searched="completeSearch"
                 />
-              <button @click="completeSearch">search</button>
             </div>
           </div>
 
@@ -146,6 +150,7 @@ export default {
 
     data() {
         return {
+            login_mode: false,
             begun: false,
             matches: [],
             search_place: {near: "", longitude: 0, latitude: 0, proximity: 0},
@@ -156,7 +161,7 @@ export default {
         }
     },
 
-    async asyncData() {
+    async asyncData(context) {
         await context.store.dispatch('get_user');
 
         const step = await context.$axios.$get("/api/ui/misc/extra/evolveme-step", context.store.state.auth);
@@ -179,8 +184,8 @@ export default {
                 else {
                     this.$axios.$post("/api/ui/misc/evolveme", {
                         step: 1,
-                        user_id: context.route.query['user_id'],
-                        unique_task_key: context.route.query['unique_task_key'],
+                        user_id: parseInt(this.$route.query['user_id']),
+                        unique_task_key: this.$route.query['unique_task_key'],
                     }, this.$store.state.auth);
 
                     return 3;
@@ -201,15 +206,15 @@ export default {
         },
 
         async completeSearch() {
-            this.matches = await context.$axios.$get('/api/ui/finder/search', {
+            this.matches = await this.$axios.$get('/api/ui/finder/search', {
                 params: {
                     text: this.search_text,
                     longitude: this.search_place.longitude,
                     latitude: this.search_place.latitude,
                     proximity: this.search_place.proximity,
-                    beginning: this.search_beginning,
-                    ending: this.search_ending,
-                    physical: this.search_online,
+                    beginning: new Date(this.search_beginning).toISOString(),
+                    ending: this.search_ending ? new Date(this.search_ending).toISOString() : undefined,
+                    physical: this.search_online ? 'in-person-or-online' : 'in-person',
                     min_age: 0,
                     max_age: 99,
                     near: this.search_place.near,
@@ -219,10 +224,10 @@ export default {
 
             this.searched = true;
 
-            this.$axios.$post("/api/ui/misc/evolveme", {
+            await this.$axios.$post("/api/ui/misc/evolveme", {
                 step: 2,
-                user_id: context.route.query['user_id'],
-                unique_task_key: context.route.query['unique_task_key'],
+                user_id: this.$route.query['user_id'],
+                unique_task_key: this.$route.query['unique_task_key'],
             }, this.$store.state.auth);
         },
     },

@@ -257,7 +257,7 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
     }
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 struct SignupForm {
     email: String,
     username: Option<String>,

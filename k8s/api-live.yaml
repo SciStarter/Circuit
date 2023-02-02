@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-api
-        image: scistarter/circuit-api:master-0.1.97
+        image: scistarter/circuit-api:master-0.1.101
         ports:
         - containerPort: 8000
         env:
@@ -59,6 +59,13 @@ spec:
             secretKeyRef:
               name: scistarter
               key: SCI_PUB
+        - name: EVOLVEME_KEY
+          valueFrom:
+            secretKeyRef:
+              name: evolveme
+              key: EVOLVEME_KEY
+        - name: EVOLVEME_HOST
+          value: "https://evolveme-api.asa.org"
 ---
 apiVersion: v1
 kind: Service

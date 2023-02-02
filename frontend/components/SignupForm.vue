@@ -62,7 +62,7 @@
       </b-field>
     </div>
     <div v-if="partner=='evolveme'" class="center">
-      <action-button :loading="working" principal @click="triggerSuccess">
+      <action-button :loading="working" principal @click="sign_up">
         Create My Account
       </action-button>
     </div>
@@ -70,7 +70,7 @@
       <action-button :loading="working" type="is-primary" primary @click="sign_up">
         Sign up
       </action-button>
-      <b-button type="is-text" @click="inModal ? $emit('close') : $router.go(-1);">
+      <b-button v-if="!notCancelable" type="is-text" @click="inModal ? $emit('close') : $router.go(-1);">
         Cancel
       </b-button>
     </div>
@@ -79,6 +79,9 @@
 </template>
 
 <script>
+
+const LIKE_UUID = /^[a-z,0-9,-]{36,36}$/;
+
 export default {
     name: "SignupForm",
 
@@ -87,6 +90,12 @@ export default {
             type: String,
             required: false,
             default: '/',
+        },
+
+        notCancelable: {
+            type: Boolean,
+            required: false,
+            default: false,
         },
 
         query: {
@@ -136,7 +145,7 @@ export default {
                 newsletter: true,
                 next: this.next || '/',
                 next_query: this.query,
-                exchange: this.partner,
+                exchange: LIKE_UUID.test(this.partner) ? this.partner : undefined,
             }
         }
     },
