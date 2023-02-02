@@ -246,7 +246,10 @@ export const actions = {
 
     commit("save_user", user);
 
-    if (next) {
+    if (next == "manual") {
+      console.log("Skipping next redirection after signup");
+    }
+    else if (next) {
       if (next.startsWith("/api/")) {
         if (process.client) {
           window.location = next;
@@ -324,7 +327,10 @@ export const actions = {
 
     commit("save_user", user);
 
-    if (next) {
+    if (next == "manual") {
+      console.log("Skipping next redirection after signup");
+    }
+    else if (next) {
       if (next.startsWith("/api/")) {
         if (process.client) {
           window.location = next;

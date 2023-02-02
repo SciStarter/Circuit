@@ -33,7 +33,7 @@
         <action-button :loading="working" type="is-primary" primary @click="log_in">
           Log in
         </action-button>
-        <b-button type="is-text" @click="inModal ? $emit('close') : $router.go(-1);">
+        <b-button v-if="!notCancelable" type="is-text" @click="inModal ? $emit('close') : $router.go(-1);">
           Cancel
         </b-button>
       </div>
@@ -50,6 +50,12 @@ export default {
             type: String,
             required: false,
             default: '/',
+        },
+
+        notCancelable: {
+            type: Boolean,
+            required: false,
+            default: false,
         },
 
         query: {

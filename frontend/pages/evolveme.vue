@@ -61,7 +61,10 @@
           <div class="content-card" v-if="state==2">
             <div class="center">
               <h1>Create Your Account</h1>
-              <div id="evolve-signup"><signup-form partner="evolveme" /></div>
+              <div id="evolve-signup">
+                <signup-form v-if="!login_mode" in-modal not-cancelable next="manual" partner="evolveme" />
+                <login-form v-if="login_mode" in-modal not-cancelable next="manual" partner="evolveme" />
+              </div>
             </div>
           </div>
 
@@ -147,6 +150,7 @@ export default {
 
     data() {
         return {
+            login_mode: false,
             begun: false,
             matches: [],
             search_place: {near: "", longitude: 0, latitude: 0, proximity: 0},
@@ -222,16 +226,6 @@ export default {
 
             await this.$axios.$post("/api/ui/misc/evolveme", {
                 step: 2,
-                user_id: this.$route.query['user_id'],
-                unique_task_key: this.$route.query['unique_task_key'],
-            }, this.$store.state.auth);
-
-            // The last step is just "view the results of the search"
-            // so we grant it as soon as the previous step
-            // notification returns. No need to wait for it to
-            // complete though.
-            this.$axios.$post("/api/ui/misc/evolveme", {
-                step: 3,
                 user_id: this.$route.query['user_id'],
                 unique_task_key: this.$route.query['unique_task_key'],
             }, this.$store.state.auth);
