@@ -132,6 +132,12 @@ export default {
             default: "",
         },
 
+        disableFullSearch: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+
         place: {
             type: Object,
             required: false,
@@ -310,7 +316,10 @@ export default {
 
     methods: {
         search() {
-            if(this.widget) {
+            if(this.disableFullSearch) {
+                this.$emit("searched");
+            }
+            else if(this.widget) {
                 window.open('https://sciencenearme.org' + this.search_url, '_blank');
             }
             else {

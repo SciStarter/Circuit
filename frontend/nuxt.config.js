@@ -105,8 +105,8 @@ export default {
         "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net", "circuit-media.s3.amazonaws.com", "use.typekit.net"],
         "object-src": ["'self'", "circuit-media.s3.amazonaws.com"],
         "media-src": ["'self'", "circuit-media.s3.amazonaws.com"],
-        "frame-src": ["'self'"], // Overridden by child-src if the browser supports CSP 3 (Safari doesn't yet)
-        "child-src": ["'self'", "blob:"],
+        "frame-src": ["'self'", "https://www.youtube.com/"], // Overridden by child-src if the browser supports CSP 3 (Safari doesn't yet)
+        "child-src": ["'self'", "blob:", "https://www.youtube.com/"],
         "form-action": ["'self'"],
         //"frame-ancestors": ["'none'"], // Need a way to override this for the widget and exchange pages specifically
         "plugin-types": ["'none'"],

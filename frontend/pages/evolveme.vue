@@ -70,8 +70,9 @@
               <h1>Find Science Near You!</h1>
               <p>Use the search bar below. You may want to allow your browser to find your location.</p>
               <general-filters
-                :text="search_text"
                 search-button
+                disable-full-search
+                :text="search_text"
                 :place="search_place"
                 :beginning="search_beginning"
                 :ending="search_ending"
@@ -81,8 +82,8 @@
                 @beginning="search_beginning=$event"
                 @ending="search_ending=$event"
                 @include-online="search_online=$event"
+                @searched="completeSearch"
                 />
-              <button @click="completeSearch">search</button>
             </div>
           </div>
 
@@ -207,9 +208,9 @@ export default {
                     longitude: this.search_place.longitude,
                     latitude: this.search_place.latitude,
                     proximity: this.search_place.proximity,
-                    beginning: this.search_beginning,
-                    ending: this.search_ending,
-                    physical: this.search_online,
+                    beginning: new Date(this.search_beginning).toISOString(),
+                    ending: this.search_ending ? new Date(this.search_ending).toISOString() : undefined,
+                    physical: this.search_online ? 'in-person-or-online' : 'in-person',
                     min_age: 0,
                     max_age: 99,
                     near: this.search_place.near,
