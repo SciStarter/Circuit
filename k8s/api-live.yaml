@@ -64,6 +64,8 @@ spec:
             secretKeyRef:
               name: evolveme
               key: EVOLVEME_KEY
+        - name: EVOLVEME_HOST
+          value: "https://evolveme-api.asa.org"
 ---
 apiVersion: v1
 kind: Service
