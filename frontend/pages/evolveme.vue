@@ -39,7 +39,7 @@
               <li class="step" :class="{'current':state==4}">
                 <div v-if="state==4" class="checkmark"><img src="~assets/img/evolve-me/checkmark.svg" /></div>
                 <div>
-                  <strong>Step Three</strong>
+                  <strong>Task Completed!</strong>
                   <small>View the science opportunities near you!</small>
                 </div>
               </li>
@@ -73,6 +73,7 @@
               <h1>Find Science Near You!</h1>
               <p>Use the search bar below. You may want to allow your browser to find your location.</p>
               <general-filters
+                evolveme
                 search-button
                 disable-full-search
                 :text="search_text"
@@ -668,38 +669,38 @@ $tan: #F2F1EF;
     }
 
 
-::v-deep(.general-filters) {
-  background-color: transparent;
-  padding-top:0;
-  .basic-filter-backdrop form {
-    background-color: $purple;
-  }
-}
+// ::v-deep(.general-filters) {
+//   background-color: transparent;
+//   padding-top:0;
+//   .basic-filter-backdrop form {
+//     background-color: $purple;
+//   }
+// }
 
-@media (max-width:959px) {
-  ::v-deep(.general-filters) {
-    padding:1rem;
-    background-color: $purple;
-    border-radius: 8px;
-    .centered-row {
-      justify-content: flex-start;
-      > div {
-        width:100%;
-      }
-      > div:first-child {
-        margin-right: 1rem;
-      }
-    }
-  }
-}
+// @media (max-width:959px) {
+//   ::v-deep(.general-filters) {
+//     padding:1rem;
+//     background-color: $purple;
+//     border-radius: 8px;
+//     .centered-row {
+//       justify-content: flex-start;
+//       > div {
+//         width:100%;
+//       }
+//       > div:first-child {
+//         margin-right: 1rem;
+//       }
+//     }
+//   }
+// }
 
-@media (max-width:488px) {
-  ::v-deep(.general-filters) {
-    .centered-row {
-      flex-direction: column;
-    }
-  }
-}
+// @media (max-width:488px) {
+//   ::v-deep(.general-filters) {
+//     .centered-row {
+//       flex-direction: column;
+//     }
+//   }
+// }
 
 .video {
   aspect-ratio: 16 / 9;
