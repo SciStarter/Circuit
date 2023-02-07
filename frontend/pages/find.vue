@@ -729,9 +729,11 @@ export default {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid $snm-color-border;
+    margin-bottom: 1rem;
     .pag-total {
       font-weight: bold;
       margin-left: 8px;
+      line-height: 1;
       small {
         font-weight: normal;
       }
@@ -888,7 +890,7 @@ export default {
     border: 1px solid #ddd;
 }
 
-@media (min-width:$tablet-screen) {
+// @media (min-width:$tablet-screen) {
   #results {
     padding: 0 1rem;
   }
@@ -896,7 +898,7 @@ export default {
       grid-row: 1;
       grid-column: 1;
   }
-}
+// }
 
 @media (min-width: 960px) {
   #find > .snm-container {

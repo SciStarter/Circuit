@@ -699,6 +699,24 @@ export default {
   }
 }
 
+@media (max-width:768px){
+#opportunity-cards {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin:1rem;
+  }
+}
+
+@media (max-width:580px){
+  #homepage #here-now #opportunity-cards {
+    display: block;
+    > article {
+      width:100%;
+    }
+  }
+}
+
 @media (min-width: $tablet-screen) {
   #homepage {
     h2 {
@@ -759,6 +777,7 @@ export default {
       }
   }
 }
+
 
 @media (min-width: $fullsize-screen) {
     #homepage {
@@ -867,6 +886,13 @@ export default {
         }
     }
 }
+
+@media (max-width: 1100px) {
+  #homepage #here-now .opportunity-card {
+    width: 48%;
+  }
+}
+
 
 @media (max-width: $mobile-screen) {
     .no-mobile {
