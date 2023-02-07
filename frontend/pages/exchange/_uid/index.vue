@@ -1,5 +1,5 @@
 <template>
-<div class="exchange exchange-index">
+<div class="exchange exchange-index" :class="{'loggedin':$store.state.user.authenticated}">
 
   <div class="exchange-actions" v-if="$store.state.user.authenticated">
 
@@ -854,6 +854,12 @@ export default {
 :deep(#filter-physical .field.has-addons) {
   flex-wrap:nowrap;
   flex-direction: column;
+}
+
+.loggedin  {
+:deep(div.pagination-selector.small){
+    top: 56px;
+}
 }
 
 
