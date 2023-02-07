@@ -345,7 +345,7 @@ export default {
     display: none;
   }
 }
-@media (min-width: $tablet-screen) {
+// @media (min-width: $tablet-screen) {
   #homepage .secondary {
     display: block;
     background-color: var(--background-color, $snm-color-background-light);
@@ -353,7 +353,7 @@ export default {
   }
 
   .opportunity-card {
-    width: calc(50% - 0.5rem);
+    // width: calc(50% - 0.5rem);
     border: 1px solid $snm-color-border!important;
     margin-bottom: 1rem;
     border-radius: rem(6px);
@@ -366,7 +366,7 @@ export default {
     }
   }
 
-}
+// }
 
 @media (min-width: $fullsize-screen) {
 
@@ -391,8 +391,9 @@ export default {
         flex-wrap: wrap;
 
         .info {
-            width: 30vw;
-            min-width: 13rem;
+          margin-right: 1rem;
+            // width: 30vw;
+            // min-width: 13rem;
 
             .opportunity-notice {
                 display: block;

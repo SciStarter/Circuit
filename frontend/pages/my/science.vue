@@ -238,9 +238,15 @@ export default {
 }
 
 .reportable {
-    border-top: 1px solid $snm-color-border;
-    border-bottom: 1px solid $snm-color-border;
-    padding: 1em 0px;
+    border: 1px solid $snm-color-border;
+    border-radius: 8px;
+    // padding: 1em 0px;
+    margin-bottom: 1rem;
+
+    .opportunity-card {
+      border: 0!important;
+      margin-bottom: 0;
+    }
 
     .actions {
         .bigger {
@@ -344,6 +350,7 @@ export default {
         .secondary {
           display:flex!important;
           background-color: #fff;
+          flex-direction: column;
         }
 
         .actions {

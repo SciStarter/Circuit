@@ -30,6 +30,8 @@ pub enum Error {
     Missing(String),
     #[error("Fields are exclusive: {0} and {1}")]
     Exclusive(String, String),
+    #[error("Value is our of bounds: {0}")]
+    OutOfBounds(String),
     #[error("Field contains invalid value: {0}")]
     Value(String),
     #[error("SQLx error")]

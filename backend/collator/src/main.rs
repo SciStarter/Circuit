@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use common::{
     model::analytics::{AbsoluteTimePeriod, EngagementDataBar, RelativeTimePeriod, Status},
@@ -8,6 +10,7 @@ use strum::IntoEnumIterator;
 use uuid::Uuid;
 
 mod ga4;
+mod ga4_bigquery;
 mod hosts;
 mod opportunity;
 mod organization;
@@ -102,6 +105,8 @@ FROM (
 }
 
 async fn process(db: &Database, cycle: u64) -> Result<(), Box<dyn std::error::Error>> {
+    let threshold: DateTime<FixedOffset> = DateTime::from_str("2021-01-01T00:00:00Z").unwrap();
+
     sqlx::query!("SELECT c_refresh_log_by_when_this_year()")
         .execute(db)
         .await?;
@@ -126,10 +131,11 @@ async fn process(db: &Database, cycle: u64) -> Result<(), Box<dyn std::error::Er
         let mut iter = common::model::Opportunity::catalog(db).await?;
         while let Some(opp) = iter.get_next(db).await {
             println!(
-                "{} [{}][{:?}][{:?}] Caching opp",
+                "{} [{}][{:?}][{}: {:?}] Caching opp",
                 Utc::now(),
                 cycle,
                 &period,
+                opp.id.unwrap_or(0),
                 &opp.exterior.title
             );
             opportunity::cache(db, &opp, temporary, begin, end).await?;
@@ -138,10 +144,11 @@ async fn process(db: &Database, cycle: u64) -> Result<(), Box<dyn std::error::Er
         for partner_ref in common::model::partner::Partner::catalog(db).await? {
             let partner = common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
             println!(
-                "{} [{}][{:?}][{:?}] Caching partner",
+                "{} [{}][{:?}][{}: {:?}] Caching partner",
                 Utc::now(),
                 cycle,
                 &period,
+                partner.id.unwrap_or(0),
                 &partner.exterior.name
             );
             organization::cache(db, &partner, temporary, begin, end).await?;
@@ -162,12 +169,17 @@ async fn process(db: &Database, cycle: u64) -> Result<(), Box<dyn std::error::Er
 
             let mut iter = common::model::Opportunity::catalog(db).await?;
             while let Some(opp) = iter.get_next(db).await {
+                if !opp.current_as_of(&threshold) {
+                    continue;
+                }
+
                 println!(
-                    "{} [{}][{:?}][{:?}][{:?}] Collecting opportunity",
+                    "{} [{}][{:?}][{:?}][{}: {:?}] Collecting opportunity",
                     Utc::now(),
                     cycle,
                     &period,
                     &status,
+                    opp.id.unwrap_or(0),
                     &opp.exterior.title
                 );
                 let data = opportunity::collect(db, &opp, &state).await?;
@@ -199,11 +211,12 @@ ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
                 let partner =
                     common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
                 println!(
-                    "{} [{}][{:?}][{:?}][{:?}] Collecting partner",
+                    "{} [{}][{:?}][{:?}][{}: {:?}] Collecting partner",
                     Utc::now(),
                     cycle,
                     &period,
                     &status,
+                    partner.id.unwrap_or(0),
                     &partner.exterior.name
                 );
 
@@ -232,11 +245,12 @@ ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
                 .await?;
 
                 println!(
-                    "{} [{}][{:?}][{:?}][{:?}] Collecting hosts",
+                    "{} [{}][{:?}][{:?}][{}: {:?}] Collecting hosts",
                     Utc::now(),
                     cycle,
                     &period,
                     &status,
+                    partner.id.unwrap_or(0),
                     &partner.exterior.name
                 );
                 let data = hosts::collect(db, &partner, &state).await?;

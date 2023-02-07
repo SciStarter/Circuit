@@ -483,4 +483,10 @@ h1 {
     overflow: hidden;
     max-height: 0;
 }
+
+@media (max-width:767px){
+  #results {
+    padding: 0 1rem;
+  }
+}
 </style>

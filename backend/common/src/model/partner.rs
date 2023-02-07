@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use super::{
     opportunity::{Domain, Opportunity, OrganizationType},
     person::Person,
@@ -5,10 +7,104 @@ use super::{
 };
 use crate::{Database, INTERNAL_UID};
 
-use chrono::FixedOffset;
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use sqlx;
 use uuid::Uuid;
+
+#[derive(Default, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Copy, Clone)]
+pub enum LoggedErrorLevel {
+    #[default]
+    Debug,
+    Warning,
+    Error,
+}
+
+impl TryFrom<i16> for LoggedErrorLevel {
+    type Error = Error;
+
+    fn try_from(value: i16) -> Result<Self, <LoggedErrorLevel as TryFrom<i16>>::Error> {
+        match value {
+            0 => Ok(LoggedErrorLevel::Debug),
+            1 => Ok(LoggedErrorLevel::Warning),
+            2 => Ok(LoggedErrorLevel::Error),
+            _ => Err(Error::OutOfBounds("error level".into())),
+        }
+    }
+}
+
+impl From<LoggedErrorLevel> for i16 {
+    fn from(value: LoggedErrorLevel) -> Self {
+        match value {
+            LoggedErrorLevel::Debug => 0,
+            LoggedErrorLevel::Warning => 1,
+            LoggedErrorLevel::Error => 2,
+        }
+    }
+}
+
+#[derive(Default, Debug, Serialize, Deserialize)]
+#[serde(default)]
+pub struct LoggedError {
+    pub id: i64,
+    #[serde(skip_serializing)]
+    pub partner_id: i32,
+    pub when: DateTime<FixedOffset>,
+    pub title: Option<String>,
+    pub raw: Option<String>,
+    pub level: LoggedErrorLevel,
+    pub message: String,
+}
+
+impl LoggedError {
+    pub fn set_title(mut self, title: impl AsRef<str>) -> Self {
+        self.title = Some(title.as_ref().to_string());
+        self
+    }
+
+    pub fn set_raw(mut self, raw: impl AsRef<str>) -> Self {
+        self.raw = Some(raw.as_ref().to_string());
+        self
+    }
+
+    pub async fn store(&self, db: &Database) -> Result<i64, Error> {
+        if self.partner_id <= 0 {
+            return Err(Error::Value("Can not save without partner_id".into()));
+        }
+
+        Ok(sqlx::query_scalar!(
+            r#"
+INSERT
+  INTO c_partner_error_log (partner_id, "level", "message", "title", "raw")
+  VALUES ($1, $2, $3, $4, $5)
+  RETURNING id
+"#,
+            self.partner_id,
+            i16::from(self.level),
+            self.message,
+            self.title,
+            self.raw,
+        )
+        .fetch_one(db)
+        .await?)
+    }
+}
+
+impl<E: std::error::Error> From<E> for LoggedError {
+    fn from(value: E) -> Self {
+        LoggedError {
+            level: LoggedErrorLevel::Error,
+            message: value.to_string(),
+            ..Default::default()
+        }
+    }
+}
+
+impl Display for LoggedError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 #[serde(default)]
@@ -128,6 +224,45 @@ impl Partner {
         } else {
             false
         }
+    }
+
+    pub async fn log_error(
+        &self,
+        db: &Database,
+        level: LoggedErrorLevel,
+        message: impl AsRef<str>,
+        title: Option<impl AsRef<str>>,
+        raw: Option<impl AsRef<str>>,
+    ) -> Result<i64, Error> {
+        let Some(partner_id) = self.id else { return Err(Error::Missing("id".into())); };
+
+        let title = if let Some(val) = &title {
+            Some(val.as_ref())
+        } else {
+            None
+        };
+
+        let raw = if let Some(val) = &raw {
+            Some(val.as_ref())
+        } else {
+            None
+        };
+
+        Ok(sqlx::query_scalar!(
+            r#"
+INSERT
+  INTO c_partner_error_log (partner_id, "level", "message", "title", "raw")
+  VALUES ($1, $2, $3, $4, $5)
+  RETURNING id
+"#,
+            partner_id,
+            i16::from(level),
+            message.as_ref(),
+            title,
+            raw,
+        )
+        .fetch_one(db)
+        .await?)
     }
 
     pub async fn find_by_name(db: &Database, name: &str) -> Result<Vec<PartnerReference>, Error> {
