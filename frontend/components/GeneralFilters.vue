@@ -1,5 +1,5 @@
 <template>
-<div class="general-filters" :class="{'widget':widget}">
+<div class="general-filters" :class="{'widget':widget,'evolveme':evolveme}">
   <template v-if="!widget">
   <div class="snm-container">
   <div class="basic-filter-backdrop">
@@ -187,6 +187,11 @@ export default {
             type: String,
             required: false,
             default: undefined,
+        },
+        evolveme: {
+            type: Boolean,
+            required: false,
+            default: false,
         },
     },
 
@@ -544,6 +549,39 @@ export default {
       align-items:center;
     }
 
+}
+
+.evolveme.general-filters {
+  background-color: transparent;
+  padding-top:0;
+  .basic-filter-backdrop form {
+    background-color: #8E51F0;
+  }
+}
+
+@media (max-width:959px) {
+  .evolveme.general-filters {
+    padding:1rem;
+    background-color: $purple;
+    border-radius: 8px;
+    .centered-row {
+      justify-content: flex-start;
+      > div {
+        width:100%;
+      }
+      > div:first-child {
+        margin-right: 1rem;
+      }
+    }
+  }
+}
+
+@media (max-width:488px) {
+  .evolveme.general-filters{
+    .centered-row {
+      flex-direction: column;
+    }
+  }
 }
 
 </style>

@@ -35,7 +35,7 @@
           Soonest
         </option>
       </mini-select>
-      <span>{{ pagination.total }} opportunities found! <small>use fewer search filter criteria to find more opportunities</small></span>
+      <span class="pag-total">{{ pagination.total }} opportunities found! <small>use fewer search filter criteria to find more opportunities</small></span>
       <!-- <action-button id="filter-trigger" text @click="filtering = true">
            Refine search
            </action-button> -->
@@ -729,6 +729,15 @@ export default {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid $snm-color-border;
+    margin-bottom: 1rem;
+    .pag-total {
+      font-weight: bold;
+      margin-left: 8px;
+      line-height: 1;
+      small {
+        font-weight: normal;
+      }
+    }
 }
 
 #filter-physical {
@@ -881,7 +890,7 @@ export default {
     border: 1px solid #ddd;
 }
 
-@media (min-width:$tablet-screen) {
+// @media (min-width:$tablet-screen) {
   #results {
     padding: 0 1rem;
   }
@@ -889,7 +898,7 @@ export default {
       grid-row: 1;
       grid-column: 1;
   }
-}
+// }
 
 @media (min-width: 960px) {
   #find > .snm-container {
