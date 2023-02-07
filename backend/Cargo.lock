@@ -760,6 +760,8 @@ dependencies = [
  "common",
  "futures-util",
  "google-analyticsdata1_beta",
+ "google-bigquery2",
+ "once_cell",
  "reqwest",
  "rusty-s3",
  "serde_json",
@@ -1050,6 +1052,41 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65e07508b90551e610910fa648a1878991d367064997a596135b86df30daf07e"
 dependencies = [
  "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "darling"
+version = "0.14.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0dd3cd20dc6b5a876612a6e5accfe7f3dd883db6d07acfbf14c128f61550dfa"
+dependencies = [
+ "darling_core",
+ "darling_macro",
+]
+
+[[package]]
+name = "darling_core"
+version = "0.14.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a784d2ccaf7c98501746bf0be29b2022ba41fd62a2e622af997a03e9f972859f"
+dependencies = [
+ "fnv",
+ "ident_case",
+ "proc-macro2",
+ "quote",
+ "strsim",
+ "syn",
+]
+
+[[package]]
+name = "darling_macro"
+version = "0.14.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7618812407e9402654622dd402b0a89dff9ba93badd6540781526117b92aab7e"
+dependencies = [
+ "darling_core",
  "quote",
  "syn",
 ]
@@ -1551,7 +1588,48 @@ dependencies = [
  "tokio",
  "tower-service",
  "url 1.7.2",
- "yup-oauth2",
+ "yup-oauth2 7.0.1",
+]
+
+[[package]]
+name = "google-apis-common"
+version = "5.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf0d0bf11c1a1c1c304a7379fa173659bda32fdd2f042c5af5a066f547cb2fef"
+dependencies = [
+ "base64 0.13.0",
+ "chrono",
+ "http",
+ "hyper",
+ "itertools",
+ "mime 0.3.16",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "tokio",
+ "tower-service",
+ "url 1.7.2",
+ "yup-oauth2 8.1.0",
+]
+
+[[package]]
+name = "google-bigquery2"
+version = "5.0.2-beta-1+20230114"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16e6de160a30b9271b9335ffda21ae242dd52ad46bc780c647de67f9140ae058"
+dependencies = [
+ "anyhow",
+ "google-apis-common",
+ "http",
+ "hyper",
+ "hyper-rustls",
+ "itertools",
+ "mime 0.3.16",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-service",
+ "url 1.7.2",
 ]
 
 [[package]]
@@ -1924,6 +2002,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ident_case"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
+
+[[package]]
 name = "idna"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1976,6 +2060,7 @@ checksum = "0f647032dfaa1f8b6dc29bd3edb7bbef4861b8b8007ebb118d6db284fd59f6ee"
 dependencies = [
  "autocfg",
  "hashbrown 0.11.2",
+ "serde",
 ]
 
 [[package]]
@@ -3000,7 +3085,7 @@ dependencies = [
  "percent-encoding 2.2.0",
  "pin-project-lite 0.2.9",
  "rustls 0.20.4",
- "rustls-pemfile 1.0.0",
+ "rustls-pemfile 1.0.2",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -3105,7 +3190,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0167bac7a9f490495f3c33013e7722b53cb087ecbe082fb0c6387c96f634ea50"
 dependencies = [
  "openssl-probe",
- "rustls-pemfile 1.0.0",
+ "rustls-pemfile 1.0.2",
  "schannel",
  "security-framework",
 ]
@@ -3130,11 +3215,11 @@ dependencies = [
 
 [[package]]
 name = "rustls-pemfile"
-version = "1.0.0"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7522c9de787ff061458fe9a829dc790a3f5b22dc571694fc5883f448b94d9a9"
+checksum = "d194b56d58803a43635bdc398cd17e383d6f71f9182b9a192c127ca42494a59b"
 dependencies = [
- "base64 0.13.0",
+ "base64 0.21.0",
 ]
 
 [[package]]
@@ -3445,6 +3530,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_with"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30d904179146de381af4c93d3af6ca4984b3152db687dacb9c3c35e86f39809c"
+dependencies = [
+ "base64 0.13.0",
+ "chrono",
+ "hex",
+ "indexmap",
+ "serde",
+ "serde_json",
+ "serde_with_macros",
+ "time 0.3.17",
+]
+
+[[package]]
+name = "serde_with_macros"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1966009f3c05f095697c537312f5415d1e3ed31ce0a56942bac4c771c5c335e"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "server"
 version = "0.1.0"
 dependencies = [
@@ -3718,7 +3831,7 @@ dependencies = [
  "percent-encoding 2.2.0",
  "rand 0.8.5",
  "rustls 0.20.4",
- "rustls-pemfile 1.0.0",
+ "rustls-pemfile 1.0.2",
  "serde",
  "serde_json",
  "sha1 0.10.5",
@@ -4879,6 +4992,33 @@ dependencies = [
  "percent-encoding 2.2.0",
  "rustls 0.20.4",
  "rustls-pemfile 0.3.0",
+ "seahash",
+ "serde",
+ "serde_json",
+ "time 0.3.17",
+ "tokio",
+ "tower-service",
+ "url 2.3.1",
+]
+
+[[package]]
+name = "yup-oauth2"
+version = "8.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8cb398cca4dedd0203666d7c3e7a089d14557be759efd57ab75f067949276e7"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "base64 0.13.0",
+ "futures",
+ "http",
+ "hyper",
+ "hyper-rustls",
+ "itertools",
+ "log 0.4.17",
+ "percent-encoding 2.2.0",
+ "rustls 0.20.4",
+ "rustls-pemfile 1.0.2",
  "seahash",
  "serde",
  "serde_json",

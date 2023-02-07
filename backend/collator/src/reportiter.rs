@@ -4,9 +4,10 @@ use anyhow::{anyhow, Error};
 use chrono::{DateTime, FixedOffset, LocalResult, NaiveDate, Utc};
 use common::ToFixedOffset;
 use google_analyticsdata1_beta::api::{Row, RunReportResponse};
+use google_bigquery2::api::{QueryResponse, TableSchema};
 use uuid::Uuid;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ReportRow(BTreeMap<String, Option<String>>);
 
 impl ReportRow {
@@ -38,6 +39,84 @@ impl ReportRow {
     pub fn get_string(&self, key: &str) -> String {
         let Some(Some(val)) = self.0.get(key) else { return String::new(); };
         val.clone()
+    }
+}
+
+pub struct BQReportIterator {
+    idx: usize,
+    length: usize,
+    rows: Vec<ReportRow>,
+}
+
+impl BQReportIterator {
+    pub fn new(report: QueryResponse) -> Result<BQReportIterator, Error> {
+        if let Some(TableSchema {
+            fields: Some(fields),
+            ..
+        }) = report.schema
+        {
+            let fields: Vec<Option<String>> = fields
+                .into_iter()
+                .map(|f| f.name.map(|n| n.replace("customEvent_", "customEvent:")))
+                .collect();
+
+            let rows = if let Some(rows) = report.rows {
+                rows.into_iter()
+                    .flat_map(|row| {
+                        row.f.map(|f| {
+                            ReportRow(
+                                fields
+                                    .iter()
+                                    .zip(f.into_iter())
+                                    .flat_map(|(name, cell)| {
+                                        if let Some(name) = name {
+                                            Some((
+                                                name.to_string(),
+                                                cell.v.map(|v| match v {
+                                                    serde_json::Value::Bool(b) => b.to_string(),
+                                                    serde_json::Value::Number(n) => n.to_string(),
+                                                    serde_json::Value::String(s) => s,
+                                                    _ => unimplemented!(),
+                                                }),
+                                            ))
+                                        } else {
+                                            None
+                                        }
+                                    })
+                                    .collect(),
+                            )
+                        })
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            };
+
+            Ok(BQReportIterator {
+                idx: 0,
+                length: rows.len(),
+                rows,
+            })
+        } else {
+            Err(anyhow!(
+                "Result does not contain a matching schema. The schema field contains {:?}",
+                report.schema
+            ))
+        }
+    }
+}
+
+impl Iterator for BQReportIterator {
+    type Item = ReportRow;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx < self.length {
+            let i = self.idx;
+            self.idx += 1;
+            self.rows.get(i).cloned()
+        } else {
+            None
+        }
     }
 }
 

@@ -1,7 +1,8 @@
 use common::model::opportunity::{
     EntityType, Opportunity, OpportunityImportRecord, OpportunityQuery, OpportunityQueryOrdering,
 };
-use common::model::Pagination;
+use common::model::partner::LoggedErrorLevel;
+use common::model::{Pagination, Partner};
 use common::Database;
 use serde_json::json;
 use tide::http::{mime, StatusCode};
@@ -31,9 +32,26 @@ async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
         Err(res) => return Ok(res),
     };
 
-    let mut opp: Opportunity = match req.body_json().await {
+    let partner = Partner::load_by_uid(req.state(), &auth).await?;
+    let body = req.body_bytes().await?;
+
+    let mut opp: Opportunity = match serde_json::from_slice(&body) {
         Ok(data) => data,
         Err(err) => {
+            println!(
+                "Logged error {}: {}",
+                partner
+                    .log_error(
+                        req.state(),
+                        LoggedErrorLevel::Error,
+                        err.to_string(),
+                        Option::<&str>::None,
+                        Some(String::from_utf8_lossy(&body))
+                    )
+                    .await?,
+                err
+            );
+
             return Ok(error(StatusCode::BadRequest, err.to_string()));
         }
     };
@@ -49,6 +67,20 @@ async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
     opp.interior.accepted = Some(true); // Policy now to trust partners by default
 
     if let Err(err) = opp.validate().await {
+        println!(
+            "Logged error {}: {}",
+            partner
+                .log_error(
+                    req.state(),
+                    LoggedErrorLevel::Error,
+                    err.to_string(),
+                    Some(&opp.exterior.title),
+                    Option::<&str>::None,
+                )
+                .await?,
+            err
+        );
+
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
 
@@ -210,23 +242,7 @@ async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
         }
     };
 
-    let mut new_opp: Opportunity = match req.body_json().await {
-        Ok(data) => data,
-        Err(err) => {
-            return Ok(error(StatusCode::BadRequest, err.to_string()));
-        }
-    };
-
-    if let EntityType::Page(_) = new_opp.exterior.entity_type {
-        return Ok(error(
-            StatusCode::BadRequest,
-            "Page entities can not be created via the API".to_string(),
-        ));
-    }
-
-    let db = req.state();
-
-    let old_opp = match Opportunity::load_by_uid(db, &uid).await {
+    let old_opp = match Opportunity::load_by_uid(req.state(), &uid).await {
         Ok(opp) => opp,
         Err(_) => {
             return Ok(error(
@@ -241,20 +257,65 @@ async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
             StatusCode::Forbidden,
             "Not authorized to edit that opportunity",
         ));
-    } else {
-        new_opp.exterior.partner = auth;
     }
 
     if uid != old_opp.exterior.uid {
         return Ok(error(StatusCode::Conflict, "uid mismatch"));
-    } else {
-        new_opp.exterior.uid = uid;
     }
+
+    let partner = Partner::load_by_uid(req.state(), &auth).await?;
+    let body = req.body_bytes().await?;
+
+    let mut new_opp: Opportunity = match serde_json::from_slice(&body) {
+        Ok(data) => data,
+        Err(err) => {
+            println!(
+                "Logged error {}: {}",
+                partner
+                    .log_error(
+                        req.state(),
+                        LoggedErrorLevel::Error,
+                        err.to_string(),
+                        Some(&old_opp.exterior.title),
+                        Some(String::from_utf8_lossy(&body))
+                    )
+                    .await?,
+                err
+            );
+
+            return Ok(error(StatusCode::BadRequest, err.to_string()));
+        }
+    };
+
+    if let EntityType::Page(_) = new_opp.exterior.entity_type {
+        return Ok(error(
+            StatusCode::BadRequest,
+            "Page entities can not be created via the API".to_string(),
+        ));
+    }
+
+    let db = req.state();
 
     new_opp.id = old_opp.id;
     new_opp.interior.accepted = old_opp.interior.accepted;
+    new_opp.exterior.partner = auth;
+    new_opp.exterior.uid = uid;
 
     if let Err(err) = new_opp.store(db).await {
+        println!(
+            "Logged error {}: {}",
+            partner
+                .log_error(
+                    req.state(),
+                    LoggedErrorLevel::Error,
+                    err.to_string(),
+                    Some(&new_opp.exterior.title),
+                    Some(String::from_utf8_lossy(&body)),
+                )
+                .await?,
+            err
+        );
+
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
 

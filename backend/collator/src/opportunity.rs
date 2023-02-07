@@ -18,7 +18,7 @@ use futures_util::TryStreamExt;
 use google_analyticsdata1_beta::api::{Filter, FilterExpression, StringFilter};
 use strum::IntoEnumIterator;
 
-use crate::{ga4, CommonState};
+use crate::{ga4_bigquery as ga4, CommonState};
 
 pub async fn cache(
     db: &Database,

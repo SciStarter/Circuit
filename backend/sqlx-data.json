@@ -239,6 +239,30 @@
     },
     "query": "\nSELECT EXISTS(\n    SELECT 1 FROM c_partner\n    WHERE (\n        (exterior -> 'open_submission') @> 'true'::jsonb OR\n        (interior -> 'prime') @> $1::jsonb OR\n        (interior -> 'authorized') @> $1::jsonb\n    )\n    AND (exterior -> 'uid') @> $2::jsonb\n) AS \"authorized!\"\n"
   },
+  "2e6a93950933b67a2c714ac1204990ad11e81ff9617ea8c96b4ac07f07391932": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int2",
+          "Text",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\nINSERT\n  INTO c_partner_error_log (partner_id, \"level\", \"message\", \"title\", \"raw\")\n  VALUES ($1, $2, $3, $4, $5)\n  RETURNING id\n"
+  },
   "35955c59eeeff0fad6ac6d431c06eac2cd7fd4ca3ba84312193de8cf85361ebf": {
     "describe": {
       "columns": [],

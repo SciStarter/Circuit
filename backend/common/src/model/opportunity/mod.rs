@@ -1,5 +1,6 @@
 pub mod for_slug;
 
+use super::partner::LoggedErrorLevel;
 use super::person::PermitAction;
 use super::Error;
 use crate::model::involvement;

@@ -19,7 +19,7 @@ use google_analyticsdata1_beta::api::{Dimension, Filter, FilterExpression, Metri
 use strum::IntoEnumIterator;
 use uuid::Uuid;
 
-use crate::{ga4, CommonState};
+use crate::{ga4_bigquery as ga4, CommonState};
 
 pub async fn cache(
     db: &Database,
@@ -103,6 +103,7 @@ VALUES (
                     string_filter: Some(StringFilter {
                         match_type: Some("BEGINS_WITH".into()),
                         value: Some("/find".into()),
+                        case_sensitive: Some(false),
                         ..Default::default()
                     }),
                     ..Default::default()
