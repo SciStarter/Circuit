@@ -866,6 +866,15 @@ export default {
   .exchange-results {
     padding:0 1rem;
   }
+
+}
+
+@media (max-width:700px){
+  .loggedin  {
+    :deep(div.pagination-selector.small){
+        top: 45px;
+    }
+  }
 }
 
 
