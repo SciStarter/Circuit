@@ -862,5 +862,11 @@ export default {
 }
 }
 
+@media (max-width:767px){
+  .exchange-results {
+    padding:0 1rem;
+  }
+}
+
 
 </style>
