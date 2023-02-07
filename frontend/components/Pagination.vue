@@ -1,5 +1,5 @@
 <template>
-<div class="pagination-selector">
+<div class="pagination-selector" :class="{'small':small}">
   <div>
     <action-button primary title="go to first page" :disabled="!more_begin" @click="$emit('switch', firstPage)">
       <span class="center-lowercase">&laquo;</span>
@@ -68,6 +68,11 @@ export default {
             required: false,
             default: 1,
         },
+        small: {
+          type: Boolean,
+          required: false,
+          default: false
+        }
     },
 
     computed: {
@@ -147,5 +152,27 @@ div.pagination-selector {
     display: none!important;
   }
 }
+
+div.pagination-selector.small {
+  font-size: 1.2rem;
+  position: sticky;
+  top: 0;
+  margin:0;
+  background-color: white;
+  flex-direction: row!important;
+
+  .mobile-only {
+    display: none!important;
+  }
+  .no-mobile {
+    display: flex!important;
+  }
+}
+
+div.pagination-selector.small > div > * {
+    height: 1rem;
+    font-size: 1.2rem;
+    padding: 10px;
+  }
 
 </style>

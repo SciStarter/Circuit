@@ -190,10 +190,10 @@
           <opportunity-calendar :opportunities="month" :exchange="exchange" :has-previous="has_calendar_previous" @prev="month_add(-1);update_calendar()" @next="month_add(1);update_calendar()" />
         </b-tab-item>
         <b-tab-item label="Opportunities">
-          <opportunity-list :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
+          <opportunity-list :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" show-top-pagination />
         </b-tab-item>
       </b-tabs>
-      <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
+      <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" show-top-pagination />
     </div>
   </div><!-- .exchange-wrapper -->
 
