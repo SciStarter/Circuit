@@ -5,6 +5,7 @@
 
 use crate::Error;
 use bytes::{BufMut, Bytes, BytesMut};
+use common::model::partner::LoggedError;
 
 /// This query produces results similar to:
 /// ```json
@@ -229,7 +230,7 @@ impl EventsQLWithCustom {
 }
 
 impl super::Source for EventsQLWithCustom {
-    fn load(&self) -> Result<Bytes, Error> {
+    fn load(&self) -> Result<Bytes, LoggedError> {
         let mut writer = BytesMut::new().limit(MAX_SIZE).writer();
         let mut reader = ureq::post(&self.endpoint)
             .set("Content-Type", "application/json")

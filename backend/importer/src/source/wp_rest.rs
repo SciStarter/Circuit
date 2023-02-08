@@ -3,6 +3,7 @@
 
 use crate::Error;
 use bytes::{BufMut, Bytes, BytesMut};
+use common::model::partner::LoggedError;
 use serde_json::{json, Value};
 
 #[derive(Debug)]
@@ -29,7 +30,7 @@ impl WordPressRest {
 }
 
 impl super::Source for WordPressRest {
-    fn load(&self) -> Result<Bytes, Error> {
+    fn load(&self) -> Result<Bytes, LoggedError> {
         let mut records = Vec::new();
 
         let mut resp = WPJsonResponse {

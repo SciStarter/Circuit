@@ -1,5 +1,6 @@
 use crate::Error;
 use bytes::Bytes;
+use common::model::partner::LoggedError;
 use serde_json::Value;
 
 #[derive(Debug)]
@@ -51,7 +52,7 @@ fn get_table(base: &str, table: &str) -> Result<Vec<Value>, Error> {
 }
 
 impl super::Source for Airtable {
-    fn load(&self) -> Result<Bytes, Error> {
+    fn load(&self) -> Result<Bytes, LoggedError> {
         let mut data = serde_json::json!({});
 
         for table in self.tables.iter() {

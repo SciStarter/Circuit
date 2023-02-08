@@ -1,12 +1,13 @@
 use crate::Error;
 use bytes::Bytes;
+use common::model::partner::LoggedError;
 use serde_json::Value;
 
 #[derive(Debug)]
 pub struct Json;
 
 impl super::Format for Json {
-    fn decode(&self, raw: Bytes) -> Result<Value, Error> {
+    fn decode(&self, raw: Bytes) -> Result<Value, LoggedError> {
         Ok(serde_json::from_slice(&raw)?)
 
         // // This is a workaround for tab characters in JSON strings.

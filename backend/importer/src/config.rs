@@ -3,10 +3,11 @@ use std::time::Duration;
 use async_trait::async_trait;
 
 use common::model::opportunity::{Descriptor, Domain, OpportunityImportRecord, Topic};
+use common::model::Partner;
 use importer::format::{self, Format};
 use importer::source::{self, Source};
 use importer::structure::{self, OneOrMany, PartnerAddress, PartnerFlag, PartnerInfo, Structure};
-use importer::Importer;
+use importer::{Error, Importer};
 
 /// This function is the 'config file' for the importer. Each entry
 /// added to the importers vector defines how to grab data from one
@@ -107,24 +108,23 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
         period: 24 * hours,
     }));
 
-    // 403 error, requires investigation
-    // importers.push(Box::new(Import {
-    //     source: source::EventsQLWithCustom::new("https://astronomyontap.org/graphql"),
-    //     format: format::Json,
-    //     structure: structure::EventsQL(PartnerInfo {
-    //         partner: "784f3316-bdc0-5855-8a44-2044cbb23788".parse().unwrap(),
-    //         partner_name: "Astronomy On Tap".to_string(),
-    //         partner_website: Some("https://astronomyontap.org/".to_string()),
-    //         partner_logo_url: Some("".to_string()),
-    //         domain: Domain::LiveScience,
-    //         topics: vec![Topic::AstronomyAndSpace],
-    //         descriptor: vec![Descriptor::Community],
-    //         flags: vec![],
-    //         address: None,
-    //         timezone: Some(chrono::Utc),
-    //     }),
-    //     period: 24 * hours,
-    // }));
+    importers.push(Box::new(Import {
+        source: source::EventsQLWithCustom::new("https://astronomyontap.org/graphql"),
+        format: format::Json,
+        structure: structure::EventsQL(PartnerInfo {
+            partner: "784f3316-bdc0-5855-8a44-2044cbb23788".parse().unwrap(),
+            partner_name: "Astronomy On Tap".to_string(),
+            partner_website: Some("https://astronomyontap.org/".to_string()),
+            partner_logo_url: Some("".to_string()),
+            domain: Domain::LiveScience,
+            topics: vec![Topic::AstronomyAndSpace],
+            descriptor: vec![Descriptor::Community],
+            flags: vec![],
+            address: None,
+            timezone: Some(chrono::Utc),
+        }),
+        period: 24 * hours,
+    }));
 
     importers.push(Box::new(Import {
         source: source::WordPressRest::new(
@@ -253,52 +253,97 @@ where
         &self,
         db: sqlx::Pool<sqlx::Postgres>,
     ) -> Result<Option<std::time::Duration>, importer::Error> {
-        match self
-            .structure
-            .interpret(self.format.decode(self.source.load()?)?)?
-        {
-            OneOrMany::One(mut item) => {
-                item.set_id_if_necessary(&db).await?;
-                let created = item.id.is_none();
-                item.interior.accepted = if created { Some(true) } else { None };
-                item.store(&db).await?;
-                OpportunityImportRecord::store(
-                    &db,
-                    &item.exterior.partner,
-                    &item.exterior.uid,
-                    created,
-                    false, // Ignored is for a hypothetical case, where we may skip importing a record because the current version is authoritative. In that case, it should be set to true.
-                )
-                .await?;
-                println!(
-                    "{} {}",
-                    if created { "Added" } else { "Updated" },
-                    &item.exterior.title
-                );
+        let partner = self.load_partner(&db).await?;
+
+        let source = match self.source.load() {
+            Ok(s) => s,
+            Err(mut le) => {
+                le.partner_id = partner
+                    .id
+                    .expect("The id should be set after loading from the database");
+                le.store(&db).await?;
+                return Err(le.into());
+            }
+        };
+
+        let format = match self.format.decode(source) {
+            Ok(f) => f,
+            Err(mut le) => {
+                le.partner_id = partner
+                    .id
+                    .expect("The id should be set after loading from the database");
+                le.store(&db).await?;
+                return Err(le.into());
+            }
+        };
+
+        match self.structure.interpret(format) {
+            OneOrMany::One(result) => {
+                match result {
+                    Ok(mut item) => {
+                        item.set_id_if_necessary(&db).await?;
+                        let created = item.id.is_none();
+                        item.interior.accepted = if created { Some(true) } else { None };
+                        item.store(&db).await?;
+                        OpportunityImportRecord::store(
+                            &db,
+                            &item.exterior.partner,
+                            &item.exterior.uid,
+                            created,
+                            false, // Ignored is for a hypothetical case, where we may skip importing a record because the current version is authoritative. In that case, it should be set to true.
+                        )
+                        .await?;
+                        println!(
+                            "{} {}",
+                            if created { "Added" } else { "Updated" },
+                            &item.exterior.title
+                        );
+                    }
+                    Err(mut le) => {
+                        le.partner_id = partner
+                            .id
+                            .expect("The id should be set after loading from the database");
+                        le.store(&db).await?;
+                    }
+                }
             }
             OneOrMany::Many(vec) => {
-                for mut item in vec {
-                    item.set_id_if_necessary(&db).await?;
-                    let created = item.id.is_none();
-                    item.interior.accepted = if created { Some(true) } else { None };
-                    item.store(&db).await?;
-                    OpportunityImportRecord::store(
-                        &db,
-                        &item.exterior.partner,
-                        &item.exterior.uid,
-                        created,
-                        false,
-                    )
-                    .await?;
-                    println!(
-                        "{} {}",
-                        if created { "Added" } else { "Updated" },
-                        &item.exterior.title
-                    );
+                for mut result in vec {
+                    match result {
+                        Ok(mut item) => {
+                            item.set_id_if_necessary(&db).await?;
+                            let created = item.id.is_none();
+                            item.interior.accepted = if created { Some(true) } else { None };
+                            item.store(&db).await?;
+                            OpportunityImportRecord::store(
+                                &db,
+                                &item.exterior.partner,
+                                &item.exterior.uid,
+                                created,
+                                false,
+                            )
+                            .await?;
+                            println!(
+                                "{} {}",
+                                if created { "Added" } else { "Updated" },
+                                &item.exterior.title
+                            );
+                        }
+                        Err(mut le) => {
+                            le.partner_id = partner
+                                .id
+                                .expect("The id should be set after loading from the database");
+                            le.store(&db).await?;
+                        }
+                    }
                 }
             }
         }
 
         Ok(Some(self.period.clone()))
+    }
+
+    async fn load_partner(&self, db: &sqlx::Pool<sqlx::Postgres>) -> Result<Partner, Error> {
+        self.structure.load_partner(db).await
     }
 }

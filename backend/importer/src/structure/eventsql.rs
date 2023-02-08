@@ -1,4 +1,6 @@
+use async_trait::async_trait;
 use inflector::Inflector;
+use sqlx::{Pool, Postgres};
 
 use super::{
     Error,
@@ -6,7 +8,7 @@ use super::{
     PartnerInfo, Structure,
 };
 use chrono::{DateTime, TimeZone, Utc};
-use common::model::{opportunity::EntityType, Opportunity};
+use common::model::{opportunity::EntityType, partner::LoggedError, Opportunity, Partner};
 use common::ToFixedOffset;
 use serde_json::Value;
 
@@ -126,18 +128,13 @@ struct Data {
     node: Option<DataNode>,
 }
 
-fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Option<Opportunity> {
-    let dump = serde_json::to_string_pretty(&entry)
-        .unwrap_or_else(|_| "[failed to serialize]".to_string());
+fn interpret_one<Tz: TimeZone>(
+    partner: &PartnerInfo<Tz>,
+    entry: Value,
+) -> Result<Opportunity, LoggedError> {
+    let dump = serde_json::to_string_pretty(&entry)?;
 
-    let data: Data = match serde_json::from_value(entry) {
-        Ok(d) => d,
-        Err(err) => {
-            println!("{}", dump);
-            println!("Warning: Entry could not be parsed: {:?}", err);
-            return None;
-        }
-    };
+    let data: Data = serde_json::from_value(entry)?;
 
     let mut opp = Opportunity::default();
 
@@ -371,39 +368,39 @@ fn interpret_one<Tz: TimeZone>(partner: &PartnerInfo<Tz>, entry: Value) -> Optio
             .append(&mut partner.descriptor.clone());
         opp.exterior.opp_topics.append(&mut partner.topics.clone());
     } else {
-        println!("Warning: Opportunity data is not present in the record");
-        return None;
+        return Err(Error::Structure(
+            "Warning: Opportunity data is not present in the record".into(),
+        )
+        .into());
     }
 
-    Some(opp)
+    Ok(opp)
 }
 
+#[async_trait::async_trait]
 impl<Tz> Structure for EventsQL<Tz>
 where
-    Tz: TimeZone + std::fmt::Debug,
+    Tz: TimeZone + std::fmt::Debug + Sync + Send,
 {
     type Data = Opportunity;
 
-    fn interpret(&self, mut parsed: Value) -> Result<OneOrMany<Self::Data>, Error> {
-        if let Some(entries) = parsed
-            .get_mut("data")
-            .ok_or_else(|| Error::Structure("Missing 'data' key in GraphQL result".to_string()))?
-            .get_mut("events")
-            .ok_or_else(|| Error::Structure("Missing 'events' key in GraphQL result".to_string()))?
-            .get_mut("edges")
-            .ok_or_else(|| Error::Structure("Missing 'edges' key in GraphQL result".to_string()))?
-            .as_array_mut()
-        {
-            Ok(Many(
+    fn interpret(&self, mut parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
+        if let Some(entries) = parsed["data"]["events"]["edges"].as_array_mut() {
+            Many(
                 entries
                     .drain(..)
-                    .flat_map(|x| interpret_one(&self.0, x))
+                    .map(|x| interpret_one(&self.0, x))
                     .collect(),
-            ))
+            )
         } else {
-            Err(Error::Structure(
-                "Edges list was not a list in GraphQL result".to_string(),
-            ))
+            OneOrMany::One(Err(Error::Structure(
+                "GraphQL result was not structured as expected".to_string(),
+            )
+            .into()))
         }
+    }
+
+    async fn load_partner(&self, db: &Pool<Postgres>) -> Result<Partner, Error> {
+        self.0.load_partner(db).await
     }
 }

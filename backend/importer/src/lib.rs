@@ -1,13 +1,13 @@
 use std::fmt::Debug;
 
 use async_trait::async_trait;
-use thiserror::Error;
+use common::model::{partner::LoggedError, Partner};
 
 pub mod format;
 pub mod source;
 pub mod structure;
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("I/O error")]
     IO(#[from] std::io::Error),
@@ -21,6 +21,8 @@ pub enum Error {
     Csv(#[from] csv::Error),
     #[error("ICal parse error")]
     IcalParse(#[from] ical::parser::ParserError),
+    #[error("{0}")]
+    Logged(LoggedError),
     #[error("Model error")]
     Model(#[from] common::model::Error),
     #[error("Incorrectly structured data")]
@@ -31,10 +33,18 @@ pub enum Error {
     Misc(String),
 }
 
+impl From<LoggedError> for Error {
+    fn from(value: LoggedError) -> Self {
+        Error::Logged(value)
+    }
+}
+
 #[async_trait]
 pub trait Importer: Debug {
     async fn import(
         &self,
         db: sqlx::Pool<sqlx::Postgres>,
     ) -> Result<Option<std::time::Duration>, Error>;
+
+    async fn load_partner(&self, db: &sqlx::Pool<sqlx::Postgres>) -> Result<Partner, Error>;
 }

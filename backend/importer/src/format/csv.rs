@@ -1,9 +1,10 @@
 use crate::Error;
 use bytes::Bytes;
+use common::model::partner::LoggedError;
 use csv::{Reader, ReaderBuilder};
 use serde_json::Value;
 
-fn _decode<R: std::io::Read>(mut reader: Reader<R>) -> Result<Value, Error> {
+fn _decode<R: std::io::Read>(mut reader: Reader<R>) -> Result<Value, LoggedError> {
     let fields: Vec<String> = reader.headers()?.iter().map(|s| s.to_string()).collect();
 
     let mut rows = Vec::new();
@@ -28,7 +29,7 @@ fn _decode<R: std::io::Read>(mut reader: Reader<R>) -> Result<Value, Error> {
 pub struct CommaSeparated;
 
 impl super::Format for CommaSeparated {
-    fn decode(&self, raw: Bytes) -> Result<Value, Error> {
+    fn decode(&self, raw: Bytes) -> Result<Value, LoggedError> {
         let reader = ReaderBuilder::new()
             .delimiter(b',')
             .terminator(csv::Terminator::CRLF)
@@ -53,7 +54,7 @@ impl super::Format for CommaSeparated {
 pub struct TabSeparated;
 
 impl super::Format for TabSeparated {
-    fn decode(&self, raw: Bytes) -> Result<Value, Error> {
+    fn decode(&self, raw: Bytes) -> Result<Value, LoggedError> {
         let reader = ReaderBuilder::new()
             .delimiter(b'\t')
             .terminator(csv::Terminator::CRLF)
@@ -77,7 +78,7 @@ impl super::Format for TabSeparated {
 pub struct SemicolonSeparated;
 
 impl super::Format for SemicolonSeparated {
-    fn decode(&self, raw: Bytes) -> Result<Value, Error> {
+    fn decode(&self, raw: Bytes) -> Result<Value, LoggedError> {
         let reader = ReaderBuilder::new()
             .delimiter(b';')
             .terminator(csv::Terminator::CRLF)

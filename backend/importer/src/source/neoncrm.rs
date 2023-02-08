@@ -2,6 +2,7 @@ use std::io::Write;
 
 use crate::Error;
 use bytes::{BufMut, Bytes, BytesMut};
+use common::model::partner::LoggedError;
 use http_auth_basic::Credentials;
 
 const API_BASE: &'static str = "https://api.neoncrm.com/v2";
@@ -85,7 +86,7 @@ impl NeonCRM {
 }
 
 impl super::Source for NeonCRM {
-    fn load(&self) -> Result<Bytes, Error> {
+    fn load(&self) -> Result<Bytes, LoggedError> {
         let mut page = 0;
 
         let mut writer = BytesMut::new().writer();

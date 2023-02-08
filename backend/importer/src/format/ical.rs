@@ -1,5 +1,6 @@
 use crate::Error;
 use bytes::Bytes;
+use common::model::partner::LoggedError;
 use ical::IcalParser;
 use serde_json::json;
 use serde_json::Value;
@@ -39,7 +40,7 @@ fn _property(p: &ical::property::Property) -> (String, Value) {
 }
 
 impl super::Format for Ical {
-    fn decode(&self, raw: Bytes) -> Result<Value, Error> {
+    fn decode(&self, raw: Bytes) -> Result<Value, LoggedError> {
         let mut entries = Vec::new();
 
         for calendar in IcalParser::new(BufReader::new(raw.as_ref())) {

@@ -5,9 +5,10 @@ use super::{
 };
 use chrono::{DateTime, NaiveDateTime, TimeZone};
 use chrono_tz::Tz;
-use common::model::Opportunity;
+use common::model::{partner::LoggedError, Opportunity, Partner};
 use once_cell::sync::Lazy;
 use serde_json::{from_value, Value};
+use sqlx::{Pool, Postgres};
 
 pub static UID: Lazy<uuid::Uuid> =
     Lazy::new(|| uuid::Uuid::parse_str("a844e7ee-6417-5bbc-b97c-f85575836442").unwrap());
@@ -58,10 +59,11 @@ fn normalize_datetime(datetime: &str, zone: Option<Tz>) -> Option<String> {
     }
 }
 
+#[async_trait::async_trait]
 impl Structure for NightSkyNetwork {
     type Data = Opportunity;
 
-    fn interpret(&self, mut parsed: Value) -> Result<OneOrMany<Self::Data>, Error> {
+    fn interpret(&self, mut parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         if let Some(events) = parsed.get_mut("events") {
             if let Value::Array(objects) = events.take() {
                 let mut opps = Vec::new();
@@ -200,22 +202,30 @@ impl Structure for NightSkyNetwork {
                         .opp_topics
                         .push(common::model::opportunity::Topic::AstronomyAndSpace);
 
-                    async_std::task::block_on(input.validate())?;
-
-                    opps.push(input);
+                    if let Err(x) = async_std::task::block_on(input.validate()) {
+                        opps.push(Err(x.into()));
+                    } else {
+                        opps.push(Ok(input));
+                    }
                 }
 
-                Ok(Many(opps))
+                Many(opps)
             } else {
-                Err(Error::Structure(
+                OneOrMany::One(Err(Error::Structure(
                     "Expected Night Sky Network data's events field to contain an array of objects"
                         .to_string(),
-                ))
+                )
+                .into()))
             }
         } else {
-            Err(Error::Structure(
+            OneOrMany::One(Err(Error::Structure(
                 "Expected Night Sky Network data to contain an events field".to_string(),
-            ))
+            )
+            .into()))
         }
+    }
+
+    async fn load_partner(&self, db: &Pool<Postgres>) -> Result<Partner, Error> {
+        Ok(Partner::load_by_uid(db, &*UID).await?)
     }
 }

@@ -1,6 +1,8 @@
 use crate::Error;
 use chrono::TimeZone;
+use common::model::{partner::LoggedError, Error as CommonError, Partner};
 use serde_json::Value;
+use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 pub mod atlanta_science_fest;
@@ -21,7 +23,7 @@ pub enum OneOrMany<T> {
     Many(Vec<T>),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct PartnerAddress {
     pub name: String,
     pub street: String,
@@ -31,13 +33,13 @@ pub struct PartnerAddress {
     pub country: String,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum PartnerFlag {
     Ticketed,
     Cost,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct PartnerInfo<Tz: TimeZone> {
     pub partner: Uuid,
     pub partner_name: String,
@@ -51,8 +53,16 @@ pub struct PartnerInfo<Tz: TimeZone> {
     pub timezone: Option<Tz>,
 }
 
+impl<Tz: TimeZone> PartnerInfo<Tz> {
+    pub async fn load_partner(&self, db: &Pool<Postgres>) -> Result<Partner, Error> {
+        Ok(Partner::load_by_uid(db, &self.partner).await?)
+    }
+}
+
+#[async_trait::async_trait]
 pub trait Structure: std::fmt::Debug {
     type Data;
 
-    fn interpret(&self, parsed: Value) -> Result<OneOrMany<Self::Data>, Error>;
+    fn interpret(&self, parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>>;
+    async fn load_partner(&self, db: &Pool<Postgres>) -> Result<Partner, Error>;
 }

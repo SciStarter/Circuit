@@ -1,9 +1,11 @@
 use chrono::DateTime;
 use common::model::{
     opportunity::{Descriptor, Domain, EntityType, LocationType, VenueType},
-    Opportunity,
+    partner::LoggedError,
+    Opportunity, Partner,
 };
 use serde_json::Value;
+use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use super::{Error, OneOrMany, Structure};
@@ -99,22 +101,30 @@ impl AtlantaScienceFest<2022> {
     }
 }
 
+#[async_trait::async_trait]
 impl Structure for AtlantaScienceFest<2022> {
     type Data = Opportunity;
 
-    fn interpret(&self, parsed: serde_json::Value) -> Result<OneOrMany<Self::Data>, Error> {
+    fn interpret(&self, parsed: serde_json::Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         let mut opps = Vec::new();
 
-        for event in parsed["Events"]
+        for event in match parsed["Events"]
             .as_array()
-            .ok_or_else(|| Error::Structure("No \"Events\" key in the JSON data".to_string()))?
+            .ok_or_else(|| Error::Structure("No \"Events\" key in the JSON data".to_string()))
         {
+            Ok(array) => array,
+            Err(err) => return OneOrMany::One(Err(err.into())),
+        } {
             match AtlantaScienceFest::<2022>::import_one(event) {
-                Ok(opp) => opps.push(opp),
-                Err(err) => println!("{err:?}"),
+                Ok(opp) => opps.push(Ok(opp)),
+                Err(err) => opps.push(Err(err.into())),
             };
         }
 
-        Ok(OneOrMany::Many(opps))
+        OneOrMany::Many(opps)
+    }
+
+    async fn load_partner(&self, db: &Pool<Postgres>) -> Result<Partner, Error> {
+        Ok(Partner::load_by_uid(db, &ATLANTA_SCIENCE_FEST).await?)
     }
 }

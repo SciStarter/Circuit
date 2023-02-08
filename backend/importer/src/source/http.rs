@@ -1,5 +1,6 @@
 use crate::Error;
 use bytes::{BufMut, Bytes, BytesMut};
+use common::model::partner::LoggedError;
 
 // We won't read more than 64 MiB from the server, even if it wants to
 // send us that much. It's likely an error, or outright malicious.
@@ -19,7 +20,7 @@ impl HttpGet {
 }
 
 impl super::Source for HttpGet {
-    fn load(&self) -> Result<Bytes, Error> {
+    fn load(&self) -> Result<Bytes, LoggedError> {
         let mut writer = BytesMut::new().limit(MAX_SIZE).writer();
         let mut reader = ureq::get(&self.endpoint).call()?.into_reader();
 

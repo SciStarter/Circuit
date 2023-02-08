@@ -3,9 +3,10 @@ use super::{
     OneOrMany::{self, Many},
     PartnerInfo, Structure,
 };
-use common::model::Opportunity;
+use common::model::{partner::LoggedError, Opportunity, Partner};
 use serde::de::{Deserialize, Unexpected};
 use serde_json::{from_value, Value};
+use sqlx::{Pool, Postgres};
 
 fn bool_from_intstr<'de, D>(deserializer: D) -> Result<bool, D::Error>
 where
@@ -121,14 +122,8 @@ fn interpret_one<Tz: chrono::TimeZone + std::fmt::Debug>(
     partner: &PartnerInfo<Tz>,
     _tz: &Tz,
     entry: Value,
-) -> Option<Opportunity> {
-    let data: NeonStandardFields = match from_value(entry) {
-        Ok(d) => d,
-        Err(err) => {
-            println!("Warning: Entry could not be parsed: {:?}", err);
-            return None;
-        }
-    };
+) -> Result<Opportunity, LoggedError> {
+    let data: NeonStandardFields = from_value(entry)?;
 
     let mut opp = Opportunity::default();
 
@@ -144,7 +139,7 @@ fn interpret_one<Tz: chrono::TimeZone + std::fmt::Debug>(
 
     // !!! TODO
 
-    Some(opp)
+    Ok(opp)
 }
 
 #[derive(serde::Deserialize, Debug)]
@@ -157,31 +152,41 @@ fn interpret_page<Tz: chrono::TimeZone + std::fmt::Debug>(
     partner: &PartnerInfo<Tz>,
     tz: &Tz,
     entries: Value,
-) -> Vec<Opportunity> {
+) -> Vec<Result<Opportunity, LoggedError>> {
     if let Ok(page) = from_value::<NeonPage>(entries) {
         page.search_results
             .into_iter()
-            .flat_map(|x| interpret_one(partner, tz, x))
+            .map(|x| interpret_one(partner, tz, x))
             .collect()
     } else {
-        println!("Page did not contain a searchResults key");
-        vec![]
+        vec![Err(Error::Structure(
+            "Page did not contain a searchResults key".into(),
+        )
+        .into())]
     }
 }
 
-impl<TZ: chrono::TimeZone + std::fmt::Debug> Structure for NeonGeneric<TZ> {
+#[async_trait::async_trait]
+impl<TZ: chrono::TimeZone + std::fmt::Debug + Sync + Send> Structure for NeonGeneric<TZ> {
     type Data = Opportunity;
 
-    fn interpret(&self, parsed: Value) -> Result<OneOrMany<Self::Data>, Error> {
+    fn interpret(&self, parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         if let Value::Array(pages) = parsed {
-            Ok(Many(
+            Many(
                 pages
                     .into_iter()
                     .flat_map(|x| interpret_page(&self.0, &self.1, x))
                     .collect(),
-            ))
+            )
         } else {
-            Err(Error::Structure("Top level of JSON is not an array".into()))
+            OneOrMany::One(Err(Error::Structure(
+                "Top level of JSON is not an array".into(),
+            )
+            .into()))
         }
+    }
+
+    async fn load_partner(&self, db: &Pool<Postgres>) -> Result<Partner, Error> {
+        self.0.load_partner(db).await
     }
 }
