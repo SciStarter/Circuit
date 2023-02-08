@@ -1,5 +1,5 @@
 <template>
-<div class="exchange exchange-index">
+<div class="exchange exchange-index" :class="{'loggedin':$store.state.user.authenticated}">
 
   <div class="exchange-actions" v-if="$store.state.user.authenticated">
 
@@ -190,10 +190,10 @@
           <opportunity-calendar :opportunities="month" :exchange="exchange" :has-previous="has_calendar_previous" @prev="month_add(-1);update_calendar()" @next="month_add(1);update_calendar()" />
         </b-tab-item>
         <b-tab-item label="Opportunities">
-          <opportunity-list :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
+          <opportunity-list :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" show-top-pagination />
         </b-tab-item>
       </b-tabs>
-      <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" />
+      <opportunity-list v-else :opportunities="opportunities" :exchange="exchange" @switch="search({page: $event})" show-top-pagination />
     </div>
   </div><!-- .exchange-wrapper -->
 
@@ -854,6 +854,27 @@ export default {
 :deep(#filter-physical .field.has-addons) {
   flex-wrap:nowrap;
   flex-direction: column;
+}
+
+.loggedin  {
+:deep(div.pagination-selector.small){
+    top: 56px;
+}
+}
+
+@media (max-width:767px){
+  .exchange-results {
+    padding:0 1rem;
+  }
+
+}
+
+@media (max-width:700px){
+  .loggedin  {
+    :deep(div.pagination-selector.small){
+        top: 45px;
+    }
+  }
 }
 
 
