@@ -161,6 +161,7 @@
               content="find-out-more"
               @before="register_interest"
               style="overflow-wrap: break-word"
+              new-tab
               >
               {{opportunity.partner_opp_url || opportunity.organization_website}}
             </external-link>
@@ -219,6 +220,7 @@
               content="find-out-more"
               class="find-out-more round-btn"
               @before="register_interest"
+              new-tab
               >
               <div class="icon">
                 <link-icon />
@@ -260,7 +262,7 @@
       <div class="partner-and-org">
         <figure v-if="opportunity.organization_logo_url || opportunity.organization_name">
           <figcaption>Hosted by</figcaption>
-          <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" :object="opportunity.uid" campaign="opp-page" content="hosted-by">
+          <component :is="opportunity.organization_website ? 'external-link' : 'span'" :href="opportunity.organization_website" :object="opportunity.uid" campaign="opp-page" content="hosted-by" new-tab>
             <img v-if="opportunity.organization_logo_url" :src="opportunity.organization_logo_url" :alt="opportunity.organization_name" :title="opportunity.organization_name">
             <span v-else>{{ opportunity.organization_name }}</span>
           </component>
@@ -292,7 +294,7 @@
         <div class="partner-and-org">
           <figure v-if="opportunity.partner_logo_url || opportunity.partner_name">
           <figcaption>Provided to SNM by</figcaption>
-          <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on">
+          <component :is="opportunity.partner_website ? 'external-link' : 'span'" :href="opportunity.partner_website" campaign="opp-page" content="featured-on" new-tab>
             <img v-if="opportunity.partner_logo_url" :src="opportunity.partner_logo_url" :alt="opportunity.partner_name" :title="opportunity.partner_name">
             <span v-else>{{ opportunity.partner_name }}</span>
           </component>
