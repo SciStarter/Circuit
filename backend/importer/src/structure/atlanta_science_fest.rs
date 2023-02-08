@@ -24,21 +24,21 @@ impl AtlantaScienceFest<2022> {
             &ATLANTA_SCIENCE_FEST,
             event["id"]
                 .as_str()
-                .ok_or_else(|| Error::Structure("Event missing id".into()))?
+                .ok_or_else(|| Error::Data("Event missing id".into()))?
                 .as_bytes(),
         );
         opp.exterior.partner_name = "Atlanta Science Festival".to_string();
         opp.exterior.partner_website = Some("https://atlantasciencefestival.org/".to_string());
         opp.exterior.partner_created = Some(
             DateTime::parse_from_rfc3339(event["createdTime"].as_str().ok_or_else(|| {
-                Error::Structure("Event record is missing created time field".to_string())
+                Error::Data("Event record is missing created time field".to_string())
             })?)
             .map_err(|_| Error::Misc("Unable to parse created time field".to_string()))?,
         );
         opp.exterior.partner_opp_url = Some(
             event["fields"]["URL"]
                 .as_str()
-                .ok_or_else(|| Error::Structure("Event record is missing URL".to_string()))?
+                .ok_or_else(|| Error::Data("Event record is missing URL".to_string()))?
                 .to_string(),
         );
         opp.exterior.organization_name = event["fields"]["Presenting Partner(s)"]
@@ -88,8 +88,8 @@ impl AtlantaScienceFest<2022> {
             {
                 "type": "Point",
                 "coordinates": [
-                    event["fields"]["Long"][0].as_f64().ok_or_else(|| Error::Structure("Error parsing longitude".to_string()))?,
-                    event["fields"]["Lat"][0].as_f64().ok_or_else(|| Error::Structure("Error parsing longitude".to_string()))?
+                    event["fields"]["Long"][0].as_f64().ok_or_else(|| Error::Data("Error parsing longitude".to_string()))?,
+                    event["fields"]["Lat"][0].as_f64().ok_or_else(|| Error::Data("Error parsing latitude".to_string()))?
                 ]
             }
         ));
@@ -110,14 +110,16 @@ impl Structure for AtlantaScienceFest<2022> {
 
         for event in match parsed["Events"]
             .as_array()
-            .ok_or_else(|| Error::Structure("No \"Events\" key in the JSON data".to_string()))
+            .ok_or_else(|| Error::Data("No \"Events\" key in the JSON data".to_string()))
         {
             Ok(array) => array,
-            Err(err) => return OneOrMany::One(Err(err.into())),
+            Err(err) => {
+                return OneOrMany::One(Err(LoggedError::from(err).set_raw(parsed.to_string())))
+            }
         } {
             match AtlantaScienceFest::<2022>::import_one(event) {
                 Ok(opp) => opps.push(Ok(opp)),
-                Err(err) => opps.push(Err(err.into())),
+                Err(err) => opps.push(Err(LoggedError::from(err).set_raw(event.to_string()))),
             };
         }
 

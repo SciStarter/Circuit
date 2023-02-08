@@ -172,7 +172,7 @@ where
                     .collect(),
             )
         } else {
-            OneOrMany::One(Err(Error::Structure(
+            OneOrMany::One(Err(Error::Data(
                 "Edges list was missing or not a list in GraphQL result".to_string(),
             )
             .into()))

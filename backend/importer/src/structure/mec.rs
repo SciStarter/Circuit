@@ -89,7 +89,7 @@ where
 
             for (_, day) in days.into_iter() {
                 for opp in match day.as_array().ok_or_else(|| {
-                    Error::Structure(String::from(
+                    Error::Data(String::from(
                         "content_json does not follow the expected structure",
                     ))
                 }) {
@@ -247,7 +247,7 @@ where
 
             OneOrMany::Many(opps)
         } else {
-            OneOrMany::One(Err(Error::Structure(String::from(
+            OneOrMany::One(Err(Error::Data(String::from(
                 "content_json missing or incorrect type",
             ))
             .into()))

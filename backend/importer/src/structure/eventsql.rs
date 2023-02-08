@@ -368,10 +368,9 @@ fn interpret_one<Tz: TimeZone>(
             .append(&mut partner.descriptor.clone());
         opp.exterior.opp_topics.append(&mut partner.topics.clone());
     } else {
-        return Err(Error::Structure(
-            "Warning: Opportunity data is not present in the record".into(),
-        )
-        .into());
+        return Err(
+            Error::Data("Warning: Opportunity data is not present in the record".into()).into(),
+        );
     }
 
     Ok(opp)
@@ -393,7 +392,7 @@ where
                     .collect(),
             )
         } else {
-            OneOrMany::One(Err(Error::Structure(
+            OneOrMany::One(Err(Error::Data(
                 "GraphQL result was not structured as expected".to_string(),
             )
             .into()))

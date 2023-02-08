@@ -159,7 +159,7 @@ fn interpret_page<Tz: chrono::TimeZone + std::fmt::Debug>(
             .map(|x| interpret_one(partner, tz, x))
             .collect()
     } else {
-        vec![Err(Error::Structure(
+        vec![Err(Error::Data(
             "Page did not contain a searchResults key".into(),
         )
         .into())]
@@ -179,10 +179,9 @@ impl<TZ: chrono::TimeZone + std::fmt::Debug + Sync + Send> Structure for NeonGen
                     .collect(),
             )
         } else {
-            OneOrMany::One(Err(Error::Structure(
-                "Top level of JSON is not an array".into(),
-            )
-            .into()))
+            OneOrMany::One(Err(
+                Error::Data("Top level of JSON is not an array".into()).into()
+            ))
         }
     }
 

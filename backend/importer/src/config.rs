@@ -262,6 +262,7 @@ where
                     .id
                     .expect("The id should be set after loading from the database");
                 le.store(&db).await?;
+                println!("Logged error: {}", &le.message);
                 return Err(le.into());
             }
         };
@@ -273,6 +274,7 @@ where
                     .id
                     .expect("The id should be set after loading from the database");
                 le.store(&db).await?;
+                println!("Logged error: {}", &le.message);
                 return Err(le.into());
             }
         };
@@ -304,6 +306,7 @@ where
                             .id
                             .expect("The id should be set after loading from the database");
                         le.store(&db).await?;
+                        println!("Logged error: {}", &le.message);
                     }
                 }
             }
@@ -334,6 +337,7 @@ where
                                 .id
                                 .expect("The id should be set after loading from the database");
                             le.store(&db).await?;
+                            println!("Logged error: {}", &le.message);
                         }
                     }
                 }

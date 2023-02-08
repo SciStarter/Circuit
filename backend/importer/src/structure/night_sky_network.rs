@@ -182,10 +182,11 @@ impl Structure for NightSkyNetwork {
                     let mut input: Opportunity = match from_value(obj) {
                         Ok(opp) => opp,
                         Err(err) => {
-                            println!(
-                                "Error importing record {:?} {:?}: {:?}",
-                                event_id, event_title, err
-                            );
+                            let mut le: LoggedError = err.into();
+                            if let Some(val) = &event_title {
+                                le = le.set_title(val);
+                            }
+                            opps.push(Err(le));
                             continue;
                         }
                     };
@@ -211,14 +212,14 @@ impl Structure for NightSkyNetwork {
 
                 Many(opps)
             } else {
-                OneOrMany::One(Err(Error::Structure(
+                OneOrMany::One(Err(Error::Data(
                     "Expected Night Sky Network data's events field to contain an array of objects"
                         .to_string(),
                 )
                 .into()))
             }
         } else {
-            OneOrMany::One(Err(Error::Structure(
+            OneOrMany::One(Err(Error::Data(
                 "Expected Night Sky Network data to contain an events field".to_string(),
             )
             .into()))

@@ -31,10 +31,7 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if when <= now {
                 println!("Importing from {:?}", &importers[idx]);
                 let delay = match (&importers[idx]).import(pool.clone()).await {
-                    Ok(optional) => {
-                        println!("Imported {:?}", &importers[idx]);
-                        optional
-                    }
+                    Ok(optional) => optional,
                     Err(error) => {
                         println!("Error {:?} while importing {:?}", error, &importers[idx]);
                         Some(RETRY_DELAY)
