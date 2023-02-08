@@ -207,7 +207,7 @@ export default {
         },
 
         async completeSearch() {
-            this.matches = await this.$axios.$get('/api/ui/finder/search', {
+            let result = await this.$axios.$get('/api/ui/finder/search', {
                 params: {
                     text: this.search_text,
                     longitude: this.search_place.longitude,
@@ -223,11 +223,13 @@ export default {
                 }
             });
 
+            this.matches = result.matches;
+
             this.searched = true;
 
             await this.$axios.$post("/api/ui/misc/evolveme", {
                 step: 2,
-                user_id: this.$route.query['user_id'],
+                user_id: parseInt(this.$route.query['user_id']),
                 unique_task_key: this.$route.query['unique_task_key'],
             }, this.$store.state.auth);
         },

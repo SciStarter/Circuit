@@ -109,14 +109,13 @@ pub async fn evolveme(mut req: tide::Request<Database>) -> tide::Result {
                     hex::encode(mac.finalize().into_bytes())
                 };
 
-                println!(
-                    "EvolveMe response: {:?}",
-                    dbg!(surf::post(&*EVOLVEME_ENDPOINT)
-                        .header("X-EM-Signature", sig)
-                        .body_bytes(body))
+                let resp = surf::post(&*EVOLVEME_ENDPOINT)
+                    .header("X-EM-Signature", sig)
+                    .body_bytes(body)
                     .recv_string()
-                    .await
-                );
+                    .await;
+
+                println!("EvolveMe response: {:?}", resp);
             }
 
             person.set_extra("evolveme-step", current, MiscPermission::ClientReadOnly);
