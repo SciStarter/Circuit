@@ -62,8 +62,8 @@
             <div class="center">
               <h1>Create Your Account</h1>
               <div id="evolve-signup">
-                <signup-form v-if="!login_mode" in-modal not-cancelable next="manual" partner="evolveme" />
-                <login-form v-if="login_mode" in-modal not-cancelable next="manual" partner="evolveme" />
+                <signup-form v-if="!login_mode" in-modal not-cancelable @login="login_mode = true" next="manual" partner="evolveme" />
+                <login-form v-if="login_mode" in-modal not-cancelable @signup="login_mode = false" next="manual" partner="evolveme" />
               </div>
             </div>
           </div>
