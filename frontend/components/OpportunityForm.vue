@@ -492,6 +492,7 @@
           <template #label>
             Select the topics that fit your opportunity best<span class="required">*</span>
           </template>
+          <div class="stack">
           <b-input :value="topics_filter" @input="topics_filter = $event.toLowerCase()" type="input" placeholder="Type to filter topic list" class="filter"/>
           <div class="checkbox-wrap">
             <template v-for="t in topics">
@@ -500,6 +501,7 @@
               </b-field>
             </template>
           </div>
+        </div>
         </b-field>
 
          <b-field :type="validation.ticket_required" label="Ticket Required" class="mb">
@@ -1849,6 +1851,12 @@ legend {
 
 .stack .field.field.has-addons {
   flex-direction: column!important;
+}
+
+.stack {
+  :deep( .field.has-addons .control:first-child:not(:only-child) .input) {
+  border-radius: 6px;
+  }
 }
 
 .field.has-addons {
