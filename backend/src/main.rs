@@ -134,14 +134,21 @@ async fn main() -> tide::Result<()> {
                     .parse::<HeaderValue>()
                     .unwrap(),
             )
-            .allow_origin(Origin::Any)
-            // .allow_origin(Origin::List(vec![
-            //     "https://sciencenearme.org".to_string(),
-            //     "https://www.sciencenearme.org".to_string(),
-            //     "https://beta.sciencenearme.org".to_string(),
-            //     #[cfg(debug_assertions)]
-            //     "http://localhost:3000".to_string(),
-            // ]))
+            // This doesn't quite work as desired with credentialed javascript requestes
+            //.allow_origin(Origin::Any)
+            .allow_origin(Origin::List(vec![
+                "https://sciencenearme.org".to_string(),
+                "https://www.sciencenearme.org".to_string(),
+                "https://beta.sciencenearme.org".to_string(),
+                #[cfg(debug_assertions)]
+                "http://localhost:3000".to_string(),
+                #[cfg(debug_assertions)]
+                "http://127.0.0.1:3000".to_string(),
+                #[cfg(debug_assertions)]
+                "http://localhost:8000".to_string(),
+                #[cfg(debug_assertions)]
+                "http://127.0.0.1:8000".to_string(),
+            ]))
             .allow_credentials(true),
     );
 
