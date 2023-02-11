@@ -209,10 +209,7 @@ pub async fn run_report(
                     ));
                 }
                 "EXACT" => {
-                    where_clauses.push(format!(
-                        r#"UPPER({}) = UPPER("{}")"#,
-                        field_expr, "feba634d-8c6c-4ad9-bac7-7aecf071c4c2" /*value*/
-                    ));
+                    where_clauses.push(format!(r#"UPPER({}) = UPPER("{}")"#, field_expr, value));
                 }
                 _ => {
                     panic!("Unsupported match type: {}", match_type);
@@ -276,8 +273,6 @@ SELECT {} FROM views WHERE {} GROUP BY {}
         )
         .doit()
         .await?;
-
-    //dbg!(&results);
 
     BQReportIterator::new(results)
 }

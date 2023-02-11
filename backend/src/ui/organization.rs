@@ -337,8 +337,8 @@ pub async fn remove_manager(mut req: tide::Request<Database>) -> tide::Result {
 struct AnalyticsRequest {
     about: Uuid,
     kind: i32,
-    period: RelativeTimePeriod,
-    status: AnayticsStatus,
+    period: i32,
+    status: i32,
     field: Option<String>,
 }
 
@@ -351,6 +351,9 @@ pub async fn my_analytics(mut req: tide::Request<Database>) -> tide::Result {
         // if params.about != Uuid::nil() {
         //     todo!() // auth check
         // }
+
+        let period = RelativeTimePeriod::from_discriminated(params.period);
+        let status = AnayticsStatus::from_discriminated(params.status);
 
         let data: serde_json::Value = sqlx::query!(
             r#"
@@ -366,8 +369,8 @@ WHERE
 "#,
             params.about,
             params.kind,
-            params.period.discriminate(),
-            params.status.discriminate(),
+            period.discriminate(),
+            status.discriminate(),
         )
         .map(|row| row.data)
         .fetch_optional(req.state())

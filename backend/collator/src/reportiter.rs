@@ -42,6 +42,7 @@ impl ReportRow {
     }
 }
 
+#[derive(Debug)]
 pub struct BQReportIterator {
     idx: usize,
     length: usize,
