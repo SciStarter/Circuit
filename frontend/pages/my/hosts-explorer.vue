@@ -22,8 +22,10 @@
     </div>
   </div> -->
 
-<div class="tree-wrap">
-  <treemap :treemap_data="report.data.hosts" />
+  <div class="tree-wrap">
+    <client-only>
+      <treemap :treemap_data="report.data.hosts" />
+    </client-only>
 </div>
   <div class="data-table-wrapper">
   <table class="data-table">
@@ -256,7 +258,7 @@ export default {
     methods: {
         async select_org(org) {
             const loading = this.$buefy.loading.open({container: null});
-            this.report = await context.$axios.$get("/api/ui/organization/analytics", {
+            this.report = await this.$axios.$get("/api/ui/organization/analytics", {
                 params: {
                     about: org.uid,
                     kind: 1,

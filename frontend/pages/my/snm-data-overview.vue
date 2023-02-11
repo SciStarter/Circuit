@@ -425,13 +425,14 @@
               <div><span class="light-blue"></span> Returning</div> 
             </div>
         </div>
-    <line-chart
-      :rows="report.traffic.data.chart"
-      :xaxis="d => new Date(d.date)"
-      :yaxes="['Unique', 'New', 'Returning']"
-      :colors="['#268699', '#868686', '#BFDCE2']"
-      />
-
+      <client-only>
+        <line-chart
+          :rows="report.traffic.data.chart"
+          :xaxis="d => new Date(d.date)"
+          :yaxes="['Unique', 'New', 'Returning']"
+          :colors="['#268699', '#868686', '#BFDCE2']"
+          />
+      </client-only>
     </div>
 
     <div class="data-wrapper crush">
@@ -522,8 +523,9 @@
     <!--   </b-select> -->
     <!-- </div> -->
 
-    <chord-diagram :chart_data="report.crossover.data.chart" :metric="e_type" />
-
+    <client-only>
+      <chord-diagram :chart_data="report.crossover.data.chart" :metric="e_type" />
+    </client-only>
   </div>
 </div>
 </template>

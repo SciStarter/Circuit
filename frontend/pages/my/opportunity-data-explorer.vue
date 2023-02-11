@@ -58,12 +58,14 @@
               <div><span class="light-blue"></span> Unique</div>
             </div>
         </div>
+      <client-only>
         <line-chart
           :rows="report.engagement.data.chart"
           :xaxis="d => new Date(d.date)"
           :yaxes="['Views', 'Unique']"
           :colors="['#268699', '#BFDCE2']"
           />
+      </client-only>
     </div>
 
     <div class="data-wrapper">
@@ -338,12 +340,14 @@
               <div><span class="light-blue"></span> Returning</div>
             </div>
         </div>
-    <line-chart
-      :rows="report.traffic.data.chart"
-      :xaxis="d => new Date(d.date)"
-      :yaxes="['Unique', 'New', 'Returning']"
-      :colors="['#268699', '#868686', '#BFDCE2']"
-      />
+      <client-only>
+        <line-chart
+          :rows="report.traffic.data.chart"
+          :xaxis="d => new Date(d.date)"
+          :yaxes="['Unique', 'New', 'Returning']"
+          :colors="['#268699', '#868686', '#BFDCE2']"
+          />
+      </client-only>
     </div>
 
     <div class="data-wrapper crush">
@@ -451,7 +455,9 @@
         </div>
       </div>
 
-      <bubble-chart :chart_data="report.overlap.data" :org="current_opp.title" :current_opp="current_opp" />
+      <client-only>
+        <bubble-chart :chart_data="report.overlap.data" :org="current_opp.title" :current_opp="current_opp" />
+      </client-only>
     </div>
 
 

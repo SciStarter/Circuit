@@ -82,12 +82,14 @@
         </div>
         </div>
       </div>
-      <line-chart
-      :rows="report[org].engagement.data.chart"
-      :xaxis="d => new Date(d.date)"
-      :yaxes="['Views', 'Unique', 'Clicks to Website']"
-      :colors="['#268699', '#BFDCE2', '#FABF40']"
-      />
+      <client-only>
+        <line-chart
+          :rows="report[org].engagement.data.chart"
+          :xaxis="d => new Date(d.date)"
+          :yaxes="['Views', 'Unique', 'Clicks to Website']"
+          :colors="['#268699', '#BFDCE2', '#FABF40']"
+          />
+      </client-only>
     </div>
 
 
@@ -361,12 +363,14 @@
               <div><span class="light-blue"></span> Returning</div>
             </div>
         </div>
-    <line-chart
-      :rows="report[org].traffic.data.chart"
-      :xaxis="d => new Date(d.date)"
-      :yaxes="['Unique', 'New', 'Returning']"
-      :colors="['#268699', '#868686', '#BFDCE2']"
-      />
+    <client-only>
+      <line-chart
+        :rows="report[org].traffic.data.chart"
+        :xaxis="d => new Date(d.date)"
+        :yaxes="['Unique', 'New', 'Returning']"
+        :colors="['#268699', '#868686', '#BFDCE2']"
+        />
+    </client-only>
     </div>
 
 
@@ -530,7 +534,7 @@ export default {
         org: {
             async set(val) {
                 if(this.report[val].updated === undefined) {
-                    const info = await this.$axios.$get("/api/ui/organization/analytics", {params: {about: this.report[val].organization, kind: 0, period: 0, status: 0}, ...this.$store.state.auth});
+                    const info = await this.$axios.$get("/api/ui/organization/analytics", {params: {about: this.report[val].organization, kind: 0, period: "All Time", status: "Live and Closed"}, ...this.$store.state.auth});
                     this.report[val] = info;
                     this.selected_org = val;
                 }
