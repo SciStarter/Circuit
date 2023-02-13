@@ -116,7 +116,7 @@
       </thead>
       <tbody>
         <tr v-for="row in engagement_top_sorted">
-          <td><a :href="row['slug']">{{row['name']}}</a></td>
+          <td><nuxt-link :to="'/my/opportunity-data-explorer?opp=' + row['slug']">{{row['name']}}</nuxt-link></td>
           <td class="table-num">{{row['Views']}}</td>
           <td class="table-bar"><comparison-bar :value="row['Views']" :max="report[org].engagement.data.max['Views']" color="#268699" /></td>
           <td class="table-num">{{row['Clicks to Website']}}</td>

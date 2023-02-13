@@ -575,7 +575,7 @@ export default {
             });
         }
 
-        const current_opp = opps[0];
+        const current_opp = !!context.query.opp ? (opps.filter(opp => opp.slug == context.query.opp) || opps[0]) : opps[0];
 
         const report = await context.$axios.$get("/api/ui/organization/analytics", {
             params: {
