@@ -534,7 +534,7 @@ export default {
         org: {
             async set(val) {
                 if(this.report[val].updated === undefined) {
-                    const info = await this.$axios.$get("/api/ui/organization/analytics", {params: {about: this.report[val].organization, kind: 0, period: "All Time", status: "Live and Closed"}, ...this.$store.state.auth});
+                    const info = await this.$axios.$get("/api/ui/organization/analytics", {params: {about: this.report[val].organization, kind: 0, period: "This Month", status: "Live and Closed"}, ...this.$store.state.auth});
                     this.report[val] = info;
                     this.selected_org = val;
                 }
