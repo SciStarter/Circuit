@@ -9,7 +9,7 @@
       <label>Opportunity</label>
       <b-select :value="current_opp" @input="load_opp($event)">
         <option v-for="opp in opps" :key="opp.id" :value="opp">
-          {{opp.title}}
+          {{opp.title.slice(0, 64)}}
         </option>
       </b-select>
     </div>
@@ -68,43 +68,46 @@
       </client-only>
     </div>
 
-    <div class="data-wrapper">
-      <div class="data-header">
-      <div class="big-legend bl-yellow">
-          <div class="ll-icon"><link-icon></link-icon></div>
-          <div>
-            <h2>{{ report.engagement.data.bars.self["Clicks to Website"] }}</h2>
-            <h3>Clicks To Your Website</h3>
-          </div>
-        </div>
-      </div>
-
-      <div class="data-header2">
-        <h4>Conversion Rates</h4><small>based on total page views</small>
-      </div>
-      <div class="conversion-rate">
-        <h5>Your Conversion Rate</h5>
-        <div class="flex align-center">
-        <comparison-bar :value="report.engagement.data.bars.self['Views'] > 0 ? report.engagement.data.bars.self['Clicks to Website'] / report.engagement.data.bars.self['Views'] : 0" :max="1.0" color="#165E6F" background="#DEDEDE" width="100%" height="2rem" />
-          <span class="con-num">{{report.engagement.data.bars.self['Views'] > 0 ? ((report.engagement.data.bars.self['Clicks to Website'] / report.engagement.data.bars.self['Views']) * 100).toFixed(2) : 0}}%</span>
-        </div>
-      </div>
-      <div class="conversion-rate">
-        <h5>All SNM Opportunity Median</h5>
-        <div class="flex align-center">
-        <comparison-bar :value="report.engagement.data.bars.median['Views'] > 0 ? report.engagement.data.bars.median['Clicks to Website'] / report.engagement.data.bars.median['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" />
-          <span class="con-num">{{report.engagement.data.bars.median['Views'] > 0 ? ((report.engagement.data.bars.median['Clicks to Website'] / report.engagement.data.bars.median['Views'])*100).toFixed(2) : 0}}%</span>
-        </div>
-      </div>
-      <div class="conversion-rate">
-        <h5>All SNM Opportunity Average</h5>
-        <div class="flex align-center">
-        <comparison-bar :value="report.engagement.data.bars.mean['Views'] > 0 ? report.engagement.data.bars.mean['Clicks to Website'] / report.engagement.data.bars.mean['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" />
-          <span class="con-num">{{report.engagement.data.bars.mean['Views'] > 0 ? ((report.engagement.data.bars.mean['Clicks to Website'] / report.engagement.data.bars.mean['Views'])*100).toFixed(2) : 0}}%</span>
-        </div>
-      </div>
-  </div>
-
+    <!-- Disabled until the computation catches up and we can display accurate data -->
+  <!--   <div class="data-wrapper"> -->
+  <!--     <div class="data-header"> -->
+  <!--       <div class="big-legend bl-yellow"> -->
+  <!--         <div class="ll-icon"><link-icon></link-icon></div> -->
+  <!--         <div> -->
+  <!--           <h2>{{ report.engagement.data.bars.self["Clicks to Website"] }}</h2> -->
+  <!--           <h3>Clicks To Your Website</h3> -->
+  <!--         </div> -->
+  <!--       </div> -->
+  <!--     </div> -->
+      
+  <!--     <div class="data-header2"> -->
+  <!--       <h4>Conversion Rates</h4><small>based on total page views</small> -->
+  <!--     </div> -->
+  <!--     <div class="conversion-rate"> -->
+  <!--       <h5>Your Conversion Rate</h5> -->
+  <!--       <div class="flex align-center"> -->
+  <!--         <strong>{{report.engagement.data.bars.self['Clicks to Website']}}</strong> clicks to the opportunity web site -->
+  <!--         <comparison-bar :value="report.engagement.data.bars.self['Views'] > 0 ? report.engagement.data.bars.self['Clicks to Website'] / report.engagement.data.bars.self['Views'] : 0" :max="1.0" color="#165E6F" background="#DEDEDE" width="100%" height="2rem" /> -->
+  <!--         <span class="con-num">{{report.engagement.data.bars.self['Views'] > 0 ? ((report.engagement.data.bars.self['Clicks to Website'] / report.engagement.data.bars.self['Views']) * 100).toFixed(2) : 0}}%</span> -->
+  <!--       </div> -->
+  <!--     </div> -->
+  <!--     <div class="conversion-rate"> -->
+  <!--       <h5>All SNM Opportunity Median</h5> -->
+  <!--       <div class="flex align-center"> -->
+  <!--         <strong>{{report.engagement.data.bars.median['Clicks to Website']}}</strong> median clicks to opportunity web sites, across all opportunities on Science Near Me -->
+  <!--         <comparison-bar :value="report.engagement.data.bars.median['Views'] > 0 ? report.engagement.data.bars.median['Clicks to Website'] / report.engagement.data.bars.median['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" /> -->
+  <!--         <span class="con-num">{{report.engagement.data.bars.median['Views'] > 0 ? ((report.engagement.data.bars.median['Clicks to Website'] / report.engagement.data.bars.median['Views'])*100).toFixed(2) : 0}}%</span> -->
+  <!--       </div> -->
+  <!--     </div> -->
+  <!--     <div class="conversion-rate"> -->
+  <!--       <h5>All SNM Opportunity Average</h5> -->
+  <!--       <div class="flex align-center"> -->
+  <!--         <strong>{{report.engagement.data.bars.mean['Clicks to Website']}}</strong> average clicks to opportunity web sites, across all opportunities on Science Near Me -->
+  <!--         <comparison-bar :value="report.engagement.data.bars.mean['Views'] > 0 ? report.engagement.data.bars.mean['Clicks to Website'] / report.engagement.data.bars.mean['Views'] : 0" :max="1.0" color="#7CB4BF" background="#DEDEDE" width="100%" height="2rem" /> -->
+  <!--         <span class="con-num">{{report.engagement.data.bars.mean['Views'] > 0 ? ((report.engagement.data.bars.mean['Clicks to Website'] / report.engagement.data.bars.mean['Views'])*100).toFixed(2) : 0}}%</span> -->
+  <!--       </div> -->
+  <!--     </div> -->
+  <!--   </div> -->
   </div>
 
   <div v-else-if="state=='states'">
