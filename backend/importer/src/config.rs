@@ -46,7 +46,8 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     }));
 
     importers.push(Box::new(Import {
-        source: source::Airtable::new("appytM7ldnmIDcbRV", ["Events"]),
+        //source: source::Airtable::new("appytM7ldnmIDcbRV", ["Events"]), // 2022 list
+        source: source::Airtable::new("appzz89bVacXdFSeZ", ["Events"]), // 2023 list
         format: format::Json,
         structure: structure::AtlantaScienceFest::<2022>,
         period: 24 * hours,
@@ -253,7 +254,14 @@ where
         &self,
         db: sqlx::Pool<sqlx::Postgres>,
     ) -> Result<Option<std::time::Duration>, importer::Error> {
-        let partner = self.load_partner(&db).await?;
+        let partner = if let Some("1") = option_env!("DEV_MODE") {
+            let mut p = Partner::default();
+            p.exterior.name = "Fake dev partner".into();
+            p.id = Some(0);
+            p
+        } else {
+            self.load_partner(&db).await?
+        };
 
         let source = match self.source.load() {
             Ok(s) => s,
@@ -261,7 +269,7 @@ where
                 le.partner_id = partner
                     .id
                     .expect("The id should be set after loading from the database");
-                le.store(&db).await?;
+                let _ = le.store(&db).await;
                 println!("Logged error: {}", &le.message);
                 return Err(le.into());
             }
@@ -273,7 +281,7 @@ where
                 le.partner_id = partner
                     .id
                     .expect("The id should be set after loading from the database");
-                le.store(&db).await?;
+                let _ = le.store(&db).await;
                 println!("Logged error: {}", &le.message);
                 return Err(le.into());
             }
@@ -305,7 +313,7 @@ where
                         le.partner_id = partner
                             .id
                             .expect("The id should be set after loading from the database");
-                        le.store(&db).await?;
+                        let _ = le.store(&db).await;
                         println!("Logged error: {}", &le.message);
                     }
                 }
@@ -336,7 +344,7 @@ where
                             le.partner_id = partner
                                 .id
                                 .expect("The id should be set after loading from the database");
-                            le.store(&db).await?;
+                            let _ = le.store(&db).await;
                             println!("Logged error: {}", &le.message);
                         }
                     }
