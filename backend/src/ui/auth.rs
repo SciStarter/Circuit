@@ -290,9 +290,9 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
 
         return Ok(Response::builder(StatusCode::Forbidden)
             .body(if other.interior.join_channel == JoinChannel::SciStarter {
-                r#"Oops! Looks like you already have a SciStarter account with that email address. Please log in with your SciStarter credentials <a href="/login-scistarter">here</a>."#
+                r#"Oops! Looks like you already have a Science Near Me account with that email address, created by logging in with your SciStarter credentials. Please try logging in using the SciStarter password you imported to Science Near Me."#
             } else {
-                r#"Error: Wrong username or password. <a href="/login">Forgot password?</a>"#
+                r#"Error: Wrong username or password. <a target="_blank" href="/login">Forgot password?</a>"#
             })
             .build());
     }
