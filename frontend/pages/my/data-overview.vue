@@ -19,7 +19,7 @@
       </div>
       <div class="stack">
         <label>{{report[org].current_opportunities}}</label>
-        <small>Opportunities<br>Currently Live</small>
+        <small>Opportunities<br>Current &amp; Future</small>
       </div>
     </div>
   </div>
