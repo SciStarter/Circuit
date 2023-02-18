@@ -19,20 +19,40 @@
             </b-button>
            </div>
            <div>
-                <action-button principal><radius-icon class="radius iconn" /> Use Radius Mode</action-button>
+                <action-button principal v-if="mapMode!='radius'" @click="mapMode='radius'"><radius-icon class="radius iconn" /> Use Radius Mode</action-button>
+                <action-button text v-if="mapMode=='radius'" @click="mapMode='usa'">Exit Radius Mode</action-button>
             </div>
         </div>
 
         <div v-if="mapMode == 'usa'" id="usa_map" class="map">
-            
+            <div class="map-message"><span>Click a state to explore its opportunities</span></div>
         </div>
 
         <div v-else-if="mapMode == 'state'" id="state_map" class="map">
-        
+            <div class="legend">
+                <div class="total"><span class="points"><span>{{counts.points.total}}</span></span> Specific Location</div>
+                <div class="total ptotal"><span class="polygons"><span>{{counts.polygons.total}}</span></span> <div>Regional<small>Viewable in Radius Mode Only</small></div></div>
+                <div class="total"><span class="anywhere"><span>{{counts.anywhere.total}}</span></span> Anywhere, Anytime</div>
+            </div>
+            <div class="map-message"><span>Click a state to explore its opportunities</span></div>
         </div>
 
         <div v-else-if="mapMode == 'radius'" id="radius_map" class="map">
-        
+            <div class="legend">
+                <div class="total"><span class="points"><span>{{counts.points.total}}</span></span> 
+                    <div>
+                        <span>Specified Location</span>
+                        <div><b-checkbox v-model="radius_show_points" :native-value="true"> Show</b-checkbox></div>
+                    </div>
+                </div>
+                <div class="total ptotal"><span class="polygons"><span>{{counts.polygons.total}}</span></span> 
+                    <div>
+                        <span>Regional</span>
+                        <div><b-checkbox v-model="radius_show_polygons" :native-value="true"> Show</b-checkbox></div>
+                    </div>
+                </div>
+                <div class="total"><span class="anywhere"><span>{{counts.anywhere.total}}</span></span> Anywhere, Anytime</div>
+            </div>
         </div>
 
         <div id="counts" class="flex">
@@ -70,12 +90,12 @@
                     </b-tooltip>
                 </div>
                 <div class="sep ctotal">
-                    {{counts.polygon.total}}
+                    {{counts.polygons.total}}
                 </div>
                 <div class="ctable">
                 <table>
                     <tbody>
-                        <tr v-for="row in counts.polygon.domains">
+                        <tr v-for="row in counts.polygons.domains">
                             <td class="table-label">{{row['name']}}</td>
                             <td class="table-num">{{row['value']}}</td>
                             <td class="table-bar"><comparison-bar :value="row['value']" :max="counts.max" color="#268699" /></td>
@@ -122,7 +142,67 @@
         aria-modal
         >
         <div class="card flex-col">
-            asdf
+            <div class="filter-header">
+                <span><filter-icon /> Filter Opportunities</span>
+                <action-button text @click="resetFilters">reset filters</action-button>
+            </div>
+            <div v-if="partner">
+                <h2>Your Opportunities</h2>
+                <b-checkbox v-model="filters.show_only_owned"> Show Only My Opportunities</b-checkbox>
+            </div>
+            <div>
+                <div class="filter-head flex">
+                    <h2>Public Engagment of Science Domains</h2>
+                    <action-button text @click="selectAllDomains">Select All</action-button>
+                    <action-button text @click="deselectAllDomains">Deselect All</action-button>
+                </div>
+                <div v-for="d in domains" class="filter-checks">
+                    <b-checkbox v-model="filters.domains" :native-value="d.val"> {{ d.name }}</b-checkbox>
+                </div>
+            </div>
+            <div>
+                <fieldset>
+                    <label class="h2">Activity Type</label>
+                    <b-taginput v-model="filters.selected_descriptors" :disabled="loading" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="query.descriptor_text = $event.toLowerCase()" />
+                </fieldset>
+            </div>
+            <div>
+                <h2>Age</h2>
+                <b-checkbox v-model="filters.kids_only" :native-value="true" :disabled="loading">
+                    Kids Friendly Only
+                </b-checkbox>
+                <b-checkbox v-model="filters.adults_only" :native-value="true" :disabled="loading">
+                    21+ Only
+                </b-checkbox>
+            </div>
+            <div>
+                <h2>Cost</h2>
+                <b-radio v-model="filters.cost" native-value="any" :disabled="loading">
+                    Any Cost
+                </b-radio>
+                <b-radio v-model="filters.cost" native-value="free" :disabled="loading">
+                    Free Only
+                </b-radio>
+            </div>
+            <div>
+                <h2>Venue Type</h2>
+                <b-select v-model="filters.venue_type" data-context="find-venue-type" :disabled="loading">
+                    <option value="either">
+                        Any
+                    </option>
+                    <option value="indoors">
+                        Indoors
+                    </option>
+                    <option value="outdoors">
+                        Outdoors
+                    </option>
+                </b-select>
+            </div>
+
+            <div class="filter-actions flex flex-justify-sb">
+                <action-button principal @click="applyFilters">Apply Filters</action-button>
+                <action-button tertiary @click="resetApplyFilters">Clear Filters</action-button>    
+            </div>
         </div>
       </b-modal>
   
@@ -153,16 +233,38 @@ export default {
 
     data(){
         return {
+            partner: true,
             dates: null,
             show_filters: false,
             filterCount: 0,
             location: 'USA',
-            mapMode: 'usa',
+            mapMode: 'usa', /// usa, state, radius
+            radius_show_points: true,
+            radius_show_polygons: false,
             queries: {
                 points: '',
                 polygon: '',
                 anywhere: '?search=xxx'
             },
+            filters: {
+                show_only_owned: false,
+                domains: ['citsci','livesci','maker','museum','school','policy','scicomm','formaled'],
+                selected_descriptors: [],
+                kids_only: false,
+                adults_only: false,
+                cost: 'any',
+                venue_type: 'either'
+            },
+            domains: [
+                {name:'Citizen Science',val:'citsci'},
+                {name:'Formal Education',val:'formaled'},
+                {name:'Live Science',val:'livesci'},
+                {name:'Maker',val:'maker'},
+                {name:'Museum & Science Center',val:'museum'},
+                {name:'Out of School Time Program',val:'school'},
+                {name:'Science Communication',val:'scicomm'},
+                {name:'Science Policy',val:'policy'},
+            ],
             counts: {
                 max: 2345,
                 points: {
@@ -182,7 +284,7 @@ export default {
                         },
                     ]
                 },
-                polygon: {
+                polygons: {
                     total: 4256,
                     domains: [
                         {
@@ -217,6 +319,46 @@ export default {
                     ]
                 },
             }
+        }
+    },
+    methods: {
+        selectAllDomains(){
+            this.filters.domains = ['citsci','livesci','maker','museum','school','policy','scicomm','formaled'];
+        },
+        deselectAllDomains(){
+            this.filters.domains = [];
+        },
+        resetFilters(){
+            this.filters = {
+                show_only_owned: false,
+                domains: ['citsci','livesci','maker','museum','school','policy','scicomm','formaled'],
+                selected_descriptors: [],
+                kids_only: false,
+                adults_only: false,
+                cost: 'any',
+                venue_type: 'either'
+            }
+        },
+        applyFilters(){
+            this.filterCount = this.countFilters();
+            this.show_filters = false;
+        },
+        countFilters(){
+            let count = 0;
+            let ctx = this.filters;
+            if(ctx.show_only_owned){count++}
+            if(ctx.domains.length!=8){count++}
+            if(ctx.selected_descriptors>0){count++}
+            if(ctx.kids_only){count++}
+            if(ctx.adults_only){count++}
+            if(ctx.cost!='any'){count++}
+            if(ctx.venue_type!='either'){count++}
+            return count;
+        },
+        resetApplyFilters(){
+            this.resetFilters();
+            this.filterCount = this.countFilters();
+            this.show_filters = false;
         }
     }
 
@@ -264,6 +406,116 @@ export default {
 button.action-button svg.radius circle{
     fill:#fff;
 }
+
+.map {
+    height: 500px;
+    width: 100%;
+    border:1px solid $snm-color-border;
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.map-message {
+    display:flex;
+    background-color: #fff;
+    align-items: center;
+    justify-content: center;
+    position:absolute;
+    bottom: 10px;
+    width:100%;
+    left:0;
+    span {
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(0,0,0,.3);
+        padding:2px 6px;
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+
+}
+
+.legend {
+    position: absolute;
+    top:10px;
+    right:10px;
+    display: flex;
+    flex-direction: column;
+    .total {
+        background-color: #fff;
+        border: 1px solid $snm-color-border;
+        font-weight: bold;
+        font-size: 0.85rem;
+        padding:5px 8px;
+        border-radius: 6px;
+        display: flex;
+        margin-bottom: 10px;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        > span {
+            margin-right: 10px;
+            top:-5px;
+            position:relative;
+            > span {
+                position: relative;
+                z-index: 2;
+                top: 5px;
+                font-size: .75rem;
+            }
+        }
+        :deep(.b-checkbox) {
+            font-weight: normal;
+            font-size: .75rem;
+        }
+
+    }
+    .ptotal {
+       
+        small {
+            font-weight: normal;
+            font-size: 0.6rem;
+            color: #7b7b7b;
+            display: block;
+        }
+  
+    }
+
+    .polygons, .points {
+        position: relative;
+    }
+    .polygons:before {
+        content:'';
+        width: 30px;
+        display: block;
+        aspect-ratio: 1;
+        clip-path: polygon(79.39% 90.45%,20.61% 90.45%,2.45% 34.55%,50.00% 0.00%,97.55% 34.55%);
+        background-color: #dfdfdf;
+        position: absolute;
+        left:50%;
+        margin-left: -15px;
+        top:0; 
+        z-index: 1;
+    }
+    .points > span {
+        color: #fff;
+    }
+    .points:before {
+        content:'';
+        width: 30px;
+        height: 30px;
+        display: block;
+       border-radius: 100%;
+        background-color:  $snm-color-background-meddark;
+        position: absolute;
+        left:50%;
+        margin-left: -15px;
+        top:0; 
+        z-index: 1;
+    }
+
+}
+
+
 .cdiv {
     flex-basis: 0;
     flex-grow: 1;
@@ -356,4 +608,78 @@ button.action-button svg.radius circle{
         background-color: darken($snm-color-action,10%);
     }
   }
+
+@media(max-width:564px){
+    .inputs {
+        flex-direction: column;
+         align-items: flex-start;
+         button {
+            margin-left:0!important;
+         }
+    }
+}
+
+@media(max-width:767px){
+    #counts {
+        flex-direction: column;
+        .cdiv {
+            margin-bottom: 1rem;
+            margin-right: 0;
+        }
+    }
+}
+
+.card {
+    overflow: auto;
+    max-height: calc(100vh - 20px);
+    padding: 1rem;
+    h2,.h2 {
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    > div {
+        border-bottom: 1px solid $snm-color-border;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        &:last-child {
+            border:0;
+            padding:0;
+            margin:0;
+        }
+    }
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    > span {
+        font-weight: bold;
+        display: flex;
+        font-size: .8rem;
+    }
+
+    svg {
+        width:20px;
+        height: 20px;
+        margin-right: 10px;
+    }
+}
+
+.b-checkbox, .b-radio {
+    margin-right: 1.6rem!important;
+}
+
+.filter-head {
+    margin-bottom: 1rem;
+    h2 {
+        margin-bottom: 0;
+        margin-right: 1rem;
+    }
+    button.action-button {
+        margin-right: 1rem;
+    }
+}
+
 </style>

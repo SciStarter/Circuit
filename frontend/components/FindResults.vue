@@ -127,11 +127,8 @@
       </fieldset>
       <fieldset>
         <label>Venue Type</label>
-        <!-- The wireframes have this as a pair of checkboxes, but that
-             implies four possible states: both checked, one box checked, the
-             other box checked, or neither checked. We actually only have
-             three meaningful states, so use a select instead. -->
         <b-select v-model="venue_type" data-context="find-venue-type" :disabled="loading">
+          
           <option value="either">
             Any
           </option>
