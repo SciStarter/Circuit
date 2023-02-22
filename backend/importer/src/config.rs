@@ -49,7 +49,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
         //source: source::Airtable::new("appytM7ldnmIDcbRV", ["Events"]), // 2022 list
         source: source::Airtable::new("appzz89bVacXdFSeZ", ["Events"]), // 2023 list
         format: format::Json,
-        structure: structure::AtlantaScienceFest::<2022>,
+        structure: structure::AtlantaScienceFest::<2022>, // The 2022 table structure has so far been carried forward to later years
         period: 24 * hours,
     }));
 

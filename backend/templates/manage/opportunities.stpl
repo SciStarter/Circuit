@@ -40,6 +40,7 @@
         <table>
           <tr>
             <th>Opportunity</th>
+            <th>Partner</th>
             <th>Accepted</th>
             <th>Withdrawn</th>
           </tr>
@@ -47,6 +48,9 @@
             <tr>
               <td>
                 <a href="<%= opp.exterior.uid | disp %>"><%= opp.exterior.title %></a>
+              </td>
+              <td>
+                <%= opp.exterior.partner_name %></a>
               </td>
               <td>
                 <% if let Some(true) = opp.interior.accepted { %><span style="color: #007C03">✓</span><% } %>
