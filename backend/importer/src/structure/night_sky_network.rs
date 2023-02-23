@@ -193,6 +193,8 @@ impl Structure for NightSkyNetwork {
 
                     input.exterior.partner = UID.clone();
 
+                    input.exterior.pes_domain = common::model::opportunity::Domain::CitizenScience;
+
                     input
                         .exterior
                         .opp_descriptor
