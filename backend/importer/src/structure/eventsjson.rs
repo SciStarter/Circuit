@@ -20,6 +20,18 @@ struct Image {
 
 #[derive(serde::Deserialize, Debug, Default)]
 #[serde(default)]
+struct Venue {
+    #[serde(alias = "venue")]
+    name: String,
+    address: String,
+    city: String,
+    state: String,
+    country: String,
+    zip: String,
+}
+
+#[derive(serde::Deserialize, Debug, Default)]
+#[serde(default)]
 struct Data {
     global_id: String,
     date_utc: String,
@@ -33,6 +45,7 @@ struct Data {
     cost: Option<String>,
     description: String,
     title: String,
+    venue: Option<Venue>,
 }
 
 fn interpret_one<Tz: TimeZone>(
@@ -125,7 +138,15 @@ fn interpret_one<Tz: TimeZone>(
         common::model::opportunity::Cost::Cost
     };
 
-    if let Some(addr) = &partner.address {
+    if let Some(venue) = data.venue {
+        opp.exterior.location_type = common::model::opportunity::LocationType::At;
+        opp.exterior.location_name = venue.name.clone();
+        opp.exterior.address_street = venue.address.clone();
+        opp.exterior.address_city = venue.city.clone();
+        opp.exterior.address_state = venue.state.clone();
+        opp.exterior.address_zip = venue.zip.clone();
+        opp.exterior.address_country = venue.country.clone();
+    } else if let Some(addr) = &partner.address {
         opp.exterior.location_type = common::model::opportunity::LocationType::At;
         opp.exterior.location_name = addr.name.clone();
         opp.exterior.address_street = addr.street.clone();

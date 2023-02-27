@@ -110,9 +110,11 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     }));
 
     importers.push(Box::new(Import {
-        source: source::EventsQLWithCustom::new("https://astronomyontap.org/graphql"),
+        source: source::WordPressRest::new(
+            "https://astronomyontap.org/wp-json/tribe/events/v1/events/?status=publish&per_page=50",
+        ),
         format: format::Json,
-        structure: structure::EventsQL(PartnerInfo {
+        structure: structure::EventsJson(PartnerInfo {
             partner: "784f3316-bdc0-5855-8a44-2044cbb23788".parse().unwrap(),
             partner_name: "Astronomy On Tap".to_string(),
             partner_website: Some("https://astronomyontap.org/".to_string()),
