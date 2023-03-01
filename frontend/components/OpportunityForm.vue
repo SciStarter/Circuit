@@ -595,14 +595,15 @@
         <template v-if="editMode">
           <action-button primary :disabled="saveDisabled" @click="save">Save &amp; Continue Editing</action-button>
           <action-button primary :disabled="saveDisabled" @click="save_and_view">Save &amp; View</action-button>
+          <action-button primary :disabled="saveDisabled" @click="save_and_publish">Save &amp; Publish</action-button>
         </template>
         <template v-else>
           <action-button v-if="state==2 || state==3"  @click="go_state(state-1)" gray>Back</action-button>
           <action-button v-if="state==1" @click="go_state(state+1)" primary :disabled="nextDisabled1">Next Step</action-button>
           <action-button v-if="state==2" @click="go_state(state+1)" primary :disabled="nextDisabled2">Next Step</action-button>
-          <action-button v-if="state<3" tertiary @click="save_and_view">Save and Complete Later</action-button>
-          <action-button v-if="state==3" primary @click="save_and_publish">Save and Publish</action-button>
-          <action-button v-if="state==3" tertiary @click="save_and_view">Save and Publish Later</action-button>
+          <action-button v-if="state<3" tertiary @click="save_and_view">Save &amp; Complete Later</action-button>
+          <action-button v-if="state==3" primary @click="save_and_publish">Save &amp; Publish</action-button>
+          <action-button v-if="state==3" tertiary @click="save_and_view">Save &amp; Publish Later</action-button>
         </template>
         <template v-if="saveState=='saved'">
           <div class="save-feedback"><div class="icon"><correct-icon /></div><span> saved</span></div>

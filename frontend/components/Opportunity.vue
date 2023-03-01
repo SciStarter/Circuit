@@ -53,7 +53,7 @@
   <div v-if="owner" class="snm-container">
     <div class="nav-tabs"  id="owner-view">
         <div class="tab-link active"><div class="icon"><eye-icon /></div>Public View</div>
-        <div v-if="published" class="publish published">
+        <div v-if="published || entity.authorized === 'edit'" class="publish published">
           This opportunity is
           <span v-if="entity.review_status === 'not_required' || entity.review_status === 'publish'">live. <action-button text2 @click="withdrawn(true)">Hide</action-button></span>
           <span v-else-if="entity.review_status === 'reject'">rejected</span>
