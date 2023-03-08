@@ -20,40 +20,42 @@
            </div>
            <div>
                 <action-button principal v-if="mapMode!='radius'" @click="mapMode='radius'"><radius-icon class="radius iconn" /> Use Radius Mode</action-button>
-                <action-button text v-if="mapMode=='radius'" @click="mapMode='usa'">Exit Radius Mode</action-button>
+                <action-button text v-if="mapMode=='radius'" @click="mapMode='usa';location='USA'">Exit Radius Mode</action-button>
             </div>
         </div>
 
-        <div v-if="mapMode == 'usa'" id="usa_map" class="map">
-            <div class="map-message"><span>Click a state to explore its opportunities</span></div>
-        </div>
+    <div class="map">
 
-        <div v-else-if="mapMode == 'state'" id="state_map" class="map">
-            <div class="legend">
+        <geo-explorer-map-usa v-if="mapMode == 'usa'" :value="statesData" @state="select_state($event)" />
+        <geo-explorer-map-state v-else-if="mapMode == 'state'" :value="projectsData" :state="selected_state" :range="dates" />
+            
+        <div v-if="mapMode == 'usa'" class="map-message"><span>Click a state to explore its opportunities</span></div>
+        <div v-if="mapMode == 'state'" class="backtousa" @click="returnToUSA()">&laquo; back to USA</div>
+        <div v-if="mapMode == 'state'" class="legend">
                 <div class="total"><span class="points"><span>{{counts.points.total}}</span></span> Specific Location</div>
                 <div class="total ptotal"><span class="polygons"><span>{{counts.polygons.total}}</span></span> <div>Regional<small>Viewable in Radius Mode Only</small></div></div>
                 <div class="total"><span class="anywhere"><span>{{counts.anywhere.total}}</span></span> Anywhere, Anytime</div>
             </div>
-            <div class="map-message"><span>Click a state to explore its opportunities</span></div>
+        <div v-if="mapMode == 'state'" class="map-message"><span>Zoom in to further explore the opportunities</span></div>
+        <div v-if="mapMode == 'radius'" class="legend">
+            <div class="total"><span class="points"><span>{{counts.points.total}}</span></span> 
+                <div>
+                    <span>Specified Location</span>
+                    <div><b-checkbox v-model="radius_show_points" :native-value="true"> Show</b-checkbox></div>
+                </div>
+            </div>
+            <div class="total ptotal"><span class="polygons"><span>{{counts.polygons.total}}</span></span> 
+                <div>
+                    <span>Regional</span>
+                    <div><b-checkbox v-model="radius_show_polygons" :native-value="true"> Show</b-checkbox></div>
+                </div>
+            </div>
+            <div class="total"><span class="anywhere"><span>{{counts.anywhere.total}}</span></span> Anywhere, Anytime</div>
         </div>
 
-        <div v-else-if="mapMode == 'radius'" id="radius_map" class="map">
-            <div class="legend">
-                <div class="total"><span class="points"><span>{{counts.points.total}}</span></span> 
-                    <div>
-                        <span>Specified Location</span>
-                        <div><b-checkbox v-model="radius_show_points" :native-value="true"> Show</b-checkbox></div>
-                    </div>
-                </div>
-                <div class="total ptotal"><span class="polygons"><span>{{counts.polygons.total}}</span></span> 
-                    <div>
-                        <span>Regional</span>
-                        <div><b-checkbox v-model="radius_show_polygons" :native-value="true"> Show</b-checkbox></div>
-                    </div>
-                </div>
-                <div class="total"><span class="anywhere"><span>{{counts.anywhere.total}}</span></span> Anywhere, Anytime</div>
-            </div>
-        </div>
+    </div>
+
+        
 
         <div id="counts" class="flex">
 
@@ -213,6 +215,11 @@
 </template>
 
 <script>
+/******  REMOVE */
+import dummyProjectData from '~/assets/dummy-data/test-projects.json'
+import dummyStateData from '~/assets/dummy-data/projects-by-state.json'
+/****** */
+
 import FilterIcon from '~/assets/img/filter.svg?inline'
 import RadiusIcon from '~/assets/img/radius.svg?inline'
 export default {
@@ -233,12 +240,15 @@ export default {
 
     data(){
         return {
+            projectsData: dummyProjectData,
+            statesData: dummyStateData,
             partner: true,
-            dates: null,
+            dates: [new Date()],
             show_filters: false,
             filterCount: 0,
             location: 'USA',
             mapMode: 'usa', /// usa, state, radius
+            selected_state: null,
             radius_show_points: true,
             radius_show_polygons: false,
             queries: {
@@ -321,6 +331,13 @@ export default {
             }
         }
     },
+    // computed: {
+    //     dates(){
+    //         let date = new Date();
+    //         // let date2 = date.setDate(date.getDate() + 7);
+    //         return [date,date]
+    //     }
+    // },
     methods: {
         selectAllDomains(){
             this.filters.domains = ['citsci','livesci','maker','museum','school','policy','scicomm','formaled'];
@@ -359,7 +376,24 @@ export default {
             this.resetFilters();
             this.filterCount = this.countFilters();
             this.show_filters = false;
-        }
+        },
+        select_state(state) {
+            this.location = state;
+            this.selected_state = state;
+            this.mapMode = 'state';
+        },
+        returnToUSA() {
+            this.location = 'USA';
+            this.selected_state = null;
+            this.mapMode = 'usa';
+        },
+    },
+    mounted() {
+        let date = new Date();
+        date.setDate(date.getDate() + 6);
+        this.dates = [new Date(), date];
+
+        /// getProjects
     }
 
 }
@@ -417,11 +451,10 @@ button.action-button svg.radius circle{
 
 .map-message {
     display:flex;
-    background-color: #fff;
     align-items: center;
     justify-content: center;
     position:absolute;
-    bottom: 10px;
+    top: 10px;
     width:100%;
     left:0;
     span {
@@ -432,6 +465,20 @@ button.action-button svg.radius circle{
         border-radius: 6px;
     }
 
+}
+
+.backtousa {
+    background-color: #fff;
+    border: 1px solid $snm-color-border;
+    font-weight: bold;
+    font-size: 0.85rem;
+    padding:5px 8px;
+    border-radius: 6px;
+    position: absolute;
+    top:20px;
+    left:20px;
+    z-index: 95;
+    cursor:pointer;
 }
 
 .legend {
@@ -680,6 +727,10 @@ button.action-button svg.radius circle{
     button.action-button {
         margin-right: 1rem;
     }
+}
+
+:deep(.datepicker.control){
+    z-index: 99;
 }
 
 </style>

@@ -1,0 +1,29 @@
+{
+    "anywhere": 780,
+    "states": {
+       "Alabama" : {
+            "point": 245,
+            "polygon": 100
+        },
+        "Arkansas" : {
+            "point": 99,
+            "polygon": 234
+        },
+        "Alaska" : {
+            "point": 56,
+            "polygon": 109
+        },
+        "Iowa": {
+            "point": 34,
+            "polygon": 56
+        },
+        "Pennsylvania" : {
+            "point": 987,
+            "polygon": 340
+        },
+        "North Dakota" : {
+            "point": 134,
+            "polygon": 8
+        }
+    }
+}
