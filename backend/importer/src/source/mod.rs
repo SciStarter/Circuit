@@ -5,6 +5,7 @@ pub mod airtable;
 pub mod eventsql;
 pub mod eventsql_custom;
 pub mod http;
+pub mod moderneventscalendar;
 pub mod neoncrm;
 pub mod wp_rest;
 
@@ -13,6 +14,7 @@ use common::model::partner::LoggedError;
 pub use eventsql::EventsQL;
 pub use eventsql_custom::EventsQLWithCustom;
 pub use http::HttpGet;
+pub use moderneventscalendar::ModernEventsCalendar;
 pub use neoncrm::NeonCRM;
 pub use wp_rest::WordPressRest;
 
