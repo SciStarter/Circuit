@@ -52,10 +52,11 @@
 
   <div v-if="owner" class="snm-container">
     <div class="nav-tabs"  id="owner-view">
-        <div class="tab-link active"><div class="icon"><eye-icon /></div>Public View</div>
+      <div class="tab-link active"><div class="icon"><eye-icon /></div>Public View</div>
         <div v-if="published || entity.authorized === 'edit'" class="publish published">
           This opportunity is
-          <span v-if="entity.review_status === 'not_required' || entity.review_status === 'publish'">live. <action-button text2 @click="withdrawn(true)">Hide</action-button></span>
+          <span v-if="entity.accepted === false">declined by Science Near Me.</span>
+          <span v-else-if="entity.review_status === 'not_required' || entity.review_status === 'publish'">live. <action-button text2 @click="withdrawn(true)">Hide</action-button></span>
           <span v-else-if="entity.review_status === 'reject'">rejected</span>
           <span v-else-if="entity.review_status === 'draft'">in draft</span>
           <span v-else>pending approval. <span v-if="entity.authorized === 'manage'"><action-button text2 @click="set_review_status('publish')">Publish</action-button> | <action-button text2 @click="set_review_status('reject')">Reject</action-button> | <action-button text2 @click="set_review_status('draft')">Return to draft</action-button></span></span>
