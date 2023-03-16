@@ -252,7 +252,7 @@ where
                     &data
                         .end_date
                         .parse::<chrono::NaiveDate>()?
-                        .and_hms_opt(11, 59, 59)
+                        .and_hms_opt(23, 59, 59)
                         .expect("11:59:59 should always be valid"),
                 )
                 .earliest()

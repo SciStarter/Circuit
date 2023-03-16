@@ -31,45 +31,22 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
                     "https://scitechinstitute.org/wp-content/themes/aztc-scitech/img/logo.svg"
                         .into(),
                 ),
-                domain: Domain::LiveScience,
-                descriptor: Vec::new(),
-                topics: Vec::new(),
+                domain: Domain::MuseumOrScienceCenter,
+                descriptor: vec![Descriptor::ExpoStyle],
+                topics: vec![Topic::Engineering, Topic::Technology],
                 flags: Vec::new(),
-                address: None,
+                address: Some(PartnerAddress {
+                    name: "SciTech Institute".to_string(),
+                    street: "1438 W. Broadway Rd., Ste 101".to_string(),
+                    city: "Tempe".to_string(),
+                    state: "AZ".to_string(),
+                    zip: "85282".to_string(),
+                    country: "United States of America".to_string(),
+                }),
                 timezone: Some(chrono_tz::US::Arizona),
             },
         ),
         period: 24 * hours,
-    }));
-
-    importers.push(Box::new(Import {
-        source: source::HttpGet::new(
-            "https://scitechinstitute.org/wp-json/mecexternal/v1/calendar/1",
-        ),
-        format: format::Json,
-        structure: structure::ModernEventsCalendar(PartnerInfo {
-            partner: "12a96513-a9a5-5372-8a85-c68ce074a54b".parse().unwrap(),
-            partner_name: "SciTech Institute".to_string(),
-            partner_website: Some("https://scitechinstitute.org/".to_string()),
-            partner_logo_url: Some(
-                "https://scitechinstitute.org/wp-content/themes/aztc-scitech/img/logo.svg"
-                    .to_string(),
-            ),
-            domain: Domain::MuseumOrScienceCenter,
-            descriptor: vec![Descriptor::ExpoStyle],
-            topics: vec![Topic::Engineering, Topic::Technology],
-            flags: vec![],
-            address: Some(PartnerAddress {
-                name: "SciTech Institute".to_string(),
-                street: "1438 W. Broadway Rd., Ste 101".to_string(),
-                city: "Tempe".to_string(),
-                state: "AZ".to_string(),
-                zip: "85282".to_string(),
-                country: "United States of America".to_string(),
-            }),
-            timezone: Some(chrono_tz::US::Mountain),
-        }),
-        period: 4 * hours,
     }));
 
     importers.push(Box::new(Import {
