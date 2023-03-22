@@ -55,7 +55,7 @@
           </template>
           <b-input type="email" v-model="value.contact_email"></b-input>
         </b-field>
-        <b-field :type="validation.name" :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '') + ' All data entered into this form will be available to Science Near Me and to the partner.'">
+        <b-field v-if="partner" :type="validation.name" :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '') + ' All data entered into this form will be available to Science Near Me and to the partner.'">
           <template #label>
             Science Near Me partner<span class="required">*</span>
           </template>
@@ -1080,10 +1080,12 @@ export default {
 
     methods: {
         initialize() {
-            this.value.partner = this.partner.uid;
-            this.value.partner_name = this.partner.name;
-            this.value.partner_url = this.partner.url;
-            this.value.partner_logo_url = this.partner.image_url;
+            if(this.partner !== null) {
+                this.value.partner = this.partner.uid;
+                this.value.partner_name = this.partner.name;
+                this.value.partner_url = this.partner.url;
+                this.value.partner_logo_url = this.partner.image_url;
+            }
 
             if(!this.value.timezone) {
                 this.value.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
