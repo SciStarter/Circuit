@@ -51,7 +51,7 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
     let slug = req.param("slug")?;
     let db = req.state();
 
-    let opp = Opportunity::load_by_slug(db, slug)
+    let opp = Opportunity::load_by_slug_with_overlay(db, slug)
         .await
         .with_status(|| StatusCode::NotFound)?;
 
