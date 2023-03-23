@@ -21,7 +21,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/data.stpl")]
+#[template(path = "manage/data.stpl.html")]
 struct DataPage;
 
 pub async fn data(req: tide::Request<Database>) -> tide::Result {
@@ -34,7 +34,7 @@ pub async fn data(req: tide::Request<Database>) -> tide::Result {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/demographics.stpl")]
+#[template(path = "manage/demographics.stpl.html")]
 struct DemographicsPage;
 
 pub async fn demographics(mut req: tide::Request<Database>) -> tide::Result {

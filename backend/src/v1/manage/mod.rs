@@ -76,7 +76,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 }
 
 #[derive(TemplateOnce)]
-#[template(path = "manage/manage.stpl")]
+#[template(path = "manage/manage.stpl.html")]
 struct ManagePage {
     pub admin: Person,
 }
@@ -93,7 +93,7 @@ async fn manage(req: tide::Request<Database>) -> tide::Result {
 }
 
 #[derive(TemplateOnce, Default, Serialize, Deserialize, Debug)]
-#[template(path = "manage/authorize.stpl")]
+#[template(path = "manage/authorize.stpl.html")]
 struct AuthorizeForm {
     next: Option<String>,
     error: Option<String>,
@@ -162,7 +162,7 @@ async fn authorize(mut req: tide::Request<Database>) -> tide::Result {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/partners.stpl")]
+#[template(path = "manage/partners.stpl.html")]
 struct PartnersPage {
     pub partners: Vec<PartnerReference>,
     pub suggested_secret: String,
@@ -170,7 +170,7 @@ struct PartnersPage {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/partners_created.stpl")]
+#[template(path = "manage/partners_created.stpl.html")]
 struct PartnersCreatedPage {
     pub name: String,
     pub uid: String,
@@ -238,7 +238,7 @@ async fn partners(mut req: tide::Request<Database>) -> tide::Result {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/partner.stpl")]
+#[template(path = "manage/partner.stpl.html")]
 struct PartnerPage {
     partner: Partner,
 }
@@ -297,7 +297,7 @@ async fn authorized_admin(
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/persons.stpl")]
+#[template(path = "manage/persons.stpl.html")]
 struct PersonsPage {
     pub persons: Vec<Person>,
     pub suggested_password: String,
@@ -394,7 +394,7 @@ async fn persons(mut req: tide::Request<Database>) -> tide::Result {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/person.stpl")]
+#[template(path = "manage/person.stpl.html")]
 struct PersonPage {
     pub person: Person,
     pub csrf: String,
@@ -527,7 +527,7 @@ async fn add_person_to_partner(mut req: tide::Request<Database>) -> tide::Result
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/masquerade.stpl")]
+#[template(path = "manage/masquerade.stpl.html")]
 struct MasqueradePage {
     pub jwt: String,
 }
@@ -584,7 +584,7 @@ mod filters {
 }
 
 #[derive(TemplateOnce)]
-#[template(path = "manage/health.stpl")]
+#[template(path = "manage/health.stpl.html")]
 struct HealthPage {
     pub accepted: Option<bool>,
     pub withdrawn: Option<bool>,

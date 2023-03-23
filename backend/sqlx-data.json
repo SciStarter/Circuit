@@ -901,6 +901,32 @@
     },
     "query": "insert\ninto c_opportunity_like (opportunity_id, person)\nvalues ($1, $2)\non conflict do nothing;\n"
   },
+  "5ffb61b679ffb59b54f949cb7ad54855f393ec574e91155ce68c0291536ecd6c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "exterior!",
+          "ordinal": 0,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior!",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT exterior as \"exterior!\", interior as \"interior!\" FROM c_opportunity_overlay WHERE opportunity_id = $1"
+  },
   "62ffbbac0271bf049852727ee7a6ebda23461fdc03384c2cd5549d9c1d16e4d7": {
     "describe": {
       "columns": [
@@ -1215,6 +1241,20 @@
       }
     },
     "query": "select\n  \"id\",\n  \"person_id\",\n  \"category\",\n  \"target\",\n  \"begin\",\n  \"end\",\n  \"status\" as \"status: GoalStatus\"\nfrom\n  c_person_goals\nwhere\n    \"person_id\" = $1\n  and\n    \"status\" = $2::c_person_goals_status\norder by \"end\" asc\n;\n"
+  },
+  "806060766ad0b84331f1422de8512eb4b2c3ee2eaa46b25ac9d09214fff42bd8": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Jsonb",
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO\n  c_opportunity_overlay (opportunity_id, exterior, interior)\nVALUES\n  ($1, $2, $3)\nON CONFLICT\n  (opportunity_id)\nDO UPDATE SET\n  exterior = EXCLUDED.exterior,\n  interior = EXCLUDED.interior\nWHERE\n  c_opportunity_overlay.opportunity_id = $1\n"
   },
   "80950a68e5badeed5975a1c5cabd085a45fc0b5e786af4dc039da2de675bfa20": {
     "describe": {

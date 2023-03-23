@@ -21,7 +21,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/emails.stpl")]
+#[template(path = "manage/emails.stpl.html")]
 struct EmailsPage {
     slugs: Vec<String>,
 }
@@ -50,7 +50,7 @@ async fn emails(mut req: tide::Request<Database>) -> tide::Result {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/email.stpl")]
+#[template(path = "manage/email.stpl.html")]
 struct EmailPage {
     slug: String,
     subject: String,

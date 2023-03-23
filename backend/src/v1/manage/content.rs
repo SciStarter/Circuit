@@ -25,7 +25,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 }
 
 #[derive(TemplateOnce)]
-#[template(path = "manage/content.stpl")]
+#[template(path = "manage/content.stpl.html")]
 struct ContentPage {
     languages: Vec<(String, String)>,
     all_languages: Vec<(String, String)>,
@@ -70,7 +70,7 @@ async fn content(mut req: tide::Request<Database>) -> tide::Result {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/content_language.stpl")]
+#[template(path = "manage/content_language.stpl.html")]
 struct ContentLanguagePage {
     language_name: String,
     groups: Vec<String>,
@@ -109,7 +109,7 @@ async fn content_language(mut req: tide::Request<Database>) -> tide::Result {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/content_group.stpl")]
+#[template(path = "manage/content_group.stpl.html")]
 struct ContentGroupPage {
     language_name: String,
     group: String,
@@ -151,7 +151,7 @@ async fn content_group(mut req: tide::Request<Database>) -> tide::Result {
 }
 
 #[derive(TemplateOnce, Default)]
-#[template(path = "manage/content_item.stpl")]
+#[template(path = "manage/content_item.stpl.html")]
 struct ContentItemPage {
     language_name: String,
     group: String,
