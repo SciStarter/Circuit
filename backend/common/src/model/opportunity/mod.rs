@@ -1445,7 +1445,7 @@ SELECT
             END AS _sort_time
         "#);
 
-    query_string.push_str(" FROM c_opportunity JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id) AS primary_table");
+    query_string.push_str(" FROM c_opportunity LEFT JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id) AS primary_table");
 
     if !clauses.is_empty() {
         query_string.push_str(" WHERE");
