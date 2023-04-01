@@ -11,6 +11,7 @@
                 editable
                 icon="calendar-today"
                 range
+                :min-date="new Date('2/1/2022')"
                 />
             </div>
             <b-button @click="show_filters=true">
@@ -19,7 +20,7 @@
             </b-button>
            </div>
            <div>
-                <action-button principal v-if="mapMode!='radius'" @click="mapMode='radius'"><radius-icon class="radius iconn" /> Use Radius Mode</action-button>
+                <action-button principal v-if="mapMode!='radius'" @click="mapMode='radius';location='Custom Radius'"><radius-icon class="radius iconn" /> Use Radius Mode</action-button>
                 <action-button text v-if="mapMode=='radius'" @click="mapMode='usa';location='USA'">Exit Radius Mode</action-button>
             </div>
         </div>
@@ -28,6 +29,7 @@
 
         <geo-explorer-map-usa v-if="mapMode == 'usa'" :value="statesData" @state="select_state($event)" />
         <geo-explorer-map-state v-else-if="mapMode == 'state'" :value="projectsData" :state="selected_state" :range="dates" />
+        <geo-explorer-map-radius v-else-if="mapMode == 'radius'" :value="projectsData" :counts="this.counts"/>
             
         <div v-if="mapMode == 'usa'" class="map-message"><span>Click a state to explore its opportunities</span></div>
         <div v-if="mapMode == 'state'" class="backtousa" @click="returnToUSA()">&laquo; back to USA</div>
@@ -37,21 +39,7 @@
                 <div class="total"><span class="anywhere"><span>{{counts.anywhere.total}}</span></span> Anywhere, Anytime</div>
             </div>
         <div v-if="mapMode == 'state'" class="map-message"><span>Zoom in to further explore the opportunities</span></div>
-        <div v-if="mapMode == 'radius'" class="legend">
-            <div class="total"><span class="points"><span>{{counts.points.total}}</span></span> 
-                <div>
-                    <span>Specified Location</span>
-                    <div><b-checkbox v-model="radius_show_points" :native-value="true"> Show</b-checkbox></div>
-                </div>
-            </div>
-            <div class="total ptotal"><span class="polygons"><span>{{counts.polygons.total}}</span></span> 
-                <div>
-                    <span>Regional</span>
-                    <div><b-checkbox v-model="radius_show_polygons" :native-value="true"> Show</b-checkbox></div>
-                </div>
-            </div>
-            <div class="total"><span class="anywhere"><span>{{counts.anywhere.total}}</span></span> Anywhere, Anytime</div>
-        </div>
+        
 
     </div>
 
@@ -457,6 +445,7 @@ button.action-button svg.radius circle{
     top: 10px;
     width:100%;
     left:0;
+    
     span {
         background: #fff;
         box-shadow: 0 1px 4px rgba(0,0,0,.3);
@@ -499,6 +488,7 @@ button.action-button svg.radius circle{
         min-height: 50px;
         display: flex;
         align-items: center;
+        box-shadow: 0 1px 4px rgba(0,0,0,.3);
         > span {
             margin-right: 10px;
             top:-5px;
@@ -517,6 +507,7 @@ button.action-button svg.radius circle{
 
     }
     .ptotal {
+
        
         small {
             font-weight: normal;
