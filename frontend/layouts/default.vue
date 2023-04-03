@@ -112,7 +112,7 @@
 
               </li>
 
-             
+
               <li class="mobile-only">
                 <nuxt-link v-if="owner" to="/my/submit-opportunity">
                   <submit-opportunity-icon class="menu-icon" /> Add an Opportunity
@@ -219,13 +219,12 @@
                 <my-data-icon class="menu-icon" /> Data Insights
               </nuxt-link>
 
-                <ul v-if="beta_features && owner && ($route.name == 'my-data-overview' || $route.name == 'my-hosts-explorer' ||  $route.name == 'my-opportunity-data-explorer' || $route.name == 'my-snm-data-overview')" class="subnav">
-                  <li><nuxt-link v-if="owner" to="/my/data-overview">Your Data Overview</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/hosts-explorer">Hosts Explorer</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/opportunity-data-explorer">Opportunity Data Explorer</nuxt-link></li>
-                  <li><nuxt-link v-if="owner" to="/my/snm-data-overview"> SNM Data Overview</nuxt-link></li>
-                </ul>
-
+              <ul v-if="beta_features && owner && ($route.name == 'my-data-overview' || $route.name == 'my-hosts-explorer' ||  $route.name == 'my-opportunity-data-explorer' || $route.name == 'my-snm-data-overview')" class="subnav">
+                <li><nuxt-link v-if="owner" to="/my/data-overview">Your Data Overview</nuxt-link></li>
+                <li><nuxt-link v-if="owner" to="/my/hosts-explorer">Hosts Explorer</nuxt-link></li>
+                <li><nuxt-link v-if="owner" to="/my/opportunity-data-explorer">Opportunity Data Explorer</nuxt-link></li>
+                <li><nuxt-link v-if="owner" to="/my/snm-data-overview"> SNM Data Overview</nuxt-link></li>
+              </ul>
 
               <nuxt-link v-if="owner" to="/my/submit-opportunity">
                 <submit-opportunity-icon /> Add an Opportunity
@@ -334,6 +333,19 @@ export default {
         }
     },
 
+    async asyncData({ req, res }) {
+        let ret = {};
+
+        if(process.client) {
+            ret.beta_features = window.location.host.indexOf("beta.") >= 0;
+        }
+        else {
+            ret.beta_features = req.headers.host.indexOf("beta.") >= 0;
+        }
+
+        return ret;
+    },
+
     async fetch () {
         await this.$store.dispatch('get_user')
     },
@@ -347,15 +359,6 @@ export default {
                 '--tertiary-color': null,
                 '--logo-url': null,
             };
-        },
-
-        beta_features() {
-            if(process.client) {
-                return window.location.host.indexOf("beta.") >= 0;
-            }
-            else {
-                return false;
-            }
         },
 
         user() {
@@ -611,9 +614,9 @@ header {
         text-align: left;
         box-shadow: 0px 3px 6px $snm-color-shadow;
         width: 100%;
-        
 
-        
+
+
 
         .not-authenticated {
             display: flex;
