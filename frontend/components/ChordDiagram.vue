@@ -61,9 +61,8 @@
                             if (d == e) {
                                 a.push(0);
                             } else {
-                                // a.push(data[d][e][metric]);
                                 if(data[d][e]) {
-                                    a.push(data[d][e][metric] * data[d].proportion);
+                                    a.push(data[d][e][metric]); // * data[d].proportion);
                                 }
                                 else {
                                     a.push(10);
@@ -205,8 +204,8 @@
                                 .style("top", (e.pageY - 150) + "px")
                             
                                 .html(
-                                    '<p><strong>' + ((d.source.value/chart_data[Names[d.source.index]].proportion) * 100).toFixed(1) + '%</strong> who ' + e_lang[metric] + " a <strong>" + nameByIndex[d.source.index] + "</strong> opportunity " + e_lang[metric] + " a <strong>"  + nameByIndex[d.target.index] + '</strong> opportunity.</p>' +
-                                    '<p><strong>' + ((d.target.value/chart_data[Names[d.target.index]].proportion) * 100).toFixed(1) + '%</strong> who ' + e_lang[metric] + " a <strong>" + nameByIndex[d.target.index] + "</strong> opportunity " + e_lang[metric] + " a <strong>"  + nameByIndex[d.source.index] + '</strong> opportunity.</p>'
+                                    //'<p><strong>' + d.source.value + '</strong> who ' + e_lang[metric] + " a <strong>" + nameByIndex[d.source.index] + "</strong> opportunity " + e_lang[metric] + " a <strong>"  + nameByIndex[d.target.index] + '</strong> opportunity.</p>' +
+                                    '<p><strong>' + d.target.value + '</strong> who ' + e_lang[metric] + " a <strong>" + nameByIndex[d.target.index] + "</strong> opportunity also " + e_lang[metric] + " a <strong>"  + nameByIndex[d.source.index] + '</strong> opportunity.</p>'
 
                                 );
 

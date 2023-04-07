@@ -316,6 +316,7 @@ export default {
             show_person_dropdown: false,
             show_cookie: false,
             show_location_modal: false,
+            beta_features: false,
 
             query: {
                 keywords: '',
@@ -333,20 +334,14 @@ export default {
         }
     },
 
-    async asyncData({ req, res }) {
-        let ret = {};
-
+    async fetch () {
         if(process.client) {
-            ret.beta_features = window.location.host.indexOf("beta.") >= 0;
+            this.beta_features = window.location.host.indexOf("beta.") >= 0;
         }
         else {
-            ret.beta_features = req.headers.host.indexOf("beta.") >= 0;
+            this.beta_features = this.$nuxt.context.req.headers.host.indexOf("beta.") >= 0;
         }
 
-        return ret;
-    },
-
-    async fetch () {
         await this.$store.dispatch('get_user')
     },
 
