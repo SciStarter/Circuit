@@ -1154,6 +1154,21 @@
     },
     "query": "DELETE FROM c_analytics_overview_cache WHERE \"temporary\" = true"
   },
+  "93d8fdc5933bc93898b77dbbf990c99984d88c945d5393fde575ca37fed51c54": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Bool",
+          "Timestamptz",
+          "Timestamptz",
+          "Int8"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO c_analytics_overview_cache (\n  \"temporary\",\n  \"begin\",\n  \"end\",\n  \"unique_visitors\",\n\n  \"shares\",\n  \"calendar_adds\",\n  \"likes\",\n  \"saves\",\n  \"didits\",\n  \"opportunity_views\",\n  \"opportunity_unique\",\n  \"opportunity_exits\",\n  \"accounts\"\n)\nVALUES (\n  $1, $2, $3, $4,\n\n  (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE \"action\" LIKE 'shared:%' AND \"when\" >= $2 AND \"when\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE \"action\" LIKE 'calendar:%' AND \"when\" >= $2 AND \"when\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_opportunity_like WHERE \"when\" >= $2 AND \"when\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE (\"exterior\"->'mode')::integer = 20 AND \"updated\" >= $2 AND \"updated\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE (\"exterior\"->'mode')::integer >= 30 AND \"updated\" >= $2 AND \"updated\" < $3),\n  (SELECT COALESCE(SUM(\"views\")::bigint, 0) FROM c_analytics_cache WHERE \"begin\" = $2 AND \"end\" = $3),\n  (SELECT COALESCE(SUM(\"sessions\")::bigint, 0) FROM c_analytics_cache WHERE \"begin\" = $2 AND \"end\" = $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE \"action\" = 'external' AND \"when\" >= $2 AND \"when\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_person WHERE \"created\" >= $2 AND \"created\" < $3)\n)\n    "
+  },
   "93dd5c26145a04b4e376a906717ca63d0bdef7f3c84db9f4306e6c520207778d": {
     "describe": {
       "columns": [
@@ -1827,21 +1842,6 @@
       }
     },
     "query": "\nSELECT\n  \"region\" AS \"state!: String\",\n  SUM(\"total_users\")::bigint AS \"unique_users: i64\",\n  SUM(\"new_users\")::bigint AS \"new_users: i64\",\n  COALESCE(SUM(\"total_users\")::bigint, 0) - COALESCE(SUM(\"new_users\")::bigint, 0) AS \"returning_users: i64\",\n  SUM(\"views\")::bigint AS \"total_pageviews: i64\",\n  SUM(\"sessions\")::bigint AS \"unique_pageviews: i64\",\n  AVG(\"engagement_duration\") AS \"average_time: f64\"\nFROM c_analytics_cache\nWHERE \"begin\" = $1 AND \"end\" = $2 AND \"partner\" = $3 AND c_opportunity_by_uid_is_status(\"opportunity\", $4)\nGROUP BY \"region\"\n"
-  },
-  "df719f1ddebf505d916001787d881566b1e6b8aa1c88f53421a4da697b792ace": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Bool",
-          "Timestamptz",
-          "Timestamptz",
-          "Int8"
-        ]
-      }
-    },
-    "query": "\nINSERT INTO c_analytics_overview_cache (\n  \"temporary\",\n  \"begin\",\n  \"end\",\n  \"unique_visitors\",\n\n  \"shares\",\n  \"calendar_adds\",\n  \"likes\",\n  \"saves\",\n  \"didits\",\n  \"opportunity_views\",\n  \"opportunity_unique\",\n  \"opportunity_exits\",\n  \"accounts\"\n)\nVALUES (\n  $1, $2, $3, $4,\n\n  (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE \"action\" LIKE 'shared:%' AND \"when\" >= $2 AND \"when\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE \"action\" LIKE 'calendar:%' AND \"when\" >= $2 AND \"when\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_opportunity_like WHERE \"when\" >= $2 AND \"when\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE (\"exterior\"->'mode')::integer = 20 AND \"updated\" >= $2 AND \"updated\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE (\"exterior\"->'mode')::integer >= 30 AND \"updated\" >= $2 AND \"updated\" < $3),\n  (SELECT COALESCE(SUM(\"views\")::bigint, 0) FROM c_analytics_cache WHERE \"begin\" = $2 AND \"end\" = $3),\n  (SELECT COALESCE(SUM(\"sessions\")::bigint, 0) FROM c_analytics_cache WHERE \"begin\" = $2 AND \"end\" = $3) - (SELECT COUNT(*) FROM c_transit WHERE \"created\" >= $2 AND \"created\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE \"action\" = 'external' AND \"when\" >= $2 AND \"when\" < $3),\n  (SELECT COALESCE(COUNT(*), 0) FROM c_person WHERE \"created\" >= $2 AND \"created\" < $3)\n)\n    "
   },
   "e1565019e4a3a0de2c83daa627ff49c9bd6313f14280ced681f4bb87edeba76d": {
     "describe": {
