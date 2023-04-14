@@ -91,13 +91,17 @@ pub fn token_cookie<'c>(jwt: String) -> Cookie<'c> {
         //.domain(&*COOKIE_DOMAIN)
         .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
         .http_only(true)
-        .same_site(tide::http::cookies::SameSite::Lax)
+        .same_site(if cfg!(not(debug_assertions)) {
+            tide::http::cookies::SameSite::None
+        } else {
+            tide::http::cookies::SameSite::Lax
+        })
         .finish()
 }
 
 /// Log the current session in to an account, if the validations pass.
 ///
-/// Set a token cookie with the HttpOnly, SameSite=Lax, and (when
+/// Set a token cookie with the HttpOnly, SameSite=None, and (when
 /// ```#[cfg(not(debug_assertions))]```) Secure flags, and also
 /// return the token in the response body for script use.
 pub async fn login(mut req: tide::Request<Database>) -> tide::Result {
