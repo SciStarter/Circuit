@@ -249,7 +249,11 @@ pub async fn login_scistarter(mut req: tide::Request<Database>) -> tide::Result 
                     //.domain(&*COOKIE_DOMAIN)
                     .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
                     .http_only(true)
-                    .same_site(tide::http::cookies::SameSite::Lax)
+                    .same_site(if cfg!(not(debug_assertions)) {
+                        tide::http::cookies::SameSite::None
+                    } else {
+                        tide::http::cookies::SameSite::Lax
+                    })
                     .finish(),
             )
         }
@@ -345,7 +349,11 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
             //.domain(&*COOKIE_DOMAIN)
             .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
             .http_only(true)
-            .same_site(tide::http::cookies::SameSite::Lax)
+            .same_site(if cfg!(not(debug_assertions)) {
+                tide::http::cookies::SameSite::None
+            } else {
+                tide::http::cookies::SameSite::Lax
+            })
             .finish(),
     )
 }
@@ -387,7 +395,11 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
                 //.domain(&*COOKIE_DOMAIN)
                 .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
                 .http_only(true)
-                .same_site(tide::http::cookies::SameSite::Lax)
+                .same_site(if cfg!(not(debug_assertions)) {
+                    tide::http::cookies::SameSite::None
+                } else {
+                    tide::http::cookies::SameSite::Lax
+                })
                 .finish(),
         )
     } else {
@@ -408,7 +420,11 @@ pub async fn logout(mut req: tide::Request<Database>) -> tide::Result {
             //.domain(&*COOKIE_DOMAIN)
             .secure(cfg!(not(debug_assertions))) // Allow HTTP when in debug mode, require HTTPS in release mode
             .http_only(true)
-            .same_site(tide::http::cookies::SameSite::Lax)
+            .same_site(if cfg!(not(debug_assertions)) {
+                tide::http::cookies::SameSite::None
+            } else {
+                tide::http::cookies::SameSite::Lax
+            })
             .finish(),
     )
 }
