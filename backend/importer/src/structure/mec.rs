@@ -6,6 +6,7 @@ use super::{
 use chrono::{DateTime, TimeZone, Utc};
 use common::model::{opportunity::EntityType, partner::LoggedError, Opportunity, Partner};
 use common::ToFixedOffset;
+use htmlentity::entity::ICodedDataTrait;
 use serde_json::Value;
 use sqlx::{Pool, Postgres};
 
@@ -164,9 +165,10 @@ where
                                 .filter(|x| !x.is_empty())
                                 .collect();
 
-                            opp.exterior.title = htmlentity::entity::decode(&entry.data.title)
-                                .iter()
-                                .collect();
+                            opp.exterior.title =
+                                htmlentity::entity::decode(entry.data.title.as_bytes())
+                                    .to_string()
+                                    .unwrap_or_default();
 
                             opp.exterior.description = entry.data.content;
 

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use htmlentity::entity::ICodedDataTrait;
 use inflector::Inflector;
 use sqlx::{Pool, Postgres};
 
@@ -168,9 +169,10 @@ fn interpret_one<Tz: TimeZone>(
 
             opp.exterior.organization_website = org.url;
 
-            opp.interior.contact_email = htmlentity::entity::decode(&org.email.unwrap_or_default())
-                .into_iter()
-                .collect();
+            opp.interior.contact_email =
+                htmlentity::entity::decode(org.email.unwrap_or_default().as_bytes())
+                    .to_string()
+                    .unwrap_or_default();
 
             opp.interior.contact_phone = org.telephone.unwrap_or_default();
         }
