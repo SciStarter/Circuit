@@ -1159,7 +1159,7 @@ export default {
                 if(this.invalid('image_url', !this.value.image_url)) valid = false;
                 if(this.invalid('pes_domain', !this.value.pes_domain || this.value.pes_domain === 'unspecified')) valid = false;
                 if(this.invalid('opp_descriptor', !this.value.opp_descriptor.length)) valid = false;
-                if(this.invalid('opp_venue', !this.value.opp_venue.length)) valid = false;
+                if(this.invalid('opp_venue', this.value.opp_venue.length < 1)) valid = false;
                 if(this.invalid('opp_topics', !this.value.opp_topics.length)) valid = false;
                 if(this.invalid('tags', !this.value.tags.length)) valid = false;
             }
@@ -1249,11 +1249,12 @@ export default {
 
             if(await this.save()) {
                 if(this.value.review_status == 'pending') {
-                    this.$buefy.dialog.alert({
+                    await this.$buefy.dialog.alert({
                         title: 'Pending Approval',
                         message: "We've saved your opportunity. It will be published after it is approved, or you will be contacted if there are any questions.",
                         confirmText: 'Got it'
-                    })
+                    });
+                    this.$router.push((this.partner !== null && this.inExchange) ? {name: 'exchange-uid-index', params: {uid: this.partner.uid}} : {name: 'index'});
                 }
                 else {
                     this.$router.push((this.partner !== null && this.inExchange) ? {name: 'exchange-uid-slug', params: {uid: this.partner.uid, slug: this.value.slug}} : {name: 'slug', params: {slug: this.value.slug}});

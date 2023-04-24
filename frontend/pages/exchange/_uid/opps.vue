@@ -29,171 +29,165 @@
 
   </div><!-- .exchange-actions -->
 
-<div class="exchange-wrapper">
-<div class="your-opportunities snm-container">
+  <div class="exchange-wrapper">
+    <div class="your-opportunities snm-container">
 
+      <div class="flex-header">
+        <h1>Your Opportunities</h1>
+        <action-button primary @click="$router.push({name: 'exchange-uid-submit', params: {uid: exchange.uid}})" class="add-btn"><div class="icon"><add-icon /></div>Add a new opportunity</action-button>
+      </div>
 
+      <div class="nav-tab-wrapper">
+        <ul class="nav-tabs">
+          <li><a class="tab-link" :class="{'active':state==1}" @click="state=1">Current, Live Opportunities</a></li>
+          <li><a class="tab-link" :class="{'active':state==2}" @click="state=2">Draft or Unpublished</a></li>
+          <li><a class="tab-link" :class="{'active':state==3}" @click="state=3">Expired or Trashed</a></li>
+          <li class="push-right"><action-button text2 @click="export_records">Export Records</action-button></li>
+        </ul>
+      </div>
 
+      <div v-if="state==1">
+        <div class="flex-header filter-actions">
+          <h2>Current, Live Opportunities</h2>
+          <div class="flex header-actions">
+            <b-field label="Search" label-position="inside" data-context="find-keywords">
+              <b-input ref="search_keywords" v-model="live_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+            </b-field>
+            <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
+              <b-datepicker
+                v-model="live_from"
+                editable
+                icon="calendar-today"
+                />
+            </b-field>
+            <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
+              <b-datepicker
+                v-model="live_until"
+                editable
+                position="is-bottom-left"
+                icon="calendar-today"
+                />
+            </b-field>
+            <b-field>
+              <b-button @click="load_live(0)">Search</b-button>
+            </b-field>
+          </div>
+        </div>
 
-  <div class="flex-header">
-    <h1>Your Opportunities</h1>
-    <action-button primary @click="$router.push({name: 'exchange-uid-submit', params: {uid: partner.uid}})" class="add-btn"><div class="icon"><add-icon /></div>Add a new opportunity</action-button>
+        <section id="results">
+          <template v-if="live.matches.length > 0">
+            <opportunity-card v-for="(opp, i) in live.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" owner="live" trash @trash="trash_live(i)"/>
+            <pagination :page-index="live.pagination.page_index" :last-page="live.pagination.last_page" @switch="load_live($event)" />
+          </template>
+          <template v-else>
+            <div class="alert no-results" style="margin-bottom:2rem;">
+              <p>No live opportunties. Add some!</p>
+            </div>
+          </template>
+        </section>
+
+      </div><!-- state 1 -->
+
+      <div v-if="state==2">
+        <div class="flex-header filter-actions">
+          <h2>Draft &amp; Unpublished Opportunities</h2>
+          <div class="flex header-actions">
+            <b-field label="Search" label-position="inside" data-context="find-keywords">
+              <b-input ref="search_keywords" v-model="draft_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+            </b-field>
+            <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
+              <b-datepicker
+                v-model="draft_from"
+                editable
+                icon="calendar-today"
+                />
+            </b-field>
+            <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
+              <b-datepicker
+                v-model="draft_until"
+                editable
+                position="is-bottom-left"
+                icon="calendar-today"
+                />
+            </b-field>
+            <b-field>
+              <b-button @click="load_draft(0)">Search</b-button>
+            </b-field>
+          </div>
+        </div>
+        <section id="results">
+          <template v-if="draft.matches.length > 0">
+            <opportunity-card v-for="(opp, i) in draft.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" owner="draft" trash @trash="trash_draft(i)"/>
+            <pagination :page-index="draft.pagination.page_index" :last-page="draft.pagination.last_page" @switch="load_draft($event)" />
+          </template>
+          <template v-else>
+            <div class="alert no-results" style="margin-bottom:2rem;">
+              <p>No results.</p>
+            </div>
+          </template>
+        </section>
+      </div><!-- state 2 -->
+
+      <div v-if="state==3">
+        <div class="flex-header filter-actions">
+          <h2>Expired or Trashed Opportunities</h2>
+          <div class="flex header-actions">
+            <b-field label="Search" label-position="inside" data-context="find-keywords">
+              <b-input ref="search_keywords" v-model="expired_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+            </b-field>
+            <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
+              <b-datepicker
+                v-model="expired_from"
+                editable
+                icon="calendar-today"
+                />
+            </b-field>
+            <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
+              <b-datepicker
+                v-model="expired_until"
+                editable
+                position="is-bottom-left"
+                icon="calendar-today"
+                />
+            </b-field>
+            <b-field>
+              <b-button @click="load_expired(0)">Search</b-button>
+            </b-field>
+          </div>
+        </div>
+        <section id="results">
+          <template v-if="expired.matches.length > 0">
+            <opportunity-card v-for="(opp, i) in expired.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" owner="past" />
+            <pagination :page-index="expired.pagination.page_index" :last-page="expired.pagination.last_page" @switch="load_expired($event)" />
+          </template>
+          <template v-else>
+            <div class="alert no-results" style="margin-bottom:2rem;">
+              <p>No results.</p>
+            </div>
+          </template>
+        </section>
+      </div><!-- state 3 -->
+
+      <b-modal
+        v-model="show_delete_confirm"
+        has-modal-card
+        trap-focus
+        :destroy-on-hide="false"
+        aria-role="dialog"
+        aria-label="Show tooltip"
+        aria-modal
+        >
+        <div class="card">
+          <h2>Confirm Delete <span class="close" @click="show_delete_confirm = false">&times;</span></h2>
+          <p>Once deleted, this opportunity and all of its data will be removed from Science Near Me.</p>
+          <div>
+            <action-button primary>Confirm Delete</action-button>
+            <action-button tertiary @click="show_delete_confirm = false">Cancel</action-button>
+          </div>          
+        </div>
+      </b-modal>
+    </div>
   </div>
-
-  <div class="nav-tab-wrapper">
-  <ul class="nav-tabs">
-      <li><a class="tab-link" :class="{'active':state==1}" @click="state=1">Current, Live Opportunities</a></li>
-      <li><a class="tab-link" :class="{'active':state==2}" @click="state=2">Draft or Unpublished</a></li>
-      <li><a class="tab-link" :class="{'active':state==3}" @click="state=3">Expired or Trashed</a></li>
-      <li class="push-right"><action-button text2 @click="export_records">Export Records</action-button></li>
-  </ul>
-  </div>
-
-  <div v-if="state==1">
-    <div class="flex-header filter-actions">
-      <h2>Current, Live Opportunities</h2>
-      <div class="flex header-actions">
-        <b-field label="Search" label-position="inside" data-context="find-keywords">
-          <b-input ref="search_keywords" v-model="live_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
-        </b-field>
-        <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
-          <b-datepicker
-            v-model="live_from"
-            editable
-            icon="calendar-today"
-            />
-        </b-field>
-        <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
-          <b-datepicker
-            v-model="live_until"
-            editable
-            position="is-bottom-left"
-            icon="calendar-today"
-            />
-        </b-field>
-        <b-field>
-          <b-button @click="load_live(0)">Search</b-button>
-        </b-field>
-      </div>
-    </div>
-
-    <section id="results">
-      <template v-if="live.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in live.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" owner="live" trash @trash="trash_live(i)"/>
-        <pagination :page-index="live.pagination.page_index" :last-page="live.pagination.last_page" @switch="load_live($event)" />
-      </template>
-      <template v-else>
-        <div class="alert no-results" style="margin-bottom:2rem;">
-          <p>No live opportunties. Add some!</p>
-        </div>
-      </template>
-    </section>
-
-  </div><!-- state 1 -->
-
-  <div v-if="state==2">
-    <div class="flex-header filter-actions">
-      <h2>Draft &amp; Unpublished Opportunities</h2>
-      <div class="flex header-actions">
-        <b-field label="Search" label-position="inside" data-context="find-keywords">
-          <b-input ref="search_keywords" v-model="draft_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
-        </b-field>
-        <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
-          <b-datepicker
-            v-model="draft_from"
-            editable
-            icon="calendar-today"
-            />
-        </b-field>
-        <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
-          <b-datepicker
-            v-model="draft_until"
-            editable
-            position="is-bottom-left"
-            icon="calendar-today"
-            />
-        </b-field>
-        <b-field>
-          <b-button @click="load_draft(0)">Search</b-button>
-        </b-field>
-      </div>
-    </div>
-    <section id="results">
-      <template v-if="draft.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in draft.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" owner="draft" trash @trash="trash_draft(i)"/>
-        <pagination :page-index="draft.pagination.page_index" :last-page="draft.pagination.last_page" @switch="load_draft($event)" />
-      </template>
-      <template v-else>
-        <div class="alert no-results" style="margin-bottom:2rem;">
-          <p>No results.</p>
-        </div>
-      </template>
-    </section>
-  </div><!-- state 2 -->
-
-  <div v-if="state==3">
-    <div class="flex-header filter-actions">
-      <h2>Expired or Trashed Opportunities</h2>
-      <div class="flex header-actions">
-        <b-field label="Search" label-position="inside" data-context="find-keywords">
-          <b-input ref="search_keywords" v-model="expired_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
-        </b-field>
-        <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
-          <b-datepicker
-            v-model="expired_from"
-            editable
-            icon="calendar-today"
-            />
-        </b-field>
-        <b-field label="Until" label-position="inside" data-context="find-ending" class="date">
-          <b-datepicker
-            v-model="expired_until"
-            editable
-            position="is-bottom-left"
-            icon="calendar-today"
-            />
-        </b-field>
-        <b-field>
-          <b-button @click="load_expired(0)">Search</b-button>
-        </b-field>
-      </div>
-    </div>
-    <section id="results">
-      <template v-if="expired.matches.length > 0">
-        <opportunity-card v-for="(opp, i) in expired.matches" :key="opp.uid" :opportunity="opp" :exchange="exchange" owner="past" />
-        <pagination :page-index="expired.pagination.page_index" :last-page="expired.pagination.last_page" @switch="load_expired($event)" />
-      </template>
-      <template v-else>
-        <div class="alert no-results" style="margin-bottom:2rem;">
-          <p>No results.</p>
-        </div>
-      </template>
-    </section>
-  </div><!-- state 3 -->
-
-
-  <b-modal
-    v-model="show_delete_confirm"
-    has-modal-card
-    trap-focus
-    :destroy-on-hide="false"
-    aria-role="dialog"
-    aria-label="Show tooltip"
-    aria-modal
-    >
-    <div class="card">
-      <h2>Confirm Delete <span class="close" @click="show_delete_confirm = false">&times;</span></h2>
-      <p>Once deleted, this opportunity and all of its data will be removed from Science Near Me.</p>
-      <div>
-          <action-button primary>Confirm Delete</action-button>
-          <action-button tertiary @click="show_delete_confirm = false">Cancel</action-button>
-      </div>
-
-    </div>
-  </b-modal>
-
-</div>
-</div>
 </div>
 </template>
 
