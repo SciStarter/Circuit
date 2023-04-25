@@ -232,7 +232,7 @@
           <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="states_max['Total Pageviews']" color="#268699" /></td>
           <td class="table-num">{{row['Unique Pageviews']}}</td>
           <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="states_max['Unique Pageviews']" color="#268699" /></td>
-          <td class="table-num">{{row['Avg. Time']}}</td>
+          <td class="table-num">{{(row['Avg. Time'] / 1000).toFixed(2)}}</td>
           <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="states_max['Avg. Time']" color="#268699" /></td>
         </tr>
       </tbody>
@@ -312,7 +312,7 @@
           <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="report[org].technology.data.max['Total Pageviews']" color="#268699" /></td>
           <td class="table-num">{{row['Unique Pageviews']}}</td>
           <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="report[org].technology.data.max['Unique Pageviews']" color="#268699" /></td>
-          <td class="table-num">{{row['Avg. Time']}}</td>
+          <td class="table-num">{{(row['Avg. Time'] / 1000).toFixed(2)}}</td>
           <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="report[org].technology.data.max['Avg. Time']" color="#268699" /></td>
         </tr>
       </tbody>
