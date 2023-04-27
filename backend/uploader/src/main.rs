@@ -183,6 +183,17 @@ async fn generic(
 
 #[tokio::main]
 async fn main() {
+    let cors = warp::cors()
+        .allow_method("POST")
+        .allow_method("OPTIONS")
+        .allow_header("Authorization")
+        .allow_header("Content-Type")
+        .allow_origin("https://sciencenearme.org")
+        .allow_origin("https://www.sciencenearme.org")
+        .allow_origin("https://beta.sciencenearme.org")
+        .allow_credentials(true)
+        .build();
+
     let app = warp::post()
         .and(warp::path("api"))
         .and(warp::path("upload"))
@@ -190,7 +201,8 @@ async fn main() {
         .and(warp::header("Authorization"))
         .and(multipart::form())
         .and_then(generic)
-        .recover(report_errors);
+        .recover(report_errors)
+        .with(cors);
 
     warp::serve(app)
         .run(
