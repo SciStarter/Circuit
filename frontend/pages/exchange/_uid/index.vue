@@ -619,7 +619,7 @@ export default {
   .exchange-nav {
     flex-direction:column;
     position:absolute;
-    top:47px;
+    top:45px;
     left:0;
     width:100%;
     z-index:100;

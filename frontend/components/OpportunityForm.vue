@@ -388,7 +388,7 @@
         <br>
 
         <label class="label">Image URL<span class="required">*</span></label>
-        <div class="flex display-image-wrapper" :class="{'is-danger': validation.image_url}">
+        <div class="display-image-wrapper" :class="{'is-danger': validation.image_url}">
           <div>
             <img v-if="value.image_url" :src="value.image_url" class="display-image" />
             <img v-else src="~/assets/img/no-image.jpg" class="display-image" />
@@ -469,7 +469,7 @@
         </b-field>
 
         <label class="label">Age required to participate<span class="required">*</span></label>
-        <div class="flex mb">
+        <div class="flex mb ages">
           <b-field :type="validation.min_age" label="Minimum Age">
             <b-checkbox v-model="has_minimum">There is a minimum age for participants</b-checkbox>
             <b-numberinput v-if="has_minimum" controls-position="compact" v-model="value.min_age"></b-numberinput>
@@ -1742,11 +1742,12 @@ legend {
   }
   .b-numberinput {
     margin-right:2rem;
+    display: flex!important;
   }
 
   .display-image {
     height: auto;
-    margin: 0 1rem 1rem 0;
+    margin: 0 0 1rem 0;
     border: 1px solid #d9d9d9;
     border-radius: 6px;
     -o-object-fit: contain;
@@ -1798,9 +1799,13 @@ legend {
     flex-direction: row-reverse;
     margin-bottom:2rem;
 
+    :deep(.field.has-addons) {
+      display: block;
+    }
+
     >:first-child {
         flex-grow: 1;
-        margin-left: 2rem;
+        // margin-left: 2rem;
     }
 }
 
@@ -1879,6 +1884,16 @@ legend {
     font-size: 14px;
     margin-left: 6px;
     background-color: $snm-color-action;
+  }
+
+  .ages .b-checkbox {
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width:399px){
+    .ages.flex {
+      flex-direction: column;
+    }
   }
 
 </style>
