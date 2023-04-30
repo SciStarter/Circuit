@@ -620,7 +620,7 @@
   </form>
 
 
-  <b-modal v-model="show_end_date" :width="640" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal" @close="end_datetime=null">
+  <b-modal v-model="show_end_date" :width="640" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal overflow-modal" @close="end_datetime=null">
     <div class="card">
       <h1>Select an End Date<span class="close" @click="show_end_date = false">&times;</span></h1>
       <p>If your ongoing opportunity has an end date, select below.</p>
@@ -634,7 +634,7 @@
     </div>
   </b-modal>
 
-  <b-modal v-model="show_time_periods" :width="800" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal">
+  <b-modal v-model="show_time_periods" :width="800" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal overflow-modal">
     <div class="card">
       <h1>Add and Customize Dates and Times <span class="close" @click="show_time_periods = false">&times;</span></h1>
       <p>Select dates on the calendar. Each date must have at least one time period set on the right.</p>
@@ -1648,6 +1648,20 @@ legend {
     }
 }
 
+.overflow-modal.form-modal {
+
+  :deep(.modal-content) {
+    padding: 1rem;
+    height: auto;
+    max-height: unset;
+    overflow: auto;
+  }
+  .card {
+    padding:1rem;
+  }
+
+}
+
 .push-right {
     margin-left:auto;
 }
@@ -1896,4 +1910,12 @@ legend {
     }
   }
 
+
+@media (max-width:450px){
+  .times-flex {
+    :deep(.field.has-addons){
+      flex-direction: column;
+    }
+  }
+}
 </style>
