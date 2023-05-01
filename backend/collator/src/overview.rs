@@ -1123,6 +1123,22 @@ WHERE
     })
 }
 
+#[cfg(test)]
+mod tests {
+    #[tokio::test]
+    async fn test_region_lookup() {
+        let found = common::geo::Query::new(format!("{}, {}", "Birmingham", "Alabama"), false)
+            .lookup_one()
+            .await;
+
+        assert!(!found.is_none());
+
+        let coords = found.map(|m| (m.geometry.longitude as f64, m.geometry.latitude as f64));
+
+        assert_eq!(coords, Some((-86.80242919921875, 33.52068328857422)));
+    }
+}
+
 /*
 SNM DATA OVERVIEW
 
