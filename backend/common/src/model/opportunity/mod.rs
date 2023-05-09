@@ -1378,11 +1378,23 @@ OR
         _ => query_string.push_str(&fields.join(", ")),
     }
 
-    query_string.push_str(" FROM (SELECT *");
+    query_string.push_str(
+        r#" FROM (
+SELECT
+    id,
+    created,
+    updated,
+    location_point,
+    location_polygon,
+    fulltext_english,
+    (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) AS exterior,
+    (c_opportunity.interior || COALESCE(c_opportunity_overlay.interior, '{}'::jsonb)) AS interior
+"#,
+    );
 
     if let Some(uid) = &query.prefer_partner {
         query_string.push_str(&format!(
-            ", ((${}::jsonb) @> (exterior -> 'partner'))::int AS _sort_preferential",
+            ", ((${}::jsonb) @> (c_opportunity.exterior -> 'partner'))::int AS _sort_preferential",
             ParamValue::Uuid(uid.clone()).append(&mut params)
         ));
     } else {
@@ -1394,7 +1406,7 @@ OR
         let lat_param = ParamValue::RawFloat(*latitude).append(&mut params);
         let prox_param = ParamValue::RawFloat(*proximity).append(&mut params);
 
-        query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' OR exterior ->> 'is_online' = 'true' THEN 2 ELSE 1 END AS _sort_location_priority");
+        query_string.push_str(", CASE WHEN (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) ->> 'location_type' = 'any' OR (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) ->> 'is_online' = 'true' THEN 2 ELSE 1 END AS _sort_location_priority");
 
         query_string.push_str(", CASE");
 
@@ -1405,7 +1417,7 @@ OR
         query_string
             .push_str(&format!(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${lon_param}, ${lat_param}), 4326)::geography, false)"));
 
-        query_string.push_str(&format!(" WHEN exterior ->> 'location_type' = 'any' OR exterior ->> 'is_online' = 'true' THEN ${prox_param}"));
+        query_string.push_str(&format!(" WHEN (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{{}}'::jsonb)) ->> 'location_type' = 'any' OR (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{{}}'::jsonb)) ->> 'is_online' = 'true' THEN ${prox_param}"));
 
         // This constant number is roughly the square root of the surface area of the earth, in meters, i.e. about as far away as you can get
         query_string.push_str(" ELSE 22585394 END AS _sort_distance");
@@ -1414,7 +1426,7 @@ OR
             clauses.push(format!("(_sort_distance < 1.1 * ${prox_param})"));
         }
     } else {
-        query_string.push_str(", CASE WHEN exterior ->> 'location_type' = 'any' OR exterior ->> 'is_online' = 'true' THEN 0 ELSE 1 END AS _sort_location_priority");
+        query_string.push_str(", CASE WHEN (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) ->> 'location_type' = 'any' OR (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) ->> 'is_online' = 'true' THEN 0 ELSE 1 END AS _sort_location_priority");
         query_string.push_str(", 1 AS _sort_distance");
     }
 
@@ -1423,17 +1435,17 @@ OR
     // We bump ongoing opportunities so that they sort as a week in the future, to give actual timely opportunities priority
     query_string.push_str(r#",
             CASE
-              WHEN jsonb_array_length(exterior -> 'start_datetimes') = 0 AND jsonb_array_length(exterior -> 'end_datetimes') = 0
+              WHEN jsonb_array_length((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') = 0 AND jsonb_array_length((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') = 0
               THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
-              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
-              THEN (SELECT MIN(value::timestamptz) FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP LIMIT 1)
-              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text(exterior -> 'end_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              THEN (SELECT MIN(value::timestamptz) FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP LIMIT 1)
+              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
               THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
               ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
             END AS _sort_time
         "#);
 
-    query_string.push_str(" FROM c_opportunity) AS primary_table");
+    query_string.push_str(" FROM c_opportunity LEFT JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id) AS primary_table");
 
     if !clauses.is_empty() {
         query_string.push_str(" WHERE");
@@ -1806,10 +1818,37 @@ impl Opportunity {
         })
     }
 
+    pub async fn load_by_id_with_overlay(db: &Database, id: i32) -> Result<Opportunity, Error> {
+        let rec = sqlx::query_file!("db/opportunity/get_by_id_with_overlay.sql", id)
+            .fetch_one(db)
+            .await?;
+
+        Ok(Opportunity {
+            id: Some(rec.id),
+            exterior: serde_json::from_value(rec.exterior)?,
+            interior: serde_json::from_value(rec.interior)?,
+        })
+    }
+
     pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<Opportunity, Error> {
         let rec = sqlx::query_file!("db/opportunity/get_by_uid.sql", serde_json::to_value(uid)?)
             .fetch_one(db)
             .await?;
+
+        Ok(Opportunity {
+            id: Some(rec.id),
+            exterior: serde_json::from_value(rec.exterior)?,
+            interior: serde_json::from_value(rec.interior)?,
+        })
+    }
+
+    pub async fn load_by_uid_with_overlay(db: &Database, uid: &Uuid) -> Result<Opportunity, Error> {
+        let rec = sqlx::query_file!(
+            "db/opportunity/get_by_uid_with_overlay.sql",
+            serde_json::to_value(uid)?
+        )
+        .fetch_one(db)
+        .await?;
 
         Ok(Opportunity {
             id: Some(rec.id),
@@ -1847,6 +1886,21 @@ impl Opportunity {
 
     pub async fn load_by_slug(db: &Database, slug: &str) -> Result<Opportunity, Error> {
         let rec = sqlx::query_file!("db/opportunity/get_by_slug.sql", slug)
+            .fetch_one(db)
+            .await?;
+
+        Ok(Opportunity {
+            id: Some(rec.id),
+            exterior: serde_json::from_value(rec.exterior)?,
+            interior: serde_json::from_value(rec.interior)?,
+        })
+    }
+
+    pub async fn load_by_slug_with_overlay(
+        db: &Database,
+        slug: &str,
+    ) -> Result<Opportunity, Error> {
+        let rec = sqlx::query_file!("db/opportunity/get_by_slug_with_overlay.sql", slug)
             .fetch_one(db)
             .await?;
 

@@ -36,6 +36,11 @@ impl Query {
         }
     }
 
+    pub fn with_limit(mut self, limit: u8) -> Query {
+        self.limit = limit;
+        self
+    }
+
     pub async fn lookup(&self) -> Result<Response, Error> {
         // Alternative: we may be able to use https://www.geonames.org/export/web-services.html
         let result: Response = surf::get("https://api.opencagedata.com/geocode/v1/json")

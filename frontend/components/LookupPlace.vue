@@ -16,6 +16,9 @@
   </b-field>
   <b-field label="Distance" :label-position="labelPosition" class="distance">
     <b-select :value="sanitized_value.proximity" @input="change({proximity: $event})">
+      <option v-if="value_miles" :value="sanitized_value.proximity">
+        {{ value_miles }} miles
+      </option>
       <option :value="80467">
         50 miles
       </option>
@@ -31,9 +34,6 @@
       <option :value="0">
         Anywhere
       </option>
-      <!-- <option v-if="value_miles" :value="sanitized_value.proximity"> -->
-      <!--   {{ value_miles }} miles -->
-      <!-- </option> -->
     </b-select>
   </b-field>
 </b-field>
@@ -130,11 +130,11 @@ export default {
             default:
                 const miles = this.value.proximity * MILES;
 
-                if(miles > 5) {
-                    return Math.ceil(miles).toString();
+                if(miles > 50) {
+                    return Math.floor(miles).toString();
                 }
 
-                return miles.toFixed(2)
+                return "";
             }
         }
     },

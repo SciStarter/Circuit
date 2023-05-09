@@ -389,17 +389,16 @@ export default {
     async mounted() {
         if(!this.search_place.near) {
             this.search_place = await this.$store.dispatch("get_here");
+            this.search({
+                longitude: this.search_place.longitude,
+                latitude: this.search_place.latitude,
+                near: this.search_place.near,
+                beginning: this.beginning ? this.beginning : undefined,
+                proximity: this.search_place.proximity || 80467,
+                sort: "closest",
+                page: 0
+            });
         }
-
-        this.search({
-            longitude: this.search_place.longitude,
-            latitude: this.search_place.latitude,
-            near: this.search_place.near,
-            beginning: this.beginning ? this.beginning : undefined,
-            proximity: 80467,
-            sort: "closest",
-            page: 0
-        });
     },
 
     methods: {
@@ -620,7 +619,7 @@ export default {
   .exchange-nav {
     flex-direction:column;
     position:absolute;
-    top:47px;
+    top:45px;
     left:0;
     width:100%;
     z-index:100;

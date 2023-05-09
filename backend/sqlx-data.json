@@ -1,5 +1,37 @@
 {
   "db": "PostgreSQL",
+  "0bbd3942f4b8d2caeb59dfb829853d70806e35c75032915a7fbeb5ba6cf19b1f": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior!",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior!",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        null,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "select\n  id,\n  (c_opportunity.exterior || coalesce(c_opportunity_overlay.exterior, '{}'::jsonb)) as \"exterior!\",\n  (c_opportunity.interior || coalesce(c_opportunity_overlay.interior, '{}'::jsonb)) as \"interior!\"\nfrom\n  c_opportunity left join c_opportunity_overlay\n  on c_opportunity.id = c_opportunity_overlay.opportunity_id\nwhere ($1::jsonb) @> (c_opportunity.exterior -> 'uid') limit 1;\n"
+  },
   "0cbc185fa2d1b0db90b3b89fc1c7c06891825b5257c9c5c020a4cd3fa702c66a": {
     "describe": {
       "columns": [],
@@ -238,6 +270,38 @@
       }
     },
     "query": "\nSELECT EXISTS(\n    SELECT 1 FROM c_partner\n    WHERE (\n        (exterior -> 'open_submission') @> 'true'::jsonb OR\n        (interior -> 'prime') @> $1::jsonb OR\n        (interior -> 'authorized') @> $1::jsonb\n    )\n    AND (exterior -> 'uid') @> $2::jsonb\n) AS \"authorized!\"\n"
+  },
+  "2df15ab232fe6ff80532774e7bf8c03fabd9f0e8a96bd44210821ce517d592b1": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior!",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior!",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        null,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "select\n  id,\n  (c_opportunity.exterior || coalesce(c_opportunity_overlay.exterior, '{}'::jsonb)) as \"exterior!\",\n  (c_opportunity.interior || coalesce(c_opportunity_overlay.interior, '{}'::jsonb)) as \"interior!\"\nfrom\n  c_opportunity left join c_opportunity_overlay\n  on c_opportunity.id = c_opportunity_overlay.opportunity_id\nwhere id = $1 limit 1;\n"
   },
   "2e6a93950933b67a2c714ac1204990ad11e81ff9617ea8c96b4ac07f07391932": {
     "describe": {
@@ -837,6 +901,32 @@
     },
     "query": "insert\ninto c_opportunity_like (opportunity_id, person)\nvalues ($1, $2)\non conflict do nothing;\n"
   },
+  "5ffb61b679ffb59b54f949cb7ad54855f393ec574e91155ce68c0291536ecd6c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "exterior!",
+          "ordinal": 0,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior!",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT exterior as \"exterior!\", interior as \"interior!\" FROM c_opportunity_overlay WHERE opportunity_id = $1"
+  },
   "62ffbbac0271bf049852727ee7a6ebda23461fdc03384c2cd5549d9c1d16e4d7": {
     "describe": {
       "columns": [
@@ -1152,6 +1242,20 @@
     },
     "query": "select\n  \"id\",\n  \"person_id\",\n  \"category\",\n  \"target\",\n  \"begin\",\n  \"end\",\n  \"status\" as \"status: GoalStatus\"\nfrom\n  c_person_goals\nwhere\n    \"person_id\" = $1\n  and\n    \"status\" = $2::c_person_goals_status\norder by \"end\" asc\n;\n"
   },
+  "806060766ad0b84331f1422de8512eb4b2c3ee2eaa46b25ac9d09214fff42bd8": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Jsonb",
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO\n  c_opportunity_overlay (opportunity_id, exterior, interior)\nVALUES\n  ($1, $2, $3)\nON CONFLICT\n  (opportunity_id)\nDO UPDATE SET\n  exterior = EXCLUDED.exterior,\n  interior = EXCLUDED.interior\nWHERE\n  c_opportunity_overlay.opportunity_id = $1\n"
+  },
   "80950a68e5badeed5975a1c5cabd085a45fc0b5e786af4dc039da2de675bfa20": {
     "describe": {
       "columns": [
@@ -1268,6 +1372,38 @@
       }
     },
     "query": "insert into c_involvement (exterior, interior) values ($1, $2) returning id;\n"
+  },
+  "8bc8ee72b69daaea721154f5211a462d4748c16447ae594ba49bbc8ae59adaec": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "exterior!",
+          "ordinal": 1,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "interior!",
+          "ordinal": 2,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        null,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "select\n  id,\n  (c_opportunity.exterior || coalesce(c_opportunity_overlay.exterior, '{}'::jsonb)) as \"exterior!\",\n  (c_opportunity.interior || coalesce(c_opportunity_overlay.interior, '{}'::jsonb)) as \"interior!\"\nfrom\n  c_opportunity left join c_opportunity_overlay\n  on c_opportunity.id = c_opportunity_overlay.opportunity_id\nwhere lower($1::text) = lower(c_opportunity.exterior ->> 'slug') limit 1;\n"
   },
   "929ffec7bf66135fe540d42efd846e0bafdfa4a8d7895d360b4794e81731a76f": {
     "describe": {

@@ -55,7 +55,7 @@
           </template>
           <b-input type="email" v-model="value.contact_email"></b-input>
         </b-field>
-        <b-field :type="validation.name" :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '') + ' All data entered into this form will be available to Science Near Me and to the partner.'">
+        <b-field v-if="partner" :type="validation.name" :message="'This opportunity is on Science Near Me under the auspices of the selected Science Near Me partner.' + (editMode ? ' If this needs to change, you must contact Science Near me.' : '') + ' All data entered into this form will be available to Science Near Me and to the partner.'">
           <template #label>
             Science Near Me partner<span class="required">*</span>
           </template>
@@ -388,7 +388,7 @@
         <br>
 
         <label class="label">Image URL<span class="required">*</span></label>
-        <div class="flex display-image-wrapper" :class="{'is-danger': validation.image_url}">
+        <div class="display-image-wrapper" :class="{'is-danger': validation.image_url}">
           <div>
             <img v-if="value.image_url" :src="value.image_url" class="display-image" />
             <img v-else src="~/assets/img/no-image.jpg" class="display-image" />
@@ -469,7 +469,7 @@
         </b-field>
 
         <label class="label">Age required to participate<span class="required">*</span></label>
-        <div class="flex mb">
+        <div class="flex mb ages">
           <b-field :type="validation.min_age" label="Minimum Age">
             <b-checkbox v-model="has_minimum">There is a minimum age for participants</b-checkbox>
             <b-numberinput v-if="has_minimum" controls-position="compact" v-model="value.min_age"></b-numberinput>
@@ -595,14 +595,15 @@
         <template v-if="editMode">
           <action-button primary :disabled="saveDisabled" @click="save">Save &amp; Continue Editing</action-button>
           <action-button primary :disabled="saveDisabled" @click="save_and_view">Save &amp; View</action-button>
+          <action-button primary :disabled="saveDisabled" @click="save_and_publish">Save &amp; Publish</action-button>
         </template>
         <template v-else>
           <action-button v-if="state==2 || state==3"  @click="go_state(state-1)" gray>Back</action-button>
           <action-button v-if="state==1" @click="go_state(state+1)" primary :disabled="nextDisabled1">Next Step</action-button>
           <action-button v-if="state==2" @click="go_state(state+1)" primary :disabled="nextDisabled2">Next Step</action-button>
-          <action-button v-if="state<3" tertiary @click="save_and_view">Save and Complete Later</action-button>
-          <action-button v-if="state==3" primary @click="save_and_publish">Save and Publish</action-button>
-          <action-button v-if="state==3" tertiary @click="save_and_view">Save and Publish Later</action-button>
+          <action-button v-if="state<3" tertiary @click="save_and_view">Save &amp; Complete Later</action-button>
+          <action-button v-if="state==3" primary @click="save_and_publish">Save &amp; Publish</action-button>
+          <action-button v-if="state==3" tertiary @click="save_and_view">Save &amp; Publish Later</action-button>
         </template>
         <template v-if="saveState=='saved'">
           <div class="save-feedback"><div class="icon"><correct-icon /></div><span> saved</span></div>
@@ -619,7 +620,7 @@
   </form>
 
 
-  <b-modal v-model="show_end_date" :width="640" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal" @close="end_datetime=null">
+  <b-modal v-model="show_end_date" :width="640" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal overflow-modal" @close="end_datetime=null">
     <div class="card">
       <h1>Select an End Date<span class="close" @click="show_end_date = false">&times;</span></h1>
       <p>If your ongoing opportunity has an end date, select below.</p>
@@ -633,7 +634,7 @@
     </div>
   </b-modal>
 
-  <b-modal v-model="show_time_periods" :width="800" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal">
+  <b-modal v-model="show_time_periods" :width="800" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal overflow-modal">
     <div class="card">
       <h1>Add and Customize Dates and Times <span class="close" @click="show_time_periods = false">&times;</span></h1>
       <p>Select dates on the calendar. Each date must have at least one time period set on the right.</p>
@@ -1079,10 +1080,12 @@ export default {
 
     methods: {
         initialize() {
-            this.value.partner = this.partner.uid;
-            this.value.partner_name = this.partner.name;
-            this.value.partner_url = this.partner.url;
-            this.value.partner_logo_url = this.partner.image_url;
+            if(this.partner !== null) {
+                this.value.partner = this.partner.uid;
+                this.value.partner_name = this.partner.name;
+                this.value.partner_url = this.partner.url;
+                this.value.partner_logo_url = this.partner.image_url;
+            }
 
             if(!this.value.timezone) {
                 this.value.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -1156,7 +1159,7 @@ export default {
                 if(this.invalid('image_url', !this.value.image_url)) valid = false;
                 if(this.invalid('pes_domain', !this.value.pes_domain || this.value.pes_domain === 'unspecified')) valid = false;
                 if(this.invalid('opp_descriptor', !this.value.opp_descriptor.length)) valid = false;
-                if(this.invalid('opp_venue', !this.value.opp_venue.length)) valid = false;
+                if(this.invalid('opp_venue', this.value.opp_venue.length < 1)) valid = false;
                 if(this.invalid('opp_topics', !this.value.opp_topics.length)) valid = false;
                 if(this.invalid('tags', !this.value.tags.length)) valid = false;
             }
@@ -1246,11 +1249,12 @@ export default {
 
             if(await this.save()) {
                 if(this.value.review_status == 'pending') {
-                    this.$buefy.dialog.alert({
+                    await this.$buefy.dialog.alert({
                         title: 'Pending Approval',
                         message: "We've saved your opportunity. It will be published after it is approved, or you will be contacted if there are any questions.",
                         confirmText: 'Got it'
-                    })
+                    });
+                    this.$router.push((this.partner !== null && this.inExchange) ? {name: 'exchange-uid-index', params: {uid: this.partner.uid}} : {name: 'index'});
                 }
                 else {
                     this.$router.push((this.partner !== null && this.inExchange) ? {name: 'exchange-uid-slug', params: {uid: this.partner.uid, slug: this.value.slug}} : {name: 'slug', params: {slug: this.value.slug}});
@@ -1644,6 +1648,20 @@ legend {
     }
 }
 
+.overflow-modal.form-modal {
+
+  :deep(.modal-content) {
+    padding: 1rem;
+    height: auto;
+    max-height: unset;
+    overflow: auto;
+  }
+  .card {
+    padding:1rem;
+  }
+
+}
+
 .push-right {
     margin-left:auto;
 }
@@ -1738,11 +1756,12 @@ legend {
   }
   .b-numberinput {
     margin-right:2rem;
+    display: flex!important;
   }
 
   .display-image {
     height: auto;
-    margin: 0 1rem 1rem 0;
+    margin: 0 0 1rem 0;
     border: 1px solid #d9d9d9;
     border-radius: 6px;
     -o-object-fit: contain;
@@ -1794,9 +1813,13 @@ legend {
     flex-direction: row-reverse;
     margin-bottom:2rem;
 
+    :deep(.field.has-addons) {
+      display: block;
+    }
+
     >:first-child {
         flex-grow: 1;
-        margin-left: 2rem;
+        // margin-left: 2rem;
     }
 }
 
@@ -1877,4 +1900,22 @@ legend {
     background-color: $snm-color-action;
   }
 
+  .ages .b-checkbox {
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width:399px){
+    .ages.flex {
+      flex-direction: column;
+    }
+  }
+
+
+@media (max-width:450px){
+  .times-flex {
+    :deep(.field.has-addons){
+      flex-direction: column;
+    }
+  }
+}
 </style>

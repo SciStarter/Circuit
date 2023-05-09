@@ -8,6 +8,7 @@ pub struct Json;
 
 impl super::Format for Json {
     fn decode(&self, raw: Bytes) -> Result<Value, LoggedError> {
+        //std::fs::write("json.raw", &raw);
         Ok(serde_json::from_slice(&raw)?)
 
         // // This is a workaround for tab characters in JSON strings.

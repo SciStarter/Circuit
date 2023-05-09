@@ -33,6 +33,7 @@ pub async fn cache(
     // organization caching stages.
 
     let mut unique_visitors = 0;
+    let mut opportunity_unique = 0;
 
     if !ga4::is_overview_cached(db, begin, end).await {
         for row in ga4::run_report(
@@ -47,7 +48,11 @@ pub async fn cache(
         )
         .await?
         {
-            unique_visitors += row.get_int("sessions");
+            let sessions = row.get_int("sessions");
+            unique_visitors += sessions;
+            if let Ok(_) = row.get_uuid("customEvent:entity_uid") {
+                opportunity_unique += sessions;
+            }
         }
 
         sqlx::query!(
@@ -57,6 +62,7 @@ INSERT INTO c_analytics_overview_cache (
   "begin",
   "end",
   "unique_visitors",
+  "opportunity_unique",
 
   "shares",
   "calendar_adds",
@@ -64,12 +70,11 @@ INSERT INTO c_analytics_overview_cache (
   "saves",
   "didits",
   "opportunity_views",
-  "opportunity_unique",
   "opportunity_exits",
   "accounts"
 )
 VALUES (
-  $1, $2, $3, $4,
+  $1, $2, $3, $4, $5,
 
   (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE "action" LIKE 'shared:%' AND "when" >= $2 AND "when" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE "action" LIKE 'calendar:%' AND "when" >= $2 AND "when" < $3),
@@ -77,7 +82,6 @@ VALUES (
   (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE ("exterior"->'mode')::integer = 20 AND "updated" >= $2 AND "updated" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE ("exterior"->'mode')::integer >= 30 AND "updated" >= $2 AND "updated" < $3),
   (SELECT COALESCE(SUM("views")::bigint, 0) FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3),
-  (SELECT COALESCE(SUM("sessions")::bigint, 0) FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3) - (SELECT COUNT(*) FROM c_transit WHERE "created" >= $2 AND "created" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE "action" = 'external' AND "when" >= $2 AND "when" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_person WHERE "created" >= $2 AND "created" < $3)
 )
@@ -86,6 +90,7 @@ VALUES (
             begin,
             end,
             unique_visitors,
+            opportunity_unique,
         )
         .execute(db)
         .await?;
@@ -1116,6 +1121,22 @@ WHERE
             },
         },
     })
+}
+
+#[cfg(test)]
+mod tests {
+    #[tokio::test]
+    async fn test_region_lookup() {
+        let found = common::geo::Query::new(format!("{}, {}", "Birmingham", "Alabama"), false)
+            .lookup_one()
+            .await;
+
+        assert!(!found.is_none());
+
+        let coords = found.map(|m| (m.geometry.longitude as f64, m.geometry.latitude as f64));
+
+        assert_eq!(coords, Some((-86.80242919921875, 33.52068328857422)));
+    }
 }
 
 /*

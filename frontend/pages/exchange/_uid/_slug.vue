@@ -36,7 +36,7 @@ export default {
             const entity = await $axios.$get('/api/ui/entity/' + params.slug, store.state.auth ? store.state.auth : undefined);
             const layout = entity.entity_type.page ? entity.entity_type.page.layout : entity.entity_type;
 
-            return { entity, layout, 'authorization_required': (entity.authorized !== 'manage') && (!entity.accepted || entity.withdrawn || entity.review_status === 'draft' || entity.review_status === 'pending' || entity.review_status === 'reject') };
+            return { entity, layout, 'authorization_required': (entity.authorized !== 'manage') && (entity.authorized !== "edit") && (!entity.accepted || entity.withdrawn || entity.review_status === 'draft' || entity.review_status === 'pending' || entity.review_status === 'reject') };
         } catch(x) {
             return {'authorization_required': true};
         }

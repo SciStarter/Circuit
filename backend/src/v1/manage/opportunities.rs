@@ -16,6 +16,7 @@ use common::{
 use http_types::{Method, StatusCode};
 use sailfish::TemplateOnce;
 use serde::Deserialize;
+use serde_json::{json, Value};
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
@@ -25,14 +26,15 @@ use uuid::Uuid;
 use crate::v1::redirect;
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
-    routes
-        .get(search)
-        .post(add_opportunity)
-        .at(":uid", |r| r.get(opportunity).post(opportunity))
+    routes.get(search).post(add_opportunity).at(":uid", |r| {
+        r.at("overlay", |r| r.get(overlay).post(overlay))
+            .get(opportunity)
+            .post(opportunity)
+    })
 }
 
 #[derive(TemplateOnce)]
-#[template(path = "manage/opportunities.stpl")]
+#[template(path = "manage/opportunities.stpl.html")]
 struct OpportunitiesPage {
     pub accepted: Option<bool>,
     pub withdrawn: Option<bool>,
@@ -107,7 +109,7 @@ mod filters {
 }
 
 #[derive(TemplateOnce)]
-#[template(path = "manage/opportunity.stpl")]
+#[template(path = "manage/opportunity.stpl.html")]
 struct OpportunityPage {
     message: String,
     opportunity: Opportunity,
@@ -334,7 +336,7 @@ async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
 
     if let Method::Post = req.method() {
         let qs = serde_qs::Config::new(5, false);
-        let form: OpportunityForm = dbg!(qs.deserialize_str(&dbg!(req.body_string().await?))?);
+        let form: OpportunityForm = qs.deserialize_str(&req.body_string().await?)?;
 
         form.apply(&mut opportunity)?;
 
@@ -388,4 +390,159 @@ async fn add_opportunity(mut req: tide::Request<Database>) -> tide::Result {
         req.url().path(),
         opportunity.exterior.uid
     )))
+}
+
+#[derive(TemplateOnce)]
+#[template(path = "manage/overlay.stpl.html")]
+struct OverlayPage {
+    message: String,
+    opportunity: Opportunity,
+    exterior: Value,
+    interior: Value,
+}
+
+#[derive(Deserialize, Default, Debug)]
+#[serde(default)]
+struct OverlayForm {
+    pes_domain: Option<common::model::opportunity::Domain>,
+    opp_descriptor: Vec<common::model::opportunity::Descriptor>,
+    opp_topics: Vec<common::model::opportunity::Topic>,
+    min_age: Option<i16>,
+    max_age: Option<i16>,
+    cost: Option<common::model::opportunity::Cost>,
+    is_online: Option<bool>,
+}
+
+impl OverlayForm {
+    pub fn apply(self, exterior: &mut Value, _interior: &mut Value) {
+        fn delete(obj: &mut Value, key: &str) {
+            obj.as_object_mut().map(|obj| obj.remove(key));
+        }
+
+        if let Some(domain) = self.pes_domain {
+            exterior["pes_domain"] = domain.to_option().0.into();
+        } else {
+            delete(exterior, "pes_domain");
+        }
+
+        if !self.opp_descriptor.is_empty() {
+            exterior["opp_descriptor"] = self
+                .opp_descriptor
+                .into_iter()
+                .map(|x| x.to_option().0)
+                .collect::<Vec<_>>()
+                .into();
+        } else {
+            delete(exterior, "opp_descriptor");
+        }
+
+        if !self.opp_topics.is_empty() {
+            exterior["opp_topics"] = self
+                .opp_topics
+                .into_iter()
+                .map(|x| x.to_option().0)
+                .collect::<Vec<_>>()
+                .into();
+        } else {
+            delete(exterior, "opp_topics");
+        }
+
+        if let Some(min_age) = self.min_age {
+            if min_age != -1 {
+                exterior["min_age"] = min_age.into();
+            } else {
+                delete(exterior, "min_age");
+            }
+        } else {
+            delete(exterior, "min_age");
+        }
+
+        if let Some(max_age) = self.max_age {
+            if max_age != -1 {
+                exterior["max_age"] = max_age.into();
+            } else {
+                delete(exterior, "max_age");
+            }
+        } else {
+            delete(exterior, "max_age");
+        }
+
+        if let Some(cost) = self.cost {
+            exterior["cost"] = cost.to_option().0.into();
+        } else {
+            delete(exterior, "cost");
+        }
+
+        if let Some(online) = self.is_online {
+            exterior["is_online"] = online.into();
+        } else {
+            delete(exterior, "is_online");
+        }
+    }
+}
+
+async fn overlay(mut req: tide::Request<Database>) -> tide::Result {
+    let _admin = match super::authorized_admin(&req, &Permission::ManageOpportunities).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let opportunity = {
+        let uid: Uuid = req.param("uid")?.parse()?;
+        Opportunity::load_by_uid(req.state(), &uid).await?
+    };
+
+    let (mut exterior, mut interior) = {
+        sqlx::query!(r#"SELECT exterior as "exterior!", interior as "interior!" FROM c_opportunity_overlay WHERE opportunity_id = $1"#, opportunity.id)
+            .fetch_optional(req.state())
+            .await?.map(|r| (r.exterior, r.interior)).unwrap_or_else(|| (json!({}), json!({})))
+    };
+
+    if let Method::Post = req.method() {
+        let qs = serde_qs::Config::new(5, false);
+        let form: OverlayForm = qs.deserialize_str(&req.body_string().await?)?;
+
+        form.apply(&mut exterior, &mut interior);
+
+        if let Err(err) = sqlx::query!(
+            r#"
+INSERT INTO
+  c_opportunity_overlay (opportunity_id, exterior, interior)
+VALUES
+  ($1, $2, $3)
+ON CONFLICT
+  (opportunity_id)
+DO UPDATE SET
+  exterior = EXCLUDED.exterior,
+  interior = EXCLUDED.interior
+WHERE
+  c_opportunity_overlay.opportunity_id = $1
+"#,
+            opportunity.id,
+            exterior,
+            interior
+        )
+        .execute(req.state())
+        .await
+        {
+            return Ok(OverlayPage {
+                message: err.to_string(),
+                opportunity,
+                exterior,
+                interior,
+            }
+            .into_response(StatusCode::Ok)?);
+        }
+
+        return Ok(redirect(req.url().path()));
+    }
+
+    let form = OverlayPage {
+        message: String::new(),
+        opportunity,
+        exterior,
+        interior,
+    };
+
+    Ok(form.into_response(StatusCode::Ok)?)
 }

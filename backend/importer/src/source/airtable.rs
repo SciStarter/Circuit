@@ -24,7 +24,7 @@ impl Airtable {
 fn get_table(base: &str, table: &str) -> Result<Vec<Value>, Error> {
     let mut records = Vec::new();
 
-    let key = std::env::var("AIRTABLE_KEY").map_err(|err| Error::Misc(err.to_string()))?;
+    let token = std::env::var("AIRTABLE_TOKEN").map_err(|err| Error::Misc(err.to_string()))?;
     let mut offset = None;
 
     loop {
@@ -35,7 +35,7 @@ fn get_table(base: &str, table: &str) -> Result<Vec<Value>, Error> {
         };
 
         let mut result: Value = ureq::get(&url)
-            .set("Authorization", &format!("Bearer {key}"))
+            .set("Authorization", &format!("Bearer {token}"))
             .call()?
             .into_json()?;
 

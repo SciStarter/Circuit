@@ -149,7 +149,7 @@ pub async fn add_opp(mut req: tide::Request<Database>) -> tide::Result {
 
 /// Unlike the entity::entity function, returns the entire
 /// opportunity. This endpoint is for people who have authority over
-/// the opportuity.
+/// the opportunity.
 pub async fn load_opp(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req).await?;
 

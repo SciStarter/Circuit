@@ -39,6 +39,7 @@ export default {
     data() {
         return {
             chart: null,
+            sorted_rows: [],
             windowWidth: window.innerWidth
         }
     },
@@ -72,6 +73,23 @@ export default {
             let yaxes = this.getters(this.yaxes);
             let colors = this.colors;
 
+            this.sorted_rows = [...this.rows];
+
+            this.sorted_rows.sort((a, b) => {
+                let ax = xaxis(a);
+                let bx = xaxis(b);
+
+                if(ax > bx) {
+                    return 1;
+                }
+                else if(ax < bx) {
+                    return -1;
+                }
+                else {
+                    return 0;
+                }
+            });
+
             if(colors.length < yaxes.length) {
                 colors = yaxes.map(f => `rgb(${128 + Math.random() * 64}, ${128 + Math.random() * 64}, ${128 + Math.random() * 64})`);
             }
@@ -82,7 +100,7 @@ export default {
                 y: {
                     grid: true
                 },
-                marks: yaxes.map((ya, i) => Plot.line(this.rows, {
+                marks: yaxes.map((ya, i) => Plot.line(this.sorted_rows, {
                     x: xaxis,
                     y: ya,
                     stroke: colors[i],

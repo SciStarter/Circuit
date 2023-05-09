@@ -57,6 +57,14 @@ pub struct LoggedError {
 }
 
 impl LoggedError {
+    pub fn new(level: impl Into<LoggedErrorLevel>, message: impl AsRef<str>) -> LoggedError {
+        LoggedError {
+            level: level.into(),
+            message: message.as_ref().to_string(),
+            ..Default::default()
+        }
+    }
+
     pub fn set_title(mut self, title: impl AsRef<str>) -> Self {
         self.title = Some(title.as_ref().to_string());
         self

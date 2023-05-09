@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/api/docs/bulma.css">
+    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+    <link rel="stylesheet" href="/api/docs/manage.css">
+    <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+    <title><%= &opportunity.exterior.partner_name %> : <%= &opportunity.exterior.title %> : Overlay</title>
+  </head>
+  <body>
+    <section class="section">
+      <div class="container">
+        <a href="../<%= opportunity.exterior.uid.to_string() %>">Back to opportunity</a>
+
+        <h1 class="title"><%= &opportunity.exterior.partner_name %> : <%= &opportunity.exterior.title %> : Overlay</h1>
+
+        <% if message.len() > 0 { %>
+          <%- message %>
+        <% } %>
+
+        <form method="post">
+          <div class="field">
+            <label class="label">Opportunity Domain (Public Engagement in Science)</label>
+            <div class="control">
+              <div class="select">
+                <select class="input" name="pes_domain">
+                  <option value="">Not Set</option>
+                  <% for opt in common::model::opportunity::Domain::all_options() { %>
+                     <option value="<%= opt.0 %>"<% if opt.0 == exterior["pes_domain"].as_str().unwrap_or("") { %> selected<% } %>><%= opt.1 %></option>
+                  <% } %>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="columns">
+              <div class="column">
+                <label class="label">Opportunity Descriptors</label>
+              </div>
+              <div class="column">
+                <span title="hold down contol or command to select multiple items" class="tag is-info">multiple select</span>
+              </div>
+            </div>
+            <div class="control">
+              <div class="select is-multiple">
+                <select multiple class="input" name="opp_descriptor[]">
+                  <% for opt in common::model::opportunity::Descriptor::all_options() { %>
+                     <option value="<%= &opt.0 %>"<% if exterior["opp_descriptor"].as_array().map(|vec| vec.contains(&opt.0.into())).unwrap_or(false) { %> selected<% } %>><%= opt.1 %></option>
+                  <% } %>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="columns">
+              <div class="column">
+                <label class="label">Opportunity Topics</label>
+              </div>
+              <div class="column">
+                <span title="hold down contol or command to select multiple items" class="tag is-info">multiple select</span>
+              </div>
+            </div>
+            <div class="control">
+              <div class="select is-multiple">
+                <select multiple class="input" name="opp_topics[]">
+                  <% for opt in common::model::opportunity::Topic::all_options() { %>
+                  <option value="<%= &opt.0 %>"<% if exterior["opp_topics"].as_array().map(|arr| arr.contains(&opt.0.into())).unwrap_or(false) { %> selected<% } %>><%= &opt.1 %></option>
+                  <% } %>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Minimum Age</label>
+            <div class="control">
+              <input class="input" type="number" name="min_age" value="<%= exterior["min_age"].as_i64().unwrap_or(-1) %>">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Maximum Age</label>
+            <div class="control">
+              <input class="input" type="number" name="max_age" value="<%= exterior["max_age"].as_i64().unwrap_or(-1) %>">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Has Cost</label>
+            <div class="control">
+              <div class="select">
+                <select class="input" name="cost">
+                  <option value="">Not Set</option>
+                  <% for opt in common::model::opportunity::Cost::all_options() { %>
+                     <option value="<%= &opt.0 %>"<% if Some(opt.0.as_ref()) == exterior["cost"].as_str() { %> selected<% } %>><%= opt.1 %></option>
+                  <% } %>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Is Online</label>
+            <div class="control">
+              <div class="select">
+                <select class="input" name="is_online">
+                  <option value="">Not Set</option>
+                  <option value="true"<% if exterior["is_online"].as_bool().unwrap_or(false) { %> selected<% } %>>Yes</option>
+                  <option value="false"<% if !exterior["is_online"].as_bool().unwrap_or(true) { %> selected<% } %>>No</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="control">
+              <input class="button is-primary is-large" type="submit" value="Save">
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+    <script>
+     function to_local(value) {
+         function pad(n) {
+             return (n > 9 ? '' : '0') + n;
+         }
+
+         var date = new Date(value);
+
+         return date.getFullYear() + '-' +
+                pad(date.getMonth() + 1) + '-' +
+                pad(date.getDate()) + 'T' +
+                pad(date.getHours()) + ':' +
+                pad(date.getMinutes()) + ':' +
+                pad(date.getSeconds());
+     };
+
+     var descriptionMDE = new EasyMDE({element: document.getElementById('description')});
+
+     function setup_datetime_view(view) {
+         var model = document.getElementById(view.dataset.global);
+
+         if(!!model.value) {
+             view.value = to_local(model.value);
+         }
+
+         view.addEventListener('input', function(event) {
+             try {
+                 model.value = new Date(view.value).toISOString();
+             }
+             catch(_) {
+                 model.value = "";
+             }
+         });
+     }
+
+     function add_a_start_end_pair() {
+         let start_global_id = "start_datetimes-" +  Math.random();
+         let end_global_id = "end_datetimes-" +  Math.random();
+
+         let start_t = document.querySelector('#tpl-start');
+         let end_t = document.querySelector('#tpl-end');
+
+         let start = start_t.content.cloneNode(true);
+         let end = end_t.content.cloneNode(true);
+
+         let start_local = start.querySelector('input[type="datetime-local"]');
+         let end_local = end.querySelector('input[type="datetime-local"]');
+
+         let start_global = start.querySelector('input[type="hidden"]');
+         let end_global = end.querySelector('input[type="hidden"]');
+
+         start_local.dataset.global = start_global_id;
+         end_local.dataset.global = end_global_id;
+
+         start_global.id = start_global_id;
+         end_global.id = end_global_id;
+
+         let start_col = document.querySelector('#start-column');
+         let end_col = document.querySelector('#end-column');
+
+         start_col.appendChild(start);
+         end_col.appendChild(end);
+
+         setup_datetime_view(start_local);
+         setup_datetime_view(end_local);
+     }
+
+     document.querySelectorAll('input[type="datetime-local"][data-global]').forEach(
+         setup_datetime_view
+     );
+    </script>
+  </body>
+</html>

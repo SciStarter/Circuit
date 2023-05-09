@@ -103,6 +103,7 @@ export default {
           "https://geocode.arcgis.com",
           "region1.google-analytics.com",
           "region1.analytics.google.com",
+          "https://stats.g.doubleclick.net"
         ],
         "font-src": ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net", "circuit-media.s3.amazonaws.com", "use.typekit.net"],
         "object-src": ["'self'", "circuit-media.s3.amazonaws.com"],

@@ -8,6 +8,7 @@ use importer::format::{self, Format};
 use importer::source::{self, Source};
 use importer::structure::{self, OneOrMany, PartnerAddress, PartnerFlag, PartnerInfo, Structure};
 use importer::{Error, Importer};
+use uuid::Uuid;
 
 /// This function is the 'config file' for the importer. Each entry
 /// added to the importers vector defines how to grab data from one
@@ -16,40 +17,43 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     let hours = Duration::new(60 * 60, 0);
 
     importers.push(Box::new(Import {
-        source: source::HttpGet::new(
-            "https://scitechinstitute.org/wp-json/mecexternal/v1/calendar/1",
+        source: source::ModernEventsCalendar::new(
+            "https://scitechinstitute.org/wp-admin/admin-ajax.php",
         ),
         format: format::Json,
-        structure: structure::ModernEventsCalendar(PartnerInfo {
-            partner: "12a96513-a9a5-5372-8a85-c68ce074a54b".parse().unwrap(),
-            partner_name: "SciTech Institute".to_string(),
-            partner_website: Some("https://scitechinstitute.org/".to_string()),
-            partner_logo_url: Some(
-                "https://scitechinstitute.org/wp-content/themes/aztc-scitech/img/logo.svg"
-                    .to_string(),
-            ),
-            domain: Domain::MuseumOrScienceCenter,
-            descriptor: vec![Descriptor::ExpoStyle],
-            topics: vec![Topic::Engineering, Topic::Technology],
-            flags: vec![],
-            address: Some(PartnerAddress {
-                name: "SciTech Institute".to_string(),
-                street: "1438 W. Broadway Rd., Ste 101".to_string(),
-                city: "Tempe".to_string(),
-                state: "AZ".to_string(),
-                zip: "85282".to_string(),
-                country: "United States of America".to_string(),
-            }),
-            timezone: Some(chrono_tz::US::Mountain),
-        }),
-        period: 4 * hours,
+        structure: structure::LdJson(
+            "items".into(),
+            PartnerInfo {
+                partner: "12a96513-a9a5-5372-8a85-c68ce074a54b".parse().unwrap(),
+                partner_name: "SciTech Institute".into(),
+                partner_website: Some("https://scitechinstitute.org/".into()),
+                partner_logo_url: Some(
+                    "https://scitechinstitute.org/wp-content/themes/aztc-scitech/img/logo.svg"
+                        .into(),
+                ),
+                domain: Domain::MuseumOrScienceCenter,
+                descriptor: vec![Descriptor::ExpoStyle],
+                topics: vec![Topic::Engineering, Topic::Technology],
+                flags: Vec::new(),
+                address: Some(PartnerAddress {
+                    name: "SciTech Institute".to_string(),
+                    street: "1438 W. Broadway Rd., Ste 101".to_string(),
+                    city: "Tempe".to_string(),
+                    state: "AZ".to_string(),
+                    zip: "85282".to_string(),
+                    country: "United States of America".to_string(),
+                }),
+                timezone: Some(chrono_tz::US::Arizona),
+            },
+        ),
+        period: 24 * hours,
     }));
 
     importers.push(Box::new(Import {
         //source: source::Airtable::new("appytM7ldnmIDcbRV", ["Events"]), // 2022 list
         source: source::Airtable::new("appzz89bVacXdFSeZ", ["Events"]), // 2023 list
         format: format::Json,
-        structure: structure::AtlantaScienceFest::<2022>,
+        structure: structure::AtlantaScienceFest::<2022>, // The 2022 table structure has so far been carried forward to later years
         period: 24 * hours,
     }));
 
@@ -110,9 +114,11 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     }));
 
     importers.push(Box::new(Import {
-        source: source::EventsQLWithCustom::new("https://astronomyontap.org/graphql"),
+        source: source::WordPressRest::new(
+            "https://astronomyontap.org/wp-json/tribe/events/v1/events/?status=publish&per_page=50",
+        ),
         format: format::Json,
-        structure: structure::EventsQL(PartnerInfo {
+        structure: structure::EventsJson(PartnerInfo {
             partner: "784f3316-bdc0-5855-8a44-2044cbb23788".parse().unwrap(),
             partner_name: "Astronomy On Tap".to_string(),
             partner_website: Some("https://astronomyontap.org/".to_string()),
@@ -263,6 +269,7 @@ where
             self.load_partner(&db).await?
         };
 
+        println!("Loading...");
         let source = match self.source.load() {
             Ok(s) => s,
             Err(mut le) => {
@@ -275,6 +282,7 @@ where
             }
         };
 
+        println!("Parsing...");
         let format = match self.format.decode(source) {
             Ok(f) => f,
             Err(mut le) => {
@@ -287,6 +295,7 @@ where
             }
         };
 
+        println!("Interpreting...");
         match self.structure.interpret(format) {
             OneOrMany::One(result) => {
                 match result {
@@ -351,6 +360,8 @@ where
                 }
             }
         }
+
+        println!("Done.");
 
         Ok(Some(self.period.clone()))
     }
