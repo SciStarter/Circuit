@@ -170,13 +170,20 @@
                 <div class="flex">
                   <h2>End Date</h2>
                   <div class="push-right">
-                    <a class="action" @click="show_end_date=true"><edit-icon /></a>
+                    <a class="action" @click="slide_end_date=true"><edit-icon /></a>
                     <a class="action" @click="end_datetime=null"><close-icon /></a>
                   </div>
                 </div>
                 <p>{{end_datetime.toLocaleDateString()}}</p>
               </div>
-              <action-button v-else primary tight @click="show_end_date=true">+ Add an end date</action-button>
+              <!-- <action-button v-else primary tight @click="show_end_date=true">+ Add an end date</action-button> -->
+              <action-button v-else primary tight @click="slide_end_date=true">+ Add an end date</action-button> 
+              <transition name="slide">
+                <div v-if="slide_end_date">
+                  <b-datepicker v-model="end_datetime" inline></b-datepicker>
+                </div>
+              </transition>
+
             </div>
           </transition>
         </label>
@@ -773,6 +780,7 @@ export default {
             when:null,
             learn:null,
             show_end_date: false,
+            slide_end_date: false,
             recurrence: false,
             show_time_periods: false,
             show_time: false,
