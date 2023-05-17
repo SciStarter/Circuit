@@ -1,3 +1,5 @@
+use std::{any::Any, marker::PhantomData, str::FromStr};
+
 use super::{
     Error,
     OneOrMany::{self, Many},
@@ -7,11 +9,69 @@ use chrono::{DateTime, TimeZone, Utc};
 use common::model::{opportunity::EntityType, partner::LoggedError, Opportunity, Partner};
 use common::ToFixedOffset;
 use htmlentity::entity::ICodedDataTrait;
+use serde::Deserialize;
 use serde_json::Value;
 use sqlx::{Pool, Postgres};
+use void::Void;
 
 #[derive(Debug)]
 pub struct EventsJson<Tz: TimeZone>(pub PartnerInfo<Tz>);
+
+#[derive(Debug)]
+pub enum StringOr<Value> {
+    String(String),
+    Value(Value),
+}
+
+impl<T> ToString for StringOr<T>
+where
+    T: ToString,
+{
+    fn to_string(&self) -> String {
+        match self {
+            StringOr::String(s) => s.clone(),
+            StringOr::Value(v) => v.to_string(),
+        }
+    }
+}
+
+impl<'de, T> serde::de::Deserialize<'de> for StringOr<T>
+where
+    T: serde::de::Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct VisitStringOr<V>(PhantomData<fn() -> V>);
+
+        impl<'de, V: serde::de::Deserialize<'de>> serde::de::Visitor<'de> for VisitStringOr<V> {
+            type Value = StringOr<V>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(formatter, "string or {}", std::any::type_name::<V>())
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<StringOr<V>, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(StringOr::String(value.to_string()))
+            }
+
+            fn visit_map<M>(self, map: M) -> Result<StringOr<V>, M::Error>
+            where
+                M: serde::de::MapAccess<'de>,
+            {
+                Ok(StringOr::Value(Deserialize::deserialize(
+                    serde::de::value::MapAccessDeserializer::new(map),
+                )?))
+            }
+        }
+
+        deserializer.deserialize_any(VisitStringOr(PhantomData))
+    }
+}
 
 #[derive(serde::Deserialize, Debug, Default)]
 #[serde(default)]
@@ -26,9 +86,21 @@ struct Venue {
     name: String,
     address: String,
     city: String,
+    #[serde(alias = "stateprovince")]
     state: String,
     country: String,
     zip: String,
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct Tag {
+    name: String,
+}
+
+impl ToString for Tag {
+    fn to_string(&self) -> String {
+        self.name.clone()
+    }
 }
 
 #[derive(serde::Deserialize, Debug, Default)]
@@ -40,7 +112,7 @@ struct Data {
     url: String,
     utc_start_date: String,
     utc_end_date: String,
-    tags: Vec<String>,
+    tags: Vec<StringOr<Tag>>,
     slug: String,
     image: Option<Image>,
     cost: Option<String>,
@@ -99,7 +171,7 @@ fn interpret_one<Tz: TimeZone>(
 
     opp.exterior.pes_domain = partner.domain.clone();
 
-    opp.exterior.tags = data.tags.into_iter().collect();
+    opp.exterior.tags = data.tags.into_iter().map(|x| x.to_string()).collect();
 
     opp.exterior.title = htmlentity::entity::decode(data.title.as_bytes())
         .to_string()
