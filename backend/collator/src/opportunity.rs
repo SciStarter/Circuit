@@ -90,7 +90,7 @@ pub async fn collect(
         row.views += entry.views.try_into().unwrap_or(0);
         row.unique += entry.total_users.try_into().unwrap_or(0);
         row.new += entry.new_users.try_into().unwrap_or(0);
-        row.returning = row.unique - row.new;
+        row.returning = row.unique.saturating_sub(row.new);
     }
 
     for row in engagement_data_chart.values_mut() {

@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use common::{
@@ -128,17 +128,38 @@ async fn process(db: &Database, cycle: u64) -> Result<(), Box<dyn std::error::Er
 
         let AbsoluteTimePeriod { begin, end } = period.absolute();
 
+        let mut opp_tasks = Vec::new();
+
         let mut iter = common::model::Opportunity::catalog(db).await?;
         while let Some(opp) = iter.get_next(db).await {
+            opp_tasks.push(tokio::spawn({
+                let db = db.clone();
+                async move {
+                    println!(
+                        "{} [{}][{:?}][{}: {:?}] Caching opp",
+                        Utc::now(),
+                        cycle,
+                        &period,
+                        opp.id.unwrap_or(0),
+                        &opp.exterior.title
+                    );
+                    opportunity::cache(&db, &opp, temporary, begin, end).await?;
+                    Result::<(), anyhow::Error>::Ok(())
+                }
+            }))
+        }
+
+        let opp_tasks_total = opp_tasks.len();
+        for (i, opp_fut) in opp_tasks.into_iter().enumerate() {
+            opp_fut.await?;
             println!(
-                "{} [{}][{:?}][{}: {:?}] Caching opp",
+                "{} [{}][{:?}] Finished caching {} / {} opportunities",
                 Utc::now(),
                 cycle,
                 &period,
-                opp.id.unwrap_or(0),
-                &opp.exterior.title
+                i,
+                opp_tasks_total,
             );
-            opportunity::cache(db, &opp, temporary, begin, end).await?;
         }
 
         for partner_ref in common::model::partner::Partner::catalog(db).await? {
@@ -207,23 +228,30 @@ ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
                 .await?;
             }
 
+            let mut partner_tasks = Vec::new();
+
             for partner_ref in common::model::partner::Partner::catalog(db).await? {
-                let partner =
-                    common::model::partner::Partner::load_by_id(db, partner_ref.id).await?;
-                println!(
-                    "{} [{}][{:?}][{:?}][{}: {:?}] Collecting partner",
-                    Utc::now(),
-                    cycle,
-                    &period,
-                    &status,
-                    partner.id.unwrap_or(0),
-                    &partner.exterior.name
-                );
+                partner_tasks.push(tokio::spawn({
+                    let db = db.clone();
+                    let state = state.clone();
+                    async move {
+                        let partner =
+                            common::model::partner::Partner::load_by_id(&db, partner_ref.id)
+                                .await?;
+                        println!(
+                            "{} [{}][{:?}][{:?}][{}: {:?}] Collecting partner",
+                            Utc::now(),
+                            cycle,
+                            &period,
+                            &status,
+                            partner.id.unwrap_or(0),
+                            &partner.exterior.name
+                        );
 
-                let data = organization::collect(db, &partner, &state).await?;
+                        let data = organization::collect(&db, &partner, &state).await?;
 
-                sqlx::query!(
-                    r#"
+                        sqlx::query!(
+                            r#"
 INSERT INTO c_analytics_compiled (
   "about",
   "kind",
@@ -236,27 +264,27 @@ INSERT INTO c_analytics_compiled (
 ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
   "data" = EXCLUDED."data"
 "#,
-                    partner.exterior.uid,
-                    period.discriminate(),
-                    status.discriminate(),
-                    serde_json::to_value(data)?,
-                )
-                .execute(db)
-                .await?;
+                            partner.exterior.uid,
+                            period.discriminate(),
+                            status.discriminate(),
+                            serde_json::to_value(data)?,
+                        )
+                        .execute(&db)
+                        .await?;
 
-                println!(
-                    "{} [{}][{:?}][{:?}][{}: {:?}] Collecting hosts",
-                    Utc::now(),
-                    cycle,
-                    &period,
-                    &status,
-                    partner.id.unwrap_or(0),
-                    &partner.exterior.name
-                );
-                let data = hosts::collect(db, &partner, &state).await?;
+                        println!(
+                            "{} [{}][{:?}][{:?}][{}: {:?}] Collecting hosts",
+                            Utc::now(),
+                            cycle,
+                            &period,
+                            &status,
+                            partner.id.unwrap_or(0),
+                            &partner.exterior.name
+                        );
+                        let data = hosts::collect(&db, &partner, &state).await?;
 
-                sqlx::query!(
-                    r#"
+                        sqlx::query!(
+                            r#"
 INSERT INTO c_analytics_compiled (
   "about",
   "kind",
@@ -269,13 +297,31 @@ INSERT INTO c_analytics_compiled (
 ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
   "data" = EXCLUDED."data"
 "#,
-                    partner.exterior.uid,
-                    period.discriminate(),
-                    status.discriminate(),
-                    serde_json::to_value(data)?,
-                )
-                .execute(db)
-                .await?;
+                            partner.exterior.uid,
+                            period.discriminate(),
+                            status.discriminate(),
+                            serde_json::to_value(data)?,
+                        )
+                        .execute(&db)
+                        .await?;
+
+                        println!(
+                            "{} [{}][{:?}][{:?}][{}: {:?}] Partner collected",
+                            Utc::now(),
+                            cycle,
+                            &period,
+                            &status,
+                            partner.id.unwrap_or(0),
+                            &partner.exterior.name
+                        );
+
+                        Result::<(), anyhow::Error>::Ok(())
+                    }
+                }))
+            }
+
+            for part_fut in partner_tasks {
+                part_fut.await?;
             }
 
             println!(
