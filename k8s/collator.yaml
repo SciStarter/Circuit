@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-collator
-        image: scistarter/circuit-collator:0.1.20
+        image: scistarter/circuit-collator:0.1.21
         ports:
         - containerPort: 9000
         volumeMounts:
@@ -24,6 +24,11 @@ spec:
           mountPath: "/etc/ga4"
           readOnly: true
         env:
+        - name: OPENCAGE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: opencage
+              key: OPENCAGE_API_KEY
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:

@@ -52,6 +52,8 @@ pub use crate::ga4::{
     clear_cached_temporary, is_cached, is_overview_cached, is_search_terms_cached,
 };
 
+static BQ_SIMULTANEOUS: Lazy<tokio::sync::Semaphore> = Lazy::new(|| tokio::sync::Semaphore::new(8));
+
 pub async fn run_report(
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
@@ -59,6 +61,8 @@ pub async fn run_report(
     dimensions: Vec<Dimension>,
     metrics: Vec<Metric>,
 ) -> Result<BQReportIterator, Error> {
+    let permit = BQ_SIMULTANEOUS.acquire().await?;
+
     let secret = oauth2::read_service_account_key(
         env::var("SNM_ANALYTICS_SECRET")
             .unwrap_or(String::from("/etc/ga4/snm-analytics-secret.json")),
@@ -253,7 +257,7 @@ WITH views AS (
     device.language AS device_language,
     geo.country AS geo_country,
     geo.region AS geo_region,
-    geo.city AS geo_city    
+    geo.city AS geo_city
   FROM `analytics_322158266.*`
   WHERE event_name = "page_view"
 )
