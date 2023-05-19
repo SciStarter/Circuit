@@ -1056,7 +1056,7 @@ export default {
                     this.value.has_end = false;
                 }
                 else {
-                    let repr = await this.datetime_repr(val, '23:59');
+                    let repr = await this.datetime_repr(val, '23:59:59');
                     if(repr != null) {
                         this.value.end_datetimes = [repr];
                         this.value.has_end = true;
@@ -1783,7 +1783,7 @@ legend {
     // margin-left:20px;
 
     .tp-list {
-        overflow: auto;
+        // overflow: auto;
         // height: 358px;
         padding:10px 0;
         // border: 1px solid $snm-color-border;
