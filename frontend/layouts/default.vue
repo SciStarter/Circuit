@@ -98,7 +98,7 @@
                 </nuxt-link>
               </li>
 
-              <li class="mobile-only" v-if="beta_features && owner">
+              <li class="mobile-only" v-if="owner">
                 <nuxt-link to="/my/data-overview">
                   <my-data-icon class="menu-icon" /> Data Insights
                 </nuxt-link>
@@ -215,11 +215,11 @@
                 <my-organization-icon /> Your Partner Organization
               </nuxt-link>
 
-              <nuxt-link v-if="beta_features && owner" to="/my/data-overview" :class="{'nuxt-link-active': $route.name == 'my-hosts-explorer' ||  $route.name == 'my-opportunity-data-explorer' || $route.name == 'my-snm-data-overview'}">
+              <nuxt-link v-if="owner" to="/my/data-overview" :class="{'nuxt-link-active': $route.name == 'my-hosts-explorer' ||  $route.name == 'my-opportunity-data-explorer' || $route.name == 'my-snm-data-overview'}">
                 <my-data-icon class="menu-icon" /> Data Insights
               </nuxt-link>
 
-              <ul v-if="beta_features && owner && ($route.name == 'my-data-overview' || $route.name == 'my-hosts-explorer' ||  $route.name == 'my-opportunity-data-explorer' || $route.name == 'my-snm-data-overview')" class="subnav">
+              <ul v-if="owner && ($route.name == 'my-data-overview' || $route.name == 'my-hosts-explorer' ||  $route.name == 'my-opportunity-data-explorer' || $route.name == 'my-snm-data-overview')" class="subnav">
                 <li><nuxt-link v-if="owner" to="/my/data-overview">Your Data Overview</nuxt-link></li>
                 <li><nuxt-link v-if="owner" to="/my/hosts-explorer">Hosts Explorer</nuxt-link></li>
                 <li><nuxt-link v-if="owner" to="/my/opportunity-data-explorer">Opportunity Data Explorer</nuxt-link></li>
