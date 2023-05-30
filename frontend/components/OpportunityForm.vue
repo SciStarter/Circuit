@@ -859,6 +859,10 @@ export default {
         this.initialize();
     },
 
+    mounted() {
+        this.initialize();
+    },
+
     computed: {
         location_name: {
             get() {
