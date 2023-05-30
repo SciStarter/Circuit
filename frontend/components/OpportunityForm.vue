@@ -165,8 +165,8 @@
             </div>
           </div>
           <transition name="slide">
-            <div v-if="when=='ongoing'" class="add">
-              <div class="set-info" v-if="end_datetime">
+            <div v-if="when=='ongoing'" class="add max">
+              <!-- <div class="set-info" v-if="end_datetime">
                 <div class="flex">
                   <h2>End Date</h2>
                   <div class="push-right">
@@ -175,12 +175,29 @@
                   </div>
                 </div>
                 <p>{{end_datetime.toLocaleDateString()}}</p>
-              </div>
+              </div> -->
               <!-- <action-button v-else primary tight @click="show_end_date=true">+ Add an end date</action-button> -->
-              <action-button v-else primary tight @click="slide_end_date=true">+ Add an end date</action-button> 
+              <action-button v-if="!show_end_date" primary tight @click="slide_end_date=true;show_end_date=true;">+ Add an end date</action-button> 
               <transition name="slide">
-                <div v-if="slide_end_date">
-                  <b-datepicker v-model="end_datetime" inline></b-datepicker>
+                <div v-if="slide_end_date" class="set-info">
+                  <a class="action absolute-action" @click="end_datetime=null;slide_end_date=false;show_end_date=false;"><close-icon /></a>
+                  <b-field>
+                    <template #label>
+                      End Date:<span class="required">*</span>
+                    </template>
+                  <b-datepicker
+                      class="validation-target"
+                      :class="{'is-danger': validation.begin_datetime}"
+                      v-model="end_datetime"
+                      placeholder="Click to select..."
+                      icon="calendar-today"
+                      :icon-right="begin_datetime ? 'close-circle' : ''"
+                      icon-right-clickable
+                      @icon-right-click="begin_datetime=null"
+                      trap-focus>
+                    </b-datepicker>
+                    </b-field>
+                  <!-- <b-datepicker v-model="end_datetime" inline></b-datepicker> -->
                 </div>
               </transition>
 
@@ -211,8 +228,8 @@
                   </option>
                 </b-select>
               </b-field>
-              <div v-if="time_periods.length == 0 || time_periods.length == 1" class="times-flex">
-                <div class="flex">
+              <div v-if="(time_periods.length == 0 || time_periods.length == 1) && show_time_periods==false" class="times-flex">
+                <div>
                   <b-field>
                     <template #label>
                       Starts on:<span class="required">*</span>
@@ -260,7 +277,7 @@
                 </div>
               </div>
 
-              <div v-if="time_periods.length > 1" class="set-info" style="margin-bottom:1rem;">
+              <!-- <div v-if="time_periods.length > 1" class="set-info" style="margin-bottom:1rem;">
                 <div class="flex">
                   <h2>Time Periods</h2>
                   <div class="push-right">
@@ -272,8 +289,53 @@
                   <span v-if="pair[0] && pair[1] && pair[0].getFullYear() == pair[1].getFullYear() && pair[0].getMonth() == pair[1].getMonth() && pair[0].getDate() == pair[1].getDate()">{{pair[0].toLocaleDateString()}} {{pair[0].toLocaleTimeString()}} - {{pair[1].toLocaleTimeString()}}</span>
                   <span v-else>{{pair[0] ? (pair[0].toLocaleString() + ' -') : 'ongoing through'}} {{pair[1].toLocaleString()}}</span>
                 </p>
+              </div> -->
+
+
+              <div v-if="!show_time_periods"><action-button primary tight @click="show_time_periods=true"><div class="icon"><time-icon /></div> Add multiple dates & time periods</action-button></div>
+
+      <transition name="slide">
+      <div v-if="show_time_periods" class="set-info" id="modal-dates">
+        <a class="action absolute-action" @click="show_time_periods=false;time_periods=[]"><close-icon /></a>
+        <b-field>
+          <template #label>
+            Select Dates<span class="required">*</span>
+          </template>
+          <b-datepicker :value="time_periods_dates" @input="time_periods_dates_set" inline multiple></b-datepicker>
+        </b-field>
+        <div id="time-periods">
+          <label class="label">Add times to each date<span class="required">*</span></label>
+          <small v-if="time_periods.length == 0">Select a date above.</small>
+          <div class="tp-list">
+
+            <!-- date has no time set -->
+            <div v-for="(pair, idx) in time_periods_local" class="tp-item">
+              <div class="flex">
+                <h2>{{ pair[0] ? pair[0].toLocaleDateString() : '' }}</h2>
               </div>
-              <div v-else><action-button primary tight @click="show_time_periods=true"><div class="icon"><time-icon /></div> Add &amp; customize time periods</action-button></div>
+              <div class="flex">
+                <b-timepicker
+                  :value="pair[0]"
+                  placeholder="Start Time" 
+                  editable
+                  @input="time_periods_set(idx, 0, $event)">
+                </b-timepicker>
+                <b-timepicker
+                  :value="pair[1]"
+                  position="is-bottom-left"
+                  placeholder="End Time" 
+                  editable
+                  @input="time_periods_set(idx, 1, $event)">
+                </b-timepicker>
+              </div>
+            </div>
+          </div>
+        </div><!-- #time-periods -->
+      </div>
+    </transition>
+
+
+
 
               <div v-if="can_recur && recurrence" class="set-info">
                 <div class="flex">
@@ -627,7 +689,7 @@
   </form>
 
 
-  <b-modal v-model="show_end_date" :width="640" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal overflow-modal" @close="end_datetime=null">
+  <!-- <b-modal v-model="show_end_date" :width="640" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal overflow-modal" @close="end_datetime=null">
     <div class="card">
       <h1>Select an End Date<span class="close" @click="show_end_date = false">&times;</span></h1>
       <p>If your ongoing opportunity has an end date, select below.</p>
@@ -639,9 +701,9 @@
         <action-button primary @click="show_end_date=false">save</action-button>
       </div>
     </div>
-  </b-modal>
+  </b-modal> -->
 
-  <b-modal v-model="show_time_periods" :width="800" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal overflow-modal">
+  <!-- <b-modal v-model="show_time_periods" :width="800" aria-role="dialog" aria-label="Log in" aria-modal class="form-modal overflow-modal">
     <div class="card">
       <h1>Add and Customize Dates and Times <span class="close" @click="show_time_periods = false">&times;</span></h1>
       <p>Select dates on the calendar. Each date must have at least one time period set on the right.</p>
@@ -656,7 +718,6 @@
           <label class="label">Add times to each date<span class="required">*</span></label>
           <div class="tp-list">
 
-            <!-- date has no time set -->
             <div v-for="(pair, idx) in time_periods_local" class="tp-item">
               <div class="flex">
                 <h2>{{ pair[0] ? pair[0].toLocaleDateString() : '' }}</h2>
@@ -680,14 +741,14 @@
               </div>
             </div>
           </div>
-        </div><!-- #time-periods -->
+        </div>
       </div>
       <div class="flex flex-center">
         <action-button tertiary @click="()=>{show_time_periods = false; time_periods_dates = []; time_periods = [];}">clear</action-button>
         <action-button primary @click="show_time_periods=false">save</action-button>
       </div>
     </div>
-  </b-modal>
+  </b-modal> -->
 
 </div>
 </template>
@@ -907,7 +968,7 @@ export default {
                   .fill()
                   .map((_,i) => [starts[i], ends[i]]);
 
-            return pairs
+            return pairs.sort();
         },
 
         time_periods_local() {
@@ -995,7 +1056,7 @@ export default {
                     this.value.has_end = false;
                 }
                 else {
-                    let repr = await this.datetime_repr(val, '23:59:59.999');
+                    let repr = await this.datetime_repr(val, '23:59:59');
                     if(repr != null) {
                         this.value.end_datetimes = [repr];
                         this.value.has_end = true;
@@ -1124,8 +1185,8 @@ export default {
                 const end = new Date(dt);
                 end.setHours(23);
                 end.setMinutes(59);
-                end.setSeconds(59);
-                end.setMilliseconds(999)
+                // end.setSeconds(59);
+                // end.setMilliseconds(999)
                 updated.push([dt, end]);
             }
 
@@ -1569,6 +1630,10 @@ legend {
 .add {
     margin-top:1rem;
     margin-left:34px;
+    
+    &.max {
+      max-width: 375px;
+    }
 
     input, select {
         border-color: #b7b7b7!important;
@@ -1576,17 +1641,24 @@ legend {
 }
 
 .times-flex {
+  margin-bottom: 20px;
     .field, .field .datepicker {
         margin-right:10px!important;
     }
 }
 
 .set-info {
-    background-color: #fff;
+    background-color: #f5f5f5;
     border: 1px solid #b7b7b7;
     max-width: 500px;
     padding:12px;
     border-radius:6px;
+    position:relative;
+    .absolute-action {
+      position: absolute;
+      top:5px;
+      right:5px;
+    }
 
     h2 {
         font-weight:bold;
@@ -1692,15 +1764,29 @@ legend {
 
 }
 
+#modal-dates {
+  background-color: #fff;
+  max-width: 380px;
+  margin-bottom: 20px;
+
+  :deep(.datepicker .dropdown-content) {
+    box-shadow: none;
+  }
+  :deep(.datepicker.control), :deep(.dropdown-item){
+    padding:0;
+  }
+
+}
+
 #time-periods {
 
-    margin-left:20px;
+    // margin-left:20px;
 
     .tp-list {
-        overflow: auto;
-        height: 358px;
-        padding:20px;
-        border: 1px solid $snm-color-border;
+        // overflow: auto;
+        // height: 358px;
+        padding:10px 0;
+        // border: 1px solid $snm-color-border;
 
     }
 
@@ -1924,6 +2010,14 @@ legend {
     :deep(.field.has-addons){
       flex-direction: column;
     }
+    :deep(.field .datepicker) {
+      margin-right:0!important;
+      margin-bottom:10px;
+    }
   }
+}
+
+:deep(.dropdown-menu) {
+  z-index:101;
 }
 </style>
