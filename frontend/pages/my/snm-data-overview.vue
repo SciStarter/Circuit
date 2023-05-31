@@ -348,44 +348,50 @@
       <thead>
         <tr>
           <th>Engagement By Device Type</th>
-          <th>Unique Users <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
+          <th colspan="2">Unique Users
+            <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined>
+              <b-button label="?" />
+            </b-tooltip>
             <a v-if="technology_top_order == 'unique_users_desc'" @click="technology_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'unique_users_asc'" @click="technology_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>New Users <b-tooltip label="First time visitors." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
+          <th colspan="2">New Users
+            <b-tooltip label="First time visitors." position="is-top" append-to-body multilined>
+              <b-button label="?" />
+            </b-tooltip>
             <a v-if="technology_top_order == 'new_users_desc'" @click="technology_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'new_users_asc'" @click="technology_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Returning Users <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
+          <th colspan="2">Returning Users
+            <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined>
+              <b-button label="?" />
+            </b-tooltip>
             <a v-if="technology_top_order == 'returning_users_desc'" @click="technology_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'returning_users_asc'" @click="technology_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Total Pageviews <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
+          <th colspan="2">Total Pageviews
+            <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
+              <b-button label="?" />
+            </b-tooltip>
             <a v-if="technology_top_order == 'total_pageviews_desc'" @click="technology_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'total_pageviews_asc'" @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Unique Pageviews <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
+          <th colspan="2">Unique Pageviews
+            <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined>
+              <b-button label="?" />
+            </b-tooltip>
             <a v-if="technology_top_order == 'unique_pageviews_desc'" @click="technology_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'unique_pageviews_asc'" @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th>Avg. Time <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
+          <th colspan="2">Avg. Time
+            <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined>
+              <b-button label="?" />
+            </b-tooltip>
             <a v-if="technology_top_order == 'average_time_desc'" @click="technology_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="technology_top_order == 'average_time_asc'" @click="technology_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="technology_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -395,11 +401,17 @@
       <tbody>
         <tr v-for="row in technology_top_sorted">
           <td>{{row['name']}}</td>
+          <td>{{row['Unique Users']}}</td>
           <td><comparison-bar :value="row['Unique Users']" :max="report.technology.data.max['Unique Users']" color="#268699" /></td>
+          <td>{{row['New Users']}}</td>
           <td><comparison-bar :value="row['New Users']" :max="report.technology.data.max['New Users']" color="#268699" /></td>
+          <td>{{row['Returning Users']}}</td>
           <td><comparison-bar :value="row['Returning Users']" :max="report.technology.data.max['Returning Users']" color="#268699" /></td>
+          <td>{{row['Total Pageviews']}}</td>
           <td><comparison-bar :value="row['Total Pageviews']" :max="report.technology.data.max['Total Pageviews']" color="#268699" /></td>
+          <td>{{row['Unique Pageviews']}}</td>
           <td><comparison-bar :value="row['Unique Pageviews']" :max="report.technology.data.max['Unique Pageviews']" color="#268699" /></td>
+          <td>{{(row['Avg. Time'] / 1000).toFixed(2)}}</td>
           <td><comparison-bar :value="row['Avg. Time']" :max="report.technology.data.max['Avg. Time']" color="#268699" /></td>
         </tr>
       </tbody>
