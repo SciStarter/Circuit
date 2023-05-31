@@ -17,6 +17,34 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     let hours = Duration::new(60 * 60, 0);
 
     importers.push(Box::new(Import {
+        source: source::ModernEventsCalendar::new("https://www.explora.us/wp-admin/admin-ajax.php"),
+        format: format::Json,
+        structure: structure::LdJson(
+            "items".into(),
+            PartnerInfo {
+                partner: "9c3b9c9e-238b-5dad-aa12-9ef22a8c3574".parse().unwrap(),
+                partner_name: "Explora".into(),
+                partner_website: Some("https://explora.us/".into()),
+                partner_logo_url: Some("https://www.explora.us/wp-admin/admin-ajax.php".into()),
+                domain: Domain::MuseumOrScienceCenter,
+                descriptor: vec![Descriptor::ExpoStyle],
+                topics: vec![Topic::Engineering, Topic::Technology],
+                flags: Vec::new(),
+                address: Some(PartnerAddress {
+                    name: "Explora".to_string(),
+                    street: "1701 Mountain Road NW".to_string(),
+                    city: "Albuquerque".to_string(),
+                    state: "NM".to_string(),
+                    zip: "87104".to_string(),
+                    country: "United States of America".to_string(),
+                }),
+                timezone: Some(chrono_tz::US::Mountain),
+            },
+        ),
+        period: 24 * hours,
+    }));
+
+    importers.push(Box::new(Import {
         source: source::ModernEventsCalendar::new(
             "https://scitechinstitute.org/wp-admin/admin-ajax.php",
         ),
