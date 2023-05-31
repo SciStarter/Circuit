@@ -614,6 +614,9 @@ export default {
         },
 
         updated_local() {
+            if(!this.report || !this.report.updated) {
+                return "";
+            }
             return new Date(this.report.updated).toLocaleDateString();
         },
 
