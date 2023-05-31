@@ -444,72 +444,72 @@
 
     <div class="data-table-wrapper">
 
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Top Referrers</th>
-          <th colspan="2">Unique Users <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="traffic_top_order == 'unique_users_desc'" @click="traffic_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="traffic_top_order == 'unique_users_asc'" @click="traffic_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="traffic_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">New Users <b-tooltip label="First time visitors." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="traffic_top_order == 'new_users_desc'" @click="traffic_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="traffic_top_order == 'new_users_asc'" @click="traffic_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="traffic_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Returning Users <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="traffic_top_order == 'returning_users_desc'" @click="traffic_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="traffic_top_order == 'returning_users_asc'" @click="traffic_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="traffic_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Total Pageviews <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="traffic_top_order == 'total_pageviews_desc'" @click="traffic_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="traffic_top_order == 'total_pageviews_asc'" @click="traffic_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="traffic_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Unique Pageviews <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="traffic_top_order == 'unique_pageviews_desc'" @click="traffic_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="traffic_top_order == 'unique_pageviews_asc'" @click="traffic_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="traffic_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Avg. Time <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="traffic_top_order == 'average_time_desc'" @click="traffic_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="traffic_top_order == 'average_time_asc'" @click="traffic_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="traffic_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in traffic_top_sorted">
-          <td>{{row['name']}}</td>
-          <td class="table-num">{{row['Unique Users']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Unique Users']" :max="report.traffic.data.max['Unique Users']" color="#268699" /></td>
-          <td class="table-num">{{row['New Users']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['New Users']" :max="report.traffic.data.max['New Users']" color="#268699" /></td>
-          <td class="table-num">{{row['Returning Users']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Returning Users']" :max="report.traffic.data.max['Returning Users']" color="#268699" /></td>
-          <td class="table-num">{{row['Total Pageviews']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="report.traffic.data.max['Total Pageviews']" color="#268699" /></td>
-          <td class="table-num">{{row['Unique Pageviews']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="report.traffic.data.max['Unique Pageviews']" color="#268699" /></td>
-          <td class="table-num">{{row['Avg. Time']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="report.traffic.data.max['Avg. Time']" color="#268699" /></td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- <table class="data-table"> -->
+    <!--   <thead> -->
+    <!--     <tr> -->
+    <!--       <th>Top Referrers</th> -->
+    <!--       <th colspan="2">Unique Users <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined> -->
+    <!--       <b-button label="?" /> -->
+    <!--     </b-tooltip> -->
+    <!--         <a v-if="traffic_top_order == 'unique_users_desc'" @click="traffic_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+    <!--         <a v-else-if="traffic_top_order == 'unique_users_asc'" @click="traffic_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+    <!--         <a v-else @click="traffic_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+    <!--       </th> -->
+    <!--       <th colspan="2">New Users <b-tooltip label="First time visitors." position="is-top" append-to-body multilined> -->
+    <!--       <b-button label="?" /> -->
+    <!--     </b-tooltip> -->
+    <!--         <a v-if="traffic_top_order == 'new_users_desc'" @click="traffic_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+    <!--         <a v-else-if="traffic_top_order == 'new_users_asc'" @click="traffic_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+    <!--         <a v-else @click="traffic_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+    <!--       </th> -->
+    <!--       <th colspan="2">Returning Users <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined> -->
+    <!--       <b-button label="?" /> -->
+    <!--     </b-tooltip> -->
+    <!--         <a v-if="traffic_top_order == 'returning_users_desc'" @click="traffic_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+    <!--         <a v-else-if="traffic_top_order == 'returning_users_asc'" @click="traffic_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+    <!--         <a v-else @click="traffic_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+    <!--       </th> -->
+    <!--       <th colspan="2">Total Pageviews <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined> -->
+    <!--       <b-button label="?" /> -->
+    <!--     </b-tooltip> -->
+    <!--         <a v-if="traffic_top_order == 'total_pageviews_desc'" @click="traffic_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+    <!--         <a v-else-if="traffic_top_order == 'total_pageviews_asc'" @click="traffic_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+    <!--         <a v-else @click="traffic_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+    <!--       </th> -->
+    <!--       <th colspan="2">Unique Pageviews <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined> -->
+    <!--       <b-button label="?" /> -->
+    <!--     </b-tooltip> -->
+    <!--         <a v-if="traffic_top_order == 'unique_pageviews_desc'" @click="traffic_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+    <!--         <a v-else-if="traffic_top_order == 'unique_pageviews_asc'" @click="traffic_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+    <!--         <a v-else @click="traffic_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+    <!--       </th> -->
+    <!--       <th colspan="2">Avg. Time <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined> -->
+    <!--       <b-button label="?" /> -->
+    <!--     </b-tooltip> -->
+    <!--         <a v-if="traffic_top_order == 'average_time_desc'" @click="traffic_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+    <!--         <a v-else-if="traffic_top_order == 'average_time_asc'" @click="traffic_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+    <!--         <a v-else @click="traffic_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+    <!--       </th> -->
+    <!--     </tr> -->
+    <!--   </thead> -->
+    <!--   <tbody> -->
+    <!--     <tr v-for="row in traffic_top_sorted"> -->
+    <!--       <td>{{row['name']}}</td> -->
+    <!--       <td class="table-num">{{row['Unique Users']}}</td> -->
+    <!--       <td class="table-bar"><comparison-bar :value="row['Unique Users']" :max="report.traffic.data.max['Unique Users']" color="#268699" /></td> -->
+    <!--       <td class="table-num">{{row['New Users']}}</td> -->
+    <!--       <td class="table-bar"><comparison-bar :value="row['New Users']" :max="report.traffic.data.max['New Users']" color="#268699" /></td> -->
+    <!--       <td class="table-num">{{row['Returning Users']}}</td> -->
+    <!--       <td class="table-bar"><comparison-bar :value="row['Returning Users']" :max="report.traffic.data.max['Returning Users']" color="#268699" /></td> -->
+    <!--       <td class="table-num">{{row['Total Pageviews']}}</td> -->
+    <!--       <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="report.traffic.data.max['Total Pageviews']" color="#268699" /></td> -->
+    <!--       <td class="table-num">{{row['Unique Pageviews']}}</td> -->
+    <!--       <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="report.traffic.data.max['Unique Pageviews']" color="#268699" /></td> -->
+    <!--       <td class="table-num">{{row['Avg. Time']}}</td> -->
+    <!--       <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="report.traffic.data.max['Avg. Time']" color="#268699" /></td> -->
+    <!--     </tr> -->
+    <!--   </tbody> -->
+    <!-- </table> -->
   </div>
   </div>
   <div v-else-if="state=='domain'">
