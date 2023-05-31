@@ -57,6 +57,9 @@ export default {
 
     computed: {
         bar_width() {
+            if(this.max == 0) {
+                return '0';
+            }
             let span = this.max - this.min;
             let val = Math.min(this.value, this.max) - this.min;
             return `${100 * (val / span)}%`;
