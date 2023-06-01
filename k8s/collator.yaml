@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-collator
-        image: scistarter/circuit-collator:0.1.21
+        image: scistarter/circuit-collator:0.1.23
         ports:
         - containerPort: 9000
         volumeMounts:
