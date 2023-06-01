@@ -37,7 +37,17 @@ ORDER BY
     let mut max = HostsDataChart::default();
     let mut hosts = Vec::with_capacity(total_hosts.try_into().unwrap_or(1024));
 
-    for host_name in host_names {
+    for (i, host_name) in host_names.into_iter().enumerate() {
+        println!(
+            "{} ... [{}: {:?}] {} / {} {}",
+            Utc::now(),
+            org.id.unwrap_or(0),
+            &org.exterior.name,
+            i,
+            total_hosts,
+            &host_name,
+        );
+
         let row = sqlx::query!(
             r#"
 SELECT

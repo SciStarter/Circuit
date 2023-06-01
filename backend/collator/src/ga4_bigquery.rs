@@ -19,8 +19,6 @@ use uuid::Uuid;
 
 use crate::reportiter::BQReportIterator;
 
-const MAX_CONCURRENT_QUERIES: u32 = 1000;
-
 static FIELD_SUBSTITUTIONS: Lazy<BTreeMap<String, String>> = Lazy::new(|| {
     [
         (
