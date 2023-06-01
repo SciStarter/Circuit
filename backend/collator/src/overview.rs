@@ -259,8 +259,9 @@ SELECT "data" AS "data!" FROM c_demographics WHERE "about" = $1
 "#,
             Uuid::nil()
         )
-        .fetch_one(db)
-        .await?,
+        .fetch_optional(db)
+        .await?
+        .expect("No demographics data uploaded"),
     )?;
 
     let mut states_max = DetailedEngagementDataChart::default();

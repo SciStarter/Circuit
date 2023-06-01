@@ -122,6 +122,7 @@ async fn main() -> tide::Result<()> {
 
     let mut app = tide::with_state(pool);
 
+    #[cfg(not(debug_assertions))]
     app.with(
         CorsMiddleware::new()
             .allow_methods(

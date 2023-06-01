@@ -151,7 +151,7 @@ async fn process(db: &Database, cycle: u64) -> Result<(), Box<dyn std::error::Er
 
         let opp_tasks_total = opp_tasks.len();
         for (i, opp_fut) in opp_tasks.into_iter().enumerate() {
-            opp_fut.await?;
+            let _ = opp_fut.await?;
             println!(
                 "{} [{}][{:?}] Finished caching {} / {} opportunities",
                 Utc::now(),
@@ -321,7 +321,7 @@ ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
             }
 
             for part_fut in partner_tasks {
-                part_fut.await?;
+                let _ = part_fut.await?;
             }
 
             println!(
