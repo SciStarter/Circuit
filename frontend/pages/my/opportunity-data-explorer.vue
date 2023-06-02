@@ -6,12 +6,33 @@
 
   <div class="filters">
     <div class="stack">
+    
+      <template v-if="opps.length > 10">
+      <b-field label="Find your opportunity">
+        <b-autocomplete
+                v-model="autocomplete_opp"
+                :data="filteredOpps" 
+                :field="'title'"
+                @select="load_autocomplete($event)"
+                expanded
+                open-on-focus
+                clearable
+                dropdown-position="bottom"
+                >
+                <template #empty>No results found</template>
+            </b-autocomplete>
+      </b-field>
+    </template>
+
+    <template v-else>
       <label>Opportunity</label>
       <b-select :value="current_opp" @input="load_opp($event)">
         <option v-for="opp in opps" :key="opp.id" :value="opp">
           {{opp.title.slice(0, 64)}}
         </option>
       </b-select>
+    </template>
+
     </div>
   </div>
 
@@ -605,6 +626,7 @@ export default {
             traffic_top_order: 'unique_users_desc',
             selected_state: null,
             selected_attr: "Unique Users",
+            autocomplete_opp:''
         }
     },
 
@@ -824,6 +846,15 @@ export default {
                 return this.report.traffic.data.table;
             }
         },
+        filteredOpps(){
+          if (this.autocomplete_opp !== null) {
+            return this.opps.filter((opp) => {
+              return opp.title.toString().toLowerCase().indexOf(this.autocomplete_opp.toLowerCase()) >= 0
+            })
+          } else {
+            return this.opps
+          }
+        }
     },
 
     methods: {
@@ -844,6 +875,7 @@ export default {
             });
             this.report = info;
             this.current_opp = opp;
+            this.autocomplete_opp = opp.title;
             loading.close();
         },
 
@@ -916,7 +948,20 @@ export default {
                 structured
             );
         },
+        load_autocomplete(opp){
+          if (opp){
+            this.load_opp(opp);
+          } else {
+            this.autocomplete_opp = this.current_opp.title;
+          }
+        }
     },
+    watch:{
+      current_opp(new_opp){
+       this.autocomplete_opp = new_opp.title
+      }
+
+    }
 }
 </script>
 
@@ -1356,6 +1401,13 @@ $lightblue: #BFDCE2;
     small {
       display: block;
       margin-bottom: 2rem;
+    }
+  }
+
+  .filters .stack {
+    :deep(.autocomplete.control.is-expanded){
+      width:400px;
+      max-width: 90%;
     }
   }
 
