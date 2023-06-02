@@ -161,7 +161,7 @@
     <choropleth-states v-if="selected_state === null" :value="report.states.data.states" attr="Unique Users" @state="select_state($event)"/>
     <div v-else>
       <a @click="selected_state = null">← Back to US Map</a>
-      <b-select v-model="selected_attr" placeholder="Select Data Type">
+      <b-select v-model="selected_attr" placeholder="Select Data Type" style="margin-bottom:20px">
         <option>Unique Users</option>
         <option>New Users</option>
         <option>Returning Users</option>
@@ -221,7 +221,7 @@
           </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody v-if="states_top_sorted.length > 0">
         <tr v-for="row in states_top_sorted">
           <td v-if="selected_state === null"><a @click="select_state(row['name'])">{{row['name']}}</a></td>
           <td v-else>{{row['name']}}</td>
@@ -237,6 +237,11 @@
           <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="states_max['Unique Pageviews']" color="#268699" /></td>
           <td class="table-num">{{(row['Avg. Time'] / 1000).toFixed(2)}}</td>
           <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="states_max['Avg. Time']" color="#268699" /></td>
+        </tr>
+      </tbody>
+      <tbody v-else>
+        <tr>
+          <td colspan="13">No Data to Display</td>
         </tr>
       </tbody>
     </table>
@@ -430,7 +435,7 @@
           </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody v-if="traffic_top_sorted.length > 0">
         <tr v-for="row in traffic_top_sorted">
           <td>{{row['name']}}</td>
           <td class="table-num">{{row['Unique Users']}}</td>
@@ -445,6 +450,11 @@
           <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="report.traffic.data.max['Unique Pageviews']" color="#268699" /></td>
           <td class="table-num">{{row['Avg. Time']}}</td>
           <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="report.traffic.data.max['Avg. Time']" color="#268699" /></td>
+        </tr>
+      </tbody>
+      <tbody v-else>
+        <tr>
+          <td colspan="13">No Data to Display</td>
         </tr>
       </tbody>
     </table>
@@ -518,7 +528,7 @@
         </b-tooltip></th>
         </tr>
       </thead>
-      <tbody>
+      <tbody v-if="report.overlap.data.table.length > 0">
         <tr v-for="row in report.overlap.data.table">
           <td>{{row.name}}</td>
           <td class="table-num">{{percent(row.overlap)}}</td>
@@ -531,6 +541,11 @@
           <td v-else><small>N/A</small></td>
           <td v-if="row.max_age < 999">{{row.max_age}}</td>
           <td v-else><small>N/A</small></td>
+        </tr>
+      </tbody>
+      <tbody v-else>
+        <tr>
+          <td colspan="11">No Data to Display</td>
         </tr>
       </tbody>
     </table>

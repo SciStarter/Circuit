@@ -22,7 +22,7 @@
     </div>
   </div> -->
 
-  <div class="tree-wrap">
+  <div class="tree-wrap" v-if="report.data.total_hosts > 0">
     <client-only>
       <treemap :treemap_data="report.data.hosts" />
     </client-only>
@@ -48,13 +48,18 @@
         </th>
       </tr>
     </thead>
-    <tbody>
+    <tbody v-if="hosts_top_sorted.length > 0">
       <tr v-for="row in hosts_top_sorted">
         <td>{{row.name}}</td>
         <td class="table-num">{{row.total}}</td>
         <td class="table-bar"><comparison-bar :value="row.total" :max="report.data.max.total" color="#268699" /></td>
         <td class="table-num">{{row.live}}</td>
         <td class="table-bar"><comparison-bar :value="row.live" :max="report.data.max.live" color="#268699" /></td>
+      </tr>
+    </tbody>
+    <tbody v-else>
+      <tr>
+        <td colspan="5">No Data to Display</td>
       </tr>
     </tbody>
   </table>
@@ -116,7 +121,7 @@
         </th>
       </tr>
     </thead>
-    <tbody>
+    <tbody v-if="engagement_top_sorted.length > 0">
       <tr v-for="row in engagement_top_sorted">
         <td>{{row.name}}</td>
         <td class="table-num">{{row.views}}</td>
@@ -133,6 +138,11 @@
         <td class="table-bar"><comparison-bar :value="row.shares" :max="report.data.max.shares" color="#268699" /></td>
         <td class="table-num">{{row.calendar_adds}}</td>
         <td class="table-bar"><comparison-bar :value="row.calendar_adds" :max="report.data.max.calendar_adds" color="#268699" /></td>
+      </tr>
+    </tbody>
+    <tbody v-else>
+      <tr>
+        <td colspan="13">No Data to Display</td>
       </tr>
     </tbody>
   </table>

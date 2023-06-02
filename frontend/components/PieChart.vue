@@ -1,6 +1,14 @@
 <template>
-<div :class="{'simplify':simplify}">
-  <canvas ref="display"/>
+<div>
+
+    <div v-if="!hasData" id="no-data">
+        <h1>No Data to Display</h1>
+    </div>
+
+    <div v-else :class="{'simplify':simplify}">
+        <canvas ref="display" />
+    </div>
+
 </div>
 </template>
 
@@ -34,19 +42,38 @@ export default {
           chart: null,  
         };
     },
+    
+    computed:{
+        hasData(){
+            if (this.data.datasets[0].data.length == 0){
+                return false;
+            } else if (this.data.datasets[0].data.reduce( (num,total) => total + num ) == 0){
+                return false;
+            } else {
+                return true;
+            }
+        }
+    },
 
     watch: {
         data() {
-            this.refresh();
+            if (this.hasData) {
+                this.refresh();
+            }
+             
         },
 
         doughnut() {
-            this.refresh();
+            if (this.hasData) {
+                this.refresh();
+            }
         },
     },
 
     mounted() {
-        this.refresh();
+        if (this.hasData) {
+                this.refresh();
+            }
     },
 
     methods: {
@@ -94,5 +121,15 @@ div.simplify {
     width: 100px;
     height: 100px;
     margin: 0;
+}
+#no-data {
+    padding:3rem;
+    text-align: center;
+    h1 {
+        font-weight: bold;
+    }
+    p {
+        font-size: .8rem;
+    }
 }
 </style>
