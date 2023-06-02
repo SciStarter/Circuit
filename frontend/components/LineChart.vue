@@ -1,5 +1,11 @@
 <template>
-<div ref="display"></div>
+<div>
+    <div ref="display" v-if="rows.length > 0"></div>
+    <div v-else id="no-data">
+        <h1>No Data to Display</h1>
+        <p>Please select another time period</p>
+    </div>
+</div>
 </template>
 
 <script>
@@ -50,7 +56,9 @@ export default {
                 return;
             }
 
-            this.set_chart()
+            if(this.rows.length > 0){
+             this.set_chart()
+            }
         },
 
         lines(new_lines) {
@@ -64,7 +72,10 @@ export default {
 
     mounted() {
         this.getChartWidth();
-        this.set_chart();
+        if(this.rows.length > 0){
+            this.set_chart();
+        }
+        
     },
 
     methods: {
@@ -148,5 +159,15 @@ export default {
 div {
     width: 100%;
     height: 100%;
+}
+#no-data {
+    padding:3rem;
+    text-align: center;
+    h1 {
+        font-weight: bold;
+    }
+    p {
+        font-size: .8rem;
+    }
 }
 </style>
