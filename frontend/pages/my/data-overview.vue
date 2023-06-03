@@ -131,6 +131,52 @@
     </table>
   </div>
 
+   <!-- KEYWORD BY LOCATION & TIME PERIOD-->
+   <h2 class="h2sep">User Searches</h2>
+   <div class="filters">
+      <div class="stack">
+        <label>Location of User</label>
+        <b-select :v-model="location_us" @input="get_us_state($event)" style="margin-bottom: 10px;">
+          <option key="all" value="all" selected>All States</option>
+          <option v-for="s in us_states" :key="s.abbreviation" :value="s.abbreviation">{{ s.name }}</option>
+        </b-select>
+        <b-select v-if="show_metro">
+          <option selected>All Areas</option>
+          <option>Daniel fill me with metro areas</option>
+        </b-select>
+      </div>
+      <div class="stack">
+        <label>Time Period</label>
+        <!-- <b-select :value="report[org].engagement.data.time_period" @input="load_data_into(report[org].organization, 0, $event, report[org].engagement.data.opportunity_status, 'engagement')">
+          <option v-for="period in report[org].engagement.time_periods" :key="period" :value="period">
+            {{period}}
+          </option>
+        </b-select> -->
+      </div>
+    </div>
+   <div class="data-table-wrapper">
+    <table class="data-table">
+      <thead>
+      <tr>
+        <th class="narrow-column">Top Searches by Keyword</th>
+        <th colspan="2">Total Searches</th>
+      </tr>
+    </thead>
+   <!--  <tbody v-if="report.engagement.data.searches.length > 0">
+      <tr v-for="row in report.engagement.data.searches">
+        <td class="narrow-column">{{row.phrase}}</td>
+        <td class="table-num">{{row.searches}}</td>
+        <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
+      </tr> 
+    </tbody>
+    <tbody v-else>
+      <tr>
+        <td colspan="3">No Data to Display</td>
+      </tr>
+    </tbody>-->
+    </table>
+  </div>
+
   </div>
 
   <div v-else-if="state=='states'">
@@ -391,6 +437,9 @@
     <pie-chart :data="report[org].traffic.data.pie" />
       </div>
 
+
+
+
   <!-- # Disabled due to the fact that almost all sites no longer provide us with referrer information # -->
 
   <!--   <div class="data-table-wrapper"> -->
@@ -484,6 +533,7 @@ import EyeIcon from '~/assets/img/eye.svg?inline'
 import LinkIcon from '~/assets/img/link.svg?inline'
 import SortIcon from '~/assets/img/sort.svg?inline'
 import SortableIcon from '~/assets/img/sortable.svg?inline'
+import STATES from "~/assets/geo/states.json"
 
 export default {
     name: "MyDataOverview",
@@ -531,6 +581,9 @@ export default {
             traffic_top_order: 'unique_users_desc',
             selected_state: null,
             selected_attr: "Unique Users",
+            us_states: STATES,
+            location_us: "all",
+            show_metro: false
         }
     },
 
@@ -855,6 +908,15 @@ export default {
                 structured
             );
         },
+        get_us_state(s){
+          if (s == "all"){
+            /* get all state data */
+            this.show_metro = false;
+          } else {
+            /* get state data */
+            this.show_metro = true;
+          }
+        }
     },
 }
 </script>
@@ -1224,6 +1286,12 @@ aside {
   .snm-container {
     padding:1rem;
   }
+}
+.h2sep {
+  border-top:1px solid #efefef;
+  margin-bottom: 12px;
+  padding-top:16px;
+  font-size: 1.2rem;
 }
 
 </style>
