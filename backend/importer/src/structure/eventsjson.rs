@@ -73,10 +73,97 @@ where
     }
 }
 
+#[derive(Debug, Default)]
+pub enum Optional<Value> {
+    #[default]
+    Empty,
+    Value(Value),
+}
+
+impl<'de, T> serde::de::Deserialize<'de> for Optional<T>
+where
+    T: serde::de::Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct VisitOptional<V>(PhantomData<fn() -> V>);
+
+        impl<'de, V: serde::de::Deserialize<'de>> serde::de::Visitor<'de> for VisitOptional<V> {
+            type Value = Optional<V>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(
+                    formatter,
+                    "false, null, empty string, or {}",
+                    std::any::type_name::<V>()
+                )
+            }
+
+            fn visit_none<E>(self) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(Optional::Empty)
+            }
+
+            fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                if !v {
+                    Ok(Optional::Empty)
+                } else {
+                    Err(E::custom("non-false bool"))
+                }
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Optional<V>, E>
+            where
+                E: serde::de::Error,
+            {
+                if value.is_empty() {
+                    Ok(Optional::Empty)
+                } else {
+                    Err(E::custom("non-empty string"))
+                }
+            }
+
+            fn visit_map<M>(self, map: M) -> Result<Optional<V>, M::Error>
+            where
+                M: serde::de::MapAccess<'de>,
+            {
+                Ok(Optional::Value(Deserialize::deserialize(
+                    serde::de::value::MapAccessDeserializer::new(map),
+                )?))
+            }
+        }
+
+        deserializer.deserialize_any(VisitOptional(PhantomData))
+    }
+}
+
 #[derive(serde::Deserialize, Debug, Default)]
 #[serde(default)]
 struct Image {
     url: String,
+}
+
+#[derive(serde::Deserialize)]
+struct StateAlternates {
+    stateprovince: Option<String>,
+    state: Option<String>,
+}
+
+fn deserialize_state_alternates<'d, D: serde::Deserializer<'d>>(d: D) -> Result<String, D::Error> {
+    let StateAlternates {
+        stateprovince,
+        state,
+    } = StateAlternates::deserialize(d)?;
+    stateprovince
+        .or(state)
+        .ok_or_else(|| serde::de::Error::custom("`stateprovince` or `state` field is required"))
 }
 
 #[derive(serde::Deserialize, Debug, Default)]
@@ -86,7 +173,7 @@ struct Venue {
     name: String,
     address: String,
     city: String,
-    #[serde(alias = "stateprovince")]
+    #[serde(deserialize_with = "deserialize_state_alternates", flatten)]
     state: String,
     country: String,
     zip: String,
@@ -114,7 +201,7 @@ struct Data {
     utc_end_date: String,
     tags: Vec<StringOr<Tag>>,
     slug: String,
-    image: Option<Image>,
+    image: Optional<Image>,
     cost: Option<String>,
     description: String,
     title: String,
@@ -179,7 +266,7 @@ fn interpret_one<Tz: TimeZone>(
 
     opp.exterior.description = data.description;
 
-    if let Some(img) = data.image {
+    if let Optional::Value(img) = data.image {
         opp.exterior.image_url = img.url;
     }
 

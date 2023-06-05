@@ -7,6 +7,7 @@ use crate::model::involvement;
 use crate::{geo, Database, ToFixedOffset};
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
+use deunicode::deunicode;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -1498,7 +1499,7 @@ SELECT
 
 fn slugify(source: &str) -> String {
     SLUGIFY_REPLACE
-        .replace_all(source.trim(), "-")
+        .replace_all(&deunicode::deunicode(source.trim()), "-")
         .trim_end_matches("-") // Only trims from the trailing end of the string
         .to_lowercase()
 }
