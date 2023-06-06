@@ -38,14 +38,14 @@
       <div id="snm-total-opp-page-views" class="big-legend bl-blue">
           <div class="ll-icon"><eye-icon></eye-icon><strong>T</strong></div>
           <div>
-            <h2>{{report.engagement.data.stats.opportunity_views}}</h2>
+            <h2>{{Math.max(report.engagement.data.stats.opportunity_views, 6316)}}</h2> <!-- min from Google Analytics -->
             <h3>Total Opportunity Page Views</h3>
           </div>
       </div>
       <div id="snm-total-opp-unique" class="big-legend bl-blue">
         <div class="ll-icon"><eye-icon></eye-icon><strong>U</strong></div>
           <div>
-            <h2>{{report.engagement.data.stats.opportunity_unique}}</h2>
+            <h2>{{Math.max(report.engagement.data.stats.opportunity_unique, 5212)}}</h2> <!-- min from Google Analytics -->
             <h3>Unique Opportunity Page Views</h3>
           </div>
       </div>
