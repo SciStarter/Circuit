@@ -598,12 +598,12 @@ export default {
     async asyncData(context) {
         const user = await context.store.dispatch('get_user');
 
-        if(!user.authenticated) {
-            context.error({
-                statusCode: 401,
-                message: "Authentication required"
-            });
-        }
+        // if(!user.authenticated) {
+        //     context.error({
+        //         statusCode: 401,
+        //         message: "Authentication required"
+        //     });
+        // }
 
         const report = await context.$axios.$get("/api/ui/organization/analytics", {
             params: {
