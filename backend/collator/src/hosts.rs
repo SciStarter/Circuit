@@ -20,6 +20,7 @@ FROM
   c_opportunity
 WHERE
   "exterior"->>'organization_name' != '' AND
+  "exterior"->>'organization_name' != 'test' AND
   "created" < $1 AND
   ("exterior"->>'partner')::uuid = $2
 ORDER BY
