@@ -343,14 +343,12 @@ struct AnalyticsRequest {
 }
 
 pub async fn my_analytics(mut req: tide::Request<Database>) -> tide::Result {
-    let person = request_person(&mut req).await?.ok_or_else(|| {
-        tide::Error::from_str(tide::StatusCode::Forbidden, "Authorization required")
-    })?;
-
     if let Ok(params) = req.query::<AnalyticsRequest>() {
-        // if params.about != Uuid::nil() {
-        //     todo!() // auth check
-        // }
+        if params.about != Uuid::nil() {
+            let _person = request_person(&mut req).await?.ok_or_else(|| {
+                tide::Error::from_str(tide::StatusCode::Forbidden, "Authorization required")
+            })?;
+        }
 
         let data: serde_json::Value = sqlx::query!(
             r#"
@@ -380,6 +378,10 @@ WHERE
             okay(&data)
         }
     } else {
+        let person = request_person(&mut req).await?.ok_or_else(|| {
+            tide::Error::from_str(tide::StatusCode::Forbidden, "Authorization required")
+        })?;
+
         let mut partners = person
             .load_partners(req.state())
             .await?
