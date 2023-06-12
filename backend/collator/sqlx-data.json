@@ -381,27 +381,6 @@
     },
     "query": "SELECT SUM(\"views\")::bigint AS \"views: i64\", SUM(\"total_users\")::bigint AS \"unique: i64\" FROM c_analytics_cache WHERE \"opportunity\" = $1 AND \"begin\" = $2 AND \"end\" = $3"
   },
-  "2ed455e4ad112b50c3fe9857089fdbab3486c08730bd86d0ab26a58f2f80f0f2": {
-    "describe": {
-      "columns": [
-        {
-          "name": "host!: String",
-          "ordinal": 0,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "Timestamptz",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "\nSELECT DISTINCT\n  \"exterior\"->>'organization_name' AS \"host!: String\"\nFROM\n  c_opportunity\nWHERE\n  \"exterior\"->>'organization_name' != '' AND\n  \"created\" < $1 AND\n  (\"exterior\"->>'partner')::uuid = $2\nORDER BY\n  \"exterior\"->>'organization_name'\n"
-  },
   "3338dc12bc9dff109618923352b4877f2731258fc86fe5b0134c9c5ecdfea500": {
     "describe": {
       "columns": [
@@ -832,6 +811,27 @@
       }
     },
     "query": "\nSELECT \"session_channel_group\" AS \"group!\", SUM(\"views\")::bigint AS \"count: i64\"\nFROM c_analytics_cache\nWHERE \"partner\" = $1 AND \"date\" >= $2 AND \"date\" < $3 AND c_opportunity_by_uid_is_status(\"opportunity\", $4)\nGROUP BY \"session_channel_group\"\nORDER BY \"session_channel_group\"\n"
+  },
+  "5dfbb79c9c072828a607fe60ab2243bd9d8eecd0f9746532312dfd937de00c9d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "host!: String",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Timestamptz",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\nSELECT DISTINCT\n  \"exterior\"->>'organization_name' AS \"host!: String\"\nFROM\n  c_opportunity\nWHERE\n  \"exterior\"->>'organization_name' != '' AND\n  \"exterior\"->>'organization_name' != 'test' AND\n  \"created\" < $1 AND\n  (\"exterior\"->>'partner')::uuid = $2\nORDER BY\n  \"exterior\"->>'organization_name'\n"
   },
   "629b0180e7ba952577e82fea15103f2c5a61269cbd847659a3400c488e3b8fcf": {
     "describe": {
