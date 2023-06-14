@@ -161,11 +161,20 @@ struct ContentItemPage {
     content: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
+enum ContentItemAction {
+    #[default]
+    Store,
+    Delete,
+}
+
+#[derive(Deserialize, Default)]
+#[serde(default)]
 struct ContentItemForm {
     tags: String,
     label: String,
     content: String,
+    action: ContentItemAction,
 }
 
 async fn content_item(mut req: tide::Request<Database>) -> tide::Result {
@@ -174,13 +183,13 @@ async fn content_item(mut req: tide::Request<Database>) -> tide::Result {
         Err(resp) => return Ok(resp),
     };
 
-    let language = req.param("language")?.to_owned();
+    let language = urlencoding::decode(req.param("language")?)?.to_string();
     let language_name = common::LANGUAGES
         .get(&language)
         .unwrap_or(&language)
         .to_owned();
-    let group = req.param("group")?.to_owned();
-    let item = req.param("item")?.to_owned();
+    let group = urlencoding::decode(req.param("group")?)?.to_string();
+    let item = urlencoding::decode(req.param("item")?)?.to_string();
 
     let mut block = {
         let db = req.state();
@@ -201,11 +210,24 @@ async fn content_item(mut req: tide::Request<Database>) -> tide::Result {
     if let Method::Post = req.method() {
         let form: ContentItemForm = req.body_form().await?;
         let db = req.state();
-        block.tags = form.tags.trim().to_string();
-        block.label = form.label.trim().to_string();
-        block.content = form.content.trim().to_string();
-        block.store(db).await?;
-        return Ok(redirect(""));
+
+        match form.action {
+            ContentItemAction::Store => {
+                block.tags = form.tags.trim().to_string();
+                block.label = form.label.trim().to_string();
+                block.content = form.content.trim().to_string();
+                block.store(db).await?;
+                return Ok(redirect(""));
+            }
+            ContentItemAction::Delete => {
+                if let Some(id) = block.id {
+                    sqlx::query!("DELETE FROM c_block WHERE id = $1", id)
+                        .execute(db)
+                        .await?;
+                }
+                return Ok(redirect("."));
+            }
+        }
     } else {
         Ok(ContentItemPage {
             language_name,

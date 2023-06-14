@@ -135,15 +135,19 @@ pub async fn content(req: tide::Request<Database>) -> tide::Result {
                 .build())
         }
     } else {
-        let mut block = model::block::Block {
-            id: None,
-            language: query.language.to_string(),
-            group: query.group.to_string(),
-            item: query.item.to_string(),
-            ..Default::default()
-        };
+        // This was meant to make editing easier, but actually just
+        // resulted in flooding the menus with the results of various
+        // attempts to use SQL injection attacks on the site.
 
-        block.store(db).await?;
+        // let mut block = model::block::Block {
+        //     id: None,
+        //     language: query.language.to_string(),
+        //     group: query.group.to_string(),
+        //     item: query.item.to_string(),
+        //     ..Default::default()
+        // };
+
+        // block.store(db).await?;
 
         Ok(Response::builder(StatusCode::NotFound)
             .body(format!("{} {} {}", query.language, query.group, query.item))
