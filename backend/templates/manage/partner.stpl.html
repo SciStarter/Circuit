@@ -12,6 +12,34 @@
         <a href=".">Back to partners</a>
         <h1 class="title">Partner: <%= partner.exterior.name %></h1>
       </div>
+
+      <h2 class="title">Manager</h2>
+      <p>
+        <label>Name: </label> <%= partner.interior.manager.name %>
+      </p>
+      <p>
+        <label>Email: </label> <a href="mailto:<%= &partner.interior.manager.email %>"><%= &partner.interior.manager.email %></a>
+      </p>
+      <% if let Some(phone) = partner.interior.manager.phone { %>
+      <p>
+        <label>Phone: </label> <%= phone %>
+      </p>
+      <% } %>
+
+      <% if let Some(contact) = partner.interior.contact { %>
+      <h2 class="title">Contact</h2>
+      <p>
+        <label>Name: </label> <%= contact.name %>
+      </p>
+      <p>
+        <label>Email: </label> <a href="mailto:<%= &contact.email %>"><%= &contact.email %></a>
+      </p>
+      <% if let Some(phone) = contact.phone { %>
+      <p>
+        <label>Phone: </label> <%= phone %>
+      </p>
+      <% } %>
+      <% } %>
     </section>
   </body>
 </html>
