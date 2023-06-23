@@ -11,35 +11,41 @@
       <div class="container">
         <a href=".">Back to partners</a>
         <h1 class="title">Partner: <%= partner.exterior.name %></h1>
+
+        <h2 class="title is-4">Manager</h2>
+        <div class="field">
+          <label class="label">Name:</label>
+          <span><%= partner.interior.manager.name %></span>
+        </div>
+        <div class="field">
+          <label class="label">Email:</label>
+          <a href="mailto:<%= &partner.interior.manager.email %>"><%= &partner.interior.manager.email %></a>
+        </div>
+        <% if let Some(phone) = partner.interior.manager.phone { if !phone.is_empty() { %>
+        <div class="field">
+          <label class="label">Phone:</label>
+          <span><%= phone %></span>
+        </div>
+        <% } } %>
+
+        <% if let Some(contact) = partner.interior.contact { %>
+        <h2 class="title is-4">Contact</h2>
+        <div class="field">
+          <label class="label">Name:</label>
+          <span><%= contact.name %></span>
+        </div>
+        <div class="field">
+          <label class="label">Email:</label>
+          <a href="mailto:<%= &contact.email %>"><%= &contact.email %></a>
+        </div>
+        <% if let Some(phone) = contact.phone { if !phone.is_empty() { %>
+        <div class="field">
+          <label class="label">Phone:</label>
+          <span><%= phone %></span>
+        </div>
+        <% } } %>
+        <% } %>
       </div>
-
-      <h2 class="title">Manager</h2>
-      <p>
-        <label>Name: </label> <%= partner.interior.manager.name %>
-      </p>
-      <p>
-        <label>Email: </label> <a href="mailto:<%= &partner.interior.manager.email %>"><%= &partner.interior.manager.email %></a>
-      </p>
-      <% if let Some(phone) = partner.interior.manager.phone { %>
-      <p>
-        <label>Phone: </label> <%= phone %>
-      </p>
-      <% } %>
-
-      <% if let Some(contact) = partner.interior.contact { %>
-      <h2 class="title">Contact</h2>
-      <p>
-        <label>Name: </label> <%= contact.name %>
-      </p>
-      <p>
-        <label>Email: </label> <a href="mailto:<%= &contact.email %>"><%= &contact.email %></a>
-      </p>
-      <% if let Some(phone) = contact.phone { %>
-      <p>
-        <label>Phone: </label> <%= phone %>
-      </p>
-      <% } %>
-      <% } %>
     </section>
   </body>
 </html>
