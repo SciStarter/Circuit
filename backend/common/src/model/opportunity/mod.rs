@@ -1578,7 +1578,7 @@ impl Opportunity {
             ReviewStatus::NotRequired => true,
         };
 
-        let publish = self.interior.accepted && !self.interior.withdrawn;
+        let publish = self.interior.accepted == Some(true) && !self.interior.withdrawn;
 
         let num_starts = self.exterior.start_datetimes.len();
         let num_ends = self.exterior.end_datetimes.len();
