@@ -7,6 +7,7 @@
   <div class="nav-mobile-wrapper">
   <div class="nav-tab-wrapper">
     <ul class="nav-tabs nav-tabs-alt">
+      <li><a class="tab-link" :class="{'active':state=='opps'}" @click="state='opps'"><span>Opportunities</span><small>About the science opportunities on SNM</small></a></li>
       <li><a class="tab-link" :class="{'active':state=='engagement'}" @click="state='engagement'"><span>Engagement</span><small>How users interact with our site</small></a></li>
       <li><a class="tab-link" :class="{'active':state=='states'}" @click="state='states'"><span>Audience</span><small>Learn about SNM users</small></a></li>
       <li><a class="tab-link" :class="{'active':state=='traffic'}" @click="state='traffic'"><span>Traffic</span><small>How users get to our opportunities</small></a></li>
@@ -17,20 +18,172 @@
 
   <aside class="data-update">Date updated: {{updated_local}}</aside>
 
-  <div v-if="state=='engagement'">
+  <div v-if="state=='opps'">
+    <h3>Science Opportunities</h3>
+    <div id="opps-data" class="flex">
+        <div class="frow frow-top">
+          <div class="big-legend large-legend">
+            <logo-icon></logo-icon>
+            <div>
+              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h3>Total Opportunities</h3>
+              <h4>All Time</h4>
+            </div>
+          </div>
+          <div class="bars">
+            <div>
+              <div class="bar-label"><span>Active & Published <b-tooltip label="Opportunities users can currently find." position="is-top" append-to-body multilined>
+            <b-button label="?" /></b-tooltip></span><span><span class="legend-num">999</span>/3458</span></div>
+              <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+            </div>
+            <div>
+            <div class="bar-label"><span>Expired <b-tooltip label="Opportunities no longer available." position="is-top" append-to-body multilined>
+          <b-button label="?" /></b-tooltip></span><span><span class="legend-num">999</span>/3458</span></div>
+            <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          </div>
+          </div>
+        </div>
+        <div class="frow">
+          <div>
+            <div class="big-legend">
+            <in-person-icon></in-person-icon>
+            <div>
+              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h3>In person, in a place <b-tooltip label="Opportunities that individuals must go someplace. There may still be an online component, such as data entry." position="is-top" append-to-body multilined>
+          <b-button label="?" /></b-tooltip></h3>
+            </div>
+          </div>
+          <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          </div>
+          <div>
+            <div class="big-legend">
+            <online-icon></online-icon>
+            <div>
+              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h3>Online only <b-tooltip label="Opportunities that can be completed only online." position="is-top" append-to-body multilined>
+          <b-button label="?" /></b-tooltip></h3>
+            </div>
+          </div>
+          <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          </div> 
+        </div>
+        <div class="frow">
+          <div>
+            <div class="big-legend">
+            <global-icon></global-icon>
+            <div>
+              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h3>Global <b-tooltip label="Opportunities available to anyone in the world." position="is-top" append-to-body multilined>
+          <b-button label="?" /></b-tooltip></h3>
+            </div>
+          </div>
+          <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          </div>
+          <div>
+            <div class="big-legend">
+            <region-icon></region-icon>
+            <div>
+              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h3>In a region <b-tooltip label="Opportunities that span an area." position="is-top" append-to-body multilined>
+          <b-button label="?" /></b-tooltip></h3>
+            </div>
+          </div>
+          <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          </div> 
+          <div>
+            <div class="big-legend">
+            <point-icon></point-icon>
+            <div>
+              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h3>At a point location <b-tooltip label="Opportunities at a specific address." position="is-top" append-to-body multilined>
+          <b-button label="?" /></b-tooltip></h3>
+            </div>
+          </div>
+          <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          </div> 
+        </div>
+    </div>
+
+    <div id="map-explorer">
+      <img src="~/assets/img/data-icons/map-explorer.jpg" alt="map explorer" />
+      <div>
+        <p>Where are Science Near Me's Opportunities?</p>
+        <a href="/geo-explorer" class="action-btn btn-arrow">Visit the Map Explorer</a>
+      </div>
+    </div>
+
+    <div class="data-table-wrapper attribute-table">
+      <table class="data-table">
+        <thead>
+          <tr class="data-table-head">
+            <th colspan="5">
+              <h3>Science Opportunities by Attributes <b-tooltip label="View opportunities by various data attributes." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
+              <a :class="{'active':attribute=='domain'}" @click="attribute='domain'">Science Domain</a>
+              <a :class="{'active':attribute=='activity'}" @click="attribute='activity'">Activity Type</a>
+              <a :class="{'active':attribute=='indoor'}" @click="attribute='indoor'">Indoor/Outdoor</a>
+            </th>
+          </tr>
+          <tr>
+            <th colspan="1">
+              <div v-if="attribute=='domain'">Science Domain <b-tooltip label="Science domains are categories of public science defined by Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></div>
+              <div v-else-if="attribute=='activity'">Activity Type <b-tooltip label="Activity types are categories of the activity a participant will do during an opportunity." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></div>
+              <div v-else-if="attribute=='indoor'">Indoor/Outdoor <b-tooltip label="Where the opportunity takes place." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></div>
+            </th>
+            <th colspan="2">
+              All Time
+            </th>
+            <th colspan="2">
+              Currently Live
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in report.engagement.data.searches">
+            <td class="narrow-column">{{row.phrase}}</td>
+            <td class="table-num">{{row.searches}}</td>
+            <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
+            <td class="table-num">{{row.searches}}</td>
+            <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+    <div class="data-table-wrapper">
+    <table class="data-table">
+      <thead>
+      <tr>
+        <th class="narrow-column">Top Providers of Science Opportunities  <b-tooltip label="The organizations that provide the most science opportunities to Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></th>
+        <th colspan="2">Total Opportunities</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="row in report.engagement.data.searches">
+        <td class="narrow-column">{{row.phrase}}</td>
+        <td class="table-num">{{row.searches}}</td>
+        <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
+      </tr>
+    </tbody>
+    </table>
+  </div>
+
+  </div> <!-- state:opps -->
+
+  <div v-else-if="state=='engagement'">
 
 
     <div class="flex flex2">
       <div id="snm-unique-visitors" class="stack center big-legend">
         <telescope-icon></telescope-icon>
         <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
-        <h3>Unique SNM Visitors</h3>
+        <h3>Unique SNM Visitors <b-tooltip label="Individual users of Science Near Me counted." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
       </div>
-      <div id="snm-accounts" class="stack center big-legend">
+      <!-- <div id="snm-accounts" class="stack center big-legend">
         <atom-icon></atom-icon>
         <h2>{{report.engagement.data.stats.accounts}}</h2>
         <h3>SNM Accounts</h3>
-      </div>
+      </div> -->
     </div>
 
     <h3>Total Engagement</h3>
@@ -39,14 +192,14 @@
           <div class="ll-icon"><eye-icon></eye-icon><strong>T</strong></div>
           <div>
             <h2>{{Math.max(report.engagement.data.stats.opportunity_views, 6316)}}</h2> <!-- min from Google Analytics -->
-            <h3>Total Opportunity Page Views</h3>
+            <h3>Total Opportunity Page Views <b-tooltip label="Number of pages visited. One user may visit pages multiple times." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
           </div>
       </div>
       <div id="snm-total-opp-unique" class="big-legend bl-blue">
         <div class="ll-icon"><eye-icon></eye-icon><strong>U</strong></div>
           <div>
             <h2>{{Math.max(report.engagement.data.stats.opportunity_unique, 5212)}}</h2> <!-- min from Google Analytics -->
-            <h3>Unique Opportunity Page Views</h3>
+            <h3>Unique Opportunity Page Views <b-tooltip label="Page views without duplication of users." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
           </div>
       </div>
     </div>
@@ -56,21 +209,21 @@
         <div class="ll-icon"><link-icon></link-icon></div>
           <div>
             <h2>{{report.engagement.data.stats.opportunity_exits}}</h2>
-            <h3>Clicks to Websites</h3>
+            <h3>Clicks to Websites <b-tooltip label="Number of times Science Near Me refers a user to the opporutnity's website." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
           </div>
       </div>
       <div id="snm-self-reports" class="big-legend bl-blue">
         <div class="ll-icon"><plus-icon></plus-icon></div>
           <div>
             <h2>{{report.engagement.data.stats.didits}}</h2>
-            <h3>Self-Reports</h3>
+            <h3>Self-Reports <b-tooltip label="Number of times a user reports they have participated in an opportunity." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
           </div>
       </div>
       <div id="snm-saves" class="big-legend bl-blue">
         <div class="ll-icon"><save-icon></save-icon></div>
           <div>
             <h2>{{report.engagement.data.stats.saves}}</h2>
-            <h3>Saves</h3>
+            <h3>Saves <b-tooltip label="Number of times users have saved an opportunity on Science Near Me to their dashboard." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
           </div>
       </div>
     </div>
@@ -80,21 +233,21 @@
         <div class="ll-icon"><like-icon></like-icon></div>
           <div>
             <h2>{{report.engagement.data.stats.likes}}</h2>
-            <h3>Likes</h3>
+            <h3>Likes <b-tooltip label="Number of times a user likes an opportunity on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
           </div>
       </div>
       <div id="snm-shares" class="big-legend bl-blue">
         <div class="ll-icon"><share-icon></share-icon></div>
           <div>
             <h2>{{report.engagement.data.stats.shares}}</h2>
-            <h3>Shares</h3>
+            <h3>Shares <b-tooltip label="Number of times users share an opportunity from Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
           </div>
       </div>
       <div id="snm-calendar-adds" class="big-legend bl-blue">
         <div class="ll-icon calendar"><calendar-icon></calendar-icon></div>
           <div>
             <h2>{{report.engagement.data.stats.calendar_adds}}</h2>
-            <h3>Calendar Adds</h3>
+            <h3>Calendar Adds <b-tooltip label="Number of times users add an opportunity to their calendar via Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
           </div>
       </div>
     </div>
@@ -103,7 +256,7 @@
     <table class="data-table">
       <thead>
       <tr>
-        <th class="narrow-column">Top 30 Searches by Keyword</th>
+        <th class="narrow-column">Top 30 Searches by Keyword <b-tooltip label="Most used keyword searches on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></th>
         <th colspan="2">Total Searches</th>
       </tr>
     </thead>
@@ -449,7 +602,7 @@
 
     <div class="data-wrapper crush">
       <div class="data-head">
-          <h3>Referral Sources</h3>
+          <h3>Referral Sources  <b-tooltip label="How users arrive to Science Near Me before finding your opportunity." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
         </div>
     <pie-chart :data="report.traffic.data.pie" />
     </div>
@@ -526,6 +679,7 @@
   </div>
   <div v-else-if="state=='domain'">
     <h2>Engagement Overlap</h2>
+    <p>This chart describes the amount of times users visit Science Near Me opportunites across science domains.<b-tooltip label="Science domains are categories of public science defined by Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></p>
     <!-- views are the only interaction we can practicably collect -->
     <!-- <div> -->
     <!--   <b-select :value="report.crossover.data.engagement_type" @input="log('TBD download from server')" v-model="e_type"> -->
@@ -567,6 +721,12 @@ import LikeIcon from '~/assets/img/like.svg?inline'
 import ShareIcon from '~/assets/img/share.svg?inline'
 import TelescopeIcon from '~/assets/img/astronomy-and-space.svg?inline'
 import SaveIcon from '~/assets/img/saved-science-opportunities.svg?inline'
+import LogoIcon from '~/assets/img/logo.svg?inline'
+import InPersonIcon from '~/assets/img/data-icons/in-person.svg?inline'
+import OnlineIcon from '~/assets/img/data-icons/online.svg?inline'
+import GlobalIcon from '~/assets/img/data-icons/global.svg?inline'
+import RegionIcon from '~/assets/img/data-icons/region.svg?inline'
+import PointIcon from '~/assets/img/data-icons/point.svg?inline'
 
 
 export default {
@@ -583,7 +743,13 @@ export default {
       LikeIcon,
       ShareIcon,
       TelescopeIcon,
-      SaveIcon
+      SaveIcon,
+      LogoIcon,
+      InPersonIcon,
+      OnlineIcon,
+      GlobalIcon,
+      RegionIcon,
+      PointIcon
     },
 
     httpHeaders() {
@@ -622,14 +788,15 @@ export default {
 
     data() {
         return {
-            state: 'engagement',
+            state: 'opps',
             org: "Demo Org",
             states_top_order: 'unique_users_desc',
             technology_top_order: 'unique_users_desc',
             traffic_top_order: 'unique_users_desc',
             selected_state: null,
             selected_attr: "Unique Users",
-            e_type: "Views"
+            e_type: "Views",
+            attribute: 'domain'
         }
     },
 
@@ -1455,7 +1622,7 @@ $lightblue: #BFDCE2;
     }
   }
   .nav-tab-wrapper {
-    min-width: 840px;
+    min-width: 1000px;
   }
 
   .data-update {
@@ -1567,4 +1734,234 @@ $lightblue: #BFDCE2;
       }
     }
   }
+
+  #opps-data {
+    border: 1px solid $linework;
+    flex-direction: column;
+    margin-bottom: 1rem;
+    .frow {
+      display: flex;
+      flex-direction: row;
+      border-top: 1px solid $linework;
+      width: 100%;
+
+      &:first-child {
+        border-top: 0;
+      }
+
+      > div {
+        flex-grow: 1;
+        flex-basis: 0;
+        padding:2rem;
+        border-left:1px solid $linework;
+
+        &:first-child {
+          border-left:0;
+        }
+      }
+      svg {
+        max-width:60px;
+        margin-right: 1rem;
+      }
+      .big-legend.large-legend svg {
+        max-width: 160px;
+
+      }
+      .big-legend {
+      margin-bottom: 1rem;
+    }
+    .big-legend.large-legend {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 0;
+      h2 {
+        font-size: 2rem;
+      }
+      h3 {
+        font-size: 1.2rem;
+        line-height: 1.2;
+      }
+      h4 {
+        font-size:.8rem;
+      }
+    }
+
+    }
+
+   
+
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      font-size: .8rem;
+
+      .legend-num {
+        color: $snm-color-element-med;
+      }
+    }
+    .bars {
+      justify-content: center;
+        display: flex;
+        flex-direction: column;
+    }
+    .bars > div:first-child {
+      margin-bottom: 2rem;
+    }
+
+    :deep(.outer){
+      background-color: #efefef!important;
+    }
+
+
+  }
+
+  #map-explorer {
+    background-color: #F0FCFF;
+    display: flex;
+    border: 1px solid $linework;
+    margin-bottom: 1rem;
+
+    img {
+      margin-right: 2rem;
+    }
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    p {
+      font-weight: bold;
+    }
+  }
+
+  .action-btn {
+    --forground: #065E6F;
+    --background: #ffffff;
+    --border: #ffffff;
+    position: relative;
+    font-family: "Roboto", sans-serif;
+    font-size: 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin: 10px 0;
+    padding: 10px;
+    font-weight: bold;
+    color: var(--foreground);
+    background-color: var(--background);
+    flex-shrink: 0;
+    flex-grow: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    box-sizing: border-box;
+    height: 2.5rem;
+    line-height: 1;
+    width: 200px;
+  }
+  .btn-arrow {
+    --border: #1b4a54;
+    --background: #065E6F;
+    --foreground: #ffffff;
+    &:after {
+      content: "";
+    display: block;
+    position: absolute;
+    top: 0.255rem;
+    right: -0.8rem;
+    width: 30px;
+    height: 30px;
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    background-color: var(--background);
+    transform: rotate(50grad);
+    border-radius: 4px;
+    border-top-right-radius: 6px;
+    -webkit-clip-path: polygon(0 0, 100% 100%, 100% 0);
+    clip-path: polygon(0 0, 100% 100%, 100% 0);
+    box-sizing: border-box;
+    max-width: 200px;
+    }
+    &:hover {
+        background-color: #1b4a54;
+        color: #fff;
+        &:after {
+          background-color: #1b4a54;
+        }
+      }
+  }
+
+  .data-table-head {
+    border-bottom: 1px solid $linework;
+    h3 {
+      margin-top:0;
+    }
+
+    a {
+      text-decoration: underline;
+      margin-right: 12px;
+      font-size: .85rem;
+      font-weight: normal;
+      &.active {
+        text-decoration: none;
+        font-weight: bold;
+        color:#1A1A1A;
+        pointer-events: none;
+      }
+    }
+  }
+
+  .attribute-table {
+    .table-bar {
+      width: 20rem;
+    }
+  }
+
+  @media (max-width:680px){
+    #opps-data .frow-top {
+      flex-direction: column;
+      > div:last-child {
+        border: 0;
+        padding-top: 0;
+      }
+      >div:first-child {
+        padding-bottom: 0;
+      }
+    }
+  }
+  @media (max-width:635px){
+    #opps-data {
+      .frow {
+        flex-direction: column;
+        > div {
+          padding: 1rem;
+        }
+        > div:last-child {
+          border: 0;
+        }
+      }
+    }
+    #map-explorer {
+      padding: 1rem;
+    }
+    #map-explorer img {
+      display: none;
+    }
+  }
+
+  :deep(.b-tooltip) {
+      top: -3px;
+    }
+
+  .data-table-wrapper {
+    :deep(.b-tooltip) {
+      top: 0px;
+    }
+  }
+
 </style>

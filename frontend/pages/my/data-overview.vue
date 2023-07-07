@@ -15,11 +15,11 @@
     <div class="labels">
       <div class="stack">
         <label>{{report[org].total_opportunities}}</label>
-        <small>Opportunities<br>Total on SNM</small>
+        <small>Opportunities<br>Total on SNM <b-tooltip label="Number of science opportunities that have ever appeared Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></small>
       </div>
       <div class="stack">
         <label>{{report[org].current_opportunities}}</label>
-        <small>Opportunities<br>Current &amp; Future</small>
+        <small>Opportunities<br>Current &amp; Future <b-tooltip label="Number of science opportunities that currently appear Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></small>
       </div>
     </div>
   </div>
@@ -67,7 +67,7 @@
           <div class="ll-icon"><eye-icon></eye-icon></div>
           <div>
             <h2>{{report[org].engagement.data.totals['Views']}}</h2>
-            <h3>Page Views</h3>
+            <h3>Page Views <b-tooltip label="Number of times a page has been viewed. Total contains repeating users. Unique does not contain a user's repeated views." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
             <div class="ll-legend">
               <div><span class="dark-blue"></span> Total</div>
               <div><span class="light-blue"></span> Unique</div>
@@ -78,7 +78,7 @@
           <div class="ll-icon"><link-icon></link-icon></div>
           <div>
             <h2>{{report[org].engagement.data.totals['Clicks to Website']}}</h2>
-            <h3>Clicks to Website</h3>
+            <h3>Clicks to Website <b-tooltip label="Number of times Science Near Me refers a user to the opportunity's website." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
         </div>
         </div>
       </div>
@@ -97,7 +97,7 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Top Performing Opportunities</th>
+          <th>Top Performing Opportunities  <b-tooltip label="Opportunities with the most engagement on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></th>
           <th colspan="2">Total Views <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
           <b-button label="?" />
         </b-tooltip>
@@ -105,9 +105,7 @@
             <a v-else-if="engagement_top_order == 'total_views_asc'" @click="engagement_top_order = 'total_views_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="engagement_top_order = 'total_views_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">Clicks to Website <b-tooltip label="The number of times users clicked on the link to your website." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
+          <th colspan="2">Clicks to Website <b-tooltip label="The number of times users clicked on the link to your website." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip>
             <a v-if="engagement_top_order == 'clicks_desc'" @click="engagement_top_order = 'clicks_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="engagement_top_order == 'clicks_asc'" @click="engagement_top_order = 'clicks_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="engagement_top_order = 'clicks_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -158,7 +156,7 @@
     <table class="data-table">
       <thead>
       <tr>
-        <th class="narrow-column">Top Searches by Keyword</th>
+        <th class="narrow-column">Top Searches by Keyword  <b-tooltip label="Most used keyword searches on Science Near Me, by location selected." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></th>
         <th colspan="2">Total Searches</th>
       </tr>
     </thead>
@@ -432,7 +430,7 @@
 
     <div class="data-wrapper crush">
       <div class="data-head">
-          <h3>Referral Sources</h3>
+          <h3>Referral Sources  <b-tooltip label="How users arrive to Science Near Me before finding your opportunity." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
         </div>
     <pie-chart :data="report[org].traffic.data.pie" />
       </div>
