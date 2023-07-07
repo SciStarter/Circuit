@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
     <link rel="stylesheet" href="/api/docs/manage.css">
     <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.1/dist/cdn.min.js"></script>
     <title><%= &opportunity.exterior.partner_name %> : <%= &opportunity.exterior.title %> : Overlay</title>
   </head>
   <body>
@@ -38,7 +39,7 @@
           <div class="field">
             <div class="columns">
               <div class="column">
-                <label class="label">Opportunity Descriptors</label>
+                <label class="label">Opportunity Descriptors (a.k.a. Activity Types)</label>
               </div>
               <div class="column">
                 <span title="hold down contol or command to select multiple items" class="tag is-info">multiple select</span>
@@ -72,6 +73,34 @@
                   <% } %>
                 </select>
               </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="columns">
+              <div class="column">
+                <label class="label">Opportunity Tags</label>
+              </div>
+              <div class="column">
+                <span title="hold down contol or command to select multiple items" class="tag is-info">multiple select</span>
+              </div>
+            </div>
+            <div class="control" x-data="{ tags: <%= exterior["tags"].to_string() %> || [], add(val) { if(val && (this.tags.indexOf(val) < 0)) { this.tags.push(val) } }, remove(val) { this.tags = this.tags.filter(t => t !== val); } }">
+              <div class="tags">
+                <template x-for="tag in tags">
+                  <span class="tag is-primary">
+                    <span x-text="tag"></span>
+                    <button type="button" class="delete is-small" @click="remove(tag)"></button>
+                    <input type="hidden" name="tags[]" :value="tag">
+                  </span>
+                </template>
+              </div>
+              <input
+                type="text"
+                placeholder="new tag"
+                @change="add($event.target.value); $event.target.value = '';"
+                @keydown.enter.prevent="add($event.target.value); $event.target.value = '';"
+                >
             </div>
           </div>
 
@@ -113,6 +142,62 @@
                   <option value="false"<% if !exterior["is_online"].as_bool().unwrap_or(true) { %> selected<% } %>>No</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Location Type</label>
+            <div class="control">
+              <div class="select">
+                <select class="input" name="location_type">
+                  <option value="">Not Set</option>
+                  <% for opt in common::model::opportunity::LocationType::all_options() { %>
+                     <option value="<%= opt.0 %>"<% if opt.0 == exterior["location_type"].as_str().unwrap_or("") { %> selected<% } %>><%= opt.1 %></option>
+                  <% } %>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Location Name</label>
+            <div class="control">
+              <input type="text" name="location_name" value="<%= exterior["location_name"].as_str().unwrap_or("") %>">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Address: Street (For Location type "At")</label>
+            <div class="control">
+              <input type="text" name="address_street" value="<%= exterior["address_street"].as_str().unwrap_or("") %>">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Address: City (For Location type "At")</label>
+            <div class="control">
+              <input type="text" name="address_city" value="<%= exterior["address_city"].as_str().unwrap_or("") %>">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Address: State (For Location type "At")</label>
+            <div class="control">
+              <input type="text" name="address_state" value="<%= exterior["address_state"].as_str().unwrap_or("") %>">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Address: Country (For Location type "At")</label>
+            <div class="control">
+              <input type="text" name="address_country" value="<%= exterior["address_country"].as_str().unwrap_or("") %>">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Opportunity Address: Zip (For Location type "At")</label>
+            <div class="control">
+              <input type="text" name="address_zip" value="<%= exterior["address_zip"].as_str().unwrap_or("") %>">
             </div>
           </div>
 

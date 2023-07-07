@@ -407,10 +407,18 @@ struct OverlayForm {
     pes_domain: Option<common::model::opportunity::Domain>,
     opp_descriptor: Vec<common::model::opportunity::Descriptor>,
     opp_topics: Vec<common::model::opportunity::Topic>,
+    tags: Vec<String>,
     min_age: Option<i16>,
     max_age: Option<i16>,
     cost: Option<common::model::opportunity::Cost>,
     is_online: Option<bool>,
+    location_type: Option<common::model::opportunity::LocationType>,
+    location_name: Option<String>,
+    address_street: Option<String>,
+    address_city: Option<String>,
+    address_state: Option<String>,
+    address_country: Option<String>,
+    address_zip: Option<String>,
 }
 
 impl OverlayForm {
@@ -447,6 +455,12 @@ impl OverlayForm {
             delete(exterior, "opp_topics");
         }
 
+        if !self.tags.is_empty() {
+            exterior["tags"] = self.tags.clone().into();
+        } else {
+            delete(exterior, "tags");
+        }
+
         if let Some(min_age) = self.min_age {
             if min_age != -1 {
                 exterior["min_age"] = min_age.into();
@@ -477,6 +491,48 @@ impl OverlayForm {
             exterior["is_online"] = online.into();
         } else {
             delete(exterior, "is_online");
+        }
+
+        if let Some(loc) = self.location_type {
+            exterior["location_type"] = loc.to_option().0.into();
+        } else {
+            delete(exterior, "location_type");
+        }
+
+        if let Some(location_name) = self.location_name {
+            exterior["location_name"] = location_name.into();
+        } else {
+            delete(exterior, "location_name");
+        }
+
+        if let Some(address_street) = self.address_street {
+            exterior["address_street"] = address_street.into();
+        } else {
+            delete(exterior, "address_street");
+        }
+
+        if let Some(address_city) = self.address_city {
+            exterior["address_city"] = address_city.into();
+        } else {
+            delete(exterior, "address_city");
+        }
+
+        if let Some(address_state) = self.address_state {
+            exterior["address_state"] = address_state.into();
+        } else {
+            delete(exterior, "address_state");
+        }
+
+        if let Some(address_country) = self.address_country {
+            exterior["address_country"] = address_country.into();
+        } else {
+            delete(exterior, "address_country");
+        }
+
+        if let Some(address_zip) = self.address_zip {
+            exterior["address_zip"] = address_zip.into();
+        } else {
+            delete(exterior, "address_zip");
         }
     }
 }

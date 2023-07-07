@@ -1570,12 +1570,23 @@ impl Opportunity {
     }
 
     pub fn current_as_of(&self, now: &DateTime<FixedOffset>) -> bool {
+        let reviewed = match self.interior.review_status {
+            ReviewStatus::Draft => false,
+            ReviewStatus::Pending => false,
+            ReviewStatus::Reject => false,
+            ReviewStatus::Publish => true,
+            ReviewStatus::NotRequired => true,
+        };
+
+        let publish = self.interior.accepted == Some(true) && !self.interior.withdrawn;
+
         let num_starts = self.exterior.start_datetimes.len();
         let num_ends = self.exterior.end_datetimes.len();
         let start_in_future = self.exterior.start_datetimes.iter().any(|dt| dt > now);
         let end_in_future = self.exterior.end_datetimes.iter().any(|dt| dt > now);
+        let upcoming = (num_starts == 1 && num_ends == 0) || start_in_future || end_in_future;
 
-        (num_starts == 1 && num_ends == 0) || start_in_future || end_in_future
+        reviewed && publish && upcoming
     }
 
     pub fn expired_as_of(&self, now: &DateTime<FixedOffset>) -> bool {

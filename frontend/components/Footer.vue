@@ -9,6 +9,11 @@
         </nuxt-link>
       </li>
       <li>
+        <nuxt-link to="/my/snm-data-overview">
+          Data Overview
+        </nuxt-link>
+      </li>
+      <li>
         <nuxt-link to="/contact">
           Contact Us
         </nuxt-link>

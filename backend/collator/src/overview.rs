@@ -40,7 +40,10 @@ pub async fn cache(
             begin,
             end,
             None,
-            vec![],
+            vec![Dimension {
+                name: Some(String::from("customEvent:entity_uid")),
+                ..Default::default()
+            }],
             vec![Metric {
                 name: Some("sessions".into()),
                 ..Default::default()
