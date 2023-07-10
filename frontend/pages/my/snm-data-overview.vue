@@ -1825,6 +1825,7 @@ $lightblue: #BFDCE2;
 
     img {
       margin-right: 2rem;
+      max-width: 240px;
     }
 
     > div {
