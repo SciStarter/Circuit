@@ -19,6 +19,10 @@
   <aside class="data-update">Date updated: {{updated_local}}</aside>
 
   <div v-if="state=='opps'">
+
+    
+
+
     <h3>Science Opportunities</h3>
     <div id="opps-data" class="flex">
         <div class="frow frow-top">
@@ -149,6 +153,10 @@
       </table>
     </div>
 
+    <div class="wordcloud-wrapper">
+      <h3>Top 30 Keywords  <b-tooltip label="The most used keywords to describe opportunities on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
+      <word-cloud :words="keywords"></word-cloud>
+    </div>
 
     <div class="data-table-wrapper">
     <table class="data-table">
@@ -796,7 +804,8 @@ export default {
             selected_state: null,
             selected_attr: "Unique Users",
             e_type: "Views",
-            attribute: 'domain'
+            attribute: 'domain',
+            keywords: [['dinosaurs',99],['hamsters',32],['tacos',14],['muffins',199],['beach',99],['hot dogs',32],['Alyssa Milano',44],['animals',256],['minotaurs',46],['popcicles',102],['bioblitz',26],['blueberries',69],['sparrows',89],['wrens',54],['Gilligan',14],['bears',123]]
         }
     },
 
@@ -1921,6 +1930,13 @@ $lightblue: #BFDCE2;
     .table-bar {
       width: 20rem;
     }
+  }
+
+  .wordcloud-wrapper {
+    margin-bottom: 2rem;
+    border:1px solid $linework;
+    padding:0 1rem 1rem;
+    
   }
 
   @media (max-width:680px){
