@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  \"date\" AS \"date!: DateTime<FixedOffset>\",\n  SUM(\"views\")::bigint AS \"views: i64\",\n  SUM(\"sessions\")::bigint AS \"unique: i64\",\n  SUM(\"new_users\")::bigint AS \"new: i64\",\n  SUM(\"sessions\")::bigint - SUM(\"new_users\")::bigint AS \"returning: i64\",\n  (\n    SELECT COUNT(*)\n    FROM c_log\n    WHERE\n      \"action\" = 'external' AND\n      \"object\" = $1 AND\n      \"when\"::date = c_analytics_cache.\"date\"::date\n  ) AS \"clicks: i64\"\nFROM c_analytics_cache\nWHERE \"opportunity\" = $1 AND \"date\" >= $2 AND \"date\" < $3\nGROUP BY \"date\"\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "date!: DateTime<FixedOffset>",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "views: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "unique: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "new: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "returning: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "clicks: i64",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "5568a6d6e9c135a877bfd3301ae9e6eceec1a2771e49360db611b1d7d1c59206"
+}

@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT \"session_channel_group\" AS \"group!\", SUM(\"views\")::bigint AS \"count: i64\"\nFROM c_analytics_cache\nWHERE \"date\" >= $1 AND \"date\" < $2 AND c_opportunity_by_uid_is_status(\"opportunity\", $3)\nGROUP BY \"session_channel_group\"\nORDER BY \"session_channel_group\"\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "group!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "count: i64",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "0921182a0d799c405897230628b758107fe36baff40c84db18b1f3cff54ad83d"
+}

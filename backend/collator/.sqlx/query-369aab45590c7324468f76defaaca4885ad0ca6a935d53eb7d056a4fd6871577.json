@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select (exterior ->> 'uid')::uuid as uid from c_opportunity where lower($1::text) = lower(exterior ->> 'slug') limit 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uid",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "369aab45590c7324468f76defaaca4885ad0ca6a935d53eb7d056a4fd6871577"
+}

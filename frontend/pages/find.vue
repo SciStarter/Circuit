@@ -304,7 +304,6 @@ function from_qs (qs, names) {
 
 function empty_query() {
     return {
-        physical: 'in-person-or-online',
         beginning: (new Date()).toISOString(),
         sort: 'closest',
         partner_text: "",
@@ -343,6 +342,7 @@ export default {
             'beginning',
             'ending',
             'physical',
+            'temporal',
             'min_age',
             'max_age',
             'topics[]',
@@ -373,6 +373,29 @@ export default {
         const descriptors = await context.store.dispatch('get_descriptors');
         const topics = await context.store.dispatch('get_topics');
 
+        let qf_location = null;
+        let qf_time = null;
+
+        if(query.physical == 'in-person') {
+            qf_location = 'In Person';
+        }
+        else if(query.physical == 'online') {
+            qf_location = 'Online';
+        }
+        else {
+            Vue.delete(query, 'physical');
+        }
+
+        if(query.temporal == 'scheduled') {
+            qf_time = 'Scheduled';
+        }
+        else if(query.temporal == 'on-demand') {
+            qf_time = 'On Demand';
+        }
+        else {
+            Vue.delete(query, 'temporal');
+        }
+
         const local = {
             filtering: false,
             pagination: {
@@ -385,6 +408,8 @@ export default {
             descriptors,
             topics,
             opportunities: [],
+            quickfilter_location: qf_location,
+            quickfilter_time: qf_time
         };
 
         return Object.assign(local, results);
@@ -395,8 +420,6 @@ export default {
             loading: false,
             location_valid: true,
             query: Object.assign(empty_query(), this.$route.query),
-            quickfilter_location: null,
-            quickfilter_time: null
         };
     },
 
@@ -756,21 +779,47 @@ export default {
                 this.$nuxt.$loading.finish();
             }
         }, 1000, {trailing: true}),
+
         quickFilterLocation(value,event){
-          if (value == this.quickfilter_location) {
-            this.quickfilter_location = null;
-          } else {
-            this.quickfilter_location = value;
-          }
-          // DO FILTER
+            if (value == this.quickfilter_location) {
+                this.quickfilter_location = null;
+            } else {
+                this.quickfilter_location = value;
+            }
+
+            switch(this.quickfilter_location) {
+            case "In Person":
+                Vue.set(this.query, 'physical', 'in-person');
+                break;
+            case "Online":
+                Vue.set(this.query, 'physical', 'online');
+                break;
+            default:
+                Vue.delete(this.query, 'physical');
+            }
+
+            this.set_query_interactive('page', 0)
         },
+
         quickFilterTime(value,event){
-          if (value == this.quickfilter_time) {
-            this.quickfilter_time = null;
-          } else {
-            this.quickfilter_time = value;
-          }
-          // DO FILTER
+            if (value == this.quickfilter_time) {
+                this.quickfilter_time = null;
+            } else {
+                this.quickfilter_time = value;
+            }
+
+            switch(this.quickfilter_time) {
+            case 'Scheduled':
+                Vue.set(this.query, 'temporal', 'scheduled');
+                break;
+            case 'On Demand':
+                Vue.set(this.query, 'temporal', 'on-demand');
+                break;
+            default:
+                Vue.delete(this.query, 'temporal');
+            }
+
+            this.set_query_interactive('page', 0);
         }
     }
 }

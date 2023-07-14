@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  \"date\" AS \"date!: DateTime<FixedOffset>\",\n  SUM(\"views\")::bigint AS \"views: i64\",\n  SUM(\"sessions\")::bigint AS \"unique: i64\",\n  SUM(\"new_users\")::bigint AS \"new: i64\",\n  COALESCE(SUM(\"sessions\")::bigint, 0) - COALESCE(SUM(\"new_users\")::bigint, 0) AS \"returning: i64\",\n  (\n    SELECT COUNT(*)\n    FROM c_log INNER JOIN c_opportunity ON c_log.\"object\" = (c_opportunity.exterior->>'uid')::uuid\n    WHERE\n      \"action\" = 'external' AND\n      \"when\"::date = c_analytics_cache.\"date\"::date\n  ) AS \"clicks: i64\"\nFROM c_analytics_cache\nWHERE \"date\" >= $1 AND \"date\" < $2 AND c_opportunity_by_uid_is_status(\"opportunity\", $3)\nGROUP BY \"date\"\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "date!: DateTime<FixedOffset>",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "views: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "unique: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "new: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "returning: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "clicks: i64",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "225c9352f9d9f062612f727644ed9e3ed4a026b3bb71352f06666645b417066b"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update c_partner set exterior = $2, interior = $3 where id = $1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "58321d77d0c4de7155c40c1f954c8345da576c96162f6c594163052fc92bea8a"
+}

@@ -308,6 +308,7 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
     query.partner = search.partner;
     query.prefer_partner = search.prefer_partner;
     query.current = Some(search.current.unwrap_or(true));
+    query.temporal = search.temporal;
 
     query.calendar = match (search.year, search.month) {
         (Some(y), Some(m)) => Some((y, m)),

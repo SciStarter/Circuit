@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update c_participation set exterior = $2, interior = $3 where id = $1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "84078fb24d45a8726b6e5f99612f933187ff24d3b9f8f990b207f4c95e6f9e49"
+}

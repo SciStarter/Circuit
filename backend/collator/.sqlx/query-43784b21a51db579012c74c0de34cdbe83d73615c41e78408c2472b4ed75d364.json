@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select R.\"id\", R.\"person\", R.\"rating\", R.\"comment\", R.\"when\",\n  case when P.\"exterior\" is not null then (P.\"exterior\" ->> 'username') else '' end as \"username\",\n  case when P.\"exterior\" is not null then (P.\"exterior\" ->> 'image_url') else '' end as \"image_url\"\nfrom c_opportunity_review R\ninner join c_opportunity O on R.opportunity_id = O.id\nleft outer join c_person P on R.person = (P.exterior ->> 'uid')::uuid\nwhere (O.exterior ->> 'slug') = $1 order by r.\"when\" desc;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "person",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "rating",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 3,
+        "name": "comment",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "when",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "image_url",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "43784b21a51db579012c74c0de34cdbe83d73615c41e78408c2472b4ed75d364"
+}

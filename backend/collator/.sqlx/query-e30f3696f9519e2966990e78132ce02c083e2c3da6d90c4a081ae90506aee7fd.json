@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c_refresh_log_by_when_this_year()",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "c_refresh_log_by_when_this_year",
+        "type_info": "Void"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e30f3696f9519e2966990e78132ce02c083e2c3da6d90c4a081ae90506aee7fd"
+}

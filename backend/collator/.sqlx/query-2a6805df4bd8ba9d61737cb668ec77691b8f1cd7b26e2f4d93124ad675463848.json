@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select exists(select 1 from c_opportunity where lower($1::text) = lower(exterior ->> 'slug')) as \"exists\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "2a6805df4bd8ba9d61737cb668ec77691b8f1cd7b26e2f4d93124ad675463848"
+}

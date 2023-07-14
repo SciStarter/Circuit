@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  c_opportunity_by_uid_domain(\"prior\") AS \"prior_domain!\",\n  c_opportunity_by_uid_domain(\"postor\") AS \"postor_domain!\"\nFROM c_transit\nWHERE\n  \"created\" >= $1 AND\n  \"created\" < $2 AND\n  c_opportunity_by_uid_domain(\"prior\") != c_opportunity_by_uid_domain(\"postor\") AND\n  c_opportunity_by_uid_domain(\"prior\") != '' AND\n  c_opportunity_by_uid_domain(\"postor\") != '' AND\n  c_opportunity_by_uid_is_status(\"prior\", $3) AND\n  c_opportunity_by_uid_is_status(\"postor\", $3)\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "prior_domain!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "postor_domain!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "683bc1c94adcdce4fe7da594521c289d17c0b1868fd1c02a5833224aa136d5d4"
+}

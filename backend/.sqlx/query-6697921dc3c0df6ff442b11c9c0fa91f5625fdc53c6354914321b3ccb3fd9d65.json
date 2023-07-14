@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select *\nfrom\n  (\n    ( -- Count each \"I did this\" in the timeframe as one\n      select\n        (I.exterior ->> 'opportunity')::uuid as \"opportunity!\",\n        (I.exterior ->> 'latest')::timestamptz as \"when!\"\n      from c_involvement I\n      where\n        (I.interior ->> 'participant') = $1::text\n      and\n        (I.exterior -> 'mode') = '30'::jsonb\n      and\n        (I.exterior ->> 'latest') >= $2::text\n      and\n        (I.exterior ->> 'latest') <= $3::text\n    )\n  union\n    ( -- Count each partner-reported contribution in the timeframe as one\n      select\n        (P.exterior ->> 'opportunity')::uuid as \"opportunity!\",\n        (P.exterior ->> 'when')::timestamptz as \"when!\"\n      from c_participation P\n      where\n        (P.interior ->> 'participant') = $1::text\n      and\n        (P.exterior ->> 'when') >= $2::text\n      and\n        (P.exterior ->> 'when') <= $3::text\n    )\n  ) as \"merged\"\norder by \"when!\" asc\n;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "opportunity!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "when!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "6697921dc3c0df6ff442b11c9c0fa91f5625fdc53c6354914321b3ccb3fd9d65"
+}

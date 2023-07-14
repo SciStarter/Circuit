@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select count(*) as total\nfrom c_involvement\nwhere\n  ($1::jsonb) @> (interior -> 'participant')\nand\n  case\n    when $2::integer is null then (exterior ->> 'mode')::integer >= 1\n    else (exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (exterior ->> 'mode')::integer <= $3::integer\n  end\n;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Jsonb",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "face724cbf013b6ed241a6468cbdf58d8729772221e67b6aee66dc9ba237e3bf"
+}

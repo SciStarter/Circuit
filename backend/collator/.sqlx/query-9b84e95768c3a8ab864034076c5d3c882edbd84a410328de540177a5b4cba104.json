@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  \"unique_visitors\" AS \"unique_visitors!\",\n  \"shares\" AS \"shares!\",\n  \"calendar_adds\" AS \"calendar_adds!\",\n  \"likes\" AS \"likes!\",\n  \"saves\" AS \"saves!\",\n  \"didits\" AS \"didits!\",\n  \"opportunity_views\" AS \"opportunity_views!\",\n  \"opportunity_unique\" AS \"opportunity_unique!\",\n  \"opportunity_exits\" AS \"opportunity_exits!\",\n  \"accounts\" AS \"accounts!\"\nFROM c_analytics_overview_cache\nWHERE\n  \"begin\" = $1 AND\n  \"end\" = $2\nLIMIT 1\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "unique_visitors!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "shares!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "calendar_adds!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "likes!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "saves!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "didits!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "opportunity_views!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "opportunity_unique!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "opportunity_exits!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "accounts!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9b84e95768c3a8ab864034076c5d3c882edbd84a410328de540177a5b4cba104"
+}

@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  \"term\" AS \"term!\",\n  \"times\" AS \"times!\"\nFROM c_analytics_search_term_cache\nWHERE\n  \"begin\" = $1 AND\n  \"end\" = $2\nORDER BY \"times\" DESC\nLIMIT 30\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "term!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "times!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "cfd77edde2735d504e7fd2b6914fa881facc5aa41c6222d751383198d0b870d9"
+}

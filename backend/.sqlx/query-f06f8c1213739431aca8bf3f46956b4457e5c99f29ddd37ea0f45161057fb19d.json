@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT (\"exterior\"->>'uid')::uuid AS \"uid!\" FROM c_opportunity",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uid!",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f06f8c1213739431aca8bf3f46956b4457e5c99f29ddd37ea0f45161057fb19d"
+}
