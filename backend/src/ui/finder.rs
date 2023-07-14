@@ -4,7 +4,7 @@ use common::{
     model::{
         opportunity::{
             Cost, Descriptor, EntityType, OpportunityQuery, OpportunityQueryOrdering,
-            OpportunityQueryPhysical, Topic, VenueType,
+            OpportunityQueryPhysical, OpportunityQueryTemporal, Topic, VenueType,
         },
         person::Permission,
         Opportunity, OpportunityExterior, Pagination, SelectOption,
@@ -250,6 +250,7 @@ struct SearchQuery {
     pub beginning: Option<DateTime<FixedOffset>>,
     pub ending: Option<DateTime<FixedOffset>>,
     pub physical: Option<OpportunityQueryPhysical>,
+    pub temporal: Option<OpportunityQueryTemporal>,
     pub min_age: Option<i16>,
     pub max_age: Option<i16>,
     pub topics: Option<Vec<Topic>>,
