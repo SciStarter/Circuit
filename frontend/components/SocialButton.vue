@@ -64,20 +64,28 @@ export default {
 
             const encode = encodeURIComponent;
 
+            let via = '';
+            let handle = '';
+            let title = '';
             const url = encode(this.url || ('https://sciencenearme.org/' + this.opportunity.slug));
-            const title = encode(this.title || this.opportunity.title);
-            const via = encode('SciNearMe_US');
             const hashtags = encode((this.hashtags.length ? this.hashtags : this.opportunity.opp_hashtags).join(',').replace(/#/g, ''));
 
             switch(this.mode) {
             case 'twitter':
+                via = encode('science_near_me');
+                handle = (!!this.opportunity?.opp_social_handles?.twitter) ? (' @' + this.opportunity.opp_social_handles.twitter) : "";
+                title = encode((this.title || this.opportunity.title) + handle);
                 return 'https://twitter.com/share?url=' + url + '&text=' + title + '&via=' + via + '&hashtags=' + hashtags;
             case 'facebook':
-                return 'https://www.facebook.com/sharer.php?u=' + url;
+                via = encode('https://www.facebook.com/find.science.near.me');
+                handle = (!!this.opportunity?.opp_social_handles?.facebook) ? (' from ' + this.opportunity.opp_social_handles.facebook) : "";
+                title = encode((this.title || this.opportunity.title) + handle + ' via ' + via);
+                return 'https://www.facebook.com/sharer.php?display=page&u=' + url + '&quote=' + title;
             case 'linkedin':
+                via = encode('science-near-me');
                 return 'https://www.linkedin.com/sharing/share-offsite/?url=' + url;
             case 'link':
-                return 'https://sciencenearme.org/' + this.opportunity.slug;
+                return this.url || ('https://sciencenearme.org/' + this.opportunity.slug);
             default:
                 return 'unknown';
             }
