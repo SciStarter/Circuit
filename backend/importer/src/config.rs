@@ -122,9 +122,11 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     }));
 
     importers.push(Box::new(Import {
-        source: source::EventsQLWithCustom::new("https://www.wisconsinsciencefest.org/graphql"),
+        // source: source::EventsQLWithCustom::new("https://www.wisconsinsciencefest.org/graphql"),
+        source: source::WordPressRest::new("https://www.wisconsinsciencefest.org/wp-json/tribe/events/v1/events/?status=publish&per_page=50"),
         format: format::Json,
-        structure: structure::EventsQL(PartnerInfo {
+        // structure: structure::EventsQL(PartnerInfo {
+        structure: structure::EventsJson(PartnerInfo {
             partner: "f390b07f-5e9b-5d19-bdab-d5e91401b7ff".parse().unwrap(),
             partner_name: "Wisconsin Science Festival".to_string(),
             partner_website: Some("https://www.wisconsinsciencefest.org/".to_string()),

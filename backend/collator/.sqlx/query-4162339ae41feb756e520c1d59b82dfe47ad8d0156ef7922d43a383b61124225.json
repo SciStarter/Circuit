@@ -1,0 +1,133 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT *\nFROM c_analytics_cache\nWHERE \"begin\" = $1 AND \"end\" = $2 AND \"partner\" = $3 AND c_opportunity_by_uid_is_status(\"opportunity\", $4)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "temporary",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "begin",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "end",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "opportunity",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "partner",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "city",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "device_category",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "first_session_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "session_channel_group",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "page_path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "page_referrer",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "region",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "views",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 14,
+        "name": "sessions",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 15,
+        "name": "events",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 16,
+        "name": "total_users",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 17,
+        "name": "new_users",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 18,
+        "name": "engagement_duration",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4162339ae41feb756e520c1d59b82dfe47ad8d0156ef7922d43a383b61124225"
+}

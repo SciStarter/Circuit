@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO c_log (\"action\", \"subject\", \"object\") VALUES ($1, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b6f1a444cdd6a8bc7b81f7a09a7ff87f05b56f705ec76882475c96b0de65f4a6"
+}

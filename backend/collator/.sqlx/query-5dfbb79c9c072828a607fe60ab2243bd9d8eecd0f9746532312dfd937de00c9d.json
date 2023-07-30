@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT DISTINCT\n  \"exterior\"->>'organization_name' AS \"host!: String\"\nFROM\n  c_opportunity\nWHERE\n  \"exterior\"->>'organization_name' != '' AND\n  \"exterior\"->>'organization_name' != 'test' AND\n  \"created\" < $1 AND\n  (\"exterior\"->>'partner')::uuid = $2\nORDER BY\n  \"exterior\"->>'organization_name'\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "host!: String",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5dfbb79c9c072828a607fe60ab2243bd9d8eecd0f9746532312dfd937de00c9d"
+}

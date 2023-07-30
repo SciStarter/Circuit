@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  AVG(\"clicks\")::bigint AS \"mean_clicks: i64\",\n  PERCENTILE_CONT(0.5) WITHIN GROUP (order by \"clicks\")::bigint AS \"median_clicks: i64\"\nFROM (\n  SELECT \"object\", COUNT(*) AS \"clicks\"\n  FROM c_log\n  WHERE \"action\" = 'external' AND \"when\" >= $1 AND \"when\" < $2\n  GROUP BY \"object\"\n) AS c_sub\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "mean_clicks: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "median_clicks: i64",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "3919d6e29e8f75bf3d88138c4a826ce26829df92a396d11f38f72ccab773512d"
+}

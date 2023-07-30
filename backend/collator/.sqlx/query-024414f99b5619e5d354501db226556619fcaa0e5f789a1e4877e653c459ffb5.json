@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  COUNT(*) AS \"count: i64\"\nFROM c_log\nWHERE\n  \"action\" = 'external' AND\n  \"object\" = $1 AND\n  \"when\" >= $2 AND\n  \"when\" < $3\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count: i64",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "024414f99b5619e5d354501db226556619fcaa0e5f789a1e4877e653c459ffb5"
+}

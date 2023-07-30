@@ -935,6 +935,15 @@ pub enum OpportunityQueryPhysical {
 
 #[derive(Serialize, Default, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
+pub enum OpportunityQueryTemporal {
+    #[default]
+    OnDemandOrScheduled,
+    Scheduled,
+    OnDemand,
+}
+
+#[derive(Serialize, Default, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
 pub enum OpportunityQueryOrdering {
     #[default]
     Alphabetical,
@@ -966,6 +975,7 @@ pub struct OpportunityQuery {
     pub prefer_partner: Option<Uuid>,
     pub near: Option<(f32, f32, f32)>,
     pub physical: Option<OpportunityQueryPhysical>,
+    pub temporal: Option<OpportunityQueryTemporal>,
     pub text: Option<String>,
     pub beginning: Option<DateTime<FixedOffset>>,
     pub ending: Option<DateTime<FixedOffset>>,
@@ -1327,6 +1337,18 @@ OR
 
                 // The area constant is ten thousand square miles in square meters
                 clauses.push(format!("(((${}::jsonb) @> (exterior -> 'is_online')) OR (location_polygon IS NOT NULL AND ST_Area(location_polygon, false) > 25899752356))", ParamValue::Bool(true).append(&mut params)));
+            }
+        }
+    }
+
+    if let Some(temporal) = &query.temporal {
+        match temporal {
+            OpportunityQueryTemporal::OnDemandOrScheduled => {}
+            OpportunityQueryTemporal::Scheduled => {
+                clauses.push("c_opportunity_is_scheduled(interior, exterior)".into());
+            }
+            OpportunityQueryTemporal::OnDemand => {
+                clauses.push("c_opportunity_is_ondemand(interior, exterior)".into());
             }
         }
     }

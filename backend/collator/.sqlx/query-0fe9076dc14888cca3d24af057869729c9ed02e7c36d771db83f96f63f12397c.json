@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  \"device_category\" AS \"device_category!: String\",\n  SUM(\"total_users\")::bigint AS \"unique_users: i64\",\n  SUM(\"new_users\")::bigint AS \"new_users: i64\",\n  COALESCE(SUM(\"total_users\")::bigint, 0) - COALESCE(SUM(\"new_users\")::bigint, 0) AS \"returning_users: i64\",\n  SUM(\"views\")::bigint AS \"total_pageviews: i64\",\n  SUM(\"sessions\")::bigint AS \"unique_pageviews: i64\",\n  AVG(\"engagement_duration\") AS \"average_time: f64\"\nFROM c_analytics_cache\nWHERE \"begin\" = $1 AND \"end\" = $2 AND c_opportunity_by_uid_is_status(\"opportunity\", $3)\nGROUP BY \"device_category\"\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "device_category!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "unique_users: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "new_users: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "returning_users: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_pageviews: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "unique_pageviews: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "average_time: f64",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "0fe9076dc14888cca3d24af057869729c9ed02e7c36d771db83f96f63f12397c"
+}

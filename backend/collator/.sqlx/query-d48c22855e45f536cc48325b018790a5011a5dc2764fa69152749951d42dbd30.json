@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  exterior->>'title' AS \"name!\",\n  exterior->>'slug' AS \"slug!\"\nFROM c_opportunity\nWHERE (exterior->>'uid')::uuid = $1 LIMIT 1\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "slug!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "d48c22855e45f536cc48325b018790a5011a5dc2764fa69152749951d42dbd30"
+}

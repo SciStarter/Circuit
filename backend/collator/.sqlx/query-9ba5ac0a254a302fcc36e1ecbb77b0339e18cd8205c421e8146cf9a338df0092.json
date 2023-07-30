@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select I.id, I.exterior, I.interior\nfrom c_involvement as I\nleft join c_opportunity as O\non (I.exterior -> 'opportunity') = (O.exterior -> 'uid')\nwhere\n  ($1::jsonb) @> (I.interior -> 'participant')\nand\n  O.fulltext_english @@ websearch_to_tsquery($4)\nand\n  case\n    when $2::integer is null then (I.exterior ->> 'mode')::integer >= 1\n    else (I.exterior ->> 'mode')::integer >= greatest($2::integer, 1)\n  end\nand\n  case\n    when $3::integer is null then true\n    else (I.exterior ->> 'mode')::integer <= $3::integer\n  end\norder by I.updated desc\nlimit $5 offset $6;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "exterior",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "interior",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Jsonb",
+        "Int4",
+        "Int4",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9ba5ac0a254a302fcc36e1ecbb77b0339e18cd8205c421e8146cf9a338df0092"
+}

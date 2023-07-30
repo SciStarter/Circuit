@@ -27,6 +27,8 @@
     />
   <div class="snm-container">
     <div id="filters-ordering">
+
+      <div class="fo">
       <mini-select id="filter-sort" v-model="query.sort" :disabled="loading" label="Sort:" data-context="find-sort-order" @input="set_query_interactive('page', 0)">
         <option value="closest">
           Closest
@@ -36,10 +38,52 @@
         </option>
       </mini-select>
       <span class="pag-total">{{ pagination.total }} opportunities found! <small>use fewer search filter criteria to find more opportunities</small></span>
+    </div>
+
+      <div class="quickfilter">
+          <div class="qf-button-group">
+              <button type="button" :class="{'active':quickfilter_location=='In Person'}" @click="quickFilterLocation('In Person')">In Person</button>
+              <button type="button" :class="{'active':quickfilter_location=='Online'}" @click="quickFilterLocation('Online')">Online</button>
+          </div>
+          <div class="qf-button-group">
+              <button type="button" :class="{'active':quickfilter_time=='Scheduled'}" @click="quickFilterTime('Scheduled')">Scheduled</button>
+              <button type="button" :class="{'active':quickfilter_time=='On Demand'}" @click="quickFilterTime('On Demand')">On Demand</button>
+          </div>
+
+
+        <!-- <b-field>
+          <b-radio-button v-model="quickfilter_location" size="is-small" @click=""
+              native-value="In Person"
+              type="is-primary">
+              <span>In Person</span>
+          </b-radio-button>
+          <b-radio-button v-model="quickfilter_location" size="is-small"
+              native-value="Online"
+              type="is-primary">
+              <span>Online</span>
+          </b-radio-button>
+        </b-field>
+
+        <b-field>
+          <b-radio-button v-model="quickfilter_time" size="is-small"
+              native-value="Scheduled"
+              type="is-primary">
+              <span>Scheduled</span>
+          </b-radio-button>
+          <b-radio-button v-model="quickfilter_time" size="is-small"
+              native-value="On Demand"
+              type="is-primary">
+              <span>On Demand</span>
+          </b-radio-button>
+        </b-field> -->
+      </div>
+
       <!-- <action-button id="filter-trigger" text @click="filtering = true">
            Refine search
            </action-button> -->
     </div>
+
+
     <div id="filters-refine">
       <div>
         <h2 class="no-mobile">
@@ -142,7 +186,7 @@
           </option>
         </b-select>
       </fieldset>
-      <fieldset data-context="find-physical">
+      <!-- <fieldset data-context="find-physical">
         <label>
           Format
           <b-tooltip multilined>
@@ -164,7 +208,7 @@
             <span class="radio-label">On-Demand</span>
           </b-radio-button>
         </b-field>
-      </fieldset>
+      </fieldset> -->
       <fieldset data-context="find-organization">
         <label>Host Organization</label>
         <b-input :value="get_query('host', '')" :disabled="loading" :name="'new-' + Math.random()" type="text" @input="set_query_interactive('host', $event, '')" />
@@ -260,7 +304,6 @@ function from_qs (qs, names) {
 
 function empty_query() {
     return {
-        physical: 'in-person-or-online',
         beginning: (new Date()).toISOString(),
         sort: 'closest',
         partner_text: "",
@@ -299,6 +342,7 @@ export default {
             'beginning',
             'ending',
             'physical',
+            'temporal',
             'min_age',
             'max_age',
             'topics[]',
@@ -329,6 +373,29 @@ export default {
         const descriptors = await context.store.dispatch('get_descriptors');
         const topics = await context.store.dispatch('get_topics');
 
+        let qf_location = null;
+        let qf_time = null;
+
+        if(query.physical == 'in-person') {
+            qf_location = 'In Person';
+        }
+        else if(query.physical == 'online') {
+            qf_location = 'Online';
+        }
+        else {
+            Vue.delete(query, 'physical');
+        }
+
+        if(query.temporal == 'scheduled') {
+            qf_time = 'Scheduled';
+        }
+        else if(query.temporal == 'on-demand') {
+            qf_time = 'On Demand';
+        }
+        else {
+            Vue.delete(query, 'temporal');
+        }
+
         const local = {
             filtering: false,
             pagination: {
@@ -341,6 +408,8 @@ export default {
             descriptors,
             topics,
             opportunities: [],
+            quickfilter_location: qf_location,
+            quickfilter_time: qf_time
         };
 
         return Object.assign(local, results);
@@ -710,6 +779,48 @@ export default {
                 this.$nuxt.$loading.finish();
             }
         }, 1000, {trailing: true}),
+
+        quickFilterLocation(value,event){
+            if (value == this.quickfilter_location) {
+                this.quickfilter_location = null;
+            } else {
+                this.quickfilter_location = value;
+            }
+
+            switch(this.quickfilter_location) {
+            case "In Person":
+                Vue.set(this.query, 'physical', 'in-person');
+                break;
+            case "Online":
+                Vue.set(this.query, 'physical', 'online');
+                break;
+            default:
+                Vue.delete(this.query, 'physical');
+            }
+
+            this.set_query_interactive('page', 0)
+        },
+
+        quickFilterTime(value,event){
+            if (value == this.quickfilter_time) {
+                this.quickfilter_time = null;
+            } else {
+                this.quickfilter_time = value;
+            }
+
+            switch(this.quickfilter_time) {
+            case 'Scheduled':
+                Vue.set(this.query, 'temporal', 'scheduled');
+                break;
+            case 'On Demand':
+                Vue.set(this.query, 'temporal', 'on-demand');
+                break;
+            default:
+                Vue.delete(this.query, 'temporal');
+            }
+
+            this.set_query_interactive('page', 0);
+        }
     }
 }
 </script>
@@ -725,11 +836,15 @@ export default {
 
 #filters-ordering {
     padding: 0.75rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    
     border-bottom: 1px solid $snm-color-border;
     margin-bottom: 1rem;
+
+    .fo {
+      display: flex;
+    // justify-content: space-between;
+    align-items: center;
+    }
     .pag-total {
       font-weight: bold;
       margin-left: 8px;
@@ -904,7 +1019,7 @@ export default {
   #find > .snm-container {
       display: grid;
       grid-template-columns: 60% 40%;
-      grid-template-rows: 4rem 1fr minmax(2rem, auto);
+      grid-template-rows: 5rem 1fr minmax(2rem, auto);
       row-gap: 0.5rem;
       margin-top: 1rem;
   }
@@ -1051,7 +1166,7 @@ export default {
       display: grid;
       grid-template-columns: 1fr rem(340px);
       // grid-template-columns: 1fr minmax(calc(#{$fullsize-screen} - 50rem), 60rem) 25rem 1fr;
-      grid-template-rows: 4rem 1fr minmax(2rem, auto);
+      grid-template-rows: 5rem 1fr minmax(2rem, auto);
       padding: 0 1rem;
   }
   #filters-refine {
@@ -1104,5 +1219,34 @@ export default {
 #filter-physical span {
   font-size:14px;
   padding:0;
+}
+
+.quickfilter {
+  display: flex;
+  margin:.75rem 0;
+}
+.qf-button-group {
+  margin-right: 1rem;
+  button {
+    font-size: .75rem;
+    padding: .25rem .5rem;
+    border:1px solid #d4d4d4;
+    &:first-child {
+      border-radius: 6px 0 0 6px;
+    }
+    &:last-child {
+      border-radius: 0 6px 6px 0;
+    }
+    &.active {
+      background-color: $snm-color-action;
+      border-color: $snm-color-action;
+    }
+  }
+}
+
+@media (max-width:959px){
+  .quickfilter {
+    margin: 1rem 0 0;
+  }
 }
 </style>

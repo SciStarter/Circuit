@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  AVG(\"view_count\")::bigint AS \"mean_views: i64\",\n  AVG(\"unique_count\")::bigint AS \"mean_unique: i64\",\n  PERCENTILE_CONT(0.5) WITHIN GROUP (order by \"view_count\")::bigint AS \"median_views: i64\",\n  PERCENTILE_CONT(0.5) WITHIN GROUP (order by \"unique_count\")::bigint AS \"median_unique: i64\"\nFROM (\n  SELECT \"opportunity\", SUM(\"views\") AS \"view_count\", SUM(\"total_users\") AS \"unique_count\"\n  FROM c_analytics_cache\n  WHERE \"begin\" = $1 AND \"end\" = $2\n  GROUP BY \"opportunity\"\n) AS c_sub\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "mean_views: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "mean_unique: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "median_views: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "median_unique: i64",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "3338dc12bc9dff109618923352b4877f2731258fc86fe5b0134c9c5ecdfea500"
+}

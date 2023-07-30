@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM c_analytics_cache WHERE \"temporary\" = true",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "18f41a2dbcd60c0b96438ef6fd11ca53baddc4f4379e45d6a2e716c96c1e3702"
+}
