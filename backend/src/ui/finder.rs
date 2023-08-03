@@ -31,6 +31,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("topics", |r| r.get(topics))
         .at("activities", |r| r.get(activities))
         .at("metros", |r| r.get(metros))
+        .at("states", |r| r.get(states))
         .at("random-categories", |r| r.get(random_categories))
         .at("search", |r| r.get(search))
         .at("geo", |r| r.post(geo))
@@ -474,6 +475,11 @@ RETURNING coalesce(pre."home_location" != post."home_location", true) as "change
 }
 
 pub async fn metros(req: tide::Request<Database>) -> tide::Result {
-    let rows = sqlx::query!(r#"SELECT "state" AS "state!", "metro" AS "metro!" FROM c_person WHERE "state" IS NOT NULL AND "metro" IS NOT NULL"#).map(|row| (row.state, row.metro)).fetch_all(req.state()).await?;
+    let rows = sqlx::query!(r#"SELECT DISTINCT "state" AS "state!", "metro" AS "metro!" FROM c_person WHERE "state" IS NOT NULL AND "metro" IS NOT NULL ORDER BY "state", "metro""#).map(|row| (row.state, row.metro)).fetch_all(req.state()).await?;
+    Ok(serde_json::to_string(&rows)?.into())
+}
+
+pub async fn states(req: tide::Request<Database>) -> tide::Result {
+    let rows = sqlx::query!(r#"SELECT DISTINCT "state" AS "state!" FROM c_person WHERE "state" IS NOT NULL ORDER BY "state""#).map(|row| row.state).fetch_all(req.state()).await?;
     Ok(serde_json::to_string(&rows)?.into())
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT \"state\" AS \"state!\", \"metro\" AS \"metro!\" FROM c_person WHERE \"state\" IS NOT NULL AND \"metro\" IS NOT NULL",
+  "query": "SELECT DISTINCT \"state\" AS \"state!\", \"metro\" AS \"metro!\" FROM c_person WHERE \"state\" IS NOT NULL AND \"metro\" IS NOT NULL ORDER BY \"state\", \"metro\"",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       true
     ]
   },
-  "hash": "ad1b38c9b52d6f4bf26f8a178197fbba72db941d7643d83a343610b5ef29da26"
+  "hash": "ca621dfb8daf2f7c9e0fda4fccc1ec8272a5da5cbbc8895917214ed5c7697c58"
 }
