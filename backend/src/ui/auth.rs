@@ -41,9 +41,9 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 }
 
 #[cfg(not(debug_assertions))]
-const TOKEN_COOKIE: &'static str = "__Host-token";
+pub const TOKEN_COOKIE: &'static str = "__Host-token";
 #[cfg(debug_assertions)]
-const TOKEN_COOKIE: &'static str = "token";
+pub const TOKEN_COOKIE: &'static str = "token";
 
 #[derive(Deserialize)]
 struct ResetForm {

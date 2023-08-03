@@ -301,7 +301,7 @@ SET
   "last_location" = ST_SetSRID(ST_Point($2, $3), 4326)
 FROM (SELECT "id", "home_location", "last_location" FROM c_person WHERE id = $1 FOR UPDATE) pre
 WHERE post.id = pre.id
-RETURNING pre."home_location" != post."home_location" as "changed!"
+RETURNING coalesce(pre."home_location" != post."home_location", true) as "changed!"
 "#,
             person_id,
             *longitude as f64,
