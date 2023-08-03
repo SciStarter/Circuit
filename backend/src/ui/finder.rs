@@ -7,7 +7,7 @@ use common::{
             OpportunityQueryPhysical, OpportunityQueryTemporal, Topic, VenueType,
         },
         person::Permission,
-        Opportunity, OpportunityExterior, Pagination, SelectOption,
+        Opportunity, OpportunityExterior, Pagination, Person, SelectOption,
     },
     Database,
 };
@@ -30,6 +30,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("descriptors", |r| r.get(descriptors))
         .at("topics", |r| r.get(topics))
         .at("activities", |r| r.get(activities))
+        .at("metros", |r| r.get(metros))
         .at("random-categories", |r| r.get(random_categories))
         .at("search", |r| r.get(search))
         .at("geo", |r| r.post(geo))
@@ -285,6 +286,35 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
 
     let search: SearchQuery = req.query()?;
 
+    if let (Some(person_id), Some(longitude), Some(latitude)) = (
+        person.as_ref().and_then(|p| p.id.clone()),
+        &search.longitude,
+        &search.latitude,
+    ) {
+        // This query is constructed like this so as to be able to
+        // detect changes, without creating a race condition
+        let changed_location = sqlx::query_scalar!(
+            r#"
+UPDATE c_person post
+SET
+  "home_location" = COALESCE(post."home_location", ST_SetSRID(ST_Point($2, $3), 4326)),
+  "last_location" = ST_SetSRID(ST_Point($2, $3), 4326)
+FROM (SELECT "id", "home_location", "last_location" FROM c_person WHERE id = $1 FOR UPDATE) pre
+WHERE post.id = pre.id
+RETURNING pre."home_location" != post."home_location" as "changed!"
+"#,
+            person_id,
+            *longitude as f64,
+            *latitude as f64
+        )
+        .fetch_one(db)
+        .await?;
+
+        if changed_location {
+            Person::update_state_and_metro_by_id(db, person_id).await?;
+        }
+    }
+
     let mut query = OpportunityQuery::default();
 
     query.entity_type = Some(vec![
@@ -441,4 +471,9 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
             "matches": matches
         }))
     }
+}
+
+pub async fn metros(req: tide::Request<Database>) -> tide::Result {
+    let rows = sqlx::query!(r#"SELECT "state" AS "state!", "metro" AS "metro!" FROM c_person WHERE "state" IS NOT NULL AND "metro" IS NOT NULL"#).map(|row| (row.state, row.metro)).fetch_all(req.state()).await?;
+    Ok(serde_json::to_string(&rows)?.into())
 }

@@ -347,8 +347,9 @@ pub struct PersonInterior {
     pub last_name: Option<String>,
     pub genders: Vec<Gender>,
     pub gender_other: Option<String>,
-    pub home_location: Option<serde_json::Value>,
-    pub last_location: Option<serde_json::Value>,
+    // Moved to be direct children of the c_person table
+    // pub home_location: Option<serde_json::Value>,
+    // pub last_location: Option<serde_json::Value>,
     pub joined_at: DateTime<FixedOffset>,
     pub active_at: DateTime<FixedOffset>,
     pub phone: Option<String>,
@@ -381,8 +382,8 @@ impl Default for PersonInterior {
             join_channel: Default::default(),
             genders: Default::default(),
             gender_other: Default::default(),
-            home_location: Default::default(),
-            last_location: Default::default(),
+            // home_location: Default::default(),
+            // last_location: Default::default(),
             joined_at: Utc::now().to_fixed_offset(),
             active_at: Utc::now().to_fixed_offset(),
             phone: Default::default(),
@@ -564,6 +565,69 @@ impl Person {
             .execute(db)
             .await?;
             Ok(())
+        } else {
+            Err(Error::NoSuch("Person has no id"))
+        }
+    }
+
+    pub async fn update_state_and_metro_by_id(db: &Database, id: i32) -> Result<(), Error> {
+        let geo = sqlx::query!(
+            r#"
+SELECT
+  ST_X(CAST("home_location" AS geometry)) AS "x",
+  ST_Y(CAST("home_location" AS geometry)) as "y"
+FROM c_person
+WHERE id = $1
+"#,
+            id
+        )
+        .map(|row| {
+            if let (Some(x), Some(y)) = (row.x, row.y) {
+                Some((x, y))
+            } else {
+                None
+            }
+        })
+        .fetch_one(db)
+        .await?;
+
+        if let Some((longitude, latitude)) = geo {
+            let query = crate::geo::Query::new(format!("{longitude} {latitude}"), false);
+            if let Some(location) = query.lookup_one().await {
+                if let Some(state) = location.components.state.clone() {
+                    sqlx::query!(
+                        r#"UPDATE c_person SET "state" = $2 WHERE id = $1"#,
+                        id,
+                        state
+                    )
+                    .execute(db)
+                    .await?;
+                }
+
+                if let Some(city) = location
+                    .components
+                    .city
+                    .as_ref()
+                    .or(location.components.town.as_ref())
+                    .clone()
+                {
+                    sqlx::query!(
+                        r#"UPDATE c_person SET "metro" = $2 WHERE id = $1"#,
+                        id,
+                        city
+                    )
+                    .execute(db)
+                    .await?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn update_state_and_metro(&self, db: &Database) -> Result<(), Error> {
+        if let Some(id) = self.id {
+            Person::update_state_and_metro_by_id(db, id).await
         } else {
             Err(Error::NoSuch("Person has no id"))
         }

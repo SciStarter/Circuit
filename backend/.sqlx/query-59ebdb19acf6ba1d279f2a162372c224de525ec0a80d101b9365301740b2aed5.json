@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nUPDATE c_person post\nSET\n  \"home_location\" = COALESCE(post.\"home_location\", ST_SetSRID(ST_Point($2, $3), 4326)),\n  \"last_location\" = ST_SetSRID(ST_Point($2, $3), 4326)\nFROM (SELECT \"id\", \"home_location\", \"last_location\" FROM c_person WHERE id = $1 FOR UPDATE) pre\nWHERE post.id = pre.id\nRETURNING pre.\"home_location\" != post.\"home_location\" as \"changed!\"\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "changed!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Float8",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "59ebdb19acf6ba1d279f2a162372c224de525ec0a80d101b9365301740b2aed5"
+}
