@@ -592,7 +592,7 @@ WHERE id = $1
         .await?;
 
         if let Some((longitude, latitude)) = geo {
-            let query = crate::geo::Query::new(format!("{longitude} {latitude}"), false);
+            let query = crate::geo::Query::new(format!("{latitude} {longitude}"), false);
             if let Some(location) = query.lookup_one().await {
                 if let Some(state) = location.components.state.clone() {
                     sqlx::query!(
