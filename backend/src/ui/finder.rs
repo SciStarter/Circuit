@@ -312,7 +312,7 @@ RETURNING coalesce(pre."home_location" != post."home_location", true) as "change
         .await?;
 
         if changed_location {
-            Person::update_state_and_metro_by_id(db, person_id).await?;
+            async_std::task::spawn(Person::update_state_and_metro_by_id(db, person_id));
         }
     }
 
