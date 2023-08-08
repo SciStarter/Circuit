@@ -113,7 +113,7 @@
                   </template>
                 </span>
 
-                <span v-if="has_value(opportunity.opp_venue)" class="quick-label">
+                <span v-if="has_value(opportunity.opp_venue) && venue_type" class="quick-label">
                   {{ venue_type }}
                 </span>
 
@@ -788,7 +788,7 @@ export default {
                 return "Outdoors";
             }
             else {
-                return "We don't know";
+                return "";
             }
         },
 
