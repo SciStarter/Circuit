@@ -129,7 +129,6 @@
     </table>
   </div>
 
-   <!-- KEYWORD BY LOCATION & TIME PERIOD-->
    <h2 class="h2sep">User Searches</h2>
    <div class="filters">
       <div class="stack">
@@ -139,19 +138,21 @@
           <option v-for="s in us_states" :key="s.abbreviation" :value="s.abbreviation">{{ s.name }}</option>
         </b-select>
         <b-select v-if="show_metro">
-          <option selected>All Areas</option>
-          <option>Daniel fill me with metro areas</option>
-          !!!
+          <option>All Areas</option>
+          <optgroup v-for="group in metro_groups" :label="group[0]">
+            <option v-for="metro in group[1]" :value="[group[0], metro]">{{ metro }}</option>
+          </optgroup>
         </b-select>
       </div>
-      <div class="stack">
-        <label>Time Period</label>
-        <!-- <b-select :value="report[org].engagement.data.time_period" @input="load_data_into(report[org].organization, 0, $event, report[org].engagement.data.opportunity_status, 'engagement')">
-          <option v-for="period in report[org].engagement.time_periods" :key="period" :value="period">
-            {{period}}
-          </option>
-        </b-select> -->
-      </div>
+      <!-- USE AS TEMPLATE TO DISPLAY /api/ui/finder/metro-searches?state=X&metro=Y -->
+      <!-- <div class="stack"> -->
+      <!--   <label>Time Period</label> -->
+      <!--   <b-select :value="report[org].engagement.data.time_period" @input="load_data_into(report[org].organization, 0, $event, report[org].engagement.data.opportunity_status, 'engagement')"> -->
+      <!--     <option v-for="period in report[org].engagement.time_periods" :key="period" :value="period"> -->
+      <!--       {{period}} -->
+      <!--     </option> -->
+      <!--   </b-select> -->
+      <!-- </div> -->
     </div>
    <div class="data-table-wrapper">
     <table class="data-table">
@@ -161,18 +162,18 @@
         <th colspan="2">Total Searches</th>
       </tr>
     </thead>
-   <!--  <tbody v-if="report.engagement.data.searches.length > 0">
-      <tr v-for="row in report.engagement.data.searches">
-        <td class="narrow-column">{{row.phrase}}</td>
-        <td class="table-num">{{row.searches}}</td>
-        <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
-      </tr> 
-    </tbody>
-    <tbody v-else>
-      <tr>
-        <td colspan="3">No Data to Display</td>
-      </tr>
-    </tbody>-->
+      <tbody v-if="report.engagement.data.searches.length > 0">
+        <tr v-for="row in report.engagement.data.searches">
+          <td class="narrow-column">{{row.phrase}}</td>
+          <td class="table-num">{{row.searches}}</td>
+          <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
+        </tr> 
+      </tbody>
+      <tbody v-else>
+        <tr>
+          <td colspan="3">No Data to Display</td>
+        </tr>
+      </tbody>
     </table>
   </div>
 
@@ -536,14 +537,14 @@ import STATES from "~/assets/geo/states.json"
 
 export default {
     name: "MyDataOverview",
-
+    
     components: {
-      EyeIcon,
-      LinkIcon,
-      SortIcon,
-      SortableIcon
+        EyeIcon,
+        LinkIcon,
+        SortIcon,
+        SortableIcon
     },
-
+    
     httpHeaders() {
         return {
             'X-XSS-Protection': '1; mode=block',
@@ -552,21 +553,43 @@ export default {
             'Referrer-Policy': 'same-origin',
         };
     },
-
+    
     async asyncData(context) {
         const user = await context.store.dispatch('get_user');
-
+        
         if(!user.authenticated) {
             context.error({
                 statusCode: 401,
                 message: "Authentication required"
             });
         }
-
+        
         const report = await context.$axios.$get("/api/ui/organization/analytics", context.store.state.auth);
+        
+        let metro_groups = [];
+        let group = "";
+        let metros = [];
+        
+        for item of await context.$axios.$get("/api/ui/finder/metros") {
+            if(item[0] != group) {
+                if(metros.length > 0) {
+                    metro_groups.push([group, metros]);
+                }
+                group = item[0];
+                metros = [];
+            }
+            if(item[1]) {
+                metros.push(item[1]);
+            }
+        }
+        
+        if(metros.length > 0) {
+            metro_groups.push([group, metros]);
+        }
 
         return {
             report,
+            metro_groups,
         };
     },
 

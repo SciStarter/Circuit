@@ -30,6 +30,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("descriptors", |r| r.get(descriptors))
         .at("topics", |r| r.get(topics))
         .at("activities", |r| r.get(activities))
+        .at("metro-searches", |r| r.get(metro_searches))
         .at("metros", |r| r.get(metros))
         .at("states", |r| r.get(states))
         .at("random-categories", |r| r.get(random_categories))
@@ -399,6 +400,18 @@ RETURNING coalesce(pre."home_location" != post."home_location", true) as "change
                 query.withdrawn = Some(false);
             }
         }
+
+        if let Some(text) = &query.text {
+            if let Some(id) = p.id {
+                sqlx::query!(
+                    r#"INSERT INTO "c_person_searches" ("person_id", "text") VALUES ($1, $2)"#,
+                    id,
+                    text
+                )
+                .execute(db)
+                .await?;
+            }
+        }
     } else {
         query.accepted = Some(true);
         query.withdrawn = Some(false);
@@ -486,5 +499,37 @@ pub async fn metros(req: tide::Request<Database>) -> tide::Result {
 
 pub async fn states(req: tide::Request<Database>) -> tide::Result {
     let rows = sqlx::query!(r#"SELECT DISTINCT "state" AS "state!" FROM c_person WHERE "state" IS NOT NULL ORDER BY "state""#).map(|row| row.state).fetch_all(req.state()).await?;
+    Ok(serde_json::to_string(&rows)?.into())
+}
+
+#[derive(Deserialize, Debug)]
+struct MetroSearchesQuery {
+    state: String,
+    metro: String,
+}
+
+pub async fn metro_searches(req: tide::Request<Database>) -> tide::Result {
+    let query: MetroSearchesQuery = req.query()?;
+
+    let rows = sqlx::query!(
+        r#"
+SELECT
+  c_person_searches."text" AS "text!",
+  COUNT(*) AS "count!"
+FROM
+  c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id
+WHERE
+  c_person."state" = $1 AND
+  c_person."metro" = $2
+GROUP BY c_person_searches."text"
+ORDER BY COUNT(*) DESC
+"#,
+        query.state,
+        query.metro
+    )
+    .map(|row| (row.text, row.count))
+    .fetch_all(req.state())
+    .await?;
+
     Ok(serde_json::to_string(&rows)?.into())
 }
