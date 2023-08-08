@@ -402,14 +402,16 @@ RETURNING coalesce(pre."home_location" != post."home_location", true) as "change
         }
 
         if let Some(text) = &query.text {
-            if let Some(id) = p.id {
-                sqlx::query!(
-                    r#"INSERT INTO "c_person_searches" ("person_id", "text") VALUES ($1, $2)"#,
-                    id,
-                    text
-                )
-                .execute(db)
-                .await?;
+            if !text.is_empty() && !text.trim().is_empty() {
+                if let Some(id) = p.id {
+                    sqlx::query!(
+                        r#"INSERT INTO "c_person_searches" ("person_id", "text") VALUES ($1, $2)"#,
+                        id,
+                        text
+                    )
+                    .execute(db)
+                    .await?;
+                }
             }
         }
     } else {
