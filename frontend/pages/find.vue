@@ -29,18 +29,19 @@
     <div id="filters-ordering">
 
       <div class="fo">
-      <mini-select id="filter-sort" v-model="query.sort" :disabled="loading" label="Sort:" data-context="find-sort-order" @input="set_query_interactive('page', 0)">
-        <option value="closest">
-          Closest
-        </option>
-        <option value="soonest">
-          Soonest
-        </option>
-      </mini-select>
-      <span class="pag-total">{{ pagination.total }} opportunities found! <small>use fewer search filter criteria to find more opportunities</small></span>
-    </div>
+        <span class="pag-total">{{ pagination.total }} opportunities found! <small>use fewer search filter criteria to find more opportunities</small></span>
+      </div>
+     
 
       <div class="quickfilter">
+          <mini-select id="filter-sort" v-model="query.sort" :disabled="loading"  data-context="find-sort-order" @input="set_query_interactive('page', 0)">
+            <option value="closest">
+              Closest
+            </option>
+            <option value="soonest">
+              Soonest
+            </option>
+          </mini-select>
           <div class="qf-button-group">
               <button type="button" :class="{'active':quickfilter_location=='In Person'}" @click="quickFilterLocation('In Person')">In Person</button>
               <button type="button" :class="{'active':quickfilter_location=='Online'}" @click="quickFilterLocation('Online')">Online</button>
@@ -50,6 +51,11 @@
               <button type="button" :class="{'active':quickfilter_time=='On Demand'}" @click="quickFilterTime('On Demand')">On Demand</button>
           </div>
 
+          <button type="button" class="no-mobile" @click="showFilters=true"><filter-icon /> More Filters</button>
+          <button type="button" v-if="filter_num > 0" @click="clearFilters"><span>&times;</span> Clear Filters</button>
+          <!-- <button type="button"><link-icon /> Copy Link</button> -->
+
+        
 
         <!-- <b-field>
           <b-radio-button v-model="quickfilter_location" size="is-small" @click=""
@@ -78,17 +84,22 @@
         </b-field> -->
       </div>
 
+      
+
       <!-- <action-button id="filter-trigger" text @click="filtering = true">
            Refine search
            </action-button> -->
     </div>
 
 
-    <div id="filters-refine">
-      <div>
-        <h2 class="no-mobile">
-          Refine Results
-        </h2>
+    <div id="filters-refine" :class="{'shown':showFilters}">
+      <div class="no-mobile flex" id="filter-header">
+            <h2>Filters</h2>
+            <button title="close filters" class="close" @click="showFilters=false">&times;</button>
+        </div>
+
+      <div id="filters">
+      
         <fieldset>
           <label>Activity Type</label>
           <b-taginput v-model="selected_descriptors" :disabled="loading" :data="suggested_descriptors" field="1" open-on-focus autocomplete data-context="find-activty-type" @typing="query.descriptor_text = $event.toLowerCase()" />
@@ -100,11 +111,13 @@
           <b-checkbox v-model="kids_only" :native-value="true" :disabled="loading">
             Kids Friendly Only
           </b-checkbox>
+          </p>
+          <p>
           <b-checkbox v-model="adults_only" :native-value="true" :disabled="loading">
             21+ Only
           </b-checkbox>
         </p>
-        <b-field label="Participant Age Range Minimum" data-context="find-minimum-age">
+        <b-field label="Participant Age Range Minimum" data-context="find-minimum-age" class="age-slider-label">
           <b-checkbox v-model="min_age_active" :disabled="loading" />
           <b-slider v-model="min_age" :disabled="!min_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
             <!-- <b-slider-tick :value="12">
@@ -128,7 +141,7 @@
           </b-slider>
           <input v-model="min_age" type="text" :disabled="!min_age_active || loading" class="slider-direct">
         </b-field>
-        <b-field label="Participant Age Range Maximum" data-context="find-maximum-age">
+        <b-field label="Participant Age Range Maximum" data-context="find-maximum-age" class="age-slider-label">
           <b-checkbox v-model="max_age_active" :disabled="loading" />
           <b-slider v-model="max_age" :disabled="!max_age_active || loading" :min="0" :max="120" :step="1" size="is-medium" rounded>
             <!-- <b-slider-tick :value="12">
@@ -235,12 +248,24 @@
       <!--     Apply -->
       <!--   </action-button> -->
       <!-- </div> -->
-      <div class="no-mobile">
+
+      <!-- <div class="no-mobile">
         <h1>Share Your Results</h1>
         <p>Share the list by copying the link below</p>
         <a :href="query_link" @click.prevent="copy_query"><link-icon />Copy Link</a>
-      </div>
+      </div> -->
     </div>
+
+    <div id="filters-submit2">
+        <action-button @click="clear();showFilters=false;">
+          Clear Filters
+        </action-button>
+        <action-button primary @click="apply();showFilters=false;" :disabled="!location_valid">
+          Apply
+        </action-button>
+      </div>
+
+
   </div>
   <section id="results">
     <template v-if="matches.length > 0">
@@ -286,6 +311,7 @@ import Pagination from '~/components/Pagination'
 import GeneralFilters from '~/components/GeneralFilters'
 
 import LinkIcon from '~/assets/img/link.svg?inline'
+import FilterIcon from '~/assets/img/filter.svg?inline'
 
 function from_qs (qs, names) {
     const dest = {}
@@ -320,7 +346,8 @@ export default {
         OpportunityCard,
         Pagination,
 
-        LinkIcon
+        LinkIcon,
+        FilterIcon
     },
 
     httpHeaders() {
@@ -420,6 +447,7 @@ export default {
             loading: false,
             location_valid: true,
             query: Object.assign(empty_query(), this.$route.query),
+            showFilters: false
         };
     },
 
@@ -665,6 +693,10 @@ export default {
           num+=this.selected_descriptors.length;
           if (this.selected_partner) {num++;}
           if (this.venue_type != "either") {num++;}
+          if (this.quickfilter_location) {num++;}
+          if (this.quickfilter_time) {num++;}
+          if (this.adults_only) {num++;}
+          if (this.kids_only) {num++;}
           return num;
         },
         beginning_display(){
@@ -764,6 +796,8 @@ export default {
 
         clear() {
             this.query = empty_query();
+            this.quickfilter_location = null;
+            this.quickfilter_time = null;
         },
 
         apply() {
@@ -820,6 +854,10 @@ export default {
             }
 
             this.set_query_interactive('page', 0);
+        },
+        clearFilters(){
+          this.clear();
+          this.apply();
         }
     }
 }
@@ -837,8 +875,8 @@ export default {
 #filters-ordering {
     padding: 0.75rem;
     
-    border-bottom: 1px solid $snm-color-border;
-    margin-bottom: 1rem;
+    // border-bottom: 1px solid $snm-color-border;
+    // margin-bottom: 1rem;
 
     .fo {
       display: flex;
@@ -866,7 +904,9 @@ export default {
 
 #filter-sort {
     display: block;
-    flex-grow: 0
+    flex-grow: 0;
+    background-color: #efefef;
+    padding: 2px;
 }
 
 .filtering #filter-sort {
@@ -909,6 +949,12 @@ export default {
     display: block;
 }
 
+#filters-header {
+  position: sticky;
+  top:0;
+
+}
+
 #filters-submit {
     display: none;
     position: fixed;
@@ -929,6 +975,19 @@ export default {
         flex-shrink: 0;
         flex-grow: 0;
     }
+}
+@media (min-width:960px) {
+  #filters-refine > #filters-submit2 {
+    display: flex;
+    justify-content: center;
+    position: sticky;
+    bottom: 0;
+    right:0;
+    background-color: $snm-color-background-medium;
+    flex-direction: row;
+    z-index: 10;
+
+  }
 }
 
 .filtering #filters-submit {
@@ -1017,15 +1076,15 @@ export default {
 
 @media (min-width: 960px) {
   #find > .snm-container {
-      display: grid;
-      grid-template-columns: 60% 40%;
-      grid-template-rows: 5rem 1fr minmax(2rem, auto);
-      row-gap: 0.5rem;
+      // display: grid;
+      // grid-template-columns: 60% 40%;
+      // grid-template-rows: 5rem 1fr minmax(2rem, auto);
+      // row-gap: 0.5rem;
       margin-top: 1rem;
   }
   #filters-ordering {
-    grid-row: 1;
-    grid-column: 1/3;
+    // grid-row: 1;
+    // grid-column: 1/3;
     justify-content: flex-start;
     border-bottom:0;
     #filter-physical {
@@ -1033,18 +1092,28 @@ export default {
     }
   }
   #filters-refine {
-      grid-column: 2;
-      grid-row: 2/-1;
-      display: block;
+    position: fixed;
+    top: 0;
+    right: -350px;
+    width:340px;
+    display: block;
+    z-index: 9999;
+    overflow: auto;
+    height: 100%;
+    box-shadow: 0 0 8px rgba(0,0,0,.5);
+    transition: right .4s ease-in;
+    &.shown {
+      right:0;
+    }
   }
-  #results {
-      grid-row: 2;
-      grid-column: 1;
-  }
-  #pagination {
-      grid-row: 3;
-      grid-column: 1;
-  }
+  // #results {
+  //     grid-row: 2;
+  //     grid-column: 1/3;
+  // }
+  // #pagination {
+  //     grid-row: 3;
+  //     grid-column: 1/3;
+  // }
 }
 
 @media (min-width: $fullsize-screen) {
@@ -1078,6 +1147,8 @@ export default {
 
     #filter-sort {
         display: inline-block;
+        padding: 1.5px;
+        background-color: rgb(239,239,239);
     }
 
     :deep(label.b-radio.radio.button) {
@@ -1100,12 +1171,22 @@ export default {
     #filters-refine {
 
         fieldset {
-            margin: 1rem 32px;
+            margin: 1rem 0 0 0;
+            border-bottom: 1px solid #d9d9d9;
+            padding-bottom: 1rem;
+
+            > * {
+              margin-left:32px;
+              margin-right: 32px;
+            }
+            &:last-child {
+              border-bottom: 0;
+            }
         }
 
         >div {
-            position: sticky;
-            top: 0px;
+            // position: sticky;
+            // top: 0px;
             display: flex;
             flex-direction: column;
 
@@ -1145,11 +1226,11 @@ export default {
             }
         }
     }
-    .authenticated {
-      #filters-refine > div {
-        top: 70px;
-      }
-    }
+    // .authenticated {
+    //   #filters-refine > div {
+    //     top: 70px;
+    //   }
+    // }
 
     #results {
         display: flex;
@@ -1163,25 +1244,21 @@ export default {
 
 @media (min-width: 1200px) {
   #find > .snm-container {
-      display: grid;
-      grid-template-columns: 1fr rem(340px);
-      // grid-template-columns: 1fr minmax(calc(#{$fullsize-screen} - 50rem), 60rem) 25rem 1fr;
-      grid-template-rows: 5rem 1fr minmax(2rem, auto);
+      // display: grid;
+      // grid-template-columns: 1fr rem(340px);
+      // // grid-template-columns: 1fr minmax(calc(#{$fullsize-screen} - 50rem), 60rem) 25rem 1fr;
+      // grid-template-rows: 5rem 1fr minmax(2rem, auto);
       padding: 0 1rem;
   }
-  #filters-refine {
-      grid-column: 2;
-      grid-row: 1/-1;
-      display: block;
-  }
-  #results {
-      grid-row: 2;
-      grid-column: 1;
-  }
-  #pagination {
-      grid-row: 4;
-      grid-column: 1;
-  }
+
+  // #results {
+  //     grid-row: 2;
+  //     grid-column: 1/3;
+  // }
+  // #pagination {
+  //     grid-row: 4;
+  //     grid-column: 1/3;
+  // }
   #find .general-filters {
     padding-left:2rem;
     padding-right: 2rem;
@@ -1223,14 +1300,35 @@ export default {
 
 .quickfilter {
   display: flex;
-  margin:.75rem 0;
+  margin:.75rem .3rem;
+  align-items: center;
+
+  button, :deep(.mini-select) {
+    font-size: .75rem;
+    padding: .25rem .5rem;
+    border:1px solid #d4d4d4;
+    border-radius: 6px;
+    margin-right: 8px;
+    cursor: pointer;
+
+    svg {
+      width: 16px;
+    vertical-align: middle;
+    height: 16px;
+    position: relative;
+    top: -1px;
+    margin:-2px 0;
+    }
+  }
 }
 .qf-button-group {
-  margin-right: 1rem;
+  margin-right: 8px;
   button {
     font-size: .75rem;
     padding: .25rem .5rem;
     border:1px solid #d4d4d4;
+    cursor: pointer;
+    margin-right: 0;
     &:first-child {
       border-radius: 6px 0 0 6px;
     }
@@ -1244,9 +1342,70 @@ export default {
   }
 }
 
+
+
 @media (max-width:959px){
   .quickfilter {
     margin: 1rem 0 0;
+  }
+}
+
+:deep(.mini-select select) {
+  font-weight: normal;
+  font-size: .75rem;
+  margin:0;
+  padding: 0;
+  background-color: rgb(239, 239, 239);
+  padding-right: 12px;
+  padding-left: 6px;
+  background-position: right 0.4em top 50%, 0 0;
+}
+
+#filters-refine > #filter-header {
+  display: flex;
+  flex-direction: row;
+  position: sticky;
+  top:0!important;
+  border-bottom: 2px solid #d9d9d9;
+  background-color: #fff;
+  z-index: 9999;
+
+  h2 {
+    margin: 0 0 0 32px;
+    line-height: 40px;
+  }
+
+  button.close {
+        background-color: transparent;
+        border: none;
+        padding: 0px;
+        margin: 0px 0.5rem;
+        font-size: 40px;
+        cursor: pointer;
+        flex-shrink: 0;
+        flex-grow: 0;
+        margin-left: auto;
+        line-height: 40px;
+        position: relative;
+        top: -3px;
+    }
+}
+
+#filters {
+  padding-bottom: 20px;
+}
+
+:deep(.age-slider-label > label) {
+  margin: 1rem 0 0 0;
+  font-weight: bold!important;
+}
+
+@media (max-width:405px){
+  .quickfilter {
+    flex-wrap: wrap;
+    > .qf-button-group, :deep(.mini-select) {
+      margin-bottom: .5rem;
+    }
   }
 }
 </style>
