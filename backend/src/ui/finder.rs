@@ -506,15 +506,17 @@ pub async fn states(req: tide::Request<Database>) -> tide::Result {
 
 #[derive(Deserialize, Debug)]
 struct MetroSearchesQuery {
-    state: String,
-    metro: String,
+    state: Option<String>,
+    metro: Option<String>,
 }
 
 pub async fn metro_searches(req: tide::Request<Database>) -> tide::Result {
-    let query: MetroSearchesQuery = req.query()?;
+    let MetroSearchesQuery { state, metro } = req.query()?;
 
-    let rows = sqlx::query!(
-        r#"
+    let rows = match (state, metro) {
+        (Some(state), Some(metro)) => {
+            sqlx::query!(
+                r#"
 SELECT
   c_person_searches."text" AS "text!",
   COUNT(*) AS "count!"
@@ -526,12 +528,52 @@ WHERE
 GROUP BY c_person_searches."text"
 ORDER BY COUNT(*) DESC
 "#,
-        query.state,
-        query.metro
-    )
-    .map(|row| (row.text, row.count))
-    .fetch_all(req.state())
-    .await?;
+                state,
+                metro
+            )
+            .map(|row| (row.text, row.count))
+            .fetch_all(req.state())
+            .await?
+        }
+        (Some(state), None) => {
+            sqlx::query!(
+                r#"
+SELECT
+  c_person_searches."text" AS "text!",
+  COUNT(*) AS "count!"
+FROM
+  c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id
+WHERE
+  c_person."state" = $1
+GROUP BY c_person_searches."text"
+ORDER BY COUNT(*) DESC
+"#,
+                state,
+            )
+            .map(|row| (row.text, row.count))
+            .fetch_all(req.state())
+            .await?
+        }
+        (None, None) => {
+            sqlx::query!(
+                r#"
+SELECT
+  c_person_searches."text" AS "text!",
+  COUNT(*) AS "count!"
+FROM
+  c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id
+GROUP BY c_person_searches."text"
+ORDER BY COUNT(*) DESC
+"#,
+            )
+            .map(|row| (row.text, row.count))
+            .fetch_all(req.state())
+            .await?
+        }
+        _ => {
+            return Err(tide::Error::from_str(400, "Unrecognized parameters"));
+        }
+    };
 
     Ok(serde_json::to_string(&rows)?.into())
 }

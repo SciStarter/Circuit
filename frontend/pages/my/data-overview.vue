@@ -133,26 +133,15 @@
    <div class="filters">
       <div class="stack">
         <label>Location of User</label>
-        <b-select :v-model="location_us" @input="get_us_state($event)" style="margin-bottom: 10px;">
+        <b-select v-model="location_us" @input="get_us_state($event)" style="margin-bottom: 10px;">
           <option key="all" value="all" selected>All States</option>
-          <option v-for="s in us_states" :key="s.abbreviation" :value="s.abbreviation">{{ s.name }}</option>
+          <option v-for="s in metro_groups.all" :key="s" :value="s">{{ s }}</option>
         </b-select>
-        <b-select v-if="show_metro">
-          <option>All Areas</option>
-          <optgroup v-for="group in metro_groups" :label="group[0]">
-            <option v-for="metro in group[1]" :value="[group[0], metro]">{{ metro }}</option>
-          </optgroup>
+        <b-select v-model="location_metro" v-if="show_metro">
+          <option :value="all">All Areas</option>
+          <option v-for="metro in metro_groups[location_us]" :value="metro">{{ metro }}</option>
         </b-select>
       </div>
-      <!-- USE AS TEMPLATE TO DISPLAY /api/ui/finder/metro-searches?state=X&metro=Y -->
-      <!-- <div class="stack"> -->
-      <!--   <label>Time Period</label> -->
-      <!--   <b-select :value="report[org].engagement.data.time_period" @input="load_data_into(report[org].organization, 0, $event, report[org].engagement.data.opportunity_status, 'engagement')"> -->
-      <!--     <option v-for="period in report[org].engagement.time_periods" :key="period" :value="period"> -->
-      <!--       {{period}} -->
-      <!--     </option> -->
-      <!--   </b-select> -->
-      <!-- </div> -->
     </div>
    <div class="data-table-wrapper">
     <table class="data-table">
@@ -162,11 +151,11 @@
         <th colspan="2">Total Searches</th>
       </tr>
     </thead>
-      <tbody v-if="report.engagement.data.searches.length > 0">
-        <tr v-for="row in report.engagement.data.searches">
-          <td class="narrow-column">{{row.phrase}}</td>
-          <td class="table-num">{{row.searches}}</td>
-          <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
+      <tbody v-if="local_searches && local_searches.length > 0">
+        <tr v-for="row in local_searches">
+          <td class="narrow-column">{{row[0]}}</td>
+          <td class="table-num">{{row[1]}}</td>
+          <td class="table-bar"><comparison-bar :value="row[1]" :max="local_searches_max" color="#165E6F" width="100%" height="1rem" /></td>
         </tr> 
       </tbody>
       <tbody v-else>
@@ -533,7 +522,6 @@ import EyeIcon from '~/assets/img/eye.svg?inline'
 import LinkIcon from '~/assets/img/link.svg?inline'
 import SortIcon from '~/assets/img/sort.svg?inline'
 import SortableIcon from '~/assets/img/sortable.svg?inline'
-import STATES from "~/assets/geo/states.json"
 
 export default {
     name: "MyDataOverview",
@@ -565,15 +553,16 @@ export default {
         }
         
         const report = await context.$axios.$get("/api/ui/organization/analytics", context.store.state.auth);
-        
-        let metro_groups = [];
+
+        let metro_groups = {'all': []};
         let group = "";
         let metros = [];
         
-        for item of await context.$axios.$get("/api/ui/finder/metros") {
+        for(let item of await context.$axios.$get("/api/ui/finder/metros")) {
             if(item[0] != group) {
                 if(metros.length > 0) {
-                    metro_groups.push([group, metros]);
+                    metro_groups['all'].push(group);
+                    metro_groups[group] = metros;
                 }
                 group = item[0];
                 metros = [];
@@ -584,12 +573,22 @@ export default {
         }
         
         if(metros.length > 0) {
-            metro_groups.push([group, metros]);
+            metro_groups['all'].push(group);
+            metro_groups[group] = metros;
+        }
+
+        let local_searches = await context.$axios.$get("/api/ui/finder/metro-searches", context.store.state.auth);
+        let local_searches_max = 0;
+
+        if(local_searches.length > 0) {
+            local_searches_max = local_searches[0][1];
         }
 
         return {
             report,
             metro_groups,
+            local_searches,
+            local_searches_max
         };
     },
 
@@ -603,9 +602,10 @@ export default {
             traffic_top_order: 'unique_users_desc',
             selected_state: null,
             selected_attr: "Unique Users",
-            us_states: STATES,
             location_us: "all",
-            show_metro: false
+            location_metro: "all",
+            show_metro: false,
+            local_searching: 0
         }
     },
 
@@ -865,9 +865,42 @@ export default {
 
     },
 
+    watch: {
+        location_us() {
+            clearTimeout(this.local_searching);
+            this.local_searching = setTimeout(this.update_local, 500);
+        },
+
+        location_metro() {
+            clearTimeout(this.local_searching);
+            this.local_searching = setTimeout(this.update_local, 500);
+        }
+    },
+
     methods: {
         log(msg) {
             console.log(msg);
+        },
+
+        async update_local() {
+            let url = "/api/ui/finder/metro-searches";
+
+            if(this.location_us != 'all') {
+                url = url + '?state=' + this.location_us;
+
+                if(this.location_metro != 'all') {
+                    url = url + '&metro=' + this.location_metro;
+                }
+            }
+
+            this.local_searches = await this.$axios.$get(url, this.$store.state.auth);
+
+            if(this.local_searches.length > 0) {
+                this.local_searches_max = this.local_searches[0][1];
+            }
+            else {
+                this.local_searches_max = 0;
+            }
         },
 
         async load_data_into(about, kind, period, status, field) {

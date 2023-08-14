@@ -26,7 +26,7 @@
             />
         </b-field>
       </div>
-      <action-button v-if="searchButton" id="quick-search-btn" :disabled="!location_valid" principal large arrow type="submit">
+      <action-button v-if="searchButton" id="quick-search-btn" :disabled="!enableInvalidLocation && !location_valid" principal large arrow type="submit">
         <search-icon />
       </action-button>
     </div>
@@ -64,7 +64,7 @@
       </b-checkbox>
     </b-field> -->
     <div class="center-submit-btn">
-      <action-button :loading="working" :disabled="!location_valid" type="is-primary" principal>
+      <action-button :loading="working" :disabled="!enableInvalidLocation && !location_valid" type="is-primary" principal>
         Search
       </action-button>
     </div>
@@ -87,7 +87,7 @@
         </div>
     </div>
     <div class="center-submit-btn">
-      <action-button :loading="working" :disabled="!location_valid" type="is-primary" principal>
+      <action-button :loading="working" :disabled="!enableInvalidLocation && !location_valid" type="is-primary" principal>
         Search
       </action-button>
     </div>
@@ -188,7 +188,14 @@ export default {
             required: false,
             default: undefined,
         },
+
         evolveme: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+
+        enableInvalidLocation: {
             type: Boolean,
             required: false,
             default: false,
