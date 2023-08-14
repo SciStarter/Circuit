@@ -785,7 +785,8 @@ export default {
                 Vue.set(this.query, 'page', 0);
             }
 
-            this.search();
+            // disabled since we're switching to explicit button clicks for filters
+            //this.search();
         },
 
         set_query_multiple(items) {
