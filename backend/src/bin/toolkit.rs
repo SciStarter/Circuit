@@ -645,6 +645,25 @@ async fn withdraw(state: &mut State, args: Vec<String>) -> Result<(), DynError> 
     Ok(())
 }
 
+async fn update_place(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+    match state.table {
+        Table::Opportunity | Table::Partner => {
+            return Err("not a meaningful operation".into());
+        }
+        Table::Person => {
+            let mut people = state.person_query.load_matching(&state.db)?;
+            while let Some(Ok(person)) = people.next().await {
+                person.update_state_and_metro(&state.db).await?;
+            }
+        }
+        Table::Ambiguous => {
+            return Err("select a table before trying this".into());
+        }
+    };
+
+    Ok(())
+}
+
 async fn db_meta(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     let mut args = args.into_iter().skip(1);
 
@@ -1025,6 +1044,14 @@ async fn run_shell(state: State) -> Result<(), DynError> {
         Command::new_async(
             "Update geo data for an opportunity based on address".into(),
             async_fn!(State, geoquery),
+        ),
+    );
+
+    shell.commands.insert(
+        "update_place".into(),
+        Command::new_async(
+            "Update state and metro fields for selected people".into(),
+            async_fn!(State, update_place),
         ),
     );
 

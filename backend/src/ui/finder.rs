@@ -7,7 +7,7 @@ use common::{
             OpportunityQueryPhysical, OpportunityQueryTemporal, Topic, VenueType,
         },
         person::Permission,
-        Opportunity, OpportunityExterior, Pagination, SelectOption,
+        Opportunity, OpportunityExterior, Pagination, Person, SelectOption,
     },
     Database,
 };
@@ -30,6 +30,9 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("descriptors", |r| r.get(descriptors))
         .at("topics", |r| r.get(topics))
         .at("activities", |r| r.get(activities))
+        .at("metro-searches", |r| r.get(metro_searches))
+        .at("metros", |r| r.get(metros))
+        .at("states", |r| r.get(states))
         .at("random-categories", |r| r.get(random_categories))
         .at("search", |r| r.get(search))
         .at("geo", |r| r.post(geo))
@@ -285,6 +288,40 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
 
     let search: SearchQuery = req.query()?;
 
+    if let (Some(person_id), Some(longitude), Some(latitude)) = (
+        person.as_ref().and_then(|p| p.id.clone()),
+        &search.longitude,
+        &search.latitude,
+    ) {
+        // This query is constructed like this so as to be able to
+        // detect changes, without creating a race condition
+        let changed_location = sqlx::query_scalar!(
+            r#"
+UPDATE c_person post
+SET
+  "home_location" = COALESCE(post."home_location", ST_SetSRID(ST_Point($2, $3), 4326)),
+  "last_location" = ST_SetSRID(ST_Point($2, $3), 4326)
+FROM (SELECT "id", "home_location", "last_location" FROM c_person WHERE id = $1 FOR UPDATE) pre
+WHERE post.id = pre.id
+RETURNING coalesce(pre."home_location" != post."home_location", true) as "changed!"
+"#,
+            person_id,
+            *longitude as f64,
+            *latitude as f64
+        )
+        .fetch_one(db)
+        .await?;
+
+        if changed_location {
+            async_std::task::spawn({
+                let db = db.clone();
+                async move {
+                    let _ = Person::update_state_and_metro_by_id(&db, person_id).await;
+                }
+            });
+        }
+    }
+
     let mut query = OpportunityQuery::default();
 
     query.entity_type = Some(vec![
@@ -361,6 +398,20 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
             (None, None) => {
                 query.accepted = Some(true);
                 query.withdrawn = Some(false);
+            }
+        }
+
+        if let Some(text) = &query.text {
+            if !text.is_empty() && !text.trim().is_empty() {
+                if let Some(id) = p.id {
+                    sqlx::query!(
+                        r#"INSERT INTO "c_person_searches" ("person_id", "text") VALUES ($1, $2)"#,
+                        id,
+                        text
+                    )
+                    .execute(db)
+                    .await?;
+                }
             }
         }
     } else {
@@ -441,4 +492,88 @@ pub async fn search(mut req: tide::Request<Database>) -> tide::Result {
             "matches": matches
         }))
     }
+}
+
+pub async fn metros(req: tide::Request<Database>) -> tide::Result {
+    let rows = sqlx::query!(r#"SELECT DISTINCT "state" AS "state!", "metro" AS "metro!" FROM c_person WHERE "state" IS NOT NULL AND "metro" IS NOT NULL ORDER BY "state", "metro""#).map(|row| (row.state, row.metro)).fetch_all(req.state()).await?;
+    Ok(serde_json::to_string(&rows)?.into())
+}
+
+pub async fn states(req: tide::Request<Database>) -> tide::Result {
+    let rows = sqlx::query!(r#"SELECT DISTINCT "state" AS "state!" FROM c_person WHERE "state" IS NOT NULL ORDER BY "state""#).map(|row| row.state).fetch_all(req.state()).await?;
+    Ok(serde_json::to_string(&rows)?.into())
+}
+
+#[derive(Deserialize, Debug)]
+struct MetroSearchesQuery {
+    state: Option<String>,
+    metro: Option<String>,
+}
+
+pub async fn metro_searches(req: tide::Request<Database>) -> tide::Result {
+    let MetroSearchesQuery { state, metro } = req.query()?;
+
+    let rows = match (state, metro) {
+        (Some(state), Some(metro)) => {
+            sqlx::query!(
+                r#"
+SELECT
+  c_person_searches."text" AS "text!",
+  COUNT(*) AS "count!"
+FROM
+  c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id
+WHERE
+  c_person."state" = $1 AND
+  c_person."metro" = $2
+GROUP BY c_person_searches."text"
+ORDER BY COUNT(*) DESC
+"#,
+                state,
+                metro
+            )
+            .map(|row| (row.text, row.count))
+            .fetch_all(req.state())
+            .await?
+        }
+        (Some(state), None) => {
+            sqlx::query!(
+                r#"
+SELECT
+  c_person_searches."text" AS "text!",
+  COUNT(*) AS "count!"
+FROM
+  c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id
+WHERE
+  c_person."state" = $1
+GROUP BY c_person_searches."text"
+ORDER BY COUNT(*) DESC
+"#,
+                state,
+            )
+            .map(|row| (row.text, row.count))
+            .fetch_all(req.state())
+            .await?
+        }
+        (None, None) => {
+            sqlx::query!(
+                r#"
+SELECT
+  c_person_searches."text" AS "text!",
+  COUNT(*) AS "count!"
+FROM
+  c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id
+GROUP BY c_person_searches."text"
+ORDER BY COUNT(*) DESC
+"#,
+            )
+            .map(|row| (row.text, row.count))
+            .fetch_all(req.state())
+            .await?
+        }
+        _ => {
+            return Err(tide::Error::from_str(400, "Unrecognized parameters"));
+        }
+    };
+
+    Ok(serde_json::to_string(&rows)?.into())
 }

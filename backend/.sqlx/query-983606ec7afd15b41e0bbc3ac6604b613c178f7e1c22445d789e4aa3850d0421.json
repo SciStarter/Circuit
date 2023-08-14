@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT \"state\" AS \"state!\" FROM c_person WHERE \"state\" IS NOT NULL ORDER BY \"state\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "state!",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "983606ec7afd15b41e0bbc3ac6604b613c178f7e1c22445d789e4aa3850d0421"
+}

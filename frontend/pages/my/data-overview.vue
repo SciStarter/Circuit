@@ -15,11 +15,11 @@
     <div class="labels">
       <div class="stack">
         <label>{{report[org].total_opportunities}}</label>
-        <small>Opportunities<br>Total on SNM</small>
+        <small>Opportunities<br>Total on SNM <b-tooltip label="Number of science opportunities that have ever appeared Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></small>
       </div>
       <div class="stack">
         <label>{{report[org].current_opportunities}}</label>
-        <small>Opportunities<br>Current &amp; Future</small>
+        <small>Opportunities<br>Current &amp; Future <b-tooltip label="Number of science opportunities that currently appear Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></small>
       </div>
     </div>
   </div>
@@ -67,7 +67,7 @@
           <div class="ll-icon"><eye-icon></eye-icon></div>
           <div>
             <h2>{{report[org].engagement.data.totals['Views']}}</h2>
-            <h3>Page Views</h3>
+            <h3>Page Views <b-tooltip label="Number of times a page has been viewed. Total contains repeating users. Unique does not contain a user's repeated views." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
             <div class="ll-legend">
               <div><span class="dark-blue"></span> Total</div>
               <div><span class="light-blue"></span> Unique</div>
@@ -78,7 +78,7 @@
           <div class="ll-icon"><link-icon></link-icon></div>
           <div>
             <h2>{{report[org].engagement.data.totals['Clicks to Website']}}</h2>
-            <h3>Clicks to Website</h3>
+            <h3>Clicks to Website <b-tooltip label="Number of times Science Near Me refers a user to the opportunity's website." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
         </div>
         </div>
       </div>
@@ -97,7 +97,7 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Top Performing Opportunities</th>
+          <th>Top Performing Opportunities  <b-tooltip label="Opportunities with the most engagement on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></th>
           <th colspan="2">Total Views <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
           <b-button label="?" />
         </b-tooltip>
@@ -105,9 +105,7 @@
             <a v-else-if="engagement_top_order == 'total_views_asc'" @click="engagement_top_order = 'total_views_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="engagement_top_order = 'total_views_desc'"><i class="sort sortable"><sortable-icon /></i></a>
           </th>
-          <th colspan="2">Clicks to Website <b-tooltip label="The number of times users clicked on the link to your website." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
+          <th colspan="2">Clicks to Website <b-tooltip label="The number of times users clicked on the link to your website." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip>
             <a v-if="engagement_top_order == 'clicks_desc'" @click="engagement_top_order = 'clicks_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
             <a v-else-if="engagement_top_order == 'clicks_asc'" @click="engagement_top_order = 'clicks_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
             <a v-else @click="engagement_top_order = 'clicks_desc'"><i class="sort sortable"><sortable-icon /></i></a>
@@ -131,49 +129,40 @@
     </table>
   </div>
 
-   <!-- KEYWORD BY LOCATION & TIME PERIOD-->
    <h2 class="h2sep">User Searches</h2>
    <div class="filters">
       <div class="stack">
         <label>Location of User</label>
-        <b-select :v-model="location_us" @input="get_us_state($event)" style="margin-bottom: 10px;">
+        <b-select v-model="location_us" @input="get_us_state($event)" style="margin-bottom: 10px;">
           <option key="all" value="all" selected>All States</option>
-          <option v-for="s in us_states" :key="s.abbreviation" :value="s.abbreviation">{{ s.name }}</option>
+          <option v-for="s in metro_groups.all" :key="s" :value="s">{{ s }}</option>
         </b-select>
-        <b-select v-if="show_metro">
-          <option selected>All Areas</option>
-          <option>Daniel fill me with metro areas</option>
+        <b-select v-model="location_metro" v-if="show_metro">
+          <option :value="all">All Areas</option>
+          <option v-for="metro in metro_groups[location_us]" :value="metro">{{ metro }}</option>
         </b-select>
-      </div>
-      <div class="stack">
-        <label>Time Period</label>
-        <!-- <b-select :value="report[org].engagement.data.time_period" @input="load_data_into(report[org].organization, 0, $event, report[org].engagement.data.opportunity_status, 'engagement')">
-          <option v-for="period in report[org].engagement.time_periods" :key="period" :value="period">
-            {{period}}
-          </option>
-        </b-select> -->
       </div>
     </div>
    <div class="data-table-wrapper">
     <table class="data-table">
       <thead>
       <tr>
-        <th class="narrow-column">Top Searches by Keyword</th>
+        <th class="narrow-column">Top Searches by Keyword  <b-tooltip label="Most used keyword searches on Science Near Me, by location selected." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></th>
         <th colspan="2">Total Searches</th>
       </tr>
     </thead>
-   <!--  <tbody v-if="report.engagement.data.searches.length > 0">
-      <tr v-for="row in report.engagement.data.searches">
-        <td class="narrow-column">{{row.phrase}}</td>
-        <td class="table-num">{{row.searches}}</td>
-        <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
-      </tr> 
-    </tbody>
-    <tbody v-else>
-      <tr>
-        <td colspan="3">No Data to Display</td>
-      </tr>
-    </tbody>-->
+      <tbody v-if="local_searches && local_searches.length > 0">
+        <tr v-for="row in local_searches">
+          <td class="narrow-column">{{row[0]}}</td>
+          <td class="table-num">{{row[1]}}</td>
+          <td class="table-bar"><comparison-bar :value="row[1]" :max="local_searches_max" color="#165E6F" width="100%" height="1rem" /></td>
+        </tr> 
+      </tbody>
+      <tbody v-else>
+        <tr>
+          <td colspan="3">No Data to Display</td>
+        </tr>
+      </tbody>
     </table>
   </div>
 
@@ -432,7 +421,7 @@
 
     <div class="data-wrapper crush">
       <div class="data-head">
-          <h3>Referral Sources</h3>
+          <h3>Referral Sources  <b-tooltip label="How users arrive to Science Near Me before finding your opportunity." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
         </div>
     <pie-chart :data="report[org].traffic.data.pie" />
       </div>
@@ -533,18 +522,17 @@ import EyeIcon from '~/assets/img/eye.svg?inline'
 import LinkIcon from '~/assets/img/link.svg?inline'
 import SortIcon from '~/assets/img/sort.svg?inline'
 import SortableIcon from '~/assets/img/sortable.svg?inline'
-import STATES from "~/assets/geo/states.json"
 
 export default {
     name: "MyDataOverview",
-
+    
     components: {
-      EyeIcon,
-      LinkIcon,
-      SortIcon,
-      SortableIcon
+        EyeIcon,
+        LinkIcon,
+        SortIcon,
+        SortableIcon
     },
-
+    
     httpHeaders() {
         return {
             'X-XSS-Protection': '1; mode=block',
@@ -553,21 +541,54 @@ export default {
             'Referrer-Policy': 'same-origin',
         };
     },
-
+    
     async asyncData(context) {
         const user = await context.store.dispatch('get_user');
-
+        
         if(!user.authenticated) {
             context.error({
                 statusCode: 401,
                 message: "Authentication required"
             });
         }
-
+        
         const report = await context.$axios.$get("/api/ui/organization/analytics", context.store.state.auth);
+
+        let metro_groups = {'all': []};
+        let group = "";
+        let metros = [];
+        
+        for(let item of await context.$axios.$get("/api/ui/finder/metros")) {
+            if(item[0] != group) {
+                if(metros.length > 0) {
+                    metro_groups['all'].push(group);
+                    metro_groups[group] = metros;
+                }
+                group = item[0];
+                metros = [];
+            }
+            if(item[1]) {
+                metros.push(item[1]);
+            }
+        }
+        
+        if(metros.length > 0) {
+            metro_groups['all'].push(group);
+            metro_groups[group] = metros;
+        }
+
+        let local_searches = await context.$axios.$get("/api/ui/finder/metro-searches", context.store.state.auth);
+        let local_searches_max = 0;
+
+        if(local_searches.length > 0) {
+            local_searches_max = local_searches[0][1];
+        }
 
         return {
             report,
+            metro_groups,
+            local_searches,
+            local_searches_max
         };
     },
 
@@ -581,9 +602,10 @@ export default {
             traffic_top_order: 'unique_users_desc',
             selected_state: null,
             selected_attr: "Unique Users",
-            us_states: STATES,
             location_us: "all",
-            show_metro: false
+            location_metro: "all",
+            show_metro: false,
+            local_searching: 0
         }
     },
 
@@ -843,9 +865,42 @@ export default {
 
     },
 
+    watch: {
+        location_us() {
+            clearTimeout(this.local_searching);
+            this.local_searching = setTimeout(this.update_local, 500);
+        },
+
+        location_metro() {
+            clearTimeout(this.local_searching);
+            this.local_searching = setTimeout(this.update_local, 500);
+        }
+    },
+
     methods: {
         log(msg) {
             console.log(msg);
+        },
+
+        async update_local() {
+            let url = "/api/ui/finder/metro-searches";
+
+            if(this.location_us != 'all') {
+                url = url + '?state=' + this.location_us;
+
+                if(this.location_metro != 'all') {
+                    url = url + '&metro=' + this.location_metro;
+                }
+            }
+
+            this.local_searches = await this.$axios.$get(url, this.$store.state.auth);
+
+            if(this.local_searches.length > 0) {
+                this.local_searches_max = this.local_searches[0][1];
+            }
+            else {
+                this.local_searches_max = 0;
+            }
         },
 
         async load_data_into(about, kind, period, status, field) {

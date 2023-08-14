@@ -19,6 +19,8 @@ use tide::http::StatusCode;
 use tide::Response;
 use tide_fluent_routes::prelude::*;
 
+use self::auth::TOKEN_COOKIE;
+
 pub static UI_AUDIENCE: Lazy<uuid::Uuid> =
     Lazy::new(|| uuid::Uuid::parse_str("0be35cad-2b1f-4a45-a6da-b1051643c6f6").unwrap());
 
@@ -88,7 +90,7 @@ async fn request_person(req: &mut tide::Request<Database>) -> tide::Result<Optio
             return Ok(None);
         }
     } else {
-        if let Some(val) = req.cookie("__Host-token") {
+        if let Some(val) = req.cookie(TOKEN_COOKIE) {
             val.value().to_string()
         } else {
             return Ok(None);

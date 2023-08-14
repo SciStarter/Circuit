@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "chart.js": "^4.3.0",
+    "chartjs": "^0.3.24",
+    "chartjs-chart-wordcloud": "^4.2.2",
+    "vue-chartjs": "^5.2.0",
+    "vue-wordcloud": "^1.1.1"
+  }
+}

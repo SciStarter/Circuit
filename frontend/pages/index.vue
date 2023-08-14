@@ -8,6 +8,7 @@
     :ending="search_ending"
     :include-online="search_online"
     search-button
+    enable-invalid-location
     @text="search_text=$event"
     @place="search_place=$event"
     @beginning="search_beginning=$event"

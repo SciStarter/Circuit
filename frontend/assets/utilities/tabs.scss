@@ -43,13 +43,20 @@
 .nav-tabs.nav-tabs-alt {
 
   .tab-link {
-    background-color:#F0FCFF;
+    background-color:#165E6F;
     min-height: 67px;
     margin-right: 8px;
-    border-color: #e9ecef #e9ecef #dee2e6;
+    border-color: #165E6F;
+    color: #fff;
     &.active {
       background-color: #fff;
+      border-color: #e9ecef #e9ecef #dee2e6;
       border-bottom-color: #fff;
+      color: #2F2F2F;
+      
+      small {
+        color: #2F2F2F;
+      }
     }
   }
 
@@ -64,7 +71,7 @@
   font-size: 12px;
   display:block;
   line-height: 1;
-  color: rgb(33, 33, 33);
+  color: #fff;
 }
 
 .nav-tabs-alt a {

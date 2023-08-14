@@ -44,7 +44,7 @@ impl super::Source for ModernEventsCalendar {
         let mut seen = HashSet::new();
         let mut first = true;
 
-        let last_date = date.checked_add_months(Months::new(2)).unwrap();
+        let last_date = date.checked_add_months(Months::new(1)).unwrap();
 
         result.extend_from_slice(br#"{"items": ["#);
 
