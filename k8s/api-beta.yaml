@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-api-beta
-        image: scistarter/circuit-api:master-0.1.159
+        image: scistarter/circuit-api:master-0.1.160
         ports:
         - containerPort: 8000
         env:

@@ -224,7 +224,7 @@
       </fieldset> -->
       <fieldset data-context="find-organization">
         <label>Host Organization</label>
-        <b-input :value="get_query('host', '')" :disabled="loading" :name="'new-' + Math.random()" type="text" @input="set_query_interactive('host', $event, '')" />
+        <b-input :value="get_query('host', '')" :disabled="loading" :name="'new-' + Math.random()" type="text" @input="set_query('host', $event, '')" />
       </fieldset>
       <fieldset data-context="find-partner">
         <label>Partner Organization</label>
@@ -472,7 +472,7 @@ export default {
             },
 
             set(value) {
-                this.set_query_interactive('min_age', value ? 0 : undefined);
+                this.set_query('min_age', value ? 0 : undefined);
             }
         },
 
@@ -482,7 +482,7 @@ export default {
             },
 
             set(value) {
-                this.set_query_interactive('max_age', value ? 120 : undefined);
+                this.set_query('max_age', value ? 120 : undefined);
             }
         },
 
@@ -493,7 +493,7 @@ export default {
 
             set(value) {
                 if(this.min_age_active) {
-                    this.set_query_interactive('min_age', value);
+                    this.set_query('min_age', value);
                 }
             }
         },
@@ -505,7 +505,7 @@ export default {
 
             set(value) {
                 if(this.max_age_active) {
-                    this.set_query_interactive('max_age', value);
+                    this.set_query('max_age', value);
                 }
             }
         },
@@ -516,7 +516,7 @@ export default {
             },
 
             set(value) {
-                this.set_query_interactive('kids_only', value);
+                this.set_query('kids_only', value);
             }
         },
 
@@ -526,7 +526,7 @@ export default {
             },
 
             set(value) {
-                this.set_query_interactive('adults_only', value);
+                this.set_query('adults_only', value);
             }
         },
 
@@ -602,7 +602,7 @@ export default {
 
             set(value) {
                 this.query.partner_text = value ? value.name : "";
-                this.set_query_interactive('partner', value ? value.uid : undefined);
+                this.set_query('partner', value ? value.uid : undefined);
             }
         },
 
@@ -621,7 +621,7 @@ export default {
             },
 
             set(values) {
-                this.set_query_interactive('descriptors[]', values.map(opt => opt[0]));
+                this.set_query('descriptors[]', values.map(opt => opt[0]));
             }
         },
 
@@ -636,7 +636,7 @@ export default {
             },
 
             set(values) {
-                this.set_query_interactive('topics[]', values.map(opt => opt[0]));
+                this.set_query('topics[]', values.map(opt => opt[0]));
             }
         },
 
@@ -650,7 +650,7 @@ export default {
             },
 
             set(value) {
-                this.set_query_interactive('cost', value, 'any');
+                this.set_query('cost', value, 'any');
             }
         },
 
@@ -660,7 +660,7 @@ export default {
             },
 
             set(value) {
-                this.set_query_interactive('venue_type', value, 'either');
+                this.set_query('venue_type', value, 'either');
             }
         },
 
@@ -785,8 +785,7 @@ export default {
                 Vue.set(this.query, 'page', 0);
             }
 
-            // disabled since we're switching to explicit button clicks for filters
-            //this.search();
+            this.search();
         },
 
         set_query_multiple(items) {
