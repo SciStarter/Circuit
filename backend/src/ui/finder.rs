@@ -518,14 +518,14 @@ pub async fn metro_searches(req: tide::Request<Database>) -> tide::Result {
             sqlx::query!(
                 r#"
 SELECT
-  c_person_searches."text" AS "text!",
+  LOWER(TRIM(c_person_searches."text")) AS "text!",
   COUNT(*) AS "count!"
 FROM
   c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id
 WHERE
   c_person."state" = $1 AND
   c_person."metro" = $2
-GROUP BY c_person_searches."text"
+GROUP BY LOWER(TRIM(c_person_searches."text"))
 ORDER BY COUNT(*) DESC
 "#,
                 state,
@@ -539,13 +539,13 @@ ORDER BY COUNT(*) DESC
             sqlx::query!(
                 r#"
 SELECT
-  c_person_searches."text" AS "text!",
+  LOWER(TRIM(c_person_searches."text")) AS "text!",
   COUNT(*) AS "count!"
 FROM
   c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id
 WHERE
   c_person."state" = $1
-GROUP BY c_person_searches."text"
+GROUP BY LOWER(TRIM(c_person_searches."text"))
 ORDER BY COUNT(*) DESC
 "#,
                 state,
@@ -558,11 +558,11 @@ ORDER BY COUNT(*) DESC
             sqlx::query!(
                 r#"
 SELECT
-  c_person_searches."text" AS "text!",
+  LOWER(TRIM(c_person_searches."text")) AS "text!",
   COUNT(*) AS "count!"
 FROM
   c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id
-GROUP BY c_person_searches."text"
+GROUP BY LOWER(TRIM(c_person_searches."text"))
 ORDER BY COUNT(*) DESC
 "#,
             )
