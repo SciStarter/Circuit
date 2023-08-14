@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  c_person_searches.\"text\" AS \"text!\",\n  COUNT(*) AS \"count!\"\nFROM\n  c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id\nWHERE\n  c_person.\"state\" = $1\nGROUP BY c_person_searches.\"text\"\nORDER BY COUNT(*) DESC\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "text!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "25262582727131f390aa437db7df677218bb23ee1c710187a1b7809b2bc3219b"
+}
