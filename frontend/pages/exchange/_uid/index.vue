@@ -85,14 +85,25 @@
     </div>
 
     <div class="exchange-filters">
-      <div v-if="filter==false" class="filter-btn">
-        <a @click="filter = true"><filter-icon /> show filters</a>
-      </div>
-      <div v-else>
-        <div class="filter-btn">
-          <a @click="filter = false"><filter-icon /> hide filters</a>
+
+        <div class="quickfilter">
+          <div class="qf-button-group">
+              <button type="button" :class="{'active':quickfilter_location=='In Person'}" @click="quickFilterLocation('In Person')">In Person</button>
+              <button type="button" :class="{'active':quickfilter_location=='Online'}" @click="quickFilterLocation('Online')">Online</button>
+          </div>
+          <div class="qf-button-group">
+              <button type="button" :class="{'active':quickfilter_time=='Scheduled'}" @click="quickFilterTime('Scheduled')">Scheduled</button>
+              <button type="button" :class="{'active':quickfilter_time=='On Demand'}" @click="quickFilterTime('On Demand')">On Demand</button>
+          </div>
+
+          <button v-if="filter==false" type="button" class="no-mobile" @click="filter = true"><filter-icon /> More Filters</button>
+          <button v-else type="button" class="no-mobile" @click="filter = false"><filter-icon /> Hide Filters</button>
+
         </div>
 
+
+
+      <div v-if="filter==true">
         <div class="filters">
           <fieldset>
             <label class="b">Age</label>
@@ -153,7 +164,7 @@
               <input v-model="max_age" type="text" class="slider-direct" :disabled="!max_age_active">
             </b-field>
           </fieldset>
-          <fieldset data-context="find-physical">
+          <!-- <fieldset data-context="find-physical">
             <label>
               <span  class="b">Format</span>
               <b-tooltip multilined>
@@ -175,7 +186,7 @@
                 <span class="radio-label">On-Demand</span>
               </b-radio-button>
             </b-field>
-          </fieldset>
+          </fieldset> -->
         </div>
 
 
@@ -325,6 +336,8 @@ export default {
             filter: false,
             loading: false,
             num_reloads: 0,
+            quickfilter_location: null,
+            quickfilter_time: null
         };
     },
     
@@ -440,7 +453,48 @@ export default {
             q.r = this.num_reloads += 1;
 
             this.$router.push({name: 'exchange-uid', params: this.$route.params, query: q});
-        }
+        },
+        quickFilterLocation(value,event){
+            if (value == this.quickfilter_location) {
+                this.quickfilter_location = null;
+            } else {
+                this.quickfilter_location = value;
+            }
+
+            switch(this.quickfilter_location) {
+            case "In Person":
+                Vue.set(this.query, 'physical', 'in-person');
+                break;
+            case "Online":
+                Vue.set(this.query, 'physical', 'online');
+                break;
+            default:
+                Vue.delete(this.query, 'physical');
+            }
+
+            this.set_query_interactive('page', 0)
+        },
+
+        quickFilterTime(value,event){
+            if (value == this.quickfilter_time) {
+                this.quickfilter_time = null;
+            } else {
+                this.quickfilter_time = value;
+            }
+
+            switch(this.quickfilter_time) {
+            case 'Scheduled':
+                Vue.set(this.query, 'temporal', 'scheduled');
+                break;
+            case 'On Demand':
+                Vue.set(this.query, 'temporal', 'on-demand');
+                break;
+            default:
+                Vue.delete(this.query, 'temporal');
+            }
+
+            this.set_query_interactive('page', 0);
+        },
     },
 }
 </script>
@@ -873,6 +927,56 @@ export default {
     :deep(div.pagination-selector.small){
         top: 45px;
     }
+  }
+}
+
+.quickfilter {
+  display: flex;
+  margin:.75rem .3rem;
+  align-items: center;
+
+  button, :deep(.mini-select) {
+    font-size: .75rem;
+    padding: .25rem .5rem;
+    border:1px solid #d4d4d4;
+    border-radius: 6px;
+    margin-right: 8px;
+    cursor: pointer;
+
+    svg {
+      width: 16px;
+    vertical-align: middle;
+    height: 16px;
+    position: relative;
+    top: -1px;
+    margin:-2px 0;
+    }
+  }
+}
+.qf-button-group {
+  margin-right: 8px;
+  button {
+    font-size: .75rem;
+    padding: .25rem .5rem;
+    border:1px solid #d4d4d4;
+    cursor: pointer;
+    margin-right: 0;
+    &:first-child {
+      border-radius: 6px 0 0 6px;
+    }
+    &:last-child {
+      border-radius: 0 6px 6px 0;
+    }
+    &.active {
+      background-color: $snm-color-action;
+      border-color: $snm-color-action;
+    }
+  }
+}
+
+@media (max-width:959px){
+  .quickfilter {
+    margin: 1rem 0 0;
   }
 }
 
