@@ -6,88 +6,89 @@
 
   <div class="filters">
     <div class="stack">
-    
+
       <template v-if="opps.length > 10">
-      <b-field label="Find your opportunity">
-        <b-autocomplete
-                v-model="autocomplete_opp"
-                :data="filteredOpps" 
-                :field="'title'"
-                @select="load_autocomplete($event)"
-                expanded
-                open-on-focus
-                clearable
-                dropdown-position="bottom"
-                >
-                <template #empty>No results found</template>
-            </b-autocomplete>
-      </b-field>
-    </template>
+        <b-field label="Find your opportunity">
+          <b-autocomplete
+            v-model="autocomplete_opp"
+            :data="filteredOpps"
+            :field="'title'"
+            @select="load_autocomplete($event)"
+            expanded
+            open-on-focus
+            clearable
+            dropdown-position="bottom"
+            >
+            <template #empty>No results found</template>
+          </b-autocomplete>
+        </b-field>
+      </template>
 
-    <template v-else>
-      <label>Opportunity</label>
-      <b-select :value="current_opp" @input="load_opp($event)">
-        <option v-for="opp in opps" :key="opp.id" :value="opp">
-          {{opp.title.slice(0, 64)}}
-        </option>
-      </b-select>
-    </template>
-
-    </div>
-  </div>
-
-  <div class="nav-mobile-wrapper">
-  <div class="nav-tab-wrapper">
-    <ul class="nav-tabs nav-tabs-alt">
-      <li><a class="tab-link" :class="{'active':state=='engagement'}" @click="state='engagement'"><span>Engagement</span><small>How users interact with your opportunity</small></a></li>
-      <li><a class="tab-link" :class="{'active':state=='states'}" @click="state='states'"><span>Audience</span><small>Demographics, locations and technology of your users</small></a></li>
-      <li><a class="tab-link" :class="{'active':state=='traffic'}" @click="state='traffic'"><span>Traffic</span><small>How users get to your opportunity</small></a></li>
-      <li><a class="tab-link" :class="{'active':state=='overlap'}" @click="state='overlap'"><span>Engagement Overlap</span><small>See how your users interact with other opportunities</small></a></li>
-    </ul>
-  </div>
-</div>
-
-  <aside class="data-update">Date updated: {{updated_local}}</aside>
-
-  <div v-if="state=='engagement'">
-
-
-    <h2>{{current_opp.title}}</h2>
-    <div class="filters">
-      <div class="stack">
-        <label>Time Period</label>
-        <b-select :value="report.engagement.data.time_period" @input="load_data_into(current_opp.uid, 0, $event, 'Live and Closed', 'engagement')">
-          <option v-for="period in report.engagement.time_periods" :key="period" :value="period">
-            {{period}}
+      <template v-else>
+        <label>Opportunity</label>
+        <b-select :value="current_opp" @input="load_opp($event)">
+          <option v-for="opp in opps" :key="opp.id" :value="opp">
+            {{opp.title.slice(0, 64)}}
           </option>
         </b-select>
+      </template>
+
+    </div>
+  </div>
+
+  <template v-if="report != null">
+    <div class="nav-mobile-wrapper">
+      <div class="nav-tab-wrapper">
+        <ul class="nav-tabs nav-tabs-alt">
+          <li><a class="tab-link" :class="{'active':state=='engagement'}" @click="state='engagement'"><span>Engagement</span><small>How users interact with your opportunity</small></a></li>
+          <li><a class="tab-link" :class="{'active':state=='states'}" @click="state='states'"><span>Audience</span><small>Demographics, locations and technology of your users</small></a></li>
+          <li><a class="tab-link" :class="{'active':state=='traffic'}" @click="state='traffic'"><span>Traffic</span><small>How users get to your opportunity</small></a></li>
+          <li><a class="tab-link" :class="{'active':state=='overlap'}" @click="state='overlap'"><span>Engagement Overlap</span><small>See how your users interact with other opportunities</small></a></li>
+        </ul>
       </div>
     </div>
 
-    <div class="data-wrapper">
-      <div class="data-header">
-      <div class="big-legend bl-blue">
-          <div class="ll-icon"><eye-icon></eye-icon></div>
-          <div>
-            <h2>{{ report.engagement.data.bars.self["Views"] }}</h2>
-            <h3>Page Views</h3>
-          </div>
+    <aside class="data-update">Date updated: {{updated_local}}</aside>
 
-      </div>
-      <div class="ll-legend">
-              <div><span class="dark-blue"></span> Total</div>
-              <div><span class="light-blue"></span> Unique</div>
-            </div>
+    <div v-if="state=='engagement'">
+
+
+      <h2>{{current_opp.title}}</h2>
+      <div class="filters">
+        <div class="stack">
+          <label>Time Period</label>
+          <b-select :value="report.engagement.data.time_period" @input="load_data_into(current_opp.uid, 0, $event, 'Live and Closed', 'engagement')">
+            <option v-for="period in report.engagement.time_periods" :key="period" :value="period">
+              {{period}}
+            </option>
+          </b-select>
         </div>
-      <client-only>
-        <line-chart
-          :rows="report.engagement.data.chart"
-          :xaxis="d => new Date(d.date)"
-          :yaxes="['Views', 'Unique']"
-          :colors="['#268699', '#BFDCE2']"
-          />
-      </client-only>
-    </div>
+      </div>
+
+      <div class="data-wrapper">
+        <div class="data-header">
+          <div class="big-legend bl-blue">
+            <div class="ll-icon"><eye-icon></eye-icon></div>
+            <div>
+              <h2>{{ report.engagement.data.bars.self["Views"] }}</h2>
+              <h3>Page Views</h3>
+            </div>
+
+          </div>
+          <div class="ll-legend">
+            <div><span class="dark-blue"></span> Total</div>
+            <div><span class="light-blue"></span> Unique</div>
+          </div>
+        </div>
+        <client-only>
+          <line-chart
+            :rows="report.engagement.data.chart"
+            :xaxis="d => new Date(d.date)"
+            :yaxes="['Views', 'Unique']"
+            :colors="['#268699', '#BFDCE2']"
+            />
+        </client-only>
+      </div>
 
     <!-- Disabled until the computation catches up and we can display accurate data -->
   <!--   <div class="data-wrapper"> -->
@@ -100,7 +101,7 @@
   <!--         </div> -->
   <!--       </div> -->
   <!--     </div> -->
-      
+
   <!--     <div class="data-header2"> -->
   <!--       <h4>Conversion Rates</h4><small>based on total page views</small> -->
   <!--     </div> -->
@@ -129,17 +130,17 @@
   <!--       </div> -->
   <!--     </div> -->
   <!--   </div> -->
-  </div>
-
-  <div v-else-if="state=='states'">
-    <h2>Audience</h2>
-
-    <div class="notification">
-      <label>Demographics Coming Soon!</label>
-      We are working on getting demographic data at the opportunity level. Right now you can view <nuxt-link to="/">site-wide demographic data</nuxt-link>.
     </div>
 
-    <div class="filters">
+    <div v-else-if="state=='states'">
+      <h2>Audience</h2>
+
+      <div class="notification">
+        <label>Demographics Coming Soon!</label>
+        We are working on getting demographic data at the opportunity level. Right now you can view <nuxt-link to="/">site-wide demographic data</nuxt-link>.
+      </div>
+
+      <div class="filters">
       <!-- <div class="stack"> -->
       <!--   <label>Opportunity Status</label> -->
       <!--   <b-select :value="report.states.data.opportunity_status" @input="log('TBD download from server')"> -->
@@ -156,10 +157,10 @@
           </option>
         </b-select>
       </div>
-    </div>
+      </div>
 
-    <choropleth-states v-if="selected_state === null" :value="report.states.data.states" attr="Unique Users" @state="select_state($event)"/>
-    <div v-else>
+      <choropleth-states v-if="selected_state === null" :value="report.states.data.states" attr="Unique Users" @state="select_state($event)"/>
+      <div v-else>
       <a @click="selected_state = null">← Back to US Map</a>
       <b-select v-model="selected_attr" placeholder="Select Data Type" style="margin-bottom:20px">
         <option>Unique Users</option>
@@ -552,6 +553,10 @@
     </div>
 
   </div>
+  </template>
+  <template v-else>
+    <em>The currently selected project has received no traffic in the current time period</em>
+  </template>
 </div>
 </template>
 
@@ -616,7 +621,7 @@ export default {
 
         const current_opp = !!context.query.opp ? (opps.filter(opp => opp.slug == context.query.opp) || opps[0]) : opps[0];
 
-        const report = await context.$axios.$get("/api/ui/organization/analytics", {
+        let report = await context.$axios.$get("/api/ui/organization/analytics", {
             params: {
                 about: current_opp.uid,
                 kind: 0,
