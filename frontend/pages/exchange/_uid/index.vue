@@ -88,12 +88,12 @@
 
         <div class="quickfilter">
           <div class="qf-button-group">
-              <button type="button" :class="{'active':quickfilter_location=='In Person'}" @click="quickFilterLocation('In Person')">In Person</button>
-              <button type="button" :class="{'active':quickfilter_location=='Online'}" @click="quickFilterLocation('Online')">Online</button>
+              <button type="button" :class="{'active':quickfilter_location=='In Person'||quickfilter_location=='in-person'}" @click="quickFilterLocation('In Person')">In Person</button>
+              <button type="button" :class="{'active':quickfilter_location=='Online'||quickfilter_location=='online'}" @click="quickFilterLocation('Online')">Online</button>
           </div>
           <div class="qf-button-group">
-              <button type="button" :class="{'active':quickfilter_time=='Scheduled'}" @click="quickFilterTime('Scheduled')">Scheduled</button>
-              <button type="button" :class="{'active':quickfilter_time=='On Demand'}" @click="quickFilterTime('On Demand')">On Demand</button>
+              <button type="button" :class="{'active':quickfilter_time=='Scheduled'||quickfilter_time=='scheduled'}" @click="quickFilterTime('Scheduled')">Scheduled</button>
+              <button type="button" :class="{'active':quickfilter_time=='On Demand'||quickfilter_time=='on-demand'}" @click="quickFilterTime('On Demand')">On Demand</button>
           </div>
 
           <button v-if="filter==false" type="button" class="no-mobile" @click="filter = true"><filter-icon /> More Filters</button>
@@ -164,7 +164,7 @@
               <input v-model="max_age" type="text" class="slider-direct" :disabled="!max_age_active">
             </b-field>
           </fieldset>
-          <!-- <fieldset data-context="find-physical">
+          <fieldset data-context="find-physical">
             <label>
               <span  class="b">Format</span>
               <b-tooltip multilined>
@@ -186,7 +186,7 @@
                 <span class="radio-label">On-Demand</span>
               </b-radio-button>
             </b-field>
-          </fieldset> -->
+          </fieldset>
         </div>
 
 
@@ -229,6 +229,7 @@
 </template>
 
 <script>
+import Vue from 'vue'
 import HomeIcon from '~/assets/img/home.svg?inline'
 import SubmitOpportunityIcon from '~/assets/img/submit-opportunity.svg?inline'
 import LookupPlace from '~/components/LookupPlace'
@@ -293,6 +294,7 @@ export default {
         let adults_only = !!query.adults_only && query.adults_only != 'false';
         let kids_only = !!query.kids_only && query.kids_only != 'false';
         let physical = query.physical || 'in-person-or-online';
+        let temporal = query.temporal || 'on-demand-or-scheduled';
         
         let opps = await context.$axios.$get('/api/ui/finder/search', { params: {...default_query, ...query} });
         
@@ -309,6 +311,8 @@ export default {
         }
         
         return {
+            quickfilter_location: physical,
+            quickfilter_time: temporal,
             opportunities: opps,
             calendar,
             month,
@@ -325,6 +329,7 @@ export default {
             adults_only,
             kids_only,
             physical,
+            temporal
         };
     },
     
@@ -336,8 +341,6 @@ export default {
             filter: false,
             loading: false,
             num_reloads: 0,
-            quickfilter_location: null,
-            quickfilter_time: null
         };
     },
     
@@ -463,16 +466,14 @@ export default {
 
             switch(this.quickfilter_location) {
             case "In Person":
-                Vue.set(this.query, 'physical', 'in-person');
+                this.search({'physical': 'in-person'});
                 break;
             case "Online":
-                Vue.set(this.query, 'physical', 'online');
+                this.search({'physical': 'online'});
                 break;
             default:
-                Vue.delete(this.query, 'physical');
+                this.search({'physical': 'in-person-or-online'});
             }
-
-            this.set_query_interactive('page', 0)
         },
 
         quickFilterTime(value,event){
@@ -484,16 +485,14 @@ export default {
 
             switch(this.quickfilter_time) {
             case 'Scheduled':
-                Vue.set(this.query, 'temporal', 'scheduled');
+                this.search({'temporal': 'scheduled', 'page': 0});
                 break;
             case 'On Demand':
-                Vue.set(this.query, 'temporal', 'on-demand');
+                this.search({'temporal': 'on-demand', 'page': 0});
                 break;
             default:
-                Vue.delete(this.query, 'temporal');
+                this.search({'temporal': 'on-demand-or-scheduled', 'page': 0});
             }
-
-            this.set_query_interactive('page', 0);
         },
     },
 }
