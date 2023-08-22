@@ -24,6 +24,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .post(add_organization)
         .at("analytics", |r| r.get(my_analytics))
+        .at("opps-overview", |r| r.get(opps_overview))
         .at("all", |r| r.get(my_organizations))
         .at("exists", |r| r.post(check_organization))
         .at("types", |r| r.get(organization_types))
@@ -432,4 +433,27 @@ WHERE
 
         okay(&toplevel)
     }
+}
+
+pub async fn opps_overview(_req: tide::Request<Database>) -> tide::Result {
+    okay(&json!({
+        "total": 1234,
+        "active": 500,
+        "inactive": 734,
+        "in_person": 654,
+        "online": 765,
+        "global": 887,
+        "regional": 543,
+        "at_point": 987,
+        "attribute": {
+            "domain": {"max": {"all": 1111, "current": 480}, "rows": [{"label": "gorp", "all": 1020, "current": 132}]},
+            "activity": {"max": {"all": 1111, "current": 480}, "rows": [{"label": "gorp", "all": 1020, "current": 432}]},
+            "indoor": {"max": {"all": 1111, "current": 480}, "rows": [{"label": "gorp", "all": 1020, "current": 432}]},
+        },
+        "keywords": [["dinosaurs",99],["hamsters",32],["tacos",14],["muffins",199],["beach",99],["hot dogs",32],["Alyssa Milano",44],["animals",256],["minotaurs",46],["popcicles",102],["bioblitz",26],["blueberries",69],["sparrows",89],["wrens",54],["Gilligan",14],["bears",123]],
+        "providers": {
+            "max": 1111,
+            "rows": [{"label": "gorp", "value": 432}],
+        }
+    }))
 }

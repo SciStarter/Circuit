@@ -19,17 +19,13 @@
   <aside class="data-update">Date updated: {{updated_local}}</aside>
 
   <div v-if="state=='opps'">
-
-    
-
-
     <h3>Science Opportunities</h3>
     <div id="opps-data" class="flex">
         <div class="frow frow-top">
           <div class="big-legend large-legend">
             <logo-icon></logo-icon>
             <div>
-              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h2>{{opps.total}}</h2>
               <h3>Total Opportunities</h3>
               <h4>All Time</h4>
             </div>
@@ -37,13 +33,13 @@
           <div class="bars">
             <div>
               <div class="bar-label"><span>Active & Published <b-tooltip label="Opportunities users can currently find." position="is-top" append-to-body multilined>
-            <b-button label="?" /></b-tooltip></span><span><span class="legend-num">999</span>/3458</span></div>
-              <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+            <b-button label="?" /></b-tooltip></span><span><span class="legend-num">{{opps.active}}</span>/{{opps.total}}</span></div>
+              <comparison-bar :value="opps.active" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
             </div>
             <div>
             <div class="bar-label"><span>Expired <b-tooltip label="Opportunities no longer available." position="is-top" append-to-body multilined>
-          <b-button label="?" /></b-tooltip></span><span><span class="legend-num">999</span>/3458</span></div>
-            <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          <b-button label="?" /></b-tooltip></span><span><span class="legend-num">{{opps.inactive}}</span>/{{opps.total}}</span></div>
+            <comparison-bar :value="opps.inactive" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
           </div>
           </div>
         </div>
@@ -52,23 +48,23 @@
             <div class="big-legend">
             <in-person-icon></in-person-icon>
             <div>
-              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h2>{{opps.in_person}}</h2>
               <h3>In person, in a place <b-tooltip label="Opportunities that individuals must go someplace. There may still be an online component, such as data entry." position="is-top" append-to-body multilined>
           <b-button label="?" /></b-tooltip></h3>
             </div>
           </div>
-          <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          <comparison-bar :value="opps.in_person" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
           </div>
           <div>
             <div class="big-legend">
             <online-icon></online-icon>
             <div>
-              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h2>{{opps.online}}</h2>
               <h3>Online only <b-tooltip label="Opportunities that can be completed only online." position="is-top" append-to-body multilined>
           <b-button label="?" /></b-tooltip></h3>
             </div>
           </div>
-          <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          <comparison-bar :value="opps.online" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
           </div> 
         </div>
         <div class="frow">
@@ -76,34 +72,34 @@
             <div class="big-legend">
             <global-icon></global-icon>
             <div>
-              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h2>{{opps.global}}</h2>
               <h3>Global <b-tooltip label="Opportunities available to anyone in the world." position="is-top" append-to-body multilined>
           <b-button label="?" /></b-tooltip></h3>
             </div>
           </div>
-          <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          <comparison-bar :value="opps.global" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
           </div>
           <div>
             <div class="big-legend">
             <region-icon></region-icon>
             <div>
-              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h2>{{opps.regional}}</h2>
               <h3>In a region <b-tooltip label="Opportunities that span an area." position="is-top" append-to-body multilined>
           <b-button label="?" /></b-tooltip></h3>
             </div>
           </div>
-          <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          <comparison-bar :value="opps.regional" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
           </div> 
           <div>
             <div class="big-legend">
             <point-icon></point-icon>
             <div>
-              <h2>{{report.engagement.data.stats.unique_visitors}}</h2>
+              <h2>{{opps.at_point}}</h2>
               <h3>At a point location <b-tooltip label="Opportunities at a specific address." position="is-top" append-to-body multilined>
           <b-button label="?" /></b-tooltip></h3>
             </div>
           </div>
-          <comparison-bar :value="100" :max="200" color="#165E6F" width="100%" height="1rem" />
+          <comparison-bar :value="opps.at_point" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
           </div> 
         </div>
     </div>
@@ -112,7 +108,7 @@
       <img src="~/assets/img/data-icons/map-explorer.jpg" alt="map explorer" />
       <div>
         <p>Where are Science Near Me's Opportunities?</p>
-        <a href="/geo-explorer" class="action-btn btn-arrow">Visit the Map Explorer</a>
+        <nuxt-link to="/geo-explorer" class="action-btn btn-arrow">Visit the Map Explorer</nuxt-link>
       </div>
     </div>
 
@@ -142,12 +138,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in report.engagement.data.searches">
-            <td class="narrow-column">{{row.phrase}}</td>
-            <td class="table-num">{{row.searches}}</td>
-            <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
-            <td class="table-num">{{row.searches}}</td>
-            <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
+          <tr v-for="row in opps.attribute[attribute].rows">
+            <td class="narrow-column">{{row.label}}</td>
+            <td class="table-num">{{row.all}}</td>
+            <td class="table-bar"><comparison-bar :value="row.all" :max="opps.attribute[attribute].max.all" color="#165E6F" width="100%" height="1rem" /></td>
+            <td class="table-num">{{row.current}}</td>
+            <td class="table-bar"><comparison-bar :value="row.current" :max="opps.attribute[attribute].max.current" color="#165E6F" width="100%" height="1rem" /></td>
           </tr>
         </tbody>
       </table>
@@ -155,7 +151,7 @@
 
     <div class="wordcloud-wrapper">
       <h3>Top 30 Keywords  <b-tooltip label="The most used keywords to describe opportunities on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
-      <word-cloud :words="keywords"></word-cloud>
+      <word-cloud :words="opps.keywords"></word-cloud>
     </div>
 
     <div class="data-table-wrapper">
@@ -167,10 +163,10 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-for="row in report.engagement.data.searches">
-        <td class="narrow-column">{{row.phrase}}</td>
-        <td class="table-num">{{row.searches}}</td>
-        <td class="table-bar"><comparison-bar :value="row.searches" :max="report.engagement.data.search_max" color="#165E6F" width="100%" height="1rem" /></td>
+      <tr v-for="row in opps.providers.rows">
+        <td class="narrow-column">{{row.label}}</td>
+        <td class="table-num">{{row.value}}</td>
+        <td class="table-bar"><comparison-bar :value="row.value" :max="opps.providers.max" color="#165E6F" width="100%" height="1rem" /></td>
       </tr>
     </tbody>
     </table>
@@ -789,8 +785,11 @@ export default {
             ...context.store.state.auth
         });
 
+        const opps = await context.$axios.$get("/api/ui/organization/opps-overview", context.store.state.auth);
+
         return {
             report,
+            opps,
         };
     },
 
@@ -805,7 +804,6 @@ export default {
             selected_attr: "Unique Users",
             e_type: "Views",
             attribute: 'domain',
-            keywords: [['dinosaurs',99],['hamsters',32],['tacos',14],['muffins',199],['beach',99],['hot dogs',32],['Alyssa Milano',44],['animals',256],['minotaurs',46],['popcicles',102],['bioblitz',26],['blueberries',69],['sparrows',89],['wrens',54],['Gilligan',14],['bears',123]]
         }
     },
 
