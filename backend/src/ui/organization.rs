@@ -435,25 +435,145 @@ WHERE
     }
 }
 
-pub async fn opps_overview(_req: tide::Request<Database>) -> tide::Result {
+#[derive(Serialize)]
+struct LabeledAllCurrent {
+    label: String,
+    all: i64,
+    current: i64,
+}
+
+#[derive(Serialize)]
+struct LabeledValue {
+    label: String,
+    value: i64,
+}
+
+pub async fn opps_overview(req: tide::Request<Database>) -> tide::Result {
+    let total = sqlx::query_scalar!(r#"SELECT COUNT(*) AS "result!" FROM c_opportunity"#)
+        .fetch_one(req.state())
+        .await?;
+
+    let active = sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE c_opportunity_is_current(interior, exterior)"#
+    )
+    .fetch_one(req.state())
+    .await?;
+
+    let online = sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE exterior->>'is_online' = 'true'"#
+    )
+    .fetch_one(req.state())
+    .await?;
+
+    let regional = sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE exterior->>'location_type' = 'near'"#
+    )
+    .fetch_one(req.state())
+    .await?;
+
+    let at_point = sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE exterior->>'location_type' = 'at'"#
+    )
+    .fetch_one(req.state())
+    .await?;
+
+    let domain_all = sqlx::query!(
+        r#"
+SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
+FROM c_opportunity
+WHERE exterior->>'pes_domain' != 'unspecified'
+GROUP BY exterior->>'pes_domain'
+"#
+    )
+    .map(|row| (row.domain.to_owned(), row.total))
+    .fetch_all(req.state())
+    .await?;
+    let domain_all_max = domain_all.iter().map(|(_, t)| *t).max();
+
+    let domain_current = sqlx::query!(
+        r#"
+SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
+FROM c_opportunity
+WHERE c_opportunity_is_current(interior, exterior) AND exterior->>'pes_domain' != 'unspecified'
+GROUP BY exterior->>'pes_domain'
+"#
+    )
+    .map(|row| (row.domain.to_owned(), row.total))
+    .fetch_all(req.state())
+    .await?;
+    let domain_current_max = domain_current.iter().map(|(_, t)| *t).max();
+
+    let domain_current: BTreeMap<String, i64> = domain_current.into_iter().collect();
+
+    let activity_all = sqlx::query!(
+        r#"
+SELECT v.descriptor AS "descriptor!", count(*) AS "total!"
+FROM c_opportunity o JOIN jsonb_array_elements_text(exterior->'opp_descriptor') v(descriptor) ON true
+GROUP BY v.descriptor
+ORDER BY "total!" DESC;
+"#
+    )
+    .map(|row| (row.descriptor.to_owned(), row.total))
+    .fetch_all(req.state())
+    .await?;
+    let activity_all_max = activity_all.iter().map(|(_, t)| *t).max();
+
+    let activity_current = sqlx::query!(
+        r#"
+SELECT v.descriptor AS "descriptor!", count(*) AS "total!"
+FROM c_opportunity o JOIN jsonb_array_elements_text(exterior->'opp_descriptor') v(descriptor) ON true
+WHERE c_opportunity_is_current(interior, exterior)
+GROUP BY v.descriptor;
+"#
+    )
+    .map(|row| (row.descriptor.to_owned(), row.total))
+    .fetch_all(req.state())
+    .await?;
+    let activity_current_max = activity_current.iter().map(|(_, t)| *t).max();
+
+    let activity_current: BTreeMap<String, i64> = activity_current.into_iter().collect();
+
+    let indoor_all = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE exterior->'opp_venue' @> '"indoors"'::jsonb"#).fetch_one(req.state()).await?;
+    let outdoor_all = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE exterior->'opp_venue' @> '"outdoors"'::jsonb"#).fetch_one(req.state()).await?;
+    let indoor_current = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE c_opportunity_is_current(interior, exterior) AND exterior->'opp_venue' @> '"indoors"'::jsonb"#).fetch_one(req.state()).await?;
+    let outdoor_current = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE c_opportunity_is_current(interior, exterior) AND exterior->'opp_venue' @> '"outdoors"'::jsonb"#).fetch_one(req.state()).await?;
+
+    let keywords = sqlx::query!(r#"SELECT lower(trim(v.tag)) AS "text!", count(*) as "total!" FROM c_opportunity o JOIN jsonb_array_elements_text(exterior->'tags') v(tag) ON true GROUP BY lower(trim(v.tag)) ORDER BY "total!" DESC LIMIT 30"#).map(|row| (row.text.to_owned(), row.total)).fetch_all(req.state()).await?;
+
+    let providers = sqlx::query!(r#"SELECT p.exterior->>'name' AS "name!", count(*) AS "total!" FROM c_opportunity o JOIN c_partner p ON p.exterior->'uid' = o.exterior->'partner' GROUP BY p.exterior->>'name'"#)
+        .map(|row| LabeledValue {
+            label: row.name.to_owned(),
+            value: row.total,
+        })
+        .fetch_all(req.state())
+        .await?;
+
+    let providers_max = providers.iter().map(|lv| lv.value).max();
+
     okay(&json!({
-        "total": 1234,
-        "active": 500,
-        "inactive": 734,
-        "in_person": 654,
-        "online": 765,
-        "global": 887,
-        "regional": 543,
-        "at_point": 987,
+        "total": total,
+
+        "active": active,
+        "inactive": total - active,
+
+        "online": online,
+        "in_person": total - online,
+
+        "global": total - regional - at_point,
+        "regional": regional,
+        "at_point": at_point,
+
         "attribute": {
-            "domain": {"max": {"all": 1111, "current": 480}, "rows": [{"label": "gorp", "all": 1020, "current": 132}]},
-            "activity": {"max": {"all": 1111, "current": 480}, "rows": [{"label": "gorp", "all": 1020, "current": 432}]},
-            "indoor": {"max": {"all": 1111, "current": 480}, "rows": [{"label": "gorp", "all": 1020, "current": 432}]},
+            "domain": {"max": {"all": domain_all_max, "current": domain_current_max}, "rows": domain_all.into_iter().map(|(label, all)| LabeledAllCurrent {current: *domain_current.get(&label).unwrap_or(&0), label, all}).collect::<Vec<_>>()},
+            "activity": {"max": {"all": activity_all_max, "current": activity_current_max}, "rows": activity_all.into_iter().map(|(label, all)| LabeledAllCurrent {current: *activity_current.get(&label).unwrap_or(&0), label, all}).collect::<Vec<_>>()},
+            "indoor": {"max": {"all": indoor_all.max(outdoor_all), "current": indoor_current.max(outdoor_current)}, "rows": [{"label": "Indoors", "all": indoor_all, "current": indoor_current}, {"label": "Outdoors", "all": outdoor_all, "current": outdoor_current}]},
         },
-        "keywords": [["dinosaurs",99],["hamsters",32],["tacos",14],["muffins",199],["beach",99],["hot dogs",32],["Alyssa Milano",44],["animals",256],["minotaurs",46],["popcicles",102],["bioblitz",26],["blueberries",69],["sparrows",89],["wrens",54],["Gilligan",14],["bears",123]],
+
+        "keywords": keywords,
+
         "providers": {
-            "max": 1111,
-            "rows": [{"label": "gorp", "value": 432}],
+            "max": providers_max,
+            "rows": providers,
         }
     }))
 }

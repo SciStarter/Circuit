@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT exterior->>'pes_domain' AS \"domain!\", COUNT(*) AS \"total!\"\nFROM c_opportunity\nWHERE c_opportunity_is_current(interior, exterior) AND exterior->>'pes_domain' != 'unspecified'\nGROUP BY exterior->>'pes_domain'\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "domain!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "7f24376a1b57c389f61f10511c1fba3fcb25465594d20ccfa6e97d4b44b2a6fb"
+}
