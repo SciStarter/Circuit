@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT p.exterior->>'name' AS \"name!\", count(*) AS \"total!\" FROM c_opportunity o JOIN c_partner p ON p.exterior->'uid' = o.exterior->'partner' GROUP BY p.exterior->>'name'",
+  "query": "\nSELECT exterior->>'pes_domain' AS \"domain!\", COUNT(*) AS \"total!\"\nFROM c_opportunity\nWHERE exterior->>'pes_domain' != 'unspecified'\nGROUP BY exterior->>'pes_domain'\nORDER BY \"total!\" DESC\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "name!",
+        "name": "domain!",
         "type_info": "Text"
       },
       {
@@ -22,5 +22,5 @@
       null
     ]
   },
-  "hash": "c327b966750e7c8e9f22e6683c78343b854982484c7c5d2dade923d93288876b"
+  "hash": "d3d083dab4e9dd2e66339169ded499b9801cffb75507403ad631166120ff1f6c"
 }

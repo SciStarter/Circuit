@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\nSELECT exterior->>'pes_domain' AS \"domain!\", COUNT(*) AS \"total!\"\nFROM c_opportunity\nWHERE c_opportunity_is_current(interior, exterior) AND exterior->>'pes_domain' != 'unspecified'\nGROUP BY exterior->>'pes_domain'\n",
+  "query": "\nSELECT exterior->>'pes_domain' AS \"domain!\", COUNT(*) AS \"total!\"\nFROM c_opportunity\nWHERE c_opportunity_is_current(interior, exterior) AND exterior->>'pes_domain' != 'unspecified'\nGROUP BY exterior->>'pes_domain'\nORDER BY \"total!\" DESC;\n",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       null
     ]
   },
-  "hash": "7f24376a1b57c389f61f10511c1fba3fcb25465594d20ccfa6e97d4b44b2a6fb"
+  "hash": "7e45de7b6a8c060a88e2e2a108ac1d424e5c76efec71e3a0cac12260fdb7fd16"
 }

@@ -483,6 +483,7 @@ SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
 FROM c_opportunity
 WHERE exterior->>'pes_domain' != 'unspecified'
 GROUP BY exterior->>'pes_domain'
+ORDER BY "total!" DESC
 "#
     )
     .map(|row| (row.domain.to_owned(), row.total))
@@ -496,6 +497,7 @@ SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
 FROM c_opportunity
 WHERE c_opportunity_is_current(interior, exterior) AND exterior->>'pes_domain' != 'unspecified'
 GROUP BY exterior->>'pes_domain'
+ORDER BY "total!" DESC;
 "#
     )
     .map(|row| (row.domain.to_owned(), row.total))
@@ -540,7 +542,7 @@ GROUP BY v.descriptor;
 
     let keywords = sqlx::query!(r#"SELECT lower(trim(v.tag)) AS "text!", count(*) as "total!" FROM c_opportunity o JOIN jsonb_array_elements_text(exterior->'tags') v(tag) ON true GROUP BY lower(trim(v.tag)) ORDER BY "total!" DESC LIMIT 30"#).map(|row| (row.text.to_owned(), row.total)).fetch_all(req.state()).await?;
 
-    let providers = sqlx::query!(r#"SELECT p.exterior->>'name' AS "name!", count(*) AS "total!" FROM c_opportunity o JOIN c_partner p ON p.exterior->'uid' = o.exterior->'partner' GROUP BY p.exterior->>'name'"#)
+    let providers = sqlx::query!(r#"SELECT p.exterior->>'name' AS "name!", count(*) AS "total!" FROM c_opportunity o JOIN c_partner p ON p.exterior->'uid' = o.exterior->'partner' GROUP BY p.exterior->>'name' ORDER BY "total!" DESC"#)
         .map(|row| LabeledValue {
             label: row.name.to_owned(),
             value: row.total,
