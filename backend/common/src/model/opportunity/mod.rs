@@ -1,13 +1,13 @@
 pub mod for_slug;
 
-use super::partner::LoggedErrorLevel;
+//use super::partner::LoggedErrorLevel;
 use super::person::PermitAction;
 use super::Error;
 use crate::model::involvement;
 use crate::{geo, Database, ToFixedOffset};
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
-use deunicode::deunicode;
+//use deunicode::deunicode;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -998,6 +998,7 @@ pub struct OpportunityQuery {
     pub exclude: Option<Vec<Uuid>>,
     pub current: Option<bool>,
     pub calendar: Option<(u32, u8)>,
+    pub region: Option<String>,
 }
 
 #[derive(Debug)]
@@ -1105,6 +1106,21 @@ fn build_matching_query(
                 "(('false'::jsonb) @> (interior -> 'withdrawn') AND coalesce(nullif(interior ->> 'review_status', ''), 'not_required') NOT IN ('draft', 'pending'))".to_string(),
             );
         }
+    }
+
+    if let Some(region) = &query.region {
+        clauses.push(format!(
+            r#"(
+SELECT
+ COALESCE(
+  NULLIF(ST_Intersects(geometry, location_point), false),
+  NULLIF(ST_Intersects(geometry, location_polygon), false),
+  false
+ )
+FROM c_region WHERE "name" = ${}
+)"#,
+            ParamValue::RawString(region.to_owned()).append(&mut params)
+        ));
     }
 
     if let Some((year, month)) = query.calendar {
@@ -1563,7 +1579,9 @@ pub struct OpportunityPseudoIter {
 
 impl OpportunityPseudoIter {
     pub async fn get_next(&mut self, db: &Database) -> Option<Opportunity> {
-        let Some(uid) = self.uids.pop_front() else { return None; };
+        let Some(uid) = self.uids.pop_front() else {
+            return None;
+        };
         Opportunity::load_by_uid(db, &uid).await.ok()
     }
 }

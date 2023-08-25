@@ -13,16 +13,16 @@
         </div>
 
         <div class="legend">
-            <div class="total"><span class="points"><span>{{counts.points.total}}</span></span> 
+            <div class="total"><span class="points"><span>{{counts.points.total}}</span></span>
                 <div>
                     <span>Specified Location</span>
                     <div><b-checkbox v-model="radius_show_points" :native-value="true"> Show</b-checkbox></div>
                 </div>
             </div>
-            <div class="total ptotal"><span class="polygons"><span>{{counts.polygons.total}}</span></span> 
+            <div class="total ptotal"><span class="polygons"><span>{{counts.polygons.total}}</span></span>
                 <div>
-                    <span>Regional</span>
-                    <div><b-checkbox v-model="radius_show_polygons" :native-value="true"> Show</b-checkbox></div>
+                  <span>Regional</span>
+                  <div><b-checkbox v-model="radius_show_polygons" :native-value="true"> Show</b-checkbox></div>
                 </div>
             </div>
             <div class="total"><span class="anywhere"><span>{{counts.anywhere.total}}</span></span> Anywhere, Anytime</div>
@@ -46,9 +46,14 @@ export default {
             default: () => ({}),
         },
         value: {
-            type: Object,
+            type: Array,
             required: true,
             default: () => ({}),
+        },
+        centroid: {
+            type: Array,
+            required: true,
+            default: [-95.7,37.1]
         }
     },
 
@@ -58,7 +63,7 @@ export default {
             radius: 25,
             minRange: 1,
             maxRange: 50,
-            point: [-95.7,37.1],
+            point: this.centroid,
             radius_show_points: true,
             radius_show_polygons: false,
             projectsGeoJSON: null,
@@ -66,6 +71,24 @@ export default {
         };
     },
 
+
+    watch: {
+        radius(){
+            this.updateRadius();
+        },
+
+        radius_show_polygons(){
+            if (this.radius_show_polygons) {
+                this.map.setLayoutProperty('projects-polygon', 'visibility', 'visible');
+            } else {
+                this.map.setLayoutProperty('projects-polygon', 'visibility', 'none');
+            }
+        }
+    },
+
+    mounted() {
+        this.mapInit();
+    },
 
     methods: {
         getProjectDates(startDate, stopDate) {
@@ -78,14 +101,12 @@ export default {
             // dateArray.push(stopDate.toLocaleDateString());
             return dateArray;
         },
+
         geo_obj(v,date){
             date = date || null;
             let obj = {
                 "type":"Feature",
-                "geometry": {
-                    "type": (v.location_point) ? "Point" : "Polygon",
-                    "coordinates": (v.location_point) ? v.location_point.coordinates : v.location_polygon.coordinates
-                },
+                "geometry": (v.location_type == 'at') ? v.location_point : v.location_polygon,
                 "properties": {
                     "uid": v.uid,
                     "title": v.title,
@@ -96,13 +117,11 @@ export default {
                     "date": date
                 }
             }
+            console.log(obj);
             return obj;
         },
-        makeGeoJSON(){
 
-            //DANIEL - I don't handle polygons here as I don't have any in my test data. I think maybe a different geojson object has to be made for those so they can be turned off and on with the checkbox. See the watch of radius_show_polygons;
-
-
+        makeGeoJSON() {
             let geoJSON = {
                 "type": "FeatureCollection",
                 "name": "projects",
@@ -111,8 +130,7 @@ export default {
             };
 
             // Remove anywhere anytime projects (location_type == any)
-            let locationProjects = this.value.matches.filter(v=>v.location_type != "any");
-            
+            let locationProjects = this.value.filter(v=>v.location_type != "any");
 
             // split apart projects into individual records by day or week
             locationProjects.map(v => {
@@ -129,13 +147,13 @@ export default {
 
                     // if only one start time
                     if (v.start_datetimes.length == 1) {
-                        
-                         // if there are end days, have to test if go into more than one day
-                         if (v.end_datetimes && v.end_datetimes.length == 1) {
+
+                        // if there are end days, have to test if go into more than one day
+                        if (v.end_datetimes && v.end_datetimes.length == 1) {
 
                             // test if start and end are different days
                             if (new Date(v.start_datetimes[0]).toLocaleDateString() !== new Date(v.end_datetimes[0]).toLocaleDateString()) {
-                                
+
                                 // build a new obj for each day
                                 let dates = this.getProjectDates(new Date(v.start_datetimes[0]),new Date(v.end_datetimes[0]).addDays(1));
                                 for (let i = 0; i < dates.length; i++){
@@ -152,17 +170,18 @@ export default {
                             // only need one object
                             geoJSON.features.push(this.geo_obj(v,new Date(v.start_datetimes[0]).toLocaleDateString()));
                             return;
-                         }
+                        }
 
-                    }     
-                
+                    }
+
                 }
-  
+
             });
 
             this.projectsGeoJSON = geoJSON;
 
         },
+
         makeRadius(){
             let _center = turf.point(this.point);
             let _radius = this.radius;
@@ -173,16 +192,17 @@ export default {
 
             return turf.circle(_center, _radius, _options);
         },
+
         mapInit(){
+            this.makeGeoJSON();
+
             let map = this.map = new mapboxgl.Map({
                 accessToken: this.$config.mapboxToken,
                 container: this.$refs.display,
                 style: 'mapbox://styles/mapbox/light-v11',
-                // DANIEL - Can this be replaced by their lat long?
                 center: this.point,
                 zoom: 5,
             });
-
 
             map.on('load', () => {
                 map.addControl(new mapboxgl.NavigationControl(),'bottom-left');
@@ -213,56 +233,64 @@ export default {
                 let ctx = this;
                 map.on('click', function(e) {
                     let coordinates = e.lngLat;
-
                     ctx.point = [coordinates.lng,coordinates.lat];
-
                     ctx.updateRadius();
-                    
                     map.easeTo({center: coordinates, duration: 500});
 
                 });
 
-
                 // set up project points
                 map.addSource('projects-data', {
-                    type: 'geojson', 
+                    type: 'geojson',
                     data: this.projectsGeoJSON,
                 });
 
                 map.addLayer(
-                {
-                    id: 'projects-point',
-                    type: 'circle',
-                    source: 'projects-data',
-                    // minzoom: 8,
-                    paint: {
-                    'circle-color':"#397ab5",
-                    'circle-stroke-color': 'white',
-                    'circle-stroke-width': 1,
-                    // 'circle-opacity': {
-                    //     stops: [
-                    //     [7, 0],
-                    //     [8, 1]
-                    //     ]
-                    // }
+                    {
+                        id: 'projects-polygon',
+                        type: 'fill',
+                        source: 'projects-data',
+                        layout: {
+                            'visibility': 'none',
+                        },
+                        paint: {
+                            'fill-color':"#397ab5",
+                            'fill-opacity': 0.05,
+                        }
                     }
-                }
-            );
+                );
 
-            map.on('click', 'projects-point', (event) => {
-                let props = event.features[0].properties;
-                new mapboxgl.Popup()
-                .setLngLat(event.features[0].geometry.coordinates)
-                .setHTML(`<p>${props.org}</p><a href="${props.slug}" target="_blank">${props.title}</a>`)
-                .addTo(map);
+                map.addLayer(
+                    {
+                        id: 'projects-point',
+                        type: 'circle',
+                        source: 'projects-data',
+                        // minzoom: 8,
+                        paint: {
+                            'circle-color':"#397ab5",
+                            'circle-stroke-color': 'white',
+                            'circle-stroke-width': 1,
+                            // 'circle-opacity': {
+                            //     stops: [
+                            //     [7, 0],
+                            //     [8, 1]
+                            //     ]
+                            // }
+                        }
+                    }
+                );
+
+                map.on('click', 'projects-point', (event) => {
+                    let props = event.features[0].properties;
+                    new mapboxgl.Popup()
+                        .setLngLat(event.features[0].geometry.coordinates)
+                        .setHTML(`<p>${props.org}</p><a href="${props.slug}" target="_blank">${props.title}</a>`)
+                        .addTo(map);
                 });
-
-
-                
             });
         },
-        updateRadius(){
 
+        updateRadius() {
             const geojson = {
                 "type": "FeatureCollection",
                 "features": []
@@ -271,33 +299,21 @@ export default {
             geojson.features.push(this.makeRadius());
 
             this.map.getSource('circleData').setData(geojson);
-            
         },
-        search(){
-            this.makeGeoJSON();
-            this.map.getSource('projects-data').setData(this.projectsGeoJSON);
 
+        search() {
+            //this.makeGeoJSON();
+            //this.map.getSource('projects-data').setData(this.projectsGeoJSON);
+
+            this.$router.push({ name: 'find', query: {
+                beginning: new Date().toISOString(),
+                sort: 'closest',
+                latitude: this.point[1],
+                longitude: this.point[0],
+                proximity: Math.floor(this.radius * 1609.34),
+            }});
         }
     },
-
-    mounted() {
-        this.mapInit();
-    },
-
-    watch: {
-        radius(){
-            this.updateRadius();
-        },
-        radius_show_polygons(){
-            if (this.radius_show_polygons) {
-                // show the polygons
-            } else {
-                // hide the polygons
-            }
-        }
-    }
-
-
  }
 </script>
 
@@ -382,14 +398,14 @@ export default {
     }
     .ptotal {
 
-       
+
         small {
             font-weight: normal;
             font-size: 0.6rem;
             color: #7b7b7b;
             display: block;
         }
-  
+
     }
 
     .polygons, .points {
@@ -405,7 +421,7 @@ export default {
         position: absolute;
         left:50%;
         margin-left: -15px;
-        top:0; 
+        top:0;
         z-index: 1;
     }
     .points > span {
@@ -421,7 +437,7 @@ export default {
         position: absolute;
         left:50%;
         margin-left: -15px;
-        top:0; 
+        top:0;
         z-index: 1;
     }
 

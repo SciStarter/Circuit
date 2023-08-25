@@ -106,7 +106,9 @@ export default {
             });
 
             map.on('click', 'states-fill', (evt) => {
-                this.$emit('state', evt.features[0].properties.name);
+                const name = evt.features[0].properties.name;
+                //console.log('click', name);
+                this.$emit('state', name);
             });
 
             const popup = new mapboxgl.Popup({

@@ -31,12 +31,14 @@ export default {
     mounted(){
         let wc = new this.wc;
         let ctx = this;
-        wc.WordCloud(document.getElementById("wordcloud"), { 
+        let width = () => this.$refs.wordcloud.clientWidth;
+
+        wc.WordCloud(document.getElementById("wordcloud"), {
             list: this.words,
             // gridSize: Math.round(12 * 640 / 1024),
             gridSize: 20,
             weightFactor: function (size) {
-                return Math.pow(size, 1) * 640 / 1024;
+                return Math.log(size) * 8;
             },
             fontFamily: 'Roboto',
             fontWeight: 'bold',
@@ -49,13 +51,13 @@ export default {
             rotateRatio: 0.5,
             rotationSteps: 2,
             backgroundColor: '#ffffff'
-        
+
         },  );
     },
-   
+
      methods: {
         wc: function(){
-        
+
         /*!
  * wordcloud2.js
  * http://timdream.org/wordcloud2.js/
@@ -480,7 +482,7 @@ if (!window.clearImmediate) {
 
       var x = Math.floor(eventX * ((canvas.width / rect.width) || 1) / g)
       var y = Math.floor(eventY * ((canvas.height / rect.height) || 1) / g)
-      
+
       if (!infoGrid[x]) {
         return null
       }
@@ -1300,7 +1302,7 @@ if (!window.clearImmediate) {
 
      }
     }
-    
+
 }
 
 </script>

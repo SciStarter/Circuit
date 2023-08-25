@@ -1,6 +1,9 @@
 use async_std::prelude::{Stream, StreamExt};
 use clap::Parser;
-use common::{geo::GeomQuery, model::Partner};
+use common::{
+    geo::{opps_regional_overview_calc, GeomQuery},
+    model::Partner,
+};
 use counter::Counter;
 use http_types::Method;
 use serde::Deserialize;
@@ -645,7 +648,7 @@ async fn withdraw(state: &mut State, args: Vec<String>) -> Result<(), DynError> 
     Ok(())
 }
 
-async fn update_place(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
+async fn update_place(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     match state.table {
         Table::Opportunity | Table::Partner => {
             return Err("not a meaningful operation".into());
@@ -1066,6 +1069,7 @@ enum Action {
     Unsubscribes,
     Joins,
     Opportunities,
+    GenerateOppsRegionalOverview,
 }
 
 #[derive(Parser, Debug)]
@@ -1089,6 +1093,9 @@ async fn main() -> Result<(), DynError> {
         }
         Action::Opportunities => {
             new_opportunities(&mut state, Vec::new()).await?;
+        }
+        Action::GenerateOppsRegionalOverview => {
+            opps_regional_overview_calc(state.db.clone()).await?;
         }
         Action::Shell => run_shell(state).await?,
     }

@@ -191,3 +191,43 @@ where
             .send(),
     );
 }
+
+pub async fn cache_json(
+    db: &Database,
+    key: &str,
+    value: &serde_json::Value,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        r#"
+INSERT INTO c_json_cache ("key", "value", "when")
+VALUES ($1, $2, NOW())
+ON CONFLICT ("key")
+DO UPDATE SET "value" = $2, "when" = NOW()
+"#,
+        key,
+        value
+    )
+    .execute(db)
+    .await?;
+
+    Ok(())
+}
+
+pub enum CachedJson {
+    Current(serde_json::Value),
+    Expired(serde_json::Value),
+    Missing,
+}
+
+pub async fn cached_json(db: &Database, key: &str, days: i32) -> Result<CachedJson, sqlx::Error> {
+    let cached = sqlx::query!(
+        r#"SELECT "value" AS "value!", (CURRENT_TIMESTAMP - make_interval(0, 0, 0, $2)) < "when" AS "current!" FROM c_json_cache WHERE "key" = $1 LIMIT 1"#,
+        key,
+        days,
+    )
+        .map(|row| if row.current {CachedJson::Current(row.value)} else {CachedJson::Expired(row.value)})
+    .fetch_optional(db)
+    .await?;
+
+    Ok(cached.unwrap_or(CachedJson::Missing))
+}

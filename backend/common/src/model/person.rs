@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ops::IndexMut};
+use std::collections::BTreeMap;
 
 use super::{partner::Partner, Error, Opportunity, OpportunityExterior, Pagination};
 use crate::{Database, ToFixedOffset};
@@ -916,7 +916,7 @@ SELECT EXISTS(
                 std::collections::btree_map::Entry::Occupied(mut e) if perm >= e.get().1 => {
                     e.insert((value.into(), perm));
                 }
-                std::collections::btree_map::Entry::Occupied(e) => {}
+                std::collections::btree_map::Entry::Occupied(_) => {}
             }
         } else {
             self.interior.extra = Some(

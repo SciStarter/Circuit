@@ -1,55 +1,55 @@
 <template>
     <div id="stateWrap">
         <div ref="display" id="map"></div>
-        <div id="sliderbar">
-            <h2 class="spad">Science Opportunities in<br /><span>{{ state }}</span></h2>
-            <div class="checks spad">
-                <b-radio v-model="display"
-                    name="name"
-                    native-value="day">
-                    Show By Day
-                </b-radio>
-                <b-radio v-model="display"
-                    name="name"
-                    native-value="week"
-                    v-if="sliderDates.length > 13">
-                    Show By Week
-                </b-radio>
-                <b-radio v-model="display"
-                    name="name"
-                    native-value="month"
-                    v-if="sliderDates.length > 45">
-                    Show By Month
-                </b-radio>
-                <b-radio v-model="display"
-                    name="name"
-                    native-value="all">
-                    Show All
-                </b-radio>
-            </div>
-            <div class="spad" v-if="display != 'all'">
-                <label v-if="display=='day'"><b>{{ sliderDates[currentSliderIndex] || 0 }}</b></label>
-                <label v-else-if="display=='week'"><b>{{ formatWeek(sliderWeeks[currentSliderIndex]) || 0 }}</b></label>
-                <label v-else-if="display=='month'"><b>{{ sliderMonths[currentSliderIndex] || 0 }}</b></label>
-                <!-- <input ref="slider" type="range" min="0" :max="sliderDates.length - 1" step="1" value="0" @change="slide()" @keyleft="currentSliderIndex--" @keyright="currentSliderIndex++" /> -->
-                <div class="flex slider-area">
-                    <b-button v-if="!sliderPlaying" size="is-small" @click="playSlider()"><play-icon /></b-button>
-                    <b-button v-else size="is-small" @click="clearPlayInterval()"><pause-icon /></b-button>
-                    <b-field v-if="display == 'day'">
-                        <b-slider type="is-warning" :min="0" :max="sliderDates.length - 1" v-model="currentSliderIndex" rounded :custom-formatter="()=>sliderDates[currentSliderIndex]" @dragstart="clearPlayInterval()"></b-slider>
-                    </b-field>
-                    <b-field v-if="display == 'week'">
-                        <b-slider type="is-warning" :min="0" :max="sliderWeeks.length - 1" v-model="currentSliderIndex" rounded :custom-formatter="()=>formatWeek(sliderWeeks[currentSliderIndex])" @dragstart="clearPlayInterval()"></b-slider>
-                    </b-field>
-                    <b-field v-else-if="display == 'month'">
-                        <b-slider type="is-warning" :min="0" :max="sliderMonths.length - 1" v-model="currentSliderIndex" rounded :custom-formatter="()=>sliderMonths[currentSliderIndex]" @dragstart="clearPlayInterval()"></b-slider>
-                    </b-field>
-                </div>
-                
-            </div>
-        </div>
+        <!-- <div id="sliderbar"> -->
+        <!--     <h2 class="spad">Science Opportunities in<br /><span>{{ state }}</span></h2> -->
+        <!--     <div class="checks spad"> -->
+        <!--         <b-radio v-model="display" -->
+        <!--             name="name" -->
+        <!--             native-value="day"> -->
+        <!--             Show By Day -->
+        <!--         </b-radio> -->
+        <!--         <b-radio v-model="display" -->
+        <!--             name="name" -->
+        <!--             native-value="week" -->
+        <!--             v-if="sliderDates.length > 13"> -->
+        <!--             Show By Week -->
+        <!--         </b-radio> -->
+        <!--         <b-radio v-model="display" -->
+        <!--             name="name" -->
+        <!--             native-value="month" -->
+        <!--             v-if="sliderDates.length > 45"> -->
+        <!--             Show By Month -->
+        <!--         </b-radio> -->
+        <!--         <b-radio v-model="display" -->
+        <!--             name="name" -->
+        <!--             native-value="all"> -->
+        <!--             Show All -->
+        <!--         </b-radio> -->
+        <!--     </div> -->
+        <!--     <div class="spad" v-if="display != 'all'"> -->
+        <!--         <label v-if="display=='day'"><b>{{ sliderDates[currentSliderIndex] || 0 }}</b></label> -->
+        <!--         <label v-else-if="display=='week'"><b>{{ formatWeek(sliderWeeks[currentSliderIndex]) || 0 }}</b></label> -->
+        <!--         <label v-else-if="display=='month'"><b>{{ sliderMonths[currentSliderIndex] || 0 }}</b></label> -->
+        <!--         <\!-- <input ref="slider" type="range" min="0" :max="sliderDates.length - 1" step="1" value="0" @change="slide()" @keyleft="currentSliderIndex--" @keyright="currentSliderIndex++" /> -\-> -->
+        <!--         <div class="flex slider-area"> -->
+        <!--             <b-button v-if="!sliderPlaying" size="is-small" @click="playSlider()"><play-icon /></b-button> -->
+        <!--             <b-button v-else size="is-small" @click="clearPlayInterval()"><pause-icon /></b-button> -->
+        <!--             <b-field v-if="display == 'day'"> -->
+        <!--                 <b-slider type="is-warning" :min="0" :max="sliderDates.length - 1" v-model="currentSliderIndex" rounded :custom-formatter="()=>sliderDates[currentSliderIndex]" @dragstart="clearPlayInterval()"></b-slider> -->
+        <!--             </b-field> -->
+        <!--             <b-field v-if="display == 'week'"> -->
+        <!--                 <b-slider type="is-warning" :min="0" :max="sliderWeeks.length - 1" v-model="currentSliderIndex" rounded :custom-formatter="()=>formatWeek(sliderWeeks[currentSliderIndex])" @dragstart="clearPlayInterval()"></b-slider> -->
+        <!--             </b-field> -->
+        <!--             <b-field v-else-if="display == 'month'"> -->
+        <!--                 <b-slider type="is-warning" :min="0" :max="sliderMonths.length - 1" v-model="currentSliderIndex" rounded :custom-formatter="()=>sliderMonths[currentSliderIndex]" @dragstart="clearPlayInterval()"></b-slider> -->
+        <!--             </b-field> -->
+        <!--         </div> -->
+
+        <!--     </div> -->
+        <!-- </div> -->
     </div>
-     
+
 </template>
 
 <script>
@@ -83,7 +83,7 @@ export default {
 
     props: {
         value: {
-            type: Object,
+            type: Array,
             required: true,
             default: () => ({}),
         },
@@ -126,6 +126,38 @@ export default {
         }
     },
 
+    watch: {
+        // I think this has to change to value instead of range, but I'm not getting live data
+        // but we also need range watched and updated when someeone selects new dates
+        range(){
+            this.mapUpdate();
+        },
+        currentSliderIndex(v){
+            this.filterDate();
+        },
+        display(d){
+            let ctx = this;
+            if (d == "all") {
+                if (ctx.playInterval){
+                    clearInterval(ctx.playInterval);
+                }
+                this.map.setFilter('projects-point',null);
+            } else {
+                this.filterDate();
+                this.currentSliderIndex = 0;
+            }
+
+        }
+    },
+
+    mounted() {
+        this.makeGeoJSON();
+        this.sliderDates = this.getProjectDates(this.range[0],this.range[1]);
+        this.mapInit();
+        this.getProjectMonths();
+        this.getProjectWeeks();
+    },
+
     methods: {
         getTotalDates(a,b){
             let date1 = new Date(a);
@@ -133,6 +165,7 @@ export default {
             let Difference_In_Time = date2.getTime() - date1.getTime();
             return (Difference_In_Time / (1000 * 3600 * 24)) + 1;
         },
+
         getProjectDates(startDate, stopDate) {
             var dateArray = new Array();
             var currentDate = startDate;
@@ -143,6 +176,7 @@ export default {
             // dateArray.push(stopDate.toLocaleDateString());
             return dateArray;
         },
+
         getProjectMonths() {
             let startMonth = new Date(this.range[0]).getMonth();
             let endMonth = new Date(this.range[1]).getMonth();
@@ -159,8 +193,8 @@ export default {
             }
 
             this.sliderMonths = dates;
-
         },
+
         getDatesOfWeek(weekNumber, year) {
             // get the date of the first day of the year
             const startDate = new Date(year, 0, 1);
@@ -181,12 +215,14 @@ export default {
 
             return weekDates;
         },
+
         formatWeek(val){
             let arr = val.split(" ");
             let weekArr = this.getDatesOfWeek(arr[0],arr[1]);
             let dates = [ weekArr[0].toLocaleDateString(), weekArr[1].toLocaleDateString() ];
             return  dates.join("–");
         },
+
         getProjectWeeks(){
             const startDate = new Date(this.range[0]);
             const endDate = new Date(this.range[1]);
@@ -196,7 +232,7 @@ export default {
 
             while (currentDate <= endDate) {
                 let week = currentDate.getWeek() + " " + currentDate.getFullYear()
-                
+
 
                 // console.log(weekArr);
 
@@ -211,14 +247,12 @@ export default {
 
             this.sliderWeeks = result;
         },
+
         geo_obj(v,date){
             date = date || null;
             let obj = {
                 "type":"Feature",
-                "geometry": {
-                    "type": (v.location_point) ? "Point" : "Polygon",
-                    "coordinates": (v.location_point) ? v.location_point.coordinates : v.location_polygon.coordinates
-                },
+                "geometry": (v.location_type == 'at') ? v.location_point : v.location_polygon,
                 "properties": {
                     "uid": v.uid,
                     "title": v.title,
@@ -233,7 +267,8 @@ export default {
             }
             return obj;
         },
-        makeGeoJSON(){
+
+        makeGeoJSON() {
             let geoJSON = {
                 "type": "FeatureCollection",
                 "name": "projects",
@@ -242,8 +277,7 @@ export default {
             };
 
             // Remove anywhere anytime projects (location_type == any)
-            let locationProjects = this.value.matches.filter(v=>v.location_type != "any");
-            
+            let locationProjects = this.value.filter(v=>v.location_type != "any");
 
             // split apart projects into individual records by day or week
             locationProjects.map(v => {
@@ -260,13 +294,13 @@ export default {
 
                     // if only one start time
                     if (v.start_datetimes.length == 1) {
-                        
-                         // if there are end days, have to test if go into more than one day
-                         if (v.end_datetimes && v.end_datetimes.length == 1) {
+
+                        // if there are end days, have to test if go into more than one day
+                        if (v.end_datetimes && v.end_datetimes.length == 1) {
 
                             // test if start and end are different days
                             if (new Date(v.start_datetimes[0]).toLocaleDateString() !== new Date(v.end_datetimes[0]).toLocaleDateString()) {
-                                
+
                                 // build a new obj for each day
                                 let dates = this.getProjectDates(new Date(v.start_datetimes[0]),new Date(v.end_datetimes[0]).addDays(1));
                                 for (let i = 0; i < dates.length; i++){
@@ -283,27 +317,19 @@ export default {
                             // only need one object
                             geoJSON.features.push(this.geo_obj(v,new Date(v.start_datetimes[0]).toLocaleDateString()));
                             return;
-                         }
+                        }
 
                     }
-                    
-                    // TODO
-                    // if there are multiple start times 
-                    // is this a case???
-                    else if (v.start_datetimes.length > 1) {
-                        console.log(v);
-                    }
-          
-                
 
                 }
-  
+
             });
 
             this.projectsGeoJSON = geoJSON;
 
         },
-        filterDate(){
+
+        filterDate() {
 
             if (this.display == "day"){
                 let date = this.sliderDates[this.currentSliderIndex];
@@ -319,8 +345,9 @@ export default {
                 this.map.setFilter('projects-point', ['match', ['get', 'month'], [date], true, false]);
             }
 
-            
+
         },
+
         playSlider(){
             let ctx = this;
             ctx.sliderPlaying = true;
@@ -338,21 +365,26 @@ export default {
                 } else {
                     ctx.currentSliderIndex++;
                 }
-                
+
             },500);
         },
+
         clearPlayInterval(){
             this.sliderPlaying = false;
             if (this.playInterval){
                 clearInterval(this.playInterval);
-            } 
+            }
         },
+
         mapInit(){
+            let center = centroid(this.statePoly.features[0]).geometry.coordinates;
+            this.$emit('centroid', center);
+
             let map = this.map = new mapboxgl.Map({
                 accessToken: this.$config.mapboxToken,
                 container: this.$refs.display,
                 style: 'mapbox://styles/mapbox/light-v11',
-                center: centroid(this.statePoly.features[0]).geometry.coordinates,
+                center: center,
                 zoom: 5,
             });
             map.on('load', () => {
@@ -373,7 +405,7 @@ export default {
             });
 
             map.addSource('projects-data', {
-                type: 'geojson', 
+                type: 'geojson',
                 data: this.projectsGeoJSON,
             });
 
@@ -483,7 +515,7 @@ export default {
 
 
             // this.slide();
-            this.filterDate();
+            //this.filterDate();
 
 
             // mapbox changes over time tutorial
@@ -491,7 +523,7 @@ export default {
 
 
 
-            // map.setFilter('projects-point',    
+            // map.setFilter('projects-point',
             //      [">=", ['get', 'timestamp'], startDate.getTime()],
             //      ["<=", ['get', 'timestamp'], oneWeekLater.getTime()]);
 
@@ -507,37 +539,6 @@ export default {
             this.getProjectWeeks();
         },
     },
-
-    mounted() {
-        this.makeGeoJSON();
-        this.sliderDates = this.getProjectDates(this.range[0],this.range[1]);
-        this.mapInit();
-        this.getProjectMonths();
-        this.getProjectWeeks();
-    },
-    watch: {
-        // I think this has to change to value instead of range, but I'm not getting live data
-        // but we also need range watched and updated when someeone selects new dates
-        range(){
-            this.mapUpdate();
-        },
-        currentSliderIndex(v){
-            this.filterDate();
-        },
-        display(d){
-            let ctx = this;
-            if (d == "all") {
-                if (ctx.playInterval){
-                    clearInterval(ctx.playInterval);
-                }
-                this.map.setFilter('projects-point',null);
-            } else {
-                this.filterDate();
-                this.currentSliderIndex = 0;
-            }
-            
-        }
-    }
 }
 </script>
 

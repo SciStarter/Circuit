@@ -398,7 +398,7 @@ struct OverlayPage {
     message: String,
     opportunity: Opportunity,
     exterior: Value,
-    interior: Value,
+    _interior: Value,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -585,7 +585,7 @@ WHERE
                 message: err.to_string(),
                 opportunity,
                 exterior,
-                interior,
+                _interior: interior,
             }
             .into_response(StatusCode::Ok)?);
         }
@@ -597,7 +597,7 @@ WHERE
         message: String::new(),
         opportunity,
         exterior,
-        interior,
+        _interior: interior,
     };
 
     Ok(form.into_response(StatusCode::Ok)?)

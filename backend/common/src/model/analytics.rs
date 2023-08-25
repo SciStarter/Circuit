@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use chrono::{Date, DateTime, Datelike, Duration, FixedOffset, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Duration, FixedOffset, TimeZone, Utc};
 use uuid::Uuid;
 
 use crate::ToFixedOffset;
@@ -95,103 +95,118 @@ impl RelativeTimePeriod {
     }
 }
 
-fn beginning_of_month<Tz: TimeZone>(day: &Date<Tz>) -> DateTime<Tz> {
-    day.timezone()
-        .ymd(day.year(), day.month(), 1)
-        .and_hms(0, 0, 0)
+fn beginning_of_month<Tz: TimeZone>(day: &DateTime<Tz>) -> DateTime<Tz> {
+    let tz = day.timezone();
+    tz.with_ymd_and_hms(day.year(), day.month(), 1, 0, 0, 0)
+        .earliest()
+        .expect("Beginning of the month should not be out of bounds")
 }
 
-fn beginning_of_quarter<Tz: TimeZone>(day: &Date<Tz>) -> DateTime<Tz> {
-    day.timezone()
-        .ymd(
-            day.year(),
-            match day.month() {
-                1 | 2 | 3 => 1,
-                4 | 5 | 6 => 4,
-                7 | 8 | 9 => 7,
-                10 | 11 | 12 => 10,
-                _ => unreachable!(),
-            },
-            1,
-        )
-        .and_hms(0, 0, 0)
+fn beginning_of_quarter<Tz: TimeZone>(day: &DateTime<Tz>) -> DateTime<Tz> {
+    let tz = day.timezone();
+    tz.with_ymd_and_hms(
+        day.year(),
+        match day.month() {
+            1 | 2 | 3 => 1,
+            4 | 5 | 6 => 4,
+            7 | 8 | 9 => 7,
+            10 | 11 | 12 => 10,
+            _ => unreachable!(),
+        },
+        1,
+        0,
+        0,
+        0,
+    )
+    .earliest()
+    .expect("Beginning of quarter should not be out of bounds")
 }
 
-fn beginning_of_semiannum<Tz: TimeZone>(day: &Date<Tz>) -> DateTime<Tz> {
-    day.timezone()
-        .ymd(
-            day.year(),
-            match day.month() {
-                1 | 2 | 3 | 4 | 5 | 6 => 1,
-                7 | 8 | 9 | 10 | 11 | 12 => 7,
-                _ => unreachable!(),
-            },
-            1,
-        )
-        .and_hms(0, 0, 0)
+fn beginning_of_semiannum<Tz: TimeZone>(day: &DateTime<Tz>) -> DateTime<Tz> {
+    let tz = day.timezone();
+    tz.with_ymd_and_hms(
+        day.year(),
+        match day.month() {
+            1 | 2 | 3 | 4 | 5 | 6 => 1,
+            7 | 8 | 9 | 10 | 11 | 12 => 7,
+            _ => unreachable!(),
+        },
+        1,
+        0,
+        0,
+        0,
+    )
+    .earliest()
+    .expect("Beginning of siannum should not be out of bounds")
 }
 
-fn beginning_of_year<Tz: TimeZone>(day: &Date<Tz>) -> DateTime<Tz> {
-    day.timezone().ymd(day.year(), 1, 1).and_hms(0, 0, 0)
+fn beginning_of_year<Tz: TimeZone>(day: &DateTime<Tz>) -> DateTime<Tz> {
+    day.timezone()
+        .with_ymd_and_hms(day.year(), 1, 1, 0, 0, 0)
+        .earliest()
+        .expect("Beginning of year should not be out of bounds")
 }
 
 impl RelativeTimePeriod {
     pub fn absolute(&self) -> AbsoluteTimePeriod {
         let now = Utc::now().to_fixed_offset();
-        let today = now.date();
         let day = Duration::days(1);
 
         match self {
             RelativeTimePeriod::ThisMonth => AbsoluteTimePeriod {
-                begin: beginning_of_month(&today),
+                begin: beginning_of_month(&now),
                 end: now,
             },
             RelativeTimePeriod::LastMonth => {
-                let month_start = beginning_of_month(&today);
-                let last_month_start = beginning_of_month(&(month_start - day).date());
+                let month_start = beginning_of_month(&now);
+                let last_month_start = beginning_of_month(&(month_start - day));
                 AbsoluteTimePeriod {
                     begin: last_month_start,
                     end: month_start,
                 }
             }
             RelativeTimePeriod::ThisQuarter => AbsoluteTimePeriod {
-                begin: beginning_of_quarter(&today),
+                begin: beginning_of_quarter(&now),
                 end: now,
             },
             RelativeTimePeriod::LastQuarter => {
-                let quarter_start = beginning_of_quarter(&today);
-                let last_quarter_start = beginning_of_quarter(&(quarter_start - day).date());
+                let quarter_start = beginning_of_quarter(&now);
+                let last_quarter_start = beginning_of_quarter(&(quarter_start - day));
                 AbsoluteTimePeriod {
                     begin: last_quarter_start,
                     end: quarter_start,
                 }
             }
             RelativeTimePeriod::ThisSemiannum => AbsoluteTimePeriod {
-                begin: beginning_of_semiannum(&today),
+                begin: beginning_of_semiannum(&now),
                 end: now,
             },
             RelativeTimePeriod::LastSemiannum => {
-                let semi_start = beginning_of_semiannum(&today);
-                let last_semi_start = beginning_of_semiannum(&(semi_start - day).date());
+                let semi_start = beginning_of_semiannum(&now);
+                let last_semi_start = beginning_of_semiannum(&(semi_start - day));
                 AbsoluteTimePeriod {
                     begin: last_semi_start,
                     end: semi_start,
                 }
             }
             RelativeTimePeriod::ThisYear => AbsoluteTimePeriod {
-                begin: beginning_of_year(&today),
+                begin: beginning_of_year(&now),
                 end: now,
             },
             RelativeTimePeriod::LastYear => {
-                let year_start = beginning_of_year(&today);
-                let last_year_start = beginning_of_year(&(year_start - day).date());
+                let year_start = beginning_of_year(&now);
+                let last_year_start = beginning_of_year(&(year_start - day));
                 AbsoluteTimePeriod {
                     begin: last_year_start,
                     end: year_start,
                 }
             }
             RelativeTimePeriod::AllTime => AbsoluteTimePeriod {
-                begin: today.timezone().ymd(1, 1, 1).and_hms(0, 0, 0),
+                begin: now
+                    .timezone()
+                    .with_ymd_and_hms(1, 1, 1, 0, 0, 0)
+                    .earliest()
+                    .expect("Constant should not be out of bounds"),
                 end: now,
             },
         }

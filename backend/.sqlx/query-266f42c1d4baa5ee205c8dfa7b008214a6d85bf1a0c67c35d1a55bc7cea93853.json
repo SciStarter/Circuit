@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT exterior->>'pes_domain' AS \"domain!\", COUNT(*) AS \"total!\"\nFROM c_opportunity JOIN c_region ON \"name\" = $1\nWHERE\n  c_opportunity_is_current(interior, exterior) AND\n  exterior->>'pes_domain' != 'unspecified' AND\n  exterior->>'location_type' = 'at' AND\n  ST_Intersects(location_point, geometry)\nGROUP BY exterior->>'pes_domain'\nORDER BY \"total!\" DESC\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "domain!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "266f42c1d4baa5ee205c8dfa7b008214a6d85bf1a0c67c35d1a55bc7cea93853"
+}

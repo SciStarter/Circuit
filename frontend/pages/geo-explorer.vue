@@ -3,34 +3,35 @@
       <div class="snm-container">
 
         <div class="inputs flex flex-justify-sb flex-align-bottom">
-           <div class="flex flex-align-bottom">
-            <div>
-            <label>Time Period Available on SNM</label>
-            <b-datepicker
-                v-model="dates"
-                editable
-                icon="calendar-today"
-                range
-                :min-date="new Date('2/1/2022')"
-                />
-            </div>
+          <div class="flex flex-align-bottom">
+            <!-- Arbitrary date ranges are never going to work within our resources. -->
+            <!-- <div> -->
+            <!-- <label>Time Period Available on SNM</label> -->
+            <!-- <b-datepicker -->
+            <!--     v-model="dates" -->
+            <!--     editable -->
+            <!--     icon="calendar-today" -->
+            <!--     range -->
+            <!--     :min-date="new Date('2/1/2022')" -->
+            <!--     /> -->
+            <!-- </div> -->
             <b-button @click="show_filters=true">
                 <filter-icon class="filter iconn" />
                 {{filterCount}} {{filterCount == 1 ? 'Filter' : 'Filters'}}
             </b-button>
            </div>
            <div>
-                <action-button principal v-if="mapMode!='radius'" @click="mapMode='radius';location='Custom Radius'"><radius-icon class="radius iconn" /> Use Radius Mode</action-button>
-                <action-button text v-if="mapMode=='radius'" @click="mapMode='usa';location='USA'">Exit Radius Mode</action-button>
+                <action-button principal v-if="mapMode=='state'" @click="mapMode='radius'"><radius-icon class="radius iconn" /> Use Radius Mode</action-button>
+                <action-button text v-if="mapMode=='radius'" @click="mapMode='state'">Exit Radius Mode</action-button>
             </div>
         </div>
 
     <div class="map">
 
-        <geo-explorer-map-usa v-if="mapMode == 'usa'" :value="statesData" @state="select_state($event)" />
-        <geo-explorer-map-state v-else-if="mapMode == 'state'" :value="projectsData" :state="selected_state" :range="dates" />
-        <geo-explorer-map-radius v-else-if="mapMode == 'radius'" :value="projectsData" :counts="this.counts"/>
-            
+        <geo-explorer-map-usa v-if="mapMode == 'usa'" :value="statesData" @state="select_state" />
+        <geo-explorer-map-state v-else-if="mapMode == 'state'" @centroid="centroid = $event" :value="projectsData" :state="selected_state" :range="dates" />
+        <geo-explorer-map-radius v-else-if="mapMode == 'radius'" :value="projectsData" :counts="counts" :centroid="centroid"/>
+
         <div v-if="mapMode == 'usa'" class="map-message"><span>Click a state to explore its opportunities</span></div>
         <div v-if="mapMode == 'state'" class="backtousa" @click="returnToUSA()">&laquo; back to USA</div>
         <div v-if="mapMode == 'state'" class="legend">
@@ -39,19 +40,19 @@
                 <div class="total"><span class="anywhere"><span>{{counts.anywhere.total}}</span></span> Anywhere, Anytime</div>
             </div>
         <div v-if="mapMode == 'state'" class="map-message"><span>Zoom in to further explore the opportunities</span></div>
-        
+
 
     </div>
 
-        
 
-        <div id="counts" class="flex">
+
+        <div id="counts" class="flex" v-if="mapMode != 'radius'">
 
             <div class="cdiv">
                 <div class="sep cheader">
                     <h4>{{location}}</h4>
                     <h3>Specified Location</h3>
-                    <b-tooltip label="Specified Location opportunities hapen at a specific location with an address." multilined>
+                    <b-tooltip label="Specified Location opportunities happen at a specific location with an address." multilined>
                         <b-button label="?" />
                     </b-tooltip>
                 </div>
@@ -68,7 +69,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <nuxt-link :to="'/find' + queries.points" class="view-button">View List</nuxt-link>
+                    <!-- <nuxt-link :to="'/find' + queries.points" class="view-button">View List</nuxt-link> -->
                 </div>
             </div>
             <div class="cdiv">
@@ -92,7 +93,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <nuxt-link :to="'/find' + queries.polygons" class="view-button">View List</nuxt-link>
+                <!-- <nuxt-link :to="queries.polygons" class="view-button">View List</nuxt-link> -->
             </div>
             </div>
             <div class="cdiv">
@@ -116,7 +117,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <nuxt-link :to="'/find' + queries.anywhere" class="view-button">View List</nuxt-link>
+                <!-- <nuxt-link :to="queries.anywhere" class="view-button">View List</nuxt-link> -->
             </div>
             </div>
 
@@ -191,23 +192,18 @@
 
             <div class="filter-actions flex flex-justify-sb">
                 <action-button principal @click="applyFilters">Apply Filters</action-button>
-                <action-button tertiary @click="resetApplyFilters">Clear Filters</action-button>    
+                <action-button tertiary @click="resetApplyFilters">Clear Filters</action-button>
             </div>
         </div>
       </b-modal>
-  
+
       </div>
     </div>
 
-   
+
 </template>
 
 <script>
-/******  REMOVE */
-import dummyProjectData from '~/assets/dummy-data/test-projects.json'
-import dummyStateData from '~/assets/dummy-data/projects-by-state.json'
-/****** */
-
 import FilterIcon from '~/assets/img/filter.svg?inline'
 import RadiusIcon from '~/assets/img/radius.svg?inline'
 export default {
@@ -217,6 +213,7 @@ export default {
         FilterIcon,
         RadiusIcon
     },
+
     httpHeaders() {
         return {
             'X-XSS-Protection': '1; mode=block',
@@ -226,10 +223,21 @@ export default {
         };
     },
 
+    async asyncData(context) {
+        let states = await context.$axios.$get("/api/ui/organization/opps-regional-overview");
+        return {
+            statesData: states.data,
+            statesCounts: states.counts,
+            counts: states.counts,
+        }
+    },
+
     data(){
         return {
-            projectsData: dummyProjectData,
-            statesData: dummyStateData,
+            centroid: [-95.7,37.1],
+            loading: false,
+            suggested_descriptors: [],
+            projectsData: [],
             partner: true,
             dates: [new Date()],
             show_filters: false,
@@ -262,70 +270,20 @@ export default {
                 {name:'Out of School Time Program',val:'school'},
                 {name:'Science Communication',val:'scicomm'},
                 {name:'Science Policy',val:'policy'},
-            ],
-            counts: {
-                max: 2345,
-                points: {
-                    total: 8932,
-                    domains: [
-                        {
-                            name: "Live Science",
-                            value: 2345
-                        },
-                        {
-                            name: "After School",
-                            value: 1245
-                        },
-                        {
-                            name: "Museum & Science",
-                            value: 435
-                        },
-                    ]
-                },
-                polygons: {
-                    total: 4256,
-                    domains: [
-                        {
-                            name: "Live Science",
-                            value: 2345
-                        },
-                        {
-                            name: "After School",
-                            value: 1245
-                        },
-                        {
-                            name: "Museum & Science",
-                            value: 435
-                        },
-                    ]
-                },
-                anywhere: {
-                    total: 2342,
-                    domains: [
-                        {
-                            name: "Live Science",
-                            value: 345
-                        },
-                        {
-                            name: "After School",
-                            value: 245
-                        },
-                        {
-                            name: "Museum & Science",
-                            value: 35
-                        },
-                    ]
-                },
-            }
+            ]
         }
     },
-    // computed: {
-    //     dates(){
-    //         let date = new Date();
-    //         // let date2 = date.setDate(date.getDate() + 7);
-    //         return [date,date]
-    //     }
-    // },
+
+    computed: {
+
+    },
+
+    mounted() {
+        let date = new Date();
+        date.setDate(date.getDate() + 6);
+        this.dates = [new Date(), date];
+    },
+
     methods: {
         selectAllDomains(){
             this.filters.domains = ['citsci','livesci','maker','museum','school','policy','scicomm','formaled'];
@@ -366,26 +324,26 @@ export default {
             this.show_filters = false;
         },
         select_state(state) {
-            this.location = state;
-            this.selected_state = state;
-            this.mapMode = 'state';
+            console.log("select", state);
+            this.loading = true;
+            this.$axios.$get("/api/ui/organization/opps-regional-detailed", {params: {name: state}}).then(info => {
+                this.location = state;
+                this.selected_state = state;
+                this.mapMode = 'state';
+                this.projectsData = info.data;
+                this.counts = info.counts;
+                this.loading = false;
+            });
         },
         returnToUSA() {
             this.location = 'USA';
             this.selected_state = null;
             this.mapMode = 'usa';
+            this.projectsData = [];
+            this.counts = this.statesCounts;
         },
-    },
-    mounted() {
-        let date = new Date();
-        date.setDate(date.getDate() + 6);
-        this.dates = [new Date(), date];
-
-        /// getProjects
     }
-
 }
-
 </script>
 
 <style scoped lang="scss">
@@ -445,7 +403,7 @@ button.action-button svg.radius circle{
     top: 10px;
     width:100%;
     left:0;
-    
+
     span {
         background: #fff;
         box-shadow: 0 1px 4px rgba(0,0,0,.3);
@@ -508,14 +466,14 @@ button.action-button svg.radius circle{
     }
     .ptotal {
 
-       
+
         small {
             font-weight: normal;
             font-size: 0.6rem;
             color: #7b7b7b;
             display: block;
         }
-  
+
     }
 
     .polygons, .points {
@@ -531,7 +489,7 @@ button.action-button svg.radius circle{
         position: absolute;
         left:50%;
         margin-left: -15px;
-        top:0; 
+        top:0;
         z-index: 1;
     }
     .points > span {
@@ -547,7 +505,7 @@ button.action-button svg.radius circle{
         position: absolute;
         left:50%;
         margin-left: -15px;
-        top:0; 
+        top:0;
         z-index: 1;
     }
 

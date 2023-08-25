@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\nSELECT v.descriptor AS \"descriptor!\", count(*) AS \"total!\"\nFROM c_opportunity o JOIN jsonb_array_elements_text(exterior->'opp_descriptor') v(descriptor) ON true\nGROUP BY v.descriptor\nORDER BY \"total!\" DESC;\n",
+  "query": "\nSELECT v.descriptor AS \"descriptor!\", count(*) AS \"total!\"\nFROM c_opportunity o JOIN jsonb_array_elements_text(exterior->'opp_descriptor') v(descriptor) ON true\nGROUP BY v.descriptor\nORDER BY \"total!\" DESC\n",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       null
     ]
   },
-  "hash": "f61ad27241ceb0062c8b5cf29684fe57070436fa9c79221f8bd0ebf8b44e7f17"
+  "hash": "3847f0a8b35c68bd58fa8f90814754cba97b8017ecf513e7ad45ba7f30abf01e"
 }

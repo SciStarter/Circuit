@@ -1,13 +1,16 @@
 use std::collections::BTreeMap;
 
 use common::{
+    cached_json,
+    geo::opp_regional_detailed_counts,
     model::{
         analytics::{RelativeTimePeriod, Status as AnayticsStatus},
         invitation::{Invitation, InvitationMode},
+        opportunity::{EntityType, OpportunityQuery, OpportunityQueryOrdering},
         person::PersonPrivilegedReference,
-        Partner, Person, SelectOption,
+        Opportunity, OpportunityExterior, Pagination, Partner, Person, SelectOption,
     },
-    Database,
+    CachedJson, Database,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -24,6 +27,8 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .post(add_organization)
         .at("analytics", |r| r.get(my_analytics))
+        .at("opps-regional-overview", |r| r.get(opps_regional_overview))
+        .at("opps-regional-detailed", |r| r.get(opps_regional_detailed))
         .at("opps-overview", |r| r.get(opps_overview))
         .at("all", |r| r.get(my_organizations))
         .at("exists", |r| r.post(check_organization))
@@ -391,7 +396,9 @@ WHERE
 
         let mut toplevel: BTreeMap<String, serde_json::Value> = BTreeMap::new();
 
-        let Some(first) = partners.next() else { return okay(&toplevel); };
+        let Some(first) = partners.next() else {
+            return okay(&toplevel);
+        };
 
         toplevel.insert(
             "initial".into(),
@@ -497,7 +504,7 @@ SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
 FROM c_opportunity
 WHERE c_opportunity_is_current(interior, exterior) AND exterior->>'pes_domain' != 'unspecified'
 GROUP BY exterior->>'pes_domain'
-ORDER BY "total!" DESC;
+ORDER BY "total!" DESC
 "#
     )
     .map(|row| (row.domain.to_owned(), row.total))
@@ -512,7 +519,7 @@ ORDER BY "total!" DESC;
 SELECT v.descriptor AS "descriptor!", count(*) AS "total!"
 FROM c_opportunity o JOIN jsonb_array_elements_text(exterior->'opp_descriptor') v(descriptor) ON true
 GROUP BY v.descriptor
-ORDER BY "total!" DESC;
+ORDER BY "total!" DESC
 "#
     )
     .map(|row| (row.descriptor.to_owned(), row.total))
@@ -577,5 +584,63 @@ GROUP BY v.descriptor;
             "max": providers_max,
             "rows": providers,
         }
+    }))
+}
+
+pub async fn opps_regional_overview(req: tide::Request<Database>) -> tide::Result {
+    match cached_json(req.state(), "geoexp-regional-overview", 7).await? {
+        CachedJson::Current(json) => okay(&json),
+        CachedJson::Expired(json) => {
+            async_std::task::spawn(common::geo::opps_regional_overview_calc(
+                req.state().clone(),
+            ));
+            okay(&json)
+        }
+        CachedJson::Missing => {
+            async_std::task::spawn(common::geo::opps_regional_overview_calc(
+                req.state().clone(),
+            ));
+            okay(
+                &json!({"anywhere": 0, "states": {}, "counts": {"max": 0, }, "status": "processing..."}),
+            )
+        }
+    }
+}
+
+#[derive(Deserialize)]
+struct RegionalDetailedQuery {
+    name: String,
+}
+
+pub async fn opps_regional_detailed(req: tide::Request<Database>) -> tide::Result {
+    let params: RegionalDetailedQuery = req.query()?;
+
+    let mut query = OpportunityQuery::default();
+
+    query.entity_type = Some(vec![
+        EntityType::Opportunity,
+        EntityType::Attraction,
+        EntityType::Unspecified,
+    ]);
+
+    query.accepted = Some(true);
+    query.withdrawn = Some(false);
+    query.current = Some(true);
+    query.region = Some(params.name.clone());
+
+    let matches: Vec<OpportunityExterior> = Opportunity::load_matching(
+        req.state(),
+        &query,
+        OpportunityQueryOrdering::Any,
+        Pagination::All,
+    )
+    .await?
+    .into_iter()
+    .map(|m| m.exterior)
+    .collect();
+
+    okay(&json!({
+        "data": matches,
+        "counts": opp_regional_detailed_counts(req.state().clone(), Some(params.name)).await?,
     }))
 }

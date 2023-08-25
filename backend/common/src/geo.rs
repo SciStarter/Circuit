@@ -1,7 +1,10 @@
+use std::collections::BTreeMap;
+
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
-use crate::Database;
+use crate::{cache_json, Database};
 
 static OPENCAGE_API_KEY: Lazy<String> =
     Lazy::new(|| std::env::var("OPENCAGE_API_KEY").unwrap_or_else(|_| String::new()));
@@ -174,4 +177,280 @@ WHERE "zcta5ce20" like $1;"#,
             .next()
             .ok_or_else(|| Error::Structure("results empty".to_string()))?)
     }
+}
+
+#[derive(Serialize)]
+struct OverviewState {
+    point: i64,
+    polygon: i64,
+}
+
+#[derive(Serialize)]
+struct OverviewDomain {
+    name: String,
+    value: i64,
+}
+
+pub async fn opp_regional_detailed_counts(
+    db: Database,
+    name: Option<String>,
+) -> Result<serde_json::Value, sqlx::Error> {
+    let anywhere_total = sqlx::query_scalar!(
+        r#"
+SELECT COUNT(*) AS "result!"
+FROM c_opportunity
+WHERE
+  exterior->>'location_type' = 'any' AND
+  c_opportunity_is_current(interior, exterior)
+"#
+    )
+    .fetch_one(&db)
+    .await?;
+
+    let anywhere_domains = sqlx::query!(
+        r#"
+SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
+FROM c_opportunity
+WHERE
+  c_opportunity_is_current(interior, exterior) AND
+  exterior->>'pes_domain' != 'unspecified' AND
+  exterior->>'location_type' = 'any'
+GROUP BY exterior->>'pes_domain'
+ORDER BY "total!" DESC
+"#
+    )
+    .map(|row| OverviewDomain {
+        name: row.domain.to_owned(),
+        value: row.total,
+    })
+    .fetch_all(&db)
+    .await?;
+
+    let (points_total, points_domains, polygons_total, polygons_domains) = if let Some(name) = name
+    {
+        let points_total = sqlx::query_scalar!(
+            r#"
+SELECT COUNT(*) AS "result!"
+FROM c_opportunity JOIN c_region ON "name" = $1
+WHERE
+  exterior->>'location_type' = 'at' AND
+  c_opportunity_is_current(interior, exterior) AND
+  ST_Intersects(location_point, geometry)
+"#,
+            &name
+        )
+        .fetch_one(&db)
+        .await?;
+        let points_domains = sqlx::query!(
+            r#"
+SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
+FROM c_opportunity JOIN c_region ON "name" = $1
+WHERE
+  c_opportunity_is_current(interior, exterior) AND
+  exterior->>'pes_domain' != 'unspecified' AND
+  exterior->>'location_type' = 'at' AND
+  ST_Intersects(location_point, geometry)
+GROUP BY exterior->>'pes_domain'
+ORDER BY "total!" DESC
+"#,
+            &name
+        )
+        .map(|row| OverviewDomain {
+            name: row.domain.to_owned(),
+            value: row.total,
+        })
+        .fetch_all(&db)
+        .await?;
+
+        let polygons_total = sqlx::query_scalar!(
+            r#"
+SELECT COUNT(*) AS "result!"
+FROM c_opportunity JOIN c_region ON "name" = $1
+WHERE
+  exterior->>'location_type' = 'near' AND
+  c_opportunity_is_current(interior, exterior) AND
+  ST_Intersects(location_polygon, geometry)
+"#,
+            &name
+        )
+        .fetch_one(&db)
+        .await?;
+
+        let polygons_domains = sqlx::query!(
+            r#"
+SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
+FROM c_opportunity JOIN c_region ON "name" = $1
+WHERE
+  c_opportunity_is_current(interior, exterior) AND
+  exterior->>'pes_domain' != 'unspecified' AND
+  exterior->>'location_type' = 'near' AND
+  ST_Intersects(location_polygon, geometry)
+GROUP BY exterior->>'pes_domain'
+ORDER BY "total!" DESC
+"#,
+            &name
+        )
+        .map(|row| OverviewDomain {
+            name: row.domain.to_owned(),
+            value: row.total,
+        })
+        .fetch_all(&db)
+        .await?;
+
+        (
+            points_total,
+            points_domains,
+            polygons_total,
+            polygons_domains,
+        )
+    } else {
+        let points_total = sqlx::query_scalar!(
+            r#"
+SELECT COUNT(*) AS "result!"
+FROM c_opportunity
+WHERE
+  exterior->>'location_type' = 'at' AND
+  c_opportunity_is_current(interior, exterior)
+"#
+        )
+        .fetch_one(&db)
+        .await?;
+
+        let points_domains = sqlx::query!(
+            r#"
+SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
+FROM c_opportunity
+WHERE
+  c_opportunity_is_current(interior, exterior) AND
+  exterior->>'pes_domain' != 'unspecified' AND
+  exterior->>'location_type' = 'at'
+GROUP BY exterior->>'pes_domain'
+ORDER BY "total!" DESC
+"#
+        )
+        .map(|row| OverviewDomain {
+            name: row.domain.to_owned(),
+            value: row.total,
+        })
+        .fetch_all(&db)
+        .await?;
+
+        let polygons_total = sqlx::query_scalar!(
+            r#"
+SELECT COUNT(*) AS "result!"
+FROM c_opportunity
+WHERE
+  exterior->>'location_type' = 'near' AND
+  c_opportunity_is_current(interior, exterior)
+"#
+        )
+        .fetch_one(&db)
+        .await?;
+
+        let polygons_domains = sqlx::query!(
+            r#"
+SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
+FROM c_opportunity
+WHERE
+  c_opportunity_is_current(interior, exterior) AND
+  exterior->>'pes_domain' != 'unspecified' AND
+  exterior->>'location_type' = 'near'
+GROUP BY exterior->>'pes_domain'
+ORDER BY "total!" DESC
+"#
+        )
+        .map(|row| OverviewDomain {
+            name: row.domain.to_owned(),
+            value: row.total,
+        })
+        .fetch_all(&db)
+        .await?;
+
+        (
+            points_total,
+            points_domains,
+            polygons_total,
+            polygons_domains,
+        )
+    };
+
+    Ok(json!(
+        {
+            "max": points_total.max(polygons_total).max(anywhere_total),
+            "points": {
+                "total": points_total,
+                "domains": points_domains
+            },
+            "polygons": {
+                "total": polygons_total,
+                "domains": polygons_domains
+            },
+            "anywhere": {
+                "total": anywhere_total,
+                "domains": anywhere_domains,
+            },
+        }
+    ))
+}
+
+pub async fn opps_regional_overview_calc(db: Database) -> Result<serde_json::Value, sqlx::Error> {
+    let anywhere = sqlx::query_scalar!(r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE exterior->>'location_type' = 'any' AND c_opportunity_is_current(interior, exterior)"#).fetch_one(&db).await?;
+
+    // !! SQLx versions <= 0.7.1 fail to parse the EXPLAIN output for this query during compile
+    //     let states: BTreeMap<String, OverviewState> = sqlx::query!(
+    //         r#"
+    // SELECT
+    //   r."name" AS "name!",
+    //   (SELECT COUNT(*) FROM c_opportunity o WHERE ST_Intersects(r.geometry, o.location_point) AND c_opportunity_is_current(o.interior, o.exterior)) AS "point!",
+    //   (SELECT COUNT(*) FROM c_opportunity o WHERE ST_Intersects(r.geometry, o.location_polygon) AND c_opportunity_is_current(o.interior, o.exterior)) AS "polygon!"
+    // FROM c_region r
+    // "#
+    //     )
+    //     .map(|row| {
+    //         (
+    //             row.name.to_owned(),
+    //             OverviewState {
+    //                 point: row.point,
+    //                 polygon: row.polygon,
+    //             },
+    //         )
+    //     })
+    //     .fetch_all(&db)
+    //     .await?
+    //     .into_iter()
+    //     .collect();
+
+    // Temporary runtime solution instead
+    use sqlx::Row;
+    let states: BTreeMap<String, OverviewState> = sqlx::query(
+        r#"
+SELECT
+  r."name" AS "name!",
+  (SELECT COUNT(*) FROM c_opportunity o WHERE ST_Intersects(r.geometry, o.location_point) AND c_opportunity_is_current(o.interior, o.exterior)) AS "point!",
+  (SELECT COUNT(*) FROM c_opportunity o WHERE ST_Intersects(r.geometry, o.location_polygon) AND c_opportunity_is_current(o.interior, o.exterior)) AS "polygon!"
+FROM c_region r
+"#
+    )
+    .map(|row: sqlx::postgres::PgRow| {
+        (
+            row.get("name!"),
+            OverviewState {
+                point: row.get("point!"),
+                polygon: row.get("polygon!"),
+            },
+        )
+    })
+    .fetch_all(&db)
+    .await?
+    .into_iter()
+    .collect();
+    // End of temporary runtime solution
+
+    let counts = opp_regional_detailed_counts(db.clone(), None).await?;
+
+    let json = json!({"data": {"anywhere": anywhere, "states": states}, "counts": counts});
+
+    cache_json(&db, "geoexp-regional-overview", &json).await?;
+
+    Ok(json)
 }

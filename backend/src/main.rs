@@ -1,10 +1,10 @@
 use common::{model, Database, INTERNAL_UID};
+#[cfg(not(debug_assertions))]
 use http_types::headers::HeaderValue;
 use sqlx::postgres::PgPoolOptions;
-use tide::{
-    log,
-    security::{CorsMiddleware, Origin},
-};
+use tide::log;
+#[cfg(not(debug_assertions))]
+use tide::security::{CorsMiddleware, Origin};
 use tide_fluent_routes::{fs::ServeFs, prelude::*};
 
 pub mod crypto;
