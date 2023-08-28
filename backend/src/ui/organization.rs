@@ -1,14 +1,15 @@
 use std::collections::BTreeMap;
 
+use chrono::{DateTime, FixedOffset};
 use common::{
     cached_json,
     geo::opp_regional_detailed_counts,
     model::{
         analytics::{RelativeTimePeriod, Status as AnayticsStatus},
         invitation::{Invitation, InvitationMode},
-        opportunity::{EntityType, OpportunityQuery, OpportunityQueryOrdering},
+        opportunity::{EntityType, LocationType, OpportunityQuery, OpportunityQueryOrdering},
         person::PersonPrivilegedReference,
-        Opportunity, OpportunityExterior, Pagination, Partner, Person, SelectOption,
+        Opportunity, Pagination, Partner, Person, SelectOption,
     },
     CachedJson, Database,
 };
@@ -612,6 +613,19 @@ struct RegionalDetailedQuery {
     name: String,
 }
 
+#[derive(Serialize)]
+struct MapPoint {
+    uid: String,
+    title: String,
+    slug: String,
+    organization_name: String,
+    start_datetimes: Vec<DateTime<FixedOffset>>,
+    end_datetimes: Vec<DateTime<FixedOffset>>,
+    location_type: LocationType,
+    location_point: Option<serde_json::Value>,
+    location_polygon: Option<serde_json::Value>,
+}
+
 pub async fn opps_regional_detailed(req: tide::Request<Database>) -> tide::Result {
     let params: RegionalDetailedQuery = req.query()?;
 
@@ -628,7 +642,7 @@ pub async fn opps_regional_detailed(req: tide::Request<Database>) -> tide::Resul
     query.current = Some(true);
     query.region = Some(params.name.clone());
 
-    let matches: Vec<OpportunityExterior> = Opportunity::load_matching(
+    let matches: Vec<_> = Opportunity::load_matching(
         req.state(),
         &query,
         OpportunityQueryOrdering::Any,
@@ -636,7 +650,17 @@ pub async fn opps_regional_detailed(req: tide::Request<Database>) -> tide::Resul
     )
     .await?
     .into_iter()
-    .map(|m| m.exterior)
+    .map(|m| MapPoint {
+        uid: m.exterior.uid.to_string(),
+        title: m.exterior.title,
+        slug: m.exterior.slug,
+        organization_name: m.exterior.organization_name,
+        start_datetimes: m.exterior.start_datetimes,
+        end_datetimes: m.exterior.end_datetimes,
+        location_type: m.exterior.location_type,
+        location_point: m.exterior.location_point,
+        location_polygon: m.exterior.location_polygon,
+    })
     .collect();
 
     okay(&json!({

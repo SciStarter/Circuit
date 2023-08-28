@@ -1,5 +1,6 @@
 <template>
-    <div class="snm-wrapper">
+<div class="snm-wrapper">
+  <b-loading :is-full-page="true" v-model="loading" :can-cancel="false"></b-loading>
       <div class="snm-container">
 
         <div class="inputs flex flex-justify-sb flex-align-bottom">
@@ -681,5 +682,4 @@ button.action-button svg.radius circle{
 :deep(.datepicker.control){
     z-index: 99;
 }
-
 </style>

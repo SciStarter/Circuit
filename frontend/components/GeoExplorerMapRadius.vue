@@ -134,9 +134,7 @@ export default {
 
             // split apart projects into individual records by day or week
             locationProjects.map(v => {
-
-                // don't push if there is no coordinates to display
-                if ( (!v.location_point && !v.location_point.coordinates) && (!v.location_polygon && !v.location_polygon.coordinates) ) {
+                if((v.location_type == 'at' && (v.location_point == null || !v.location_point.coordinates || v.location_point.coordinates.length == 0)) || (v.location_type == 'near' && (!v.location_polygon || !v.location_polygon.coordinates || v.location_polygon.coordinates.length == 0))) {
                     return;
                 }
 
