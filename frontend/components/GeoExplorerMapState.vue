@@ -489,6 +489,7 @@ export default {
                     id: 'projects-point',
                     type: 'circle',
                     source: 'projects-data',
+                    filter: ['==', ['geometry-type'], 'Point'],
                     // minzoom: 8,
                     paint: {
                     'circle-color':"#397ab5",

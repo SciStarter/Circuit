@@ -645,7 +645,7 @@ pub async fn opps_regional_detailed(req: tide::Request<Database>) -> tide::Resul
     let matches: Vec<_> = Opportunity::load_matching(
         req.state(),
         &query,
-        OpportunityQueryOrdering::Any,
+        OpportunityQueryOrdering::Unique,
         Pagination::All,
     )
     .await?

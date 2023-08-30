@@ -191,17 +191,25 @@ struct OverviewDomain {
     value: i64,
 }
 
+/// Unlike the actual search function, this function and related
+/// geo-explorer functions collapse opportunities of the same name
+/// from the same partner. That produces a result more suitable for
+/// maps.
 pub async fn opp_regional_detailed_counts(
     db: Database,
     name: Option<String>,
 ) -> Result<serde_json::Value, sqlx::Error> {
     let anywhere_total = sqlx::query_scalar!(
         r#"
-SELECT COUNT(*) AS "result!"
-FROM c_opportunity
-WHERE
-  exterior->>'location_type' = 'any' AND
-  c_opportunity_is_current(interior, exterior)
+SELECT COUNT(x.*) AS "result!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  FROM c_opportunity o
+  WHERE
+    o.exterior->>'location_type' = 'any' AND
+    c_opportunity_is_current(o.interior, o.exterior)
+  ORDER BY exterior->>'title', exterior->>'partner'
+) x
 "#
     )
     .fetch_one(&db)
@@ -209,12 +217,16 @@ WHERE
 
     let anywhere_domains = sqlx::query!(
         r#"
-SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
-FROM c_opportunity
-WHERE
-  c_opportunity_is_current(interior, exterior) AND
-  exterior->>'pes_domain' != 'unspecified' AND
-  exterior->>'location_type' = 'any'
+SELECT x.exterior->>'pes_domain' AS "domain!", COUNT(x.*) AS "total!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *
+  FROM c_opportunity o
+  WHERE
+    c_opportunity_is_current(o.interior, o.exterior) AND
+    o.exterior->>'pes_domain' != 'unspecified' AND
+    o.exterior->>'location_type' = 'any'
+  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+  ) x
 GROUP BY exterior->>'pes_domain'
 ORDER BY "total!" DESC
 "#
@@ -230,12 +242,16 @@ ORDER BY "total!" DESC
     {
         let points_total = sqlx::query_scalar!(
             r#"
-SELECT COUNT(*) AS "result!"
-FROM c_opportunity JOIN c_region ON "name" = $1
-WHERE
-  exterior->>'location_type' = 'at' AND
-  c_opportunity_is_current(interior, exterior) AND
-  ST_Intersects(location_point, geometry)
+SELECT COUNT(x.*) AS "result!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  FROM c_opportunity o JOIN c_region r ON r."name" = $1
+  WHERE
+    exterior->>'location_type' = 'at' AND
+    c_opportunity_is_current(o.interior, o.exterior) AND
+    ST_Intersects(o.location_point, r.geometry)
+  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+) x
 "#,
             &name
         )
@@ -243,14 +259,18 @@ WHERE
         .await?;
         let points_domains = sqlx::query!(
             r#"
-SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
-FROM c_opportunity JOIN c_region ON "name" = $1
-WHERE
-  c_opportunity_is_current(interior, exterior) AND
-  exterior->>'pes_domain' != 'unspecified' AND
-  exterior->>'location_type' = 'at' AND
-  ST_Intersects(location_point, geometry)
-GROUP BY exterior->>'pes_domain'
+SELECT x.exterior->>'pes_domain' AS "domain!", COUNT(x.*) AS "total!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *
+  FROM c_opportunity o JOIN c_region r ON r."name" = $1
+  WHERE
+    c_opportunity_is_current(o.interior, o.exterior) AND
+    o.exterior->>'pes_domain' != 'unspecified' AND
+    o.exterior->>'location_type' = 'at' AND
+    ST_Intersects(o.location_point, r.geometry)
+  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+) x
+GROUP BY x.exterior->>'pes_domain'
 ORDER BY "total!" DESC
 "#,
             &name
@@ -264,12 +284,16 @@ ORDER BY "total!" DESC
 
         let polygons_total = sqlx::query_scalar!(
             r#"
-SELECT COUNT(*) AS "result!"
-FROM c_opportunity JOIN c_region ON "name" = $1
-WHERE
-  exterior->>'location_type' = 'near' AND
-  c_opportunity_is_current(interior, exterior) AND
-  ST_Intersects(location_polygon, geometry)
+SELECT COUNT(x.*) AS "result!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  FROM c_opportunity o JOIN c_region r ON r."name" = $1
+  WHERE
+    o.exterior->>'location_type' = 'near' AND
+    c_opportunity_is_current(o.interior, o.exterior) AND
+    ST_Intersects(o.location_polygon, r.geometry)
+  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+) x
 "#,
             &name
         )
@@ -278,14 +302,18 @@ WHERE
 
         let polygons_domains = sqlx::query!(
             r#"
-SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
-FROM c_opportunity JOIN c_region ON "name" = $1
-WHERE
-  c_opportunity_is_current(interior, exterior) AND
-  exterior->>'pes_domain' != 'unspecified' AND
-  exterior->>'location_type' = 'near' AND
-  ST_Intersects(location_polygon, geometry)
-GROUP BY exterior->>'pes_domain'
+SELECT x.exterior->>'pes_domain' AS "domain!", COUNT(x.*) AS "total!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *
+  FROM c_opportunity o JOIN c_region r ON r."name" = $1
+  WHERE
+    c_opportunity_is_current(o.interior, o.exterior) AND
+    o.exterior->>'pes_domain' != 'unspecified' AND
+    o.exterior->>'location_type' = 'near' AND
+    ST_Intersects(o.location_polygon, r.geometry)
+  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+) x
+GROUP BY x.exterior->>'pes_domain'
 ORDER BY "total!" DESC
 "#,
             &name
@@ -306,11 +334,15 @@ ORDER BY "total!" DESC
     } else {
         let points_total = sqlx::query_scalar!(
             r#"
-SELECT COUNT(*) AS "result!"
-FROM c_opportunity
-WHERE
-  exterior->>'location_type' = 'at' AND
-  c_opportunity_is_current(interior, exterior)
+SELECT COUNT(x.*) AS "result!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  FROM c_opportunity o
+  WHERE
+    exterior->>'location_type' = 'at' AND
+    c_opportunity_is_current(o.interior, o.exterior)
+  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+) x
 "#
         )
         .fetch_one(&db)
@@ -318,13 +350,17 @@ WHERE
 
         let points_domains = sqlx::query!(
             r#"
-SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
-FROM c_opportunity
-WHERE
-  c_opportunity_is_current(interior, exterior) AND
-  exterior->>'pes_domain' != 'unspecified' AND
-  exterior->>'location_type' = 'at'
-GROUP BY exterior->>'pes_domain'
+SELECT x.exterior->>'pes_domain' AS "domain!", COUNT(x.*) AS "total!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *
+  FROM c_opportunity o
+  WHERE
+    c_opportunity_is_current(o.interior, o.exterior) AND
+    o.exterior->>'pes_domain' != 'unspecified' AND
+    o.exterior->>'location_type' = 'at'
+  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+) x
+GROUP BY x.exterior->>'pes_domain'
 ORDER BY "total!" DESC
 "#
         )
@@ -337,11 +373,15 @@ ORDER BY "total!" DESC
 
         let polygons_total = sqlx::query_scalar!(
             r#"
-SELECT COUNT(*) AS "result!"
-FROM c_opportunity
-WHERE
-  exterior->>'location_type' = 'near' AND
-  c_opportunity_is_current(interior, exterior)
+SELECT COUNT(x.*) AS "result!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  FROM c_opportunity o
+  WHERE
+    o.exterior->>'location_type' = 'near' AND
+    c_opportunity_is_current(o.interior, o.exterior) 
+  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+) x
 "#
         )
         .fetch_one(&db)
@@ -349,13 +389,17 @@ WHERE
 
         let polygons_domains = sqlx::query!(
             r#"
-SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
-FROM c_opportunity
-WHERE
-  c_opportunity_is_current(interior, exterior) AND
-  exterior->>'pes_domain' != 'unspecified' AND
-  exterior->>'location_type' = 'near'
-GROUP BY exterior->>'pes_domain'
+SELECT x.exterior->>'pes_domain' AS "domain!", COUNT(x.*) AS "total!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *
+  FROM c_opportunity o
+  WHERE
+    c_opportunity_is_current(o.interior, o.exterior) AND
+    o.exterior->>'pes_domain' != 'unspecified' AND
+    o.exterior->>'location_type' = 'near'
+  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+) x
+GROUP BY x.exterior->>'pes_domain'
 ORDER BY "total!" DESC
 "#
         )
@@ -394,16 +438,50 @@ ORDER BY "total!" DESC
 }
 
 pub async fn opps_regional_overview_calc(db: Database) -> Result<serde_json::Value, sqlx::Error> {
-    let anywhere = sqlx::query_scalar!(r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE exterior->>'location_type' = 'any' AND c_opportunity_is_current(interior, exterior)"#).fetch_one(&db).await?;
+    let anywhere = sqlx::query_scalar!(
+        r#"
+SELECT COUNT(x.*) AS "result!"
+FROM (
+  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  FROM c_opportunity o
+  WHERE
+    o.exterior->>'location_type' = 'any' AND
+    c_opportunity_is_current(o.interior, o.exterior)
+  ORDER BY exterior->>'title', exterior->>'partner'
+) x
+"#
+    )
+    .fetch_one(&db)
+    .await?;
 
     // !! SQLx versions <= 0.7.1 fail to parse the EXPLAIN output for this query during compile
     //     let states: BTreeMap<String, OverviewState> = sqlx::query!(
     //         r#"
     // SELECT
     //   r."name" AS "name!",
-    //   (SELECT COUNT(*) FROM c_opportunity o WHERE ST_Intersects(r.geometry, o.location_point) AND c_opportunity_is_current(o.interior, o.exterior)) AS "point!",
-    //   (SELECT COUNT(*) FROM c_opportunity o WHERE ST_Intersects(r.geometry, o.location_polygon) AND c_opportunity_is_current(o.interior, o.exterior)) AS "polygon!"
-    // FROM c_region r
+    //   (
+    //     SELECT COUNT(x.*)
+    //     FROM (
+    //       SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+    //       FROM c_opportunity o
+    //       WHERE
+    //         c_opportunity_is_current(o.interior, o.exterior) AND
+    //         ST_Intersects(r.geometry, o.location_point)
+    //       ORDER BY o.exterior->>'title', o.exterior->>'partner'
+    //     ) x
+    //   ) AS "point!",
+    //   (
+    //     SELECT COUNT(x.*)
+    //     FROM (
+    //       SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+    //       FROM c_opportunity o
+    //       WHERE
+    //         c_opportunity_is_current(o.interior, o.exterior) AND
+    //         ST_Intersects(r.geometry, o.location_polygon)
+    //       ORDER BY o.exterior->>'title', o.exterior->>'partner'
+    //     ) x
+    //   ) AS "polygon!"
+    //   FROM c_region r
     // "#
     //     )
     //     .map(|row| {
@@ -426,10 +504,30 @@ pub async fn opps_regional_overview_calc(db: Database) -> Result<serde_json::Val
         r#"
 SELECT
   r."name" AS "name!",
-  (SELECT COUNT(*) FROM c_opportunity o WHERE ST_Intersects(r.geometry, o.location_point) AND c_opportunity_is_current(o.interior, o.exterior)) AS "point!",
-  (SELECT COUNT(*) FROM c_opportunity o WHERE ST_Intersects(r.geometry, o.location_polygon) AND c_opportunity_is_current(o.interior, o.exterior)) AS "polygon!"
+  (
+    SELECT COUNT(x.*)
+    FROM (
+      SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+      FROM c_opportunity o
+      WHERE
+        c_opportunity_is_current(o.interior, o.exterior) AND
+        ST_Intersects(r.geometry, o.location_point)
+      ORDER BY o.exterior->>'title', o.exterior->>'partner'
+    ) x
+  ) AS "point!",
+  (
+    SELECT COUNT(x.*)
+    FROM (
+      SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+      FROM c_opportunity o
+      WHERE
+        c_opportunity_is_current(o.interior, o.exterior) AND
+        ST_Intersects(r.geometry, o.location_polygon)
+      ORDER BY o.exterior->>'title', o.exterior->>'partner'
+    ) x
+  ) AS "polygon!"
 FROM c_region r
-"#
+"#,
     )
     .map(|row: sqlx::postgres::PgRow| {
         (

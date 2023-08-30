@@ -248,12 +248,14 @@ export default {
                         id: 'projects-polygon',
                         type: 'fill',
                         source: 'projects-data',
+                        filter: ['==', ['geometry-type'], 'Polygon'],
                         layout: {
                             'visibility': 'none',
                         },
                         paint: {
+                            'fill-outline-color':"#2e618f",
                             'fill-color':"#397ab5",
-                            'fill-opacity': 0.05,
+                            'fill-opacity': 0.005,
                         }
                     }
                 );
@@ -263,6 +265,7 @@ export default {
                         id: 'projects-point',
                         type: 'circle',
                         source: 'projects-data',
+                        filter: ['==', ['geometry-type'], 'Point'],
                         // minzoom: 8,
                         paint: {
                             'circle-color':"#397ab5",

@@ -951,6 +951,7 @@ pub enum OpportunityQueryOrdering {
     Soonest,
     Any,
     Native,
+    Unique,
 }
 
 /// Each field represents one of the database fields by which
@@ -1411,6 +1412,10 @@ OR
 
     let mut query_string = "SELECT ".to_string();
 
+    if ordering == OpportunityQueryOrdering::Unique {
+        query_string.push_str("DISTINCT ON (exterior->>'title', exterior->>'partner') ");
+    }
+
     match fields.len() {
         0 => query_string.push_str("*"),
         1 => query_string.push_str(fields[0]),
@@ -1522,6 +1527,9 @@ SELECT
         }
         OpportunityQueryOrdering::Native => query_string.push_str(" ORDER BY id ASC"),
         OpportunityQueryOrdering::Any => {}
+        OpportunityQueryOrdering::Unique => {
+            query_string.push_str(" ORDER BY exterior->>'title', exterior->>'partner' ASC")
+        }
     }
 
     match pagination {
