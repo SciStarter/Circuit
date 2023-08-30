@@ -1,6 +1,6 @@
 use crate::Error;
 use chrono::TimeZone;
-use common::model::{partner::LoggedError, Error as CommonError, Partner};
+use common::model::{partner::LoggedError, Partner};
 use serde_json::Value;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;

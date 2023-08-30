@@ -1,4 +1,3 @@
-use crate::Error;
 use bytes::Bytes;
 use common::model::partner::LoggedError;
 use csv::{Reader, ReaderBuilder};

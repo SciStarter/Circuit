@@ -2038,6 +2038,43 @@ impl Opportunity {
             self.id = Some(rec.id);
         };
 
+        let overlay = sqlx::query_scalar!(
+            r#"SELECT true AS "exists!" FROM c_opportunity_overlay WHERE opportunity_id = $1"#,
+            self.id
+        )
+        .fetch_optional(db)
+        .await?;
+
+        if overlay.is_none() {
+            let other = sqlx::query!(
+                r#"
+SELECT v.interior AS "interior!", v.exterior AS "exterior!"
+FROM c_opportunity_overlay v JOIN c_opportunity o ON v.opportunity_id = o.id
+WHERE
+  o.exterior->>'title' = $1 AND
+  o.exterior->>'partner' = $2
+"#,
+                &self.exterior.title,
+                self.exterior.partner.to_string(),
+            )
+            .fetch_optional(db)
+            .await?;
+
+            if let Some(other) = other {
+                sqlx::query!(
+                    r#"
+INSERT INTO c_opportunity_overlay (opportunity_id, interior, exterior)
+VALUES ($1, $2, $3)
+"#,
+                    self.id,
+                    other.interior,
+                    other.exterior,
+                )
+                .execute(db)
+                .await?;
+            }
+        }
+
         Ok(())
     }
 }

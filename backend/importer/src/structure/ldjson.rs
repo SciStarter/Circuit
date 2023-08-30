@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{NaiveDateTime, TimeZone};
+use chrono::TimeZone;
 use common::{
     geo::Match,
     model::{
@@ -9,7 +9,7 @@ use common::{
     },
     ToFixedOffset,
 };
-use once_cell::sync::Lazy;
+use htmlentity::entity::ICodedDataTrait;
 use serde_json::{json, Value};
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
@@ -96,7 +96,8 @@ struct SchemaOrgLocation {
     #[serde(rename = "@type")]
     schema_type: SchemaOrgLocationType,
     name: String,
-    image: String,
+    #[serde(default, rename = "image")]
+    _image: String,
     address: String,
 }
 
@@ -104,7 +105,7 @@ struct SchemaOrgLocation {
 #[serde(rename_all = "camelCase")]
 struct SchemaOrgOrganizer {
     #[serde(rename = "@type")]
-    schema_type: SchemaOrgOrganizerType,
+    _schema_type: SchemaOrgOrganizerType,
     name: String,
     url: String,
 }
@@ -112,20 +113,24 @@ struct SchemaOrgOrganizer {
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Offer {
-    url: String,
+    #[serde(default, rename = "url")]
+    _url: String,
     price: String,
-    price_currency: String,
-    availability: String,
-    valid_from: String,
+    #[serde(default, rename = "price_currency")]
+    _price_currency: String,
+    #[serde(default, rename = "availability")]
+    _availability: String,
+    #[serde(default, rename = "valid_from")]
+    _valid_from: String,
 }
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct SchemaOrgEvent {
     #[serde(rename = "@context")]
-    schema_context: SchemaOrgContext,
+    _schema_context: SchemaOrgContext,
     #[serde(rename = "@type")]
-    schema_type: SchemaOrgType,
+    _schema_type: SchemaOrgType,
     event_status: SchemaOrgEventStatus,
     start_date: String,
     end_date: String,
@@ -133,7 +138,8 @@ struct SchemaOrgEvent {
     location: SchemaOrgLocation,
     organizer: SchemaOrgOrganizer,
     offers: Offer,
-    performer: String,
+    #[serde(default, rename = "performer")]
+    _performer: String,
     description: String,
     image: String,
     name: String,
@@ -146,7 +152,7 @@ where
 {
     fn interpret_one(
         &self,
-        mut json: Value,
+        json: Value,
         cache: &mut HashMap<String, Option<Match>>,
     ) -> Result<Opportunity, LoggedError> {
         let data: SchemaOrgEvent = serde_json::from_value(json)?;
@@ -155,9 +161,13 @@ where
 
         opp.exterior.uid = Uuid::new_v5(&self.1.partner, data.url.as_bytes());
 
-        opp.exterior.title = data.name;
+        opp.exterior.title = htmlentity::entity::decode(data.name.as_bytes())
+            .to_string()
+            .unwrap_or_default();
 
-        opp.exterior.description = data.description;
+        opp.exterior.description = htmlentity::entity::decode(data.description.as_bytes())
+            .to_string()
+            .unwrap_or_default();
 
         opp.exterior.partner_opp_url = if !data.url.is_empty() {
             Some(data.url)
@@ -173,13 +183,20 @@ where
             _ => common::model::opportunity::Cost::Cost,
         };
 
-        opp.exterior.organization_name = data.organizer.name;
+        opp.exterior.organization_name = htmlentity::entity::decode(data.organizer.name.as_bytes())
+            .to_string()
+            .unwrap_or_default();
 
         opp.exterior.organization_website = if !data.organizer.url.is_empty() {
             Some(data.organizer.url)
         } else {
             None
         };
+
+        opp.exterior.min_age = 0;
+        opp.exterior.max_age = 999;
+
+        opp.exterior.opp_venue = vec![common::model::opportunity::VenueType::Indoors];
 
         match data.location.schema_type {
             SchemaOrgLocationType::Place => {
@@ -208,7 +225,12 @@ where
                     opp.exterior.location_point = Some(
                         json!({"type": "Point", "coordinates": [loc.geometry.longitude, loc.geometry.latitude]}),
                     );
-                    opp.exterior.address_street = loc.formatted.clone();
+                    opp.exterior.address_street = loc
+                        .formatted
+                        .split_once(',')
+                        .unwrap_or(("", ""))
+                        .0
+                        .to_owned();
                     opp.exterior.address_city = loc
                         .components
                         .city
@@ -300,7 +322,7 @@ where
 {
     type Data = Opportunity;
 
-    fn interpret(&self, mut parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
+    fn interpret(&self, parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         let mut cache = HashMap::new();
 
         if parsed[&self.0].is_array() {

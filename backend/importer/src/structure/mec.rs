@@ -1,9 +1,5 @@
-use super::{
-    Error,
-    OneOrMany::{self, Many},
-    PartnerInfo, Structure,
-};
-use chrono::{DateTime, TimeZone, Utc};
+use super::{Error, OneOrMany, PartnerInfo, Structure};
+use chrono::{DateTime, TimeZone};
 use common::model::{opportunity::EntityType, partner::LoggedError, Opportunity, Partner};
 use common::ToFixedOffset;
 use htmlentity::entity::ICodedDataTrait;
@@ -53,10 +49,14 @@ pub struct Event {
 
 #[derive(serde::Deserialize, Debug, Default)]
 pub struct Moment {
-    date: String,
-    hour: String,
-    minutes: String,
-    ampm: String,
+    #[serde(default, rename = "date")]
+    _date: String,
+    #[serde(default, rename = "hour")]
+    _hour: String,
+    #[serde(default, rename = "minutes")]
+    _minutes: String,
+    #[serde(default, rename = "ampm")]
+    _ampm: String,
     timestamp: i64,
 }
 
@@ -68,8 +68,8 @@ pub struct StartAndEnd {
 
 #[derive(serde::Deserialize, Debug, Default)]
 pub struct Entry {
-    #[serde(rename = "ID")]
-    id: u64,
+    #[serde(default, rename = "ID")]
+    _id: u64,
     data: Event,
     date: StartAndEnd,
 }
@@ -170,7 +170,10 @@ where
                                     .to_string()
                                     .unwrap_or_default();
 
-                            opp.exterior.description = entry.data.content;
+                            opp.exterior.description =
+                                htmlentity::entity::decode(entry.data.content.as_bytes())
+                                    .to_string()
+                                    .unwrap_or_default();
 
                             opp.exterior.image_url = entry.data.featured_image.large;
 
@@ -180,11 +183,15 @@ where
                                 // is offset by that much in the SciTech
                                 // Institute data.
                                 opp.exterior.start_datetimes = vec![tz
-                                    .timestamp(entry.date.start.timestamp + 25200, 0)
+                                    .timestamp_opt(entry.date.start.timestamp + 25200, 0)
+                                    .earliest()
+                                    .expect("Start datetime should be within DateTime domain")
                                     .to_fixed_offset()];
 
                                 opp.exterior.end_datetimes = vec![tz
-                                    .timestamp(entry.date.end.timestamp + 25200, 0)
+                                    .timestamp_opt(entry.date.end.timestamp + 25200, 0)
+                                    .earliest()
+                                    .expect("End datetime should be within DateTime domain")
                                     .to_fixed_offset()];
 
                                 opp.exterior.has_end = true;

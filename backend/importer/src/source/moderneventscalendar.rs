@@ -1,12 +1,10 @@
 use std::collections::HashSet;
 
-use bytes::{BufMut, Bytes, BytesMut};
+use bytes::{Bytes, BytesMut};
 use chrono::{Days, Months};
 use common::model::partner::{LoggedError, LoggedErrorLevel};
 use once_cell::sync::Lazy;
 use regex::Regex;
-
-use crate::Error;
 
 static LD_JSON_BLOCK: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?is)<\s*script\s+type="application/ld\+json"\s*>(.*?)<\s*/\s*script\s*>"#)
@@ -30,9 +28,12 @@ impl ModernEventsCalendar {
 struct MECResponse {
     offset: usize,
     count: usize,
-    current_month_divider: String,
-    end_date: String,
-    has_more_event: u8,
+    #[serde(default, rename = "current_month_divider")]
+    _current_month_divider: String,
+    #[serde(default, rename = "end_date")]
+    _end_date: String,
+    #[serde(default, rename = "has_more_event")]
+    _has_more_event: u8,
     html: String,
 }
 
@@ -40,7 +41,7 @@ impl super::Source for ModernEventsCalendar {
     fn load(&self) -> Result<Bytes, LoggedError> {
         let mut result = BytesMut::new();
         let mut date = chrono::Local::now().date_naive();
-        let mut offset = 0;
+        let mut offset;
         let mut seen = HashSet::new();
         let mut first = true;
 

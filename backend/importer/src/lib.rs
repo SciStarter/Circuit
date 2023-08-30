@@ -55,7 +55,7 @@ pub trait Importer: Debug {
 }
 
 // https://serde.rs/string-or-struct.html
-fn string_or_struct<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+fn _string_or_struct<'de, T, D>(deserializer: D) -> Result<T, D::Error>
 where
     T: Deserialize<'de> + FromStr<Err = Void>,
     D: Deserializer<'de>,

@@ -1,4 +1,4 @@
-use std::{any::Any, marker::PhantomData, str::FromStr};
+use std::marker::PhantomData;
 
 use super::{
     Error,
@@ -12,7 +12,6 @@ use htmlentity::entity::ICodedDataTrait;
 use serde::Deserialize;
 use serde_json::Value;
 use sqlx::{Pool, Postgres};
-use void::Void;
 
 #[derive(Debug)]
 pub struct EventsJson<Tz: TimeZone>(pub PartnerInfo<Tz>);
@@ -212,7 +211,7 @@ fn interpret_one<Tz: TimeZone>(
     partner: &PartnerInfo<Tz>,
     entry: Value,
 ) -> Result<Opportunity, LoggedError> {
-    let dump = serde_json::to_string_pretty(&entry)?;
+    //let dump = serde_json::to_string_pretty(&entry)?;
 
     let data: Data = serde_json::from_value(entry)?;
 

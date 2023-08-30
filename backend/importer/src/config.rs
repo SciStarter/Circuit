@@ -8,7 +8,6 @@ use importer::format::{self, Format};
 use importer::source::{self, Source};
 use importer::structure::{self, OneOrMany, PartnerAddress, PartnerFlag, PartnerInfo, Structure};
 use importer::{Error, Importer};
-use uuid::Uuid;
 
 /// This function is the 'config file' for the importer. Each entry
 /// added to the importers vector defines how to grab data from one
@@ -32,8 +31,8 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
                         .into(),
                 ),
                 domain: Domain::MuseumOrScienceCenter,
-                descriptor: vec![Descriptor::ExpoStyle],
-                topics: vec![Topic::Engineering, Topic::Technology],
+                descriptor: vec![Descriptor::Community],
+                topics: vec![Topic::GeneralScience],
                 flags: Vec::new(),
                 address: Some(PartnerAddress {
                     name: "SciTech Institute".to_string(),
@@ -339,7 +338,7 @@ where
                 }
             }
             OneOrMany::Many(vec) => {
-                for mut result in vec {
+                for result in vec {
                     match result {
                         Ok(mut item) => {
                             item.set_id_if_necessary(&db).await?;

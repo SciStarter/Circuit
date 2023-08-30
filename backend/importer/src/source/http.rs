@@ -1,4 +1,3 @@
-use crate::Error;
 use bytes::{BufMut, Bytes, BytesMut};
 use common::model::partner::LoggedError;
 

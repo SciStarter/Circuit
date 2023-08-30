@@ -1,4 +1,3 @@
-use crate::Error;
 use bytes::Bytes;
 
 pub mod airtable;

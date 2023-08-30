@@ -3,7 +3,6 @@
 //! fields that were configured according to the Science Near Me
 //! recommendations.
 
-use crate::Error;
 use bytes::{BufMut, Bytes, BytesMut};
 use common::model::partner::LoggedError;
 

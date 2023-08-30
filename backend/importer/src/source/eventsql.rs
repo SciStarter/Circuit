@@ -1,7 +1,6 @@
 //! Uses GraphQL and the WPgraphQL and EventsQL schema to query event
 //! information from The Events Calendar Pro.
 
-use crate::Error;
 use bytes::{BufMut, Bytes, BytesMut};
 use common::model::partner::LoggedError;
 

@@ -1,8 +1,7 @@
 //! Uses WP-JSON to query event information from The Events Calendar
 //! Pro
 
-use crate::Error;
-use bytes::{BufMut, Bytes, BytesMut};
+use bytes::Bytes;
 use common::model::partner::LoggedError;
 use serde_json::{json, Value};
 
@@ -14,11 +13,15 @@ pub struct WordPressRest {
 #[derive(serde::Deserialize, Default, Debug)]
 struct WPJsonResponse {
     events: Vec<Value>,
-    rest_url: String,
+    #[serde(default, rename = "rest_url")]
+    _rest_url: String,
     next_rest_url: Option<String>,
-    previous_rest_url: Option<String>,
-    total: u32,
-    total_pages: u32,
+    #[serde(default, rename = "previous_rest_url")]
+    _previous_rest_url: Option<String>,
+    #[serde(default, rename = "total")]
+    _total: u32,
+    #[serde(default, rename = "total_pages")]
+    _total_pages: u32,
 }
 
 impl WordPressRest {

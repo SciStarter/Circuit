@@ -15,48 +15,65 @@ pub struct NeonCRM {
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct StandardSearchField {
-    field_name: String,
-    operators: Vec<String>,
+    #[serde(default, rename = "field_name")]
+    _field_name: String,
+    #[serde(default, rename = "operators")]
+    _operators: Vec<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CustomSearchField {
-    display_name: String,
-    id: i32,
-    operators: Vec<String>,
+    #[serde(default, rename = "display_name")]
+    _display_name: String,
+    #[serde(default, rename = "id")]
+    _id: i32,
+    #[serde(default, rename = "operators")]
+    _operators: Vec<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchFields {
-    custom_fields: Vec<CustomSearchField>,
-    standard_fields: Vec<StandardSearchField>,
+    #[serde(default, rename = "custom_fields")]
+    _custom_fields: Vec<CustomSearchField>,
+    #[serde(default, rename = "standard_fields")]
+    _standard_fields: Vec<StandardSearchField>,
 }
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CustomOutputFieldOptionValue {
-    id: String,
-    name: String,
-    status: String,
+    #[serde(default, rename = "id")]
+    _id: String,
+    #[serde(default, rename = "name")]
+    _name: String,
+    #[serde(default, rename = "status")]
+    _status: String,
 }
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CustomOutputField {
-    id: String,
-    name: String,
-    option_values: Option<Vec<CustomOutputFieldOptionValue>>,
-    status: String,
-    value: String,
+    #[serde(default, rename = "id")]
+    _id: String,
+    #[serde(default, rename = "name")]
+    _name: String,
+    #[serde(default, rename = "option_values")]
+    _option_values: Option<Vec<CustomOutputFieldOptionValue>>,
+    #[serde(default, rename = "status")]
+    _status: String,
+    #[serde(default, rename = "value")]
+    _value: String,
 }
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct OutputFields {
-    custom_fields: Vec<CustomOutputField>,
-    standard_fields: Vec<String>,
+    #[serde(default, rename = "custom_fields")]
+    _custom_fields: Vec<CustomOutputField>,
+    #[serde(default, rename = "standard_fields")]
+    _standard_fields: Vec<String>,
 }
 
 impl NeonCRM {
