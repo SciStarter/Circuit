@@ -240,25 +240,6 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
         }),
         period: 24 * hours,
     }));
-
-    // Disabled because they're using an exchange instead
-    // importers.push(Box::new(Import {
-    //     source: source::EventsQLWithCustom::new("https://stemcouncil.alabama.gov/graphql"),
-    //     format: format::Json,
-    //     structure: structure::EventsQL(PartnerInfo {
-    //         partner: "b9224b48-dcc3-5153-9c31-7b53ff24a380".parse().unwrap(),
-    //         partner_name: "Alabama STEM Council".to_string(),
-    //         partner_website: Some("https://stemcouncil.alabama.gov/".to_string()),
-    //         partner_logo_url: Some("".to_string()),
-    //         domain: Domain::OutOfSchoolTimeProgram,
-    //         descriptor: vec![],
-    //         topics: vec![],
-    //         flags: vec![],
-    //         address: None,
-    //         timezone: Some(chrono_tz::US::Central),
-    //     }),
-    //     period: 24 * hours,
-    // }));
 }
 
 pub fn setup() -> Vec<Box<dyn Importer>> {

@@ -1,4 +1,3 @@
-use crate::Error;
 use bytes::Bytes;
 use common::model::partner::LoggedError;
 use serde_json::Value;
@@ -8,16 +7,9 @@ pub struct Json;
 
 impl super::Format for Json {
     fn decode(&self, raw: Bytes) -> Result<Value, LoggedError> {
-        //std::fs::write("json.raw", &raw);
-        Ok(serde_json::from_slice(&raw)?)
-
-        // // This is a workaround for tab characters in JSON strings.
-        // // Hopefully temporary, and to be removed when the Night Sky
-        // // Network starts providing valid JSON.
-        // let filtered: String = std::str::from_utf8(&raw)?
-        //     .chars()
-        //     .map(|c| if c == '\t' { ' ' } else { c })
-        //     .collect();
-        // Ok(serde_json::from_str(&filtered)?)
+        //let _ = std::fs::write("json.raw", &raw);
+        let cleaned = String::from_utf8_lossy(&raw).replace(|c: char| c.is_control(), " ");
+        //let _ = std::fs::write("json.cleaned", &cleaned);
+        Ok(serde_json::from_str(cleaned.as_str())?)
     }
 }
