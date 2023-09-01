@@ -20,7 +20,8 @@
         <% } %>
 
         <p style="padding: 1rem 0px">
-          <a href="<%= opportunity.exterior.uid.to_string() %>/overlay">Edit overlay</a>
+          <a href="<%= opportunity.exterior.uid.to_string() %>/overlay">Edit overlay</a><br>
+          <a href="/<%= opportunity.exterior.slug %>" target="_blank">View on site</a>
         </p>
 
         <form method="post">
