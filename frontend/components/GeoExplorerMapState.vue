@@ -382,7 +382,8 @@ export default {
             let map = this.map = new mapboxgl.Map({
                 accessToken: this.$config.mapboxToken,
                 container: this.$refs.display,
-                style: 'mapbox://styles/mapbox/light-v11',
+                style: 'mapbox://styles/scistarter/clm6d272z02jn01qx0rbm7rlv',
+                //style: 'mapbox://styles/mapbox/light-v11',
                 center: center,
                 zoom: 5,
             });
