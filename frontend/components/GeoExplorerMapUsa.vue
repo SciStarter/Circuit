@@ -127,7 +127,7 @@ export default {
                         coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
                     }
 
-                    popup.setLngLat(coordinates).setHTML(`<strong>${name}</strong><br>Projects: ${projects}`).addTo(map);
+                    popup.setLngLat(coordinates).setHTML(`<strong>${name}</strong><br>Opportunities: ${projects}`).addTo(map);
                 }
             });
 
