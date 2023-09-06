@@ -64,7 +64,7 @@
                     <table>
                         <tbody>
                             <tr v-for="row in counts.points.domains">
-                                <td class="table-label">{{row['name']}}</td>
+                                <td class="table-label">{{domain_name(row['name'])}}</td>
                                 <td class="table-num">{{row['value']}}</td>
                                 <td class="table-bar"><comparison-bar :value="row['value']" :max="counts.max" color="#268699" /></td>
                             </tr>
@@ -88,7 +88,7 @@
                 <table>
                     <tbody>
                         <tr v-for="row in counts.polygons.domains">
-                            <td class="table-label">{{row['name']}}</td>
+                            <td class="table-label">{{domain_name(row['name'])}}</td>
                             <td class="table-num">{{row['value']}}</td>
                             <td class="table-bar"><comparison-bar :value="row['value']" :max="counts.max" color="#268699" /></td>
                         </tr>
@@ -112,7 +112,7 @@
                 <table>
                     <tbody>
                         <tr v-for="row in counts.anywhere.domains">
-                            <td class="table-label">{{row['name']}}</td>
+                            <td class="table-label">{{domain_name(row['name'])}}</td>
                             <td class="table-num">{{row['value']}}</td>
                             <td class="table-bar"><comparison-bar :value="row['value']" :max="counts.max" color="#268699" /></td>
                         </tr>
@@ -286,6 +286,28 @@ export default {
     },
 
     methods: {
+        domain_name(tag) {
+            switch(tag) {
+            case "citizen_science":
+                return "Citizen Science";
+            case "live_science":
+                return "Live Science";
+            case "museum_or_science_center":
+                return "Museum or Science Center";
+            case "maker":
+                return "Maker";
+            case "policy":
+                return "Science Policy";
+            case "out_of_school_time_program":
+                return "Out of School Time Program";
+            case "formal_education":
+                return "Formal Education";
+            case "science_communications":
+                return "Science Communications";
+            default:
+                return "Unspecified";
+            }
+        },
         selectAllDomains(){
             this.filters.domains = ['citsci','livesci','maker','museum','school','policy','scicomm','formaled'];
         },
