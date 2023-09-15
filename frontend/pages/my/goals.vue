@@ -1,7 +1,32 @@
 <template>
-  <section v-if="mode == 'set'" class="goals set-goal" data-context="set-goal">
+
+<div>
+    
+<div class="instruct" v-if="mode == 'set'">
     <h1><atom-icon /> Set a goal</h1>
-    <p>Setting a goal is a great way to challenge yourself to grow your science learning!</p>
+    <p class="lead">Choose the goal that’s right for you, and then be sure to come back to Science Near Me to log your activity after you participate in a science opportunity.</p>
+    <h2>Why Set a Goal?</h2>
+    <ul>
+        <li><p>Setting a goal is a great way to inspire yourself to increase your science learning and engagement!</p></li>
+        <li> <p>Your goals and activity logs also help researchers better understand how people participate in science.</p></li>
+    </ul>
+   
+    <h2>How to Record Your Science Participation</h2>
+    <p style="margin-bottom: .5rem;">It's super simple!</p> 
+    <ol>
+        <li><p>On each science opportunity page on Science Near Me you'll find an <submit-opportunity-icon/> "I Did This!" button.</p></li>
+        <li><p>After participating in the activity, visit its page and click that button!</p></li>
+    </ol>
+    <h2>Set Your Goal</h2>
+</div>
+
+
+
+
+  <section v-if="mode == 'set'" class="goals set-goal" data-context="set-goal">
+    
+
+
     <div class="goal-card" data-context="goal-dabbler">
       <trophy-dabbler />
       <div>
@@ -99,7 +124,17 @@
         </ol>
       </div>
     </div>
+
+    <div class="instruct instruct2">
+    <h2 style="margin-top:1rem">How to Record Your Science Participation</h2>
+    <ol style="margin-bottom: 2rem;">
+        <li><p>On each science opportunity page on Science Near Me you'll find an <submit-opportunity-icon/> "I Did This!" button.</p></li>
+        <li><p>After participating in the activity, visit its page and click that button!</p></li>
+    </ol>
+</div>
+
   </section>
+</div>
 </template>
 
 <script>
@@ -113,13 +148,15 @@ import TrophyDabbler from '~/assets/img/trophy-dabbler.svg?inline'
 import TrophyEnthusiast from '~/assets/img/trophy-enthusiast.svg?inline'
 import TrophyHero from '~/assets/img/trophy-hero.svg?inline'
 
+import SubmitOpportunityIcon from '~/assets/img/submit-opportunity.svg?inline'
+
 export default {
     name: "MyGoals",
 
     components: {
         ActionButton,
         SocialButton,
-
+        SubmitOpportunityIcon,
         AtomIcon,
         TrashIcon,
         TrophyDabbler,
@@ -238,13 +275,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.goals {
+.goals, .instruct {
     > h1 {
         display: flex;
         align-items: center;
         font-family: $snm-font-heading;
         font-weight: bold;
-        font-size: $snm-font-small;
+        font-size: 21px;
         line-height: 36px;
         color: $snm-color-background-dark;
         margin-top: 1rem;
@@ -255,7 +292,7 @@ export default {
     }
 }
 
-.set-goal {
+.set-goal, .instruct  {
     > h1 {
         justify-content: center;
 
@@ -266,9 +303,9 @@ export default {
     }
 
     > p {
-        padding: 0.5rem;
-        text-align: center;
-        padding-bottom: 2rem;
+        // padding: 0.5rem;
+        // text-align: center;
+        // padding-bottom: 2rem;
         font-family: $snm-font-meta;
         font-size: $snm-font-small;
         color: $snm-color-tldr;
@@ -531,7 +568,7 @@ export default {
     min-height:75%;
   }
 
-    .goals {
+    .goals, .instruct {
         > h1 {
             font-size: $snm-font-largest;
             width: 100%;
@@ -599,4 +636,49 @@ export default {
         }
     }
 }
+
+.instruct {
+    padding:0 1rem;
+    h2 {
+          font-family: "Fira Sans", sans-serif;
+        color: #1b4a54;
+        font-size: 18px;
+        font-weight: bold;
+        width: auto;
+        margin-top: 2rem;
+    }
+    .lead {
+        font-weight: bold;
+        text-align: center;
+        color: #363636;
+    }
+
+    ul {
+        list-style-type: disc;
+        margin-left: 1rem;
+        li {
+            margin-bottom: .5rem;
+        }
+    }
+    ol {
+        margin-left: 1rem;
+        li {
+            margin-bottom: .5rem;
+        }
+        svg {
+            vertical-align: middle;
+            position: relative;
+            top:-2px;
+        }
+    }
+
+}
+.instruct2 {
+        border:1px solid #ddd;
+        padding:0 1rem;
+        background:#efefef;
+        h2 {
+            margin:0 0 1rem 0;
+        }
+    }
 </style>
