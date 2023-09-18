@@ -176,6 +176,28 @@ impl Structure for NightSkyNetwork {
                         obj["end_datetimes"] = obj["end_dates"].take();
                     }
 
+                    // They send an empty end_datetimes array often
+                    // for events where only the start time is set, so
+                    // we need to guess an end time for them.
+                    {
+                        let mut starts = obj["start_datetimes"]
+                            .as_array()
+                            .cloned()
+                            .unwrap_or_else(Vec::new);
+                        let ends = obj["end_datetimes"].as_array_mut();
+                        if let (Some(ends), Some(start)) = (
+                            ends,
+                            starts.pop().and_then(|v| v.as_str().map(|s| s.to_string())),
+                        ) {
+                            if ends.is_empty() {
+                                if let Ok(mut end) = DateTime::parse_from_rfc3339(&start) {
+                                    end += chrono::Duration::hours(2);
+                                    ends.push(end.to_rfc3339().into());
+                                }
+                            }
+                        }
+                    }
+
                     //let event_id = obj["event_id"].as_str().map(|x| x.to_owned());
                     let event_title = obj["title"].as_str().map(|x| x.to_owned());
 
@@ -195,10 +217,17 @@ impl Structure for NightSkyNetwork {
 
                     input.exterior.pes_domain = common::model::opportunity::Domain::CitizenScience;
 
-                    input
-                        .exterior
-                        .opp_descriptor
-                        .push(common::model::opportunity::Descriptor::StarParty);
+                    if event_title.is_some_and(|s| s.to_ascii_lowercase().contains("star party")) {
+                        input
+                            .exterior
+                            .opp_descriptor
+                            .push(common::model::opportunity::Descriptor::StarParty);
+                    } else {
+                        input
+                            .exterior
+                            .opp_descriptor
+                            .push(common::model::opportunity::Descriptor::Community);
+                    }
 
                     input
                         .exterior
