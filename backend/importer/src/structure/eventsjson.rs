@@ -293,10 +293,11 @@ fn interpret_one<Tz: TimeZone>(
 
     opp.exterior.cost = if partner.flags.contains(&crate::structure::PartnerFlag::Cost) {
         common::model::opportunity::Cost::Cost
-    } else if data.cost.unwrap_or_else(String::new).is_empty() {
-        common::model::opportunity::Cost::Free
     } else {
-        common::model::opportunity::Cost::Cost
+        match data.cost.unwrap_or_else(String::new).as_str() {
+            "" | "free" | "Free" => common::model::opportunity::Cost::Free,
+            _ => common::model::opportunity::Cost::Cost,
+        }
     };
 
     if let Some(venue) = data.venue {
