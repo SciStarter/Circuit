@@ -133,25 +133,25 @@ enum PersonQuery {
     #[default]
     Any,
     _Email(String),
+    SQL(String),
 }
 
 impl PersonQuery {
-    pub fn load_matching<'db>(
-        &self,
+    pub fn load_matching<'s: 'db, 'db>(
+        &'s self,
         db: &'db Database,
     ) -> Result<impl Stream<Item = Result<Person, sqlx::Error>> + 'db, DynError> {
-        match self {
-            PersonQuery::Any => Ok(sqlx::query("select * from c_person;")
-                .map(|row: sqlx::postgres::PgRow| Person {
-                    id: row.get("id"),
-                    exterior: serde_json::from_value(row.get("exterior"))
-                        .expect("Error decoding exterior"),
-                    interior: serde_json::from_value(row.get("interior"))
-                        .expect("Error decoding interior"),
-                })
-                .fetch(db)),
+        Ok(match self {
+            PersonQuery::Any => sqlx::query("select * from c_person;"),
             PersonQuery::_Email(_) => todo!(),
+            PersonQuery::SQL(query) => sqlx::query(&query),
         }
+        .map(|row: sqlx::postgres::PgRow| Person {
+            id: row.get("id"),
+            exterior: serde_json::from_value(row.get("exterior")).expect("Error decoding exterior"),
+            interior: serde_json::from_value(row.get("interior")).expect("Error decoding interior"),
+        })
+        .fetch(db))
     }
 }
 
@@ -724,6 +724,9 @@ async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
         return Ok(());
     }
 
+    let replacement =
+        regex::Regex::new(r#"\{(.*?)\}"#).expect("Constant regex should not fail to compile");
+
     match args[1].as_str() {
         "test" => {
             if args.len() == 5 {
@@ -758,8 +761,38 @@ async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
                     common::emails::send(
                         &person.interior.email,
                         "Science Near Me <info@sciencenearme.org>",
-                        &email.subject,
-                        &email.body,
+                        replacement.replace_all(&email.subject, |caps: &regex::Captures| {
+                            person.value_repr(&caps[1])
+                        }),
+                        replacement.replace_all(&email.body, |caps: &regex::Captures| {
+                            person.value_repr(&caps[1])
+                        }),
+                    )
+                    .await;
+                }
+                println!("Sent");
+            } else if args.len() > 3 && args[3] == "with" {
+                let slug = &args[2];
+                let query = PersonQuery::SQL(args[5..].join(" "));
+
+                let email = common::emails::EmailMessage::load(&state.db, slug)
+                    .await
+                    .unwrap();
+
+                let mut persons = query.load_matching(&state.db)?;
+
+                while let Some(result) = persons.next().await {
+                    let person = result.unwrap();
+                    println!("{}", &person.interior.email);
+                    common::emails::send(
+                        &person.interior.email,
+                        "Science Near Me <info@sciencenearme.org>",
+                        replacement.replace_all(&email.subject, |caps: &regex::Captures| {
+                            person.value_repr(&caps[1])
+                        }),
+                        replacement.replace_all(&email.body, |caps: &regex::Captures| {
+                            person.value_repr(&caps[1])
+                        }),
                     )
                     .await;
                 }
@@ -770,6 +803,13 @@ async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
                 let email = common::emails::EmailMessage::load(&state.db, slug)
                     .await
                     .unwrap();
+
+                if replacement.is_match(&email.body) {
+                    println!(
+                        "Form fields are not supported when sending by explicit email addresses"
+                    );
+                    return Ok(());
+                };
 
                 for address in args.iter().skip(3) {
                     println!("{address}");

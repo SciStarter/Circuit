@@ -442,6 +442,60 @@ pub enum PermitAction {
 }
 
 impl Person {
+    pub fn value_repr(&self, path: impl AsRef<str>) -> String {
+        let path: Vec<_> = path.as_ref().split('.').map(|n| n.trim()).collect();
+
+        if path.is_empty() {
+            return String::new();
+        }
+
+        let mut root = None;
+
+        let mut current = if path[0] == "id" {
+            if let Some(id) = self.id {
+                return id.to_string();
+            } else {
+                return String::new();
+            }
+        } else if path[0] == "interior" {
+            root.insert(
+                serde_json::to_value(&self.interior).expect("should be able to serialize interior"),
+            )
+        } else if path[0] == "exterior" {
+            root.insert(
+                serde_json::to_value(&self.exterior).expect("should be able to serialize exterior"),
+            )
+        } else {
+            return format!("[unrecognized root: {}]", path[0]);
+        };
+
+        for name in path.iter().skip(1) {
+            let parts: Vec<_> = name
+                .split('[')
+                .map(|p| p.trim().trim_matches(']'))
+                .collect();
+
+            if parts.is_empty() {
+                return String::new();
+            }
+
+            current = &mut current[parts[0]];
+
+            for idx in parts.iter().skip(1).map(|i| i.trim()) {
+                match idx.parse::<usize>() {
+                    Ok(idx) => current = &mut current[idx],
+                    Err(_) => {}
+                }
+            }
+        }
+
+        match current {
+            serde_json::Value::String(s) => s.to_owned(),
+            serde_json::Value::Null => String::new(),
+            _ => current.to_string(),
+        }
+    }
+
     async fn save_log(db: Database, id: i32, event: LogEvent) -> Result<i32, Error> {
         Ok(sqlx::query_file!(
             "db/person/add_log_entry.sql",
