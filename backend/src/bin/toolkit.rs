@@ -773,7 +773,7 @@ async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
                 println!("Sent");
             } else if args.len() > 3 && args[3] == "with" {
                 let slug = &args[2];
-                let query = PersonQuery::SQL(dbg!(args[5..].join(" ")));
+                let query = PersonQuery::SQL(args[4..].join(" "));
 
                 let email = common::emails::EmailMessage::load(&state.db, slug)
                     .await
