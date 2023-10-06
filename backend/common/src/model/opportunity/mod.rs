@@ -1268,9 +1268,11 @@ OR
             r"(EXISTS (SELECT value FROM jsonb_array_elements_text(exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
               OR
               EXISTS (SELECT value FROM jsonb_array_elements_text(exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz)
-              OR
-              (jsonb_array_length(exterior -> 'start_datetimes') = 0
-               AND jsonb_array_length(exterior -> 'end_datetimes') = 0))",
+              OR (
+               jsonb_array_length(exterior -> 'start_datetimes') <= 1
+               AND
+               jsonb_array_length(exterior -> 'end_datetimes') = 0
+              ))",
         time_param, time_param));
     }
 
