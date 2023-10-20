@@ -74,7 +74,7 @@ async fn search(req: tide::Request<Database>) -> tide::Result {
             current: Some(form.current.unwrap_or(true)),
             ..Default::default()
         },
-        OpportunityQueryOrdering::Alphabetical,
+        OpportunityQueryOrdering::PartnerName,
         Pagination::All,
     )
     .await?;

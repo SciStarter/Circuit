@@ -720,7 +720,12 @@ async fn checkpassword(_state: &mut State, args: Vec<String>) -> Result<(), DynE
 
 async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     if args.len() < 2 {
-        println!("Expected test or template keyword");
+        println!("Expected message or template keyword");
+        println!(r#"Send a one-off:\n   send message person@example.com "subject" "body""#);
+        println!(r#"Send a template to the selected people:\n   send template template-slug"#);
+        println!(
+            r#"Send a template to the people selected by a custom query:\n   send template template template-slug with select * from c_person where interior->>'email' like '%@example.com'"#
+        );
         return Ok(());
     }
 
@@ -728,7 +733,7 @@ async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
         regex::Regex::new(r#"\{(.*?)\}"#).expect("Constant regex should not fail to compile");
 
     match args[1].as_str() {
-        "test" => {
+        "message" => {
             if args.len() == 5 {
                 let to = &args[2];
                 let subject = &args[3];

@@ -952,6 +952,7 @@ pub enum OpportunityQueryOrdering {
     Any,
     Native,
     Unique,
+    PartnerName,
 }
 
 /// Each field represents one of the database fields by which
@@ -1493,7 +1494,11 @@ SELECT
             END AS _sort_time
         "#);
 
-    query_string.push_str(" FROM c_opportunity LEFT JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id) AS primary_table");
+    if ordering == OpportunityQueryOrdering::PartnerName {
+        query_string.push_str(" FROM c_opportunity LEFT JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id LEFT JOIN c_partner ON c_opportunity.exterior->>'partner' = c_partner.exterior->>'uid') AS primary_table");
+    } else {
+        query_string.push_str(" FROM c_opportunity LEFT JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id) AS primary_table");
+    }
 
     if !clauses.is_empty() {
         query_string.push_str(" WHERE");
@@ -1534,6 +1539,9 @@ SELECT
         OpportunityQueryOrdering::Unique => {
             query_string.push_str(" ORDER BY exterior->>'title', exterior->>'partner' ASC")
         }
+        OpportunityQueryOrdering::PartnerName => query_string.push_str(
+            " ORDER BY (c_partner.exterior->>'name') ASC, (c_opportunity.exterior->>'title') ASC",
+        ),
     }
 
     match pagination {
