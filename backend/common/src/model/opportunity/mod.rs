@@ -1431,18 +1431,8 @@ OR
 
     match fields.len() {
         0 => query_string.push_str("primary_table.*"),
-        1 => {
-            query_string.push_str("primary_table.");
-            query_string.push_str(fields[0])
-        }
-        _ => query_string.push_str(
-            fields
-                .iter()
-                .map(|f| format!("primary_table.{}", f))
-                .collect::<Vec<_>>()
-                .join(", ")
-                .as_str(),
-        ),
+        1 => query_string.push_str(fields[0]),
+        _ => query_string.push_str(fields.join(", ").as_str()),
     }
 
     query_string.push_str(
@@ -1684,7 +1674,7 @@ impl Opportunity {
 
     pub async fn count_matching(db: &Database, query: &OpportunityQuery) -> Result<u32, Error> {
         let (query_string, query_params) = build_matching_query(
-            &["count(*) as matches"],
+            &["count(primary_table.*) as matches"],
             query,
             OpportunityQueryOrdering::Any,
             Pagination::One,
@@ -1707,11 +1697,11 @@ impl Opportunity {
     ) -> Result<Vec<OpportunityReference>, Error> {
         let (query_string, query_params) = build_matching_query(
             &[
-                "(exterior -> 'uid') as uid",
-                "(exterior -> 'slug') as slug",
-                "(exterior -> 'title') as title",
-                "(exterior -> 'image_url') as image_url",
-                "(exterior -> 'short_desc') as short_desc",
+                "(primary_table.exterior -> 'uid') as uid",
+                "(primary_table.exterior -> 'slug') as slug",
+                "(primary_table.exterior -> 'title') as title",
+                "(primary_table.exterior -> 'image_url') as image_url",
+                "(primary_table.exterior -> 'short_desc') as short_desc",
             ],
             query,
             ordering,
