@@ -263,7 +263,7 @@ fn interpret_one<Tz: TimeZone>(
         .to_string()
         .unwrap_or_default();
 
-    opp.exterior.description = data.description;
+    opp.exterior.description = common::html_to_md(&data.description);
 
     if let Optional::Value(img) = data.image {
         opp.exterior.image_url = img.url;
