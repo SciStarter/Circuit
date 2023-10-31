@@ -721,10 +721,10 @@ async fn checkpassword(_state: &mut State, args: Vec<String>) -> Result<(), DynE
 async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
     if args.len() < 2 {
         println!("Expected message or template keyword");
-        println!(r#"Send a one-off:\n   send message person@example.com "subject" "body""#);
-        println!(r#"Send a template to the selected people:\n   send template template-slug"#);
+        println!("Send a one-off:\n   send message person@example.com \"subject\" \"body\"");
+        println!("Send a template to the selected people:\n   send template template-slug");
         println!(
-            r#"Send a template to the people selected by a custom query:\n   send template template template-slug with select * from c_person where interior->>'email' like '%@example.com'"#
+            "Send a template to the people selected by a custom query:\n   send template template-slug with select * from c_person where interior->>'email' like '%@example.com'"
         );
         return Ok(());
     }
