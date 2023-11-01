@@ -395,7 +395,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         cycle += 1;
 
-        let throttle = Duration::days(7);
+        let throttle = Duration::days(90);
 
         if took < throttle {
             tokio::time::sleep((throttle - took).to_std()?).await;
