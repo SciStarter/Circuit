@@ -7,7 +7,7 @@ use thiserror::Error;
 use uuid::Uuid;
 
 pub mod emails;
-pub mod geo;
+pub mod gis;
 pub mod jwt;
 pub mod model;
 pub mod time;

@@ -16,11 +16,14 @@ tokio = ["sqlx/runtime-tokio-rustls"]
 aho-corasick = "0.7.20"
 ammonia = "3.3.0"
 async-std = { version = "1.12.0", features = ["attributes"] }
+async-trait = "0.1.74"
 chrono = { version = "0.4.26", features = ["serde"] }
 chrono-tz = "0.8.3"
 deunicode = "1.3.3"
 djangohashers = "1.6.8"
 futures = "0.3.28"
+geo = { version = "0.26.0", features = ["use-serde"] }
+geozero = { version = "0.11.0", features = ["with-postgis-sqlx", "with-wkb"] }
 hex = "0.4.3"
 hmac = "0.12.1"
 jwt = "0.16.0"

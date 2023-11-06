@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::{partner::Partner, Error, Opportunity, OpportunityExterior, Pagination};
+use super::{partner::Partner, Error, Opportunity, Pagination};
 use crate::{Database, ToFixedOffset};
 
 use async_std::task::{self, JoinHandle};
@@ -153,9 +153,7 @@ impl From<ParticipationRow> for Participation {
 impl Participation {
     pub async fn expand(self, db: &Database) -> Result<ExpandedParticipation, Error> {
         Ok(ExpandedParticipation {
-            opportunity: Opportunity::load_by_uid(db, &self.opportunity)
-                .await?
-                .exterior,
+            opportunity: Opportunity::load_by_uid(db, &self.opportunity).await?,
             when: self.when,
         })
     }
@@ -163,7 +161,7 @@ impl Participation {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ExpandedParticipation {
-    pub opportunity: OpportunityExterior,
+    pub opportunity: Opportunity,
     pub when: DateTime<FixedOffset>,
 }
 
@@ -646,7 +644,7 @@ WHERE id = $1
         .await?;
 
         if let Some((longitude, latitude)) = geo {
-            let query = crate::geo::Query::new(format!("{latitude} {longitude}"), false);
+            let query = crate::gis::Query::new(format!("{latitude} {longitude}"), false);
             if let Some(location) = query.lookup_one().await {
                 if let Some(state) = location.components.state.clone() {
                     sqlx::query!(
@@ -804,14 +802,14 @@ SELECT EXISTS(
 ) AS "authorized!"
 "#,
                     serde_json::to_value(self.exterior.uid)?,
-                    serde_json::to_value(opportunity.exterior.partner)?,
+                    serde_json::to_value(opportunity.partner)?,
                 )
                 .fetch_one(db)
                 .await?
                 .authorized
             }
             PermitAction::Edit => {
-                opportunity.interior.submitted_by == Some(self.exterior.uid)
+                opportunity.interior(db).await?.submitted_by == Some(self.exterior.uid)
                     || sqlx::query!(
                         r#"
 SELECT EXISTS(
@@ -824,7 +822,7 @@ SELECT EXISTS(
 ) AS "authorized!"
 "#,
                         serde_json::to_value(self.exterior.uid)?,
-                        serde_json::to_value(opportunity.exterior.partner)?,
+                        serde_json::to_value(opportunity.partner)?,
                     )
                     .fetch_one(db)
                     .await?
@@ -843,7 +841,7 @@ SELECT EXISTS(
 ) AS "authorized!"
 "#,
                     serde_json::to_value(self.exterior.uid)?,
-                    serde_json::to_value(opportunity.exterior.partner)?,
+                    serde_json::to_value(opportunity.partner)?,
                 )
                 .fetch_one(db)
                 .await?

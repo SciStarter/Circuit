@@ -4,18 +4,18 @@ pub mod for_slug;
 use super::person::PermitAction;
 use super::Error;
 use crate::model::involvement;
-use crate::{geo, Database, ToFixedOffset};
+use crate::{gis, Database, ToFixedOffset};
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
+use geozero::ToJson;
 //use deunicode::deunicode;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 use sqlx::postgres::PgArguments;
 use sqlx::query::Query;
 use sqlx::{prelude::*, Postgres};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashSet, VecDeque};
 use std::convert::AsRef;
 use strum::IntoEnumIterator;
 use strum_macros::{AsRefStr, EnumIter, EnumString};
@@ -30,6 +30,14 @@ use super::{Pagination, PARTNER_NAMESPACE};
 // that text using non-Latin characters will be retained when slugified.
 pub static SLUGIFY_REPLACE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"[^\pL\pN-]+").expect("Unable to compile SLUGIFY_REPLACE regex"));
+
+#[async_trait::async_trait]
+pub trait TryFromWithDB<T>
+where
+    Self: Sized,
+{
+    async fn try_from_with_db(db: &Database, source: T) -> Result<Self, Error>;
+}
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
@@ -70,7 +78,9 @@ pub enum Recurrence {
     #[default]
     Once,
     Daily,
+    Weekdays,
     Weekly,
+    Monthly,
 }
 
 impl Recurrence {
@@ -566,142 +576,16 @@ fn nineninetynine() -> i16 {
     999
 }
 
-fn en_us() -> Vec<String> {
-    vec!["en-US".to_string()]
-}
-
-#[derive(Default, Serialize, Deserialize)]
-#[serde(default)]
-pub struct OpportunityExterior {
-    pub uid: Uuid,
-    pub slug: String,
-    pub partner_name: String,
-    pub partner_website: Option<String>,
-    pub partner_logo_url: Option<String>,
-    pub partner_created: Option<DateTime<FixedOffset>>,
-    pub partner_updated: Option<DateTime<FixedOffset>>,
-    pub partner_opp_url: Option<String>,
-    pub organization_name: String,
-    pub organization_type: OrganizationType,
-    pub organization_website: Option<String>,
-    pub organization_logo_url: Option<String>,
-    pub entity_type: EntityType,
-    pub opp_venue: Vec<VenueType>,
-    pub opp_descriptor: Vec<Descriptor>,
-    #[serde(default = "zero")]
-    pub min_age: i16,
-    #[serde(default = "nineninetynine")]
-    pub max_age: i16,
-    pub pes_domain: Domain,
-    pub tags: HashSet<String>,
-    pub opp_topics: Vec<Topic>,
-    pub ticket_required: bool,
-    pub title: String,
-    pub description: String,
-    pub short_desc: String,
-    pub image_url: String,
-    pub image_credit: String,
-    // 2021-09-07 bug prevents alias from working here https://github.com/serde-rs/serde/issues/1504
-    #[serde(alias = "start_dates")]
-    pub start_datetimes: Vec<DateTime<FixedOffset>>,
-    pub has_end: bool,
-    // 2021-09-07 bug prevents alias from working here https://github.com/serde-rs/serde/issues/1504
-    #[serde(alias = "end_dates")]
-    pub end_datetimes: Vec<DateTime<FixedOffset>>,
-    pub recurrence: Recurrence,
-    pub end_recurrence: Option<DateTime<FixedOffset>>,
-    pub timezone: Option<String>,
-    pub attraction_hours: Option<OpenDays>,
-    pub cost: Cost,
-    #[serde(default = "en_us")]
-    pub languages: Vec<String>,
-    pub is_online: bool,
-    pub location_type: LocationType,
-    pub location_name: String,
-    pub location_point: Option<serde_json::Value>,
-    pub location_polygon: Option<serde_json::Value>,
-    pub address_street: String,
-    pub address_city: String,
-    pub address_state: String,
-    pub address_country: String,
-    pub address_zip: String,
-    pub opp_hashtags: Vec<String>,
-    pub opp_social_handles: HashMap<String, String>,
-    pub partner: Uuid, // uid of the Partner entry which controls this entry
-}
-
-impl OpportunityExterior {
-    pub fn into_reference(self) -> OpportunityReference {
-        OpportunityReference {
-            uid: self.uid,
-            slug: self.slug,
-            title: self.title,
-            image_url: self.image_url,
-            short_desc: self.short_desc,
-        }
-    }
-}
-
-impl std::fmt::Debug for OpportunityExterior {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            serde_json::to_string_pretty(self)
-                .unwrap_or_else(|_| "## JSON serialization failed".to_string())
-        )
-    }
-}
-
 #[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct AnnotatedOpportunityExterior {
     #[serde(flatten)]
-    pub exterior: OpportunityExterior,
+    pub exterior: Opportunity,
     pub accepted: bool,
     pub withdrawn: bool,
     pub current: bool,
     pub authorized: PermitAction,
     pub review_status: ReviewStatus,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(default)]
-pub struct OpportunityInterior {
-    pub accepted: Option<bool>,
-    pub withdrawn: bool,
-    pub submitted_by: Option<Uuid>,
-    pub review_status: ReviewStatus,
-    pub contact_name: String,
-    pub contact_email: String,
-    pub contact_phone: String,
-    pub extra_data: serde_json::Value,
-}
-
-impl Default for OpportunityInterior {
-    fn default() -> Self {
-        OpportunityInterior {
-            accepted: Some(false), // editors have accepted it for publication
-            withdrawn: false,      // partner has withdrawn it from publication
-            submitted_by: None,
-            review_status: ReviewStatus::NotRequired,
-            contact_name: Default::default(),
-            contact_email: Default::default(),
-            contact_phone: Default::default(),
-            extra_data: serde_json::json!({}),
-        }
-    }
-}
-
-impl std::fmt::Debug for OpportunityInterior {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            serde_json::to_string_pretty(self)
-                .unwrap_or_else(|_| "## JSON serialization failed".to_string())
-        )
-    }
 }
 
 #[derive(Serialize, Debug)]
@@ -760,25 +644,29 @@ pub struct OpportunityForCsv {
     pub extra_data: String,
 }
 
-impl From<Opportunity> for OpportunityForCsv {
-    fn from(opp: Opportunity) -> Self {
-        OpportunityForCsv {
-            uid: opp.exterior.uid,
-            slug: opp.exterior.slug,
-            partner_name: opp.exterior.partner_name,
-            partner_website: opp.exterior.partner_website,
-            partner_logo_url: opp.exterior.partner_logo_url,
-            partner_created: opp.exterior.partner_created,
-            partner_updated: opp.exterior.partner_updated,
-            partner_opp_url: opp.exterior.partner_opp_url,
-            organization_name: opp.exterior.organization_name,
-            organization_type: opp.exterior.organization_type,
-            organization_website: opp.exterior.organization_website,
-            organization_logo_url: opp.exterior.organization_logo_url,
-            entity_type: opp.exterior.entity_type,
+#[async_trait::async_trait]
+impl TryFromWithDB<Opportunity> for OpportunityForCsv {
+    async fn try_from_with_db(db: &Database, opp: Opportunity) -> Result<Self, Error> {
+        let instances = opp.instances(db).await?;
+        let interior = opp.interior(db).await?;
+
+        Ok(OpportunityForCsv {
+            uid: opp.uid,
+            slug: opp.slug,
+            partner_name: opp.partner_name,
+            partner_website: opp.partner_website,
+            partner_logo_url: opp.partner_logo_url,
+            partner_created: opp.partner_created,
+            partner_updated: opp.partner_updated,
+            partner_opp_url: opp.partner_opp_url,
+            organization_name: opp.organization_name,
+            organization_type: opp.organization_type,
+            organization_website: opp.organization_website,
+            organization_logo_url: opp.organization_logo_url,
+            entity_type: opp.entity_type,
             opp_venue: opp
-                .exterior
-                .opp_venue
+                .venues(db)
+                .await?
                 .into_iter()
                 .fold(String::new(), |mut accum, add| {
                     if !accum.is_empty() {
@@ -787,7 +675,7 @@ impl From<Opportunity> for OpportunityForCsv {
                     accum.push_str(add.as_ref());
                     accum
                 }),
-            opp_descriptor: opp.exterior.opp_descriptor.into_iter().fold(
+            opp_descriptor: opp.descriptors(db).await?.into_iter().fold(
                 String::new(),
                 |mut accum, add| {
                     if !accum.is_empty() {
@@ -797,12 +685,12 @@ impl From<Opportunity> for OpportunityForCsv {
                     accum
                 },
             ),
-            min_age: opp.exterior.min_age,
-            max_age: opp.exterior.max_age,
-            pes_domain: opp.exterior.pes_domain,
+            min_age: opp.min_age,
+            max_age: opp.max_age,
+            pes_domain: opp.pes_domain,
             tags: opp
-                .exterior
-                .tags
+                .tags(db)
+                .await?
                 .into_iter()
                 .fold(String::new(), |mut accum, add| {
                     if !accum.is_empty() {
@@ -811,93 +699,335 @@ impl From<Opportunity> for OpportunityForCsv {
                     accum.push_str(&add);
                     accum
                 }),
-            opp_topics: opp.exterior.opp_topics.into_iter().fold(
-                String::new(),
-                |mut accum, add| {
+            opp_topics: opp
+                .topics(db)
+                .await?
+                .into_iter()
+                .fold(String::new(), |mut accum, add| {
                     if !accum.is_empty() {
                         accum.push_str(", ");
                     }
                     accum.push_str(add.as_ref());
                     accum
-                },
-            ),
-            ticket_required: opp.exterior.ticket_required,
-            title: opp.exterior.title,
-            description: opp.exterior.description,
-            short_desc: opp.exterior.short_desc,
-            image_url: opp.exterior.image_url,
-            image_credit: opp.exterior.image_credit,
-            start_datetimes: opp.exterior.start_datetimes.into_iter().fold(
-                String::new(),
-                |mut accum, add| {
-                    if !accum.is_empty() {
-                        accum.push_str(", ");
-                    }
-                    accum.push_str(&add.to_rfc3339());
-                    accum
-                },
-            ),
-            has_end: opp.exterior.has_end,
-            end_datetimes: opp.exterior.end_datetimes.into_iter().fold(
-                String::new(),
-                |mut accum, add| {
-                    if !accum.is_empty() {
-                        accum.push_str(", ");
-                    }
-                    accum.push_str(&add.to_rfc3339());
-                    accum
-                },
-            ),
-            recurrence: opp.exterior.recurrence,
-            end_recurrence: opp.exterior.end_recurrence.map(|dt| dt.to_rfc3339()),
-            timezone: opp.exterior.timezone,
-            cost: opp.exterior.cost,
-            languages: opp.exterior.languages.join(", "),
-            is_online: opp.exterior.is_online,
-            location_type: opp.exterior.location_type,
-            location_name: opp.exterior.location_name,
-            location_point: opp
-                .exterior
-                .location_point
-                .map(|point| serde_json::to_string(&point).unwrap_or_else(|_| "ERROR".to_string())),
-            location_polygon: opp
-                .exterior
-                .location_polygon
-                .map(|poly| serde_json::to_string(&poly).unwrap_or_else(|_| "ERROR".to_string())),
-            address_street: opp.exterior.address_street,
-            address_city: opp.exterior.address_city,
-            address_state: opp.exterior.address_state,
-            address_country: opp.exterior.address_country,
-            address_zip: opp.exterior.address_zip,
-            opp_hashtags: opp.exterior.opp_hashtags.join(", "),
-            partner: opp.exterior.partner,
-            accepted: opp.interior.accepted,
-            withdrawn: opp.interior.withdrawn,
-            contact_name: opp.interior.contact_name,
-            contact_email: opp.interior.contact_email,
-            contact_phone: opp.interior.contact_phone,
-            extra_data: opp.interior.extra_data.to_string(),
+                }),
+            ticket_required: opp.ticket_required,
+            title: opp.title,
+            description: opp.description,
+            short_desc: opp.short_desc,
+            image_url: opp.image_url,
+            image_credit: opp.image_credit,
+            start_datetimes: instances.iter().fold(String::new(), |mut accum, add| {
+                if !accum.is_empty() {
+                    accum.push_str(", ");
+                }
+                accum.push_str(&add.start.to_rfc3339());
+                accum
+            }),
+            has_end: instances.len() > 1 || (instances.len() == 1 && !instances[0].end.is_none()),
+            end_datetimes: instances.iter().fold(String::new(), |mut accum, add| {
+                if !accum.is_empty() {
+                    accum.push_str(", ");
+                }
+                accum.push_str(&add.end.map_or_else(|| String::new(), |e| e.to_rfc3339()));
+                accum
+            }),
+            recurrence: opp.recurrence,
+            end_recurrence: opp.end_recurrence.map(|dt| dt.to_rfc3339()),
+            timezone: opp.timezone,
+            cost: opp.cost,
+            languages: opp.languages(db).await?.join(", "),
+            is_online: opp.is_online,
+            location_type: opp.location_type,
+            location_name: opp.location_name,
+            location_point: opp.location_point.and_then(|point| {
+                <geo::Point as Into<geo::Geometry>>::into(point)
+                    .to_json()
+                    .ok()
+            }),
+            location_polygon: opp.location_polygon.and_then(|poly| {
+                <geo::MultiPolygon as Into<geo::Geometry>>::into(poly)
+                    .to_json()
+                    .ok()
+            }),
+            address_street: opp.address_street,
+            address_city: opp.address_city,
+            address_state: opp.address_state,
+            address_country: opp.address_country,
+            address_zip: opp.address_zip,
+            opp_hashtags: opp.hashtags(db).await?.join(", "),
+            partner: opp.partner,
+            accepted: interior.accepted,
+            withdrawn: interior.withdrawn,
+            contact_name: interior.contact_name,
+            contact_email: interior.contact_email,
+            contact_phone: interior.contact_phone,
+            extra_data: interior.extra_data.to_string(),
+        })
+    }
+}
+
+#[derive(Debug)]
+pub struct OpportunityInstance {
+    pub id: Option<i32>,
+    pub opportunity_id: Option<i32>,
+    pub start: DateTime<FixedOffset>,
+    pub end: Option<DateTime<FixedOffset>>,
+}
+
+impl OpportunityInstance {
+    pub async fn delete(&self) -> Result<(), Error> {
+        if let Some(_id) = self.id {
+            todo!()
+        } else {
+            Ok(())
         }
     }
+}
+
+#[derive(Debug)]
+pub struct OpportunityVenue {
+    pub id: Option<i32>,
+    pub opportunity_id: i32,
+    pub venue_type: VenueType,
+}
+
+#[derive(Debug)]
+pub struct OpportunityDescriptor {
+    pub id: Option<i32>,
+    pub opportunity_id: i32,
+    pub descriptor: Descriptor,
+}
+
+#[derive(Debug)]
+pub struct OpportunityTag {
+    pub id: Option<i32>,
+    pub opportunity_id: i32,
+    pub tag: String,
+}
+
+#[derive(Debug)]
+pub struct OpportunityTopic {
+    pub id: Option<i32>,
+    pub opportunity_id: i32,
+    pub topic: Topic,
+}
+
+#[derive(Debug)]
+pub struct OpportunityHashtag {
+    pub id: Option<i32>,
+    pub opportunity_id: i32,
+    pub hashtag: String,
+}
+
+#[derive(Debug)]
+pub struct OpportunityLanguage {
+    pub id: Option<i32>,
+    pub opportunity_id: i32,
+    pub language: String,
+}
+
+#[derive(Debug)]
+pub struct OpportunitySocialHandle {
+    pub id: Option<i32>,
+    pub opportunity_id: i32,
+    pub network: String,
+    pub handle: String,
 }
 
 #[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Opportunity {
     pub id: Option<i32>,
-    #[serde(flatten)]
-    pub exterior: OpportunityExterior,
-    #[serde(flatten)]
-    pub interior: OpportunityInterior,
+    pub uid: Uuid,
+    pub slug: String,
+    pub partner_name: String,
+    pub partner_website: Option<String>,
+    pub partner_logo_url: Option<String>,
+    pub partner_created: Option<DateTime<FixedOffset>>,
+    pub partner_updated: Option<DateTime<FixedOffset>>,
+    pub partner_opp_url: Option<String>,
+    pub organization_name: String,
+    pub organization_type: OrganizationType,
+    pub organization_website: Option<String>,
+    pub organization_logo_url: Option<String>,
+    pub entity_type: EntityType,
+    #[serde(default = "zero")]
+    pub min_age: i16,
+    #[serde(default = "nineninetynine")]
+    pub max_age: i16,
+    pub pes_domain: Domain,
+    pub ticket_required: bool,
+    pub title: String,
+    pub description: String,
+    pub short_desc: String,
+    pub image_url: String,
+    pub image_credit: String,
+    pub recurrence: Recurrence,
+    pub end_recurrence: Option<DateTime<FixedOffset>>,
+    pub timezone: Option<String>,
+    //pub attraction_hours: Option<OpenDays>,
+    pub cost: Cost,
+    pub is_online: bool,
+    pub location_type: LocationType,
+    pub location_name: String,
+    pub location_point: Option<geo::Point>,
+    pub location_polygon: Option<geo::MultiPolygon>,
+    pub address_street: String,
+    pub address_city: String,
+    pub address_state: String,
+    pub address_country: String,
+    pub address_zip: String,
+    pub partner: Uuid,
+}
+
+impl Opportunity {
+    pub async fn interior(&self, _db: &Database) -> Result<OpportunityInterior, Error> {
+        todo!()
+    }
+
+    pub async fn venues(&self, _db: &Database) -> Result<Vec<VenueType>, Error> {
+        todo!()
+    }
+
+    pub async fn set_venues(&self, _db: &Database, _vals: Vec<VenueType>) -> Result<(), Error> {
+        todo!()
+    }
+
+    #[doc(alias = "activity_types")]
+    pub async fn descriptors(&self, _db: &Database) -> Result<Vec<Descriptor>, Error> {
+        todo!()
+    }
+
+    #[doc(alias = "set_activity_types")]
+    pub async fn set_descriptors(
+        &self,
+        _db: &Database,
+        _vals: Vec<Descriptor>,
+    ) -> Result<(), Error> {
+        todo!()
+    }
+
+    pub async fn topics(&self, _db: &Database) -> Result<Vec<Topic>, Error> {
+        todo!()
+    }
+
+    pub async fn set_topics(&self, _db: &Database, _vals: Vec<Topic>) -> Result<(), Error> {
+        todo!()
+    }
+
+    pub async fn tags(&self, _db: &Database) -> Result<HashSet<String>, Error> {
+        todo!()
+    }
+
+    pub async fn set_tags<Tag>(&self, _db: &Database, _vals: HashSet<Tag>) -> Result<(), Error>
+    where
+        Tag: AsRef<str>,
+    {
+        todo!()
+    }
+
+    pub async fn instances(&self, _db: &Database) -> Result<Vec<OpportunityInstance>, Error> {
+        todo!()
+    }
+
+    pub async fn ensure_instance(
+        &self,
+        _db: &Database,
+        _inst: OpportunityInstance,
+    ) -> Result<(), Error> {
+        todo!()
+    }
+
+    pub async fn hashtags(&self, _db: &Database) -> Result<Vec<String>, Error> {
+        todo!()
+    }
+
+    pub async fn set_hashtags<Tag>(&self, _db: &Database, _vals: Vec<Tag>) -> Result<(), Error>
+    where
+        Tag: AsRef<str>,
+    {
+        todo!()
+    }
+
+    pub async fn social_handles(&self, _db: &Database) -> Result<Vec<(String, String)>, Error> {
+        todo!()
+    }
+
+    pub async fn set_social_handles<Network, Handle>(
+        &self,
+        _db: &Database,
+        _vals: Vec<(Network, Handle)>,
+    ) -> Result<(), Error>
+    where
+        Network: AsRef<str>,
+        Handle: AsRef<str>,
+    {
+        todo!()
+    }
+
+    pub async fn languages(&self, _db: &Database) -> Result<Vec<String>, Error> {
+        // default to vec!['en-US'] if empty
+        todo!()
+    }
+
+    pub async fn set_languages<Lang>(&self, _db: &Database, _vals: Vec<Lang>) -> Result<(), Error>
+    where
+        Lang: AsRef<str>,
+    {
+        todo!()
+    }
 }
 
 impl std::fmt::Display for Opportunity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.exterior.title)
+        write!(f, "{}", self.title)
     }
 }
 
 impl std::fmt::Debug for Opportunity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            serde_json::to_string_pretty(self)
+                .unwrap_or_else(|_| "## JSON serialization failed".to_string())
+        )
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(default)]
+pub struct OpportunityInterior {
+    pub id: Option<i32>,
+    pub opportunity_id: Option<i32>,
+    pub accepted: Option<bool>,
+    pub withdrawn: bool,
+    pub submitted_by: Option<Uuid>,
+    pub review_status: ReviewStatus,
+    pub contact_name: String,
+    pub contact_email: String,
+    pub contact_phone: String,
+    pub extra_data: serde_json::Value,
+}
+
+impl Default for OpportunityInterior {
+    fn default() -> Self {
+        OpportunityInterior {
+            id: None,
+            opportunity_id: None,
+            accepted: Some(false), // editors have accepted it for publication
+            withdrawn: false,      // partner has withdrawn it from publication
+            submitted_by: None,
+            review_status: ReviewStatus::NotRequired,
+            contact_name: Default::default(),
+            contact_email: Default::default(),
+            contact_phone: Default::default(),
+            extra_data: serde_json::json!({}),
+        }
+    }
+}
+
+impl std::fmt::Debug for OpportunityInterior {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -1625,20 +1755,37 @@ impl Opportunity {
         })
     }
 
-    pub fn into_annotated_exterior(self, authorized: PermitAction) -> AnnotatedOpportunityExterior {
-        let current = self.current();
-        AnnotatedOpportunityExterior {
-            exterior: self.exterior,
-            accepted: self.interior.accepted.unwrap_or(false),
-            withdrawn: self.interior.withdrawn,
-            review_status: self.interior.review_status,
+    pub async fn into_annotated_exterior(
+        self,
+        db: &Database,
+        authorized: PermitAction,
+    ) -> Result<AnnotatedOpportunityExterior, Error> {
+        let current = self.current(db).await?;
+        let interior = self
+            .interior(db)
+            .await
+            .expect("opportunity should always have an interior record");
+
+        Ok(AnnotatedOpportunityExterior {
+            exterior: self,
+            accepted: interior.accepted.unwrap_or(false),
+            withdrawn: interior.withdrawn,
+            review_status: interior.review_status,
             current,
             authorized,
-        }
+        })
     }
 
-    pub fn current_as_of(&self, now: &DateTime<FixedOffset>) -> bool {
-        let reviewed = match self.interior.review_status {
+    pub async fn current_as_of(
+        &self,
+        db: &Database,
+        now: &DateTime<FixedOffset>,
+    ) -> Result<bool, Error> {
+        let interior = self.interior(db).await?;
+
+        let instances = self.instances(db).await?;
+
+        let reviewed = match interior.review_status {
             ReviewStatus::Draft => false,
             ReviewStatus::Pending => false,
             ReviewStatus::Reject => false,
@@ -1646,30 +1793,31 @@ impl Opportunity {
             ReviewStatus::NotRequired => true,
         };
 
-        let publish = self.interior.accepted == Some(true) && !self.interior.withdrawn;
+        let publish = interior.accepted == Some(true) && !interior.withdrawn;
 
-        let num_starts = self.exterior.start_datetimes.len();
-        let num_ends = self.exterior.end_datetimes.len();
-        let start_in_future = self.exterior.start_datetimes.iter().any(|dt| dt > now);
-        let end_in_future = self.exterior.end_datetimes.iter().any(|dt| dt > now);
-        let upcoming = (num_starts == 1 && num_ends == 0) || start_in_future || end_in_future;
+        let upcoming = instances.iter().any(|inst| match &inst.end {
+            Some(end) => end > now,
+            None => true,
+        });
 
-        reviewed && publish && upcoming
+        Ok(reviewed && publish && upcoming)
     }
 
-    pub fn expired_as_of(&self, now: &DateTime<FixedOffset>) -> bool {
-        !self.current_as_of(now)
+    pub async fn expired_as_of(
+        &self,
+        db: &Database,
+        now: &DateTime<FixedOffset>,
+    ) -> Result<bool, Error> {
+        Ok(!self.current_as_of(db, now).await?)
     }
 
-    pub fn current(&self) -> bool {
+    pub async fn current(&self, db: &Database) -> Result<bool, Error> {
         let now = chrono::Utc::now().to_fixed_offset();
-        self.interior.accepted.unwrap_or(false)
-            && !self.interior.withdrawn
-            && self.current_as_of(&now)
+        self.current_as_of(db, &now).await
     }
 
-    pub fn expired(&self) -> bool {
-        !self.current()
+    pub async fn expired(&self, db: &Database) -> Result<bool, Error> {
+        Ok(!self.current(db).await?)
     }
 
     pub async fn count_matching(db: &Database, query: &OpportunityQuery) -> Result<u32, Error> {
@@ -1755,108 +1903,82 @@ impl Opportunity {
 
     pub fn to_reference(&self) -> OpportunityReference {
         OpportunityReference {
-            uid: self.exterior.uid.clone(),
-            slug: self.exterior.slug.clone(),
-            title: self.exterior.title.clone(),
-            image_url: self.exterior.image_url.clone(),
-            short_desc: self.exterior.short_desc.clone(),
+            uid: self.uid.clone(),
+            slug: self.slug.clone(),
+            title: self.title.clone(),
+            image_url: self.image_url.clone(),
+            short_desc: self.short_desc.clone(),
         }
     }
 
     pub fn into_reference(self) -> OpportunityReference {
         OpportunityReference {
-            uid: self.exterior.uid,
-            slug: self.exterior.slug,
-            title: self.exterior.title,
-            image_url: self.exterior.image_url,
-            short_desc: self.exterior.short_desc,
+            uid: self.uid,
+            slug: self.slug,
+            title: self.title,
+            image_url: self.image_url,
+            short_desc: self.short_desc,
         }
     }
 
     pub async fn load_partner(&self, db: &Database) -> Result<super::partner::Partner, Error> {
-        Ok(super::partner::Partner::load_by_uid(db, &self.exterior.partner).await?)
+        Ok(super::partner::Partner::load_by_uid(db, &self.partner).await?)
     }
 
     pub async fn reviews(&mut self, db: &Database) -> Result<Reviews, Error> {
-        for_slug::reviews_for_slug(db, &self.exterior.slug).await
+        for_slug::reviews_for_slug(db, &self.slug).await
     }
 
     pub async fn likes(&mut self, db: &Database) -> Result<u32, Error> {
-        for_slug::likes_for_slug(db, &self.exterior.slug).await
+        for_slug::likes_for_slug(db, &self.slug).await
     }
 
     pub async fn validate(&mut self) -> Result<(), Error> {
-        self.exterior.partner_name = self
-            .exterior
-            .partner_name
-            .trim_matches(char::is_whitespace)
-            .into();
+        self.partner_name = self.partner_name.trim_matches(char::is_whitespace).into();
 
-        self.exterior.partner_opp_url = self
-            .exterior
+        self.partner_opp_url = self
             .partner_opp_url
             .as_ref()
             .map(|url| url.trim_matches(char::is_whitespace).into());
 
-        self.exterior.title = self.exterior.title.trim_matches(char::is_whitespace).into();
+        self.title = self.title.trim_matches(char::is_whitespace).into();
 
-        self.exterior.short_desc = ammonia::clean(&self.exterior.short_desc);
-        self.exterior.description = ammonia::clean(&self.exterior.description);
+        self.short_desc = ammonia::clean(&self.short_desc);
+        self.description = ammonia::clean(&self.description);
 
-        if let None = &self.exterior.location_point {
-            if !self.exterior.address_street.is_empty() {
-                if let Some(found) = geo::Query::new(
+        if let None = &self.location_point {
+            if !self.address_street.is_empty() {
+                if let Some(found) = gis::Query::new(
                     format!(
                         "{} {} {} {} {}",
-                        self.exterior.address_street,
-                        self.exterior.address_city,
-                        self.exterior.address_state,
-                        self.exterior.address_zip,
-                        self.exterior.address_country
+                        self.address_street,
+                        self.address_city,
+                        self.address_state,
+                        self.address_zip,
+                        self.address_country
                     ),
                     false,
                 )
                 .lookup_one()
                 .await
                 {
-                    self.exterior.location_point = Some(serde_json::json!({
-                        "type": "Point",
-                        "coordinates": [found.geometry.longitude, found.geometry.latitude]
-                    }));
+                    self.location_point = Some(geo::Point::new(
+                        found.geometry.longitude as f64,
+                        found.geometry.latitude as f64,
+                    ));
                 }
             }
         }
 
-        if let Some(point) = &self.exterior.location_point {
-            let geom = &point["geometry"];
-            if geom.is_object() {
-                self.exterior.location_point = Some(geom.clone());
-            }
-        }
-
-        if let Some(poly) = &self.exterior.location_polygon {
-            let geom = &poly["geometry"];
-            if geom.is_object() {
-                self.exterior.location_polygon = Some(geom.clone());
-            }
-        }
-
-        if let Some(poly) = &self.exterior.location_polygon {
-            if poly["type"] == Value::from("Polygon") {
-                let new = json!({"type": "MultiPolygon", "coordinates": [poly["coordinates"]]});
-                self.exterior.location_polygon = Some(new);
-            }
-        }
-
-        if self.exterior.partner_name.is_empty() {
+        if self.partner_name.is_empty() {
             return Err(Error::Missing("partner_name".into()));
         }
 
-        if let (None, Some(dt)) = (self.exterior.partner_created, self.exterior.partner_updated) {
-            self.exterior.partner_created = Some(dt.clone());
+        if let (None, Some(dt)) = (self.partner_created, self.partner_updated) {
+            self.partner_created = Some(dt.clone());
         }
 
-        if self.exterior.title.is_empty() {
+        if self.title.is_empty() {
             return Err(Error::Missing("title".into()));
         }
 
@@ -1869,18 +1991,17 @@ impl Opportunity {
         //     return Err(Error::Missing("partner_opp_url".into()));
         // }
 
-        if self.exterior.uid.is_nil() {
-            let namespace = Uuid::new_v5(&PARTNER_NAMESPACE, self.exterior.partner_name.as_ref());
+        if self.uid.is_nil() {
+            let namespace = Uuid::new_v5(&PARTNER_NAMESPACE, self.partner_name.as_ref());
 
             let mut identifier = self
-                .exterior
                 .partner_opp_url
                 .clone()
                 .unwrap_or_else(|| "sciencenearme.org".to_string());
             identifier.push_str("||");
-            identifier.push_str(&self.exterior.title);
+            identifier.push_str(&self.title);
 
-            self.exterior.uid = Uuid::new_v5(&namespace, identifier.as_ref());
+            self.uid = Uuid::new_v5(&namespace, identifier.as_ref());
         }
 
         Ok(())
@@ -1958,7 +2079,7 @@ impl Opportunity {
 
     pub async fn set_id_if_necessary(&mut self, db: &Database) -> Result<(), Error> {
         if let None = self.id {
-            self.id = Opportunity::id_by_uid(db, &self.exterior.uid).await?;
+            self.id = Opportunity::id_by_uid(db, &self.uid).await?;
         }
 
         Ok(())
@@ -2016,8 +2137,8 @@ impl Opportunity {
     }
 
     pub async fn set_slug_if_necessary(&mut self, db: &Database) -> Result<(), Error> {
-        if self.exterior.slug.is_empty() {
-            let base = slugify(&self.exterior.title);
+        if self.slug.is_empty() {
+            let base = slugify(&self.title);
             let mut slug = base.clone();
             let mut disamb = 0u32;
 
@@ -2026,7 +2147,7 @@ impl Opportunity {
                 slug = format!("{}-{}", base, disamb);
             }
 
-            self.exterior.slug = slug
+            self.slug = slug
         }
 
         Ok(())
@@ -2074,8 +2195,8 @@ WHERE
   o.exterior->>'title' = $1 AND
   o.exterior->>'partner' = $2
 "#,
-                &self.exterior.title,
-                self.exterior.partner.to_string(),
+                &self.title,
+                self.partner.to_string(),
             )
             .fetch_optional(db)
             .await?;

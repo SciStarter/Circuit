@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-pub use opportunity::{Opportunity, OpportunityExterior, OpportunityInterior};
+pub use opportunity::{Opportunity, OpportunityInterior};
 pub use partner::Partner;
 pub use person::Person;
 use serde::{Deserialize, Serialize};
@@ -38,6 +38,8 @@ pub enum Error {
     SQLx(#[from] sqlx::Error),
     #[error("JSON error")]
     JSON(#[from] serde_json::Error),
+    #[error("GeoZero error")]
+    GeoZero(#[from] geozero::error::GeozeroError),
     #[error("No such item exists")]
     NoSuch(&'static str),
 }
