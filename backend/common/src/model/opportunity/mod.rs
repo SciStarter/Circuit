@@ -39,8 +39,9 @@ where
     async fn try_from_with_db(db: &Database, source: T) -> Result<Self, Error>;
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "T_ReviewStatus", rename_all = "snake_case")]
 pub enum ReviewStatus {
     Draft,
     Pending,
@@ -72,15 +73,14 @@ impl ReviewStatus {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "T_Recurrence", rename_all = "snake_case")]
 pub enum Recurrence {
     #[default]
     Once,
     Daily,
-    Weekdays,
     Weekly,
-    Monthly,
 }
 
 impl Recurrence {
@@ -112,15 +112,27 @@ pub struct Reviews {
 }
 
 #[derive(
-    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    EnumString,
+    AsRefStr,
+    Copy,
+    Clone,
+    PartialEq,
+    sqlx::Type,
 )]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "T_OrganizationType", rename_all = "snake_case")]
 pub enum OrganizationType {
     MuseumOrScienceCenter,
     Festival,
     Library,
     CollegeUniversity,
     #[serde(rename = "pk12school")]
+    #[sqlx(rename = "pk12school")]
     PK12School,
     CommunityOrganization,
     Club,
@@ -176,12 +188,14 @@ pub struct PageOptions {
     pub layout: PageLayout,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "T_EntityType", rename_all = "snake_case")]
 pub enum EntityType {
     Unspecified,
     Attraction,
-    Page(PageOptions),
+    PageJustContent,
+    PageAddOpportunities,
     #[serde(other)]
     #[default]
     Opportunity,
@@ -192,16 +206,8 @@ impl super::SelectOption for EntityType {
         vec![
             EntityType::Opportunity.to_option(),
             EntityType::Attraction.to_option(),
-            EntityType::Page(PageOptions {
-                layout: PageLayout::JustContent,
-                ..Default::default()
-            })
-            .to_option(),
-            EntityType::Page(PageOptions {
-                layout: PageLayout::AddOpportunities,
-                ..Default::default()
-            })
-            .to_option(),
+            EntityType::PageJustContent.to_option(),
+            EntityType::PageAddOpportunities.to_option(),
             EntityType::Unspecified.to_option(),
         ]
     }
@@ -223,18 +229,16 @@ impl super::SelectOption for EntityType {
                 "Opportunity".to_string(),
                 EntityType::Opportunity,
             ),
-            EntityType::Page(options) => match options.layout {
-                PageLayout::JustContent => (
-                    "page__just_content".to_string(),
-                    "Page - Just Content".to_string(),
-                    EntityType::Page(options.clone()),
-                ),
-                PageLayout::AddOpportunities => (
-                    "page__add_opportunities".to_string(),
-                    "Page - 'Add Opportunities' layout".to_string(),
-                    EntityType::Page(options.clone()),
-                ),
-            },
+            EntityType::PageJustContent => (
+                "page_just_content".to_string(),
+                "Page - Just Content".to_string(),
+                EntityType::PageJustContent,
+            ),
+            EntityType::PageAddOpportunities => (
+                "page_add_opportunities".to_string(),
+                "Page - 'Add Opportunities' layout".to_string(),
+                EntityType::PageAddOpportunities,
+            ),
         }
     }
 }
@@ -280,9 +284,10 @@ impl super::SelectOption for VenueType {
 }
 
 #[derive(
-    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,, sqlx::Type
 )]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "T_PESDomain", rename_all = "snake_case")]
 pub enum Domain {
     CitizenScience,
     LiveScience,
@@ -317,8 +322,20 @@ impl super::SelectOption for Domain {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
+#[derive(
+    Debug,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    EnumString,
+    AsRefStr,
+    Copy,
+    Clone,
+    PartialEq,
+    sqlx::Type,
+)]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "T_Descriptor", rename_all = "snake_case")]
 pub enum Descriptor {
     AdvocacyDays,
     Bioblitz,
@@ -331,6 +348,7 @@ pub enum Descriptor {
     Concert,
     Conference,
     #[serde(rename = "create-a-thon")]
+    #[sqlx(rename = "create-a-thon")]
     Createathon,
     Dance,
     Exhibition,
@@ -339,10 +357,12 @@ pub enum Descriptor {
     Forum,
     Fundraising,
     #[serde(rename = "hack-a-thon")]
+    #[sqlx(rename = "hack-a-thon")]
     Hackathon,
     Lecture,
     LiveScience,
     #[serde(rename = "make-a-thon")]
+    #[sqlx(rename = "make-a-thon")]
     Makeathon,
     Maker,
     MakerFaire,
@@ -400,8 +420,20 @@ impl super::SelectOption for Descriptor {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
+#[derive(
+    Debug,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    EnumString,
+    AsRefStr,
+    Copy,
+    Clone,
+    PartialEq,
+    sqlx::Type,
+)]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "T_Topic", rename_all = "snake_case")]
 pub enum Topic {
     Agriculture,
     Alcohol,
@@ -496,9 +528,20 @@ pub struct OpenDays {
 }
 
 #[derive(
-    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    EnumString,
+    AsRefStr,
+    Copy,
+    Clone,
+    PartialEq,
+    sqlx::Type,
 )]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "T_Cost", rename_all = "snake_case")]
 pub enum Cost {
     #[default]
     Free,
@@ -528,9 +571,20 @@ impl super::SelectOption for Cost {
 }
 
 #[derive(
-    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    EnumString,
+    AsRefStr,
+    Copy,
+    Clone,
+    PartialEq,
+    sqlx::Type,
 )]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "T_LocationType", rename_all = "snake_case")]
 pub enum LocationType {
     #[serde(alias = "ANY")]
     #[serde(alias = "Any")]
@@ -998,8 +1052,8 @@ impl std::fmt::Debug for Opportunity {
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityInterior {
-    pub id: Option<i32>,
     pub opportunity_id: Option<i32>,
+    pub updated: DateTime<FixedOffset>,
     pub accepted: Option<bool>,
     pub withdrawn: bool,
     pub submitted_by: Option<Uuid>,
@@ -1013,8 +1067,8 @@ pub struct OpportunityInterior {
 impl Default for OpportunityInterior {
     fn default() -> Self {
         OpportunityInterior {
-            id: None,
             opportunity_id: None,
+            updated: Utc::now().fixed_offset(),
             accepted: Some(false), // editors have accepted it for publication
             withdrawn: false,      // partner has withdrawn it from publication
             submitted_by: None,
