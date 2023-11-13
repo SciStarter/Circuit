@@ -1,5 +1,15 @@
 BEGIN;
 
+DROP FUNCTION "c_opportunity_is_current_as_of";
+DROP FUNCTION "c_opportunity_is_scheduled";
+DROP FUNCTION "c_opportunity_is_ondemand";
+DROP FUNCTION "c_opportunity_by_uid_likes_during";
+DROP FUNCTION "c_opportunity_by_uid_is_status";
+DROP FUNCTION "c_opportunity_by_uid_domain";
+DROP FUNCTION "c_opportunity_is_current";
+DROP FUNCTION "c_opportunity_by_uid_is_current_as_of";
+DROP FUNCTION "c_opportunity_by_uid_is_current";
+
 DROP INDEX "c_opportunity_by_slug";
 DROP INDEX "c_opportunity_cost";
 DROP INDEX "c_opportunity_end_dates";
@@ -15,6 +25,7 @@ DROP INDEX "c_opportunity_tags";
 DROP INDEX "c_opportunity_uid";
 DROP INDEX "c_opportunity_withdrawn";
 DROP INDEX IF EXISTS "c_opportyunity_by_location_type_text";
+DROP INDEX IF EXISTS "c_opportunity_location_type";
 
 ALTER TABLE "c_opportunity" RENAME TO "c_opportunity_v1";
 ALTER TABLE "c_opportunity_overlay" RENAME TO "c_opportunity_overlay_v1";
@@ -220,13 +231,13 @@ CREATE TABLE "c_opportunity" (
 CREATE TRIGGER c_opportunity_set_updated BEFORE UPDATE ON c_opportunity
     FOR EACH ROW EXECUTE PROCEDURE set_updated();
 
-CREATE INDEX c_opportunity_by_location_type ON c_opportunity ("location_type");
-CREATE INDEX c_opportunity_by_cost ON c_opportunity ("cost");
-CREATE INDEX c_opportunity_is_online ON c_opportunity ("is_online");
-CREATE INDEX c_opportunity_by_organization_name ON c_opportunity ("organization_name");
-CREATE INDEX c_opportunity_by_partner ON c_opportunity ("partner");
-CREATE INDEX c_opportunity_by_location_point ON c_opportunity USING GIST ("location_point");
-CREATE INDEX c_opportunity_by_location_polygon ON c_opportunity USING GIST ("location_polygon");
+CREATE INDEX c_opportunity_via_location_type ON c_opportunity ("location_type");
+CREATE INDEX c_opportunity_via_cost ON c_opportunity ("cost");
+CREATE INDEX c_opportunity_via_is_online ON c_opportunity ("is_online");
+CREATE INDEX c_opportunity_via_organization_name ON c_opportunity ("organization_name");
+CREATE INDEX c_opportunity_via_partner ON c_opportunity ("partner");
+CREATE INDEX c_opportunity_via_location_point ON c_opportunity USING GIST ("location_point");
+CREATE INDEX c_opportunity_via_location_polygon ON c_opportunity USING GIST ("location_polygon");
 
 SELECT setval(
     (SELECT pg_get_serial_sequence('c_opportunity', 'id')),
@@ -240,7 +251,7 @@ CREATE TABLE c_opportunity_instance (
     "end" timestamptz
 );
 
-CREATE INDEX c_opportunity_instance_by_opportunity_id ON c_opportunity_instance ("opportunity_id");
+CREATE INDEX c_opportunity_instance_via_opportunity_id ON c_opportunity_instance ("opportunity_id");
 
 CREATE TABLE c_opportunity_interior (
     "opportunity_id" integer PRIMARY KEY REFERENCES "c_opportunity" ON DELETE CASCADE,
@@ -266,8 +277,8 @@ CREATE TABLE c_opportunity_tag (
     UNIQUE ("opportunity_id", "tag")
 );
 
-CREATE INDEX c_opportunity_tag_by_opportunity_id ON c_opportunity_tag ("opportunity_id");
-CREATE INDEX c_opportunity_tag_by_tag ON c_opportunity_tag ("tag");
+CREATE INDEX c_opportunity_tag_via_opportunity_id ON c_opportunity_tag ("opportunity_id");
+CREATE INDEX c_opportunity_tag_via_tag ON c_opportunity_tag ("tag");
 
 CREATE TABLE c_opportunity_topic (
     "id" serial PRIMARY KEY,
@@ -277,8 +288,8 @@ CREATE TABLE c_opportunity_topic (
     UNIQUE ("opportunity_id", "topic")
 );
 
-CREATE INDEX c_opportunity_topic_by_opportunity_id ON c_opportunity_topic ("opportunity_id");
-CREATE INDEX c_opportunity_topic_by_topic ON c_opportunity_topic ("topic");
+CREATE INDEX c_opportunity_topic_via_opportunity_id ON c_opportunity_topic ("opportunity_id");
+CREATE INDEX c_opportunity_topic_via_topic ON c_opportunity_topic ("topic");
 
 CREATE TABLE c_opportunity_descriptor (
     "id" serial PRIMARY KEY,
@@ -288,8 +299,8 @@ CREATE TABLE c_opportunity_descriptor (
     UNIQUE ("opportunity_id", "descriptor")
 );
 
-CREATE INDEX c_opportunity_descriptor_by_opportunity_id ON c_opportunity_descriptor ("opportunity_id");
-CREATE INDEX c_opportunity_descriptor_by_descriptor ON c_opportunity_descriptor ("descriptor");
+CREATE INDEX c_opportunity_descriptor_via_opportunity_id ON c_opportunity_descriptor ("opportunity_id");
+CREATE INDEX c_opportunity_descriptor_via_descriptor ON c_opportunity_descriptor ("descriptor");
 
 CREATE TABLE c_opportunity_hashtag (
     "id" serial PRIMARY KEY,
@@ -298,12 +309,12 @@ CREATE TABLE c_opportunity_hashtag (
     UNIQUE ("opportunity_id", "hashtag")
 );
 
-CREATE INDEX c_opportunity_hashtag_by_opportunity_id ON c_opportunity_hashtag ("opportunity_id");
-CREATE INDEX c_opportunity_hashtag_by_hashtag ON c_opportunity_hashtag ("hashtag");
+CREATE INDEX c_opportunity_hashtag_via_opportunity_id ON c_opportunity_hashtag ("opportunity_id");
+CREATE INDEX c_opportunity_hashtag_via_hashtag ON c_opportunity_hashtag ("hashtag");
 
 CREATE FUNCTION "c_opportunity_tsvector" ("row" c_opportunity) RETURNS tsvector
 LANGUAGE plpgsql
-IMMUTABLE STRICT AS $$
+IMMUTABLE STRICT AS $func$
 BEGIN
     RETURN to_tsvector(
         'english',
@@ -317,7 +328,127 @@ BEGIN
         "row"."address_country"
     );
 END;
-$$;
+$func$;
+
+CREATE FUNCTION c_opportunity_is_current_as_of("opp" c_opportunity, stamp timestamptz) returns boolean AS
+$func$
+BEGIN
+ RETURN (
+   COALESCE(NULLIF(opp."review_status", ''), 'not_required') IN ('publish', 'not_required')
+   AND
+   opp."accepted" = true
+   AND
+   opp."withdrawn" = false
+   AND
+   (
+       (
+          (opp."recurrence" = 'daily' OR opp."recurrence" = 'weekly')
+          AND
+          (opp."end_recurrence" IS NULL OR opp."end_recurrence"> "stamp")
+       )
+       OR
+       EXISTS(SELECT 1 FROM c_opportunity_instance WHERE "opportunity_id" = opp."id" AND ("end" IS NULL OR "end" > "stamp"))
+       OR NOT
+       EXISTS(SELECT 1 from c_opportunity_instance WHERE "opportunity_id" = opp."id")
+   )
+ );
+END
+$func$ LANGUAGE plpgsql STABLE;
+
+CREATE FUNCTION c_opportunity_is_scheduled("opp" c_opportunity) returns boolean AS
+$func$
+DECLARE
+  "total" bigint;
+  "inst" c_opportunity_instance;
+BEGIN
+ SELECT COUNT(*) INTO "total" FROM c_opportunity_instance WHERE "opportunity_id" = opp."id";
+ SELECT * INTO "inst" FROM c_opportunity_instance WHERE "opportunity_id" = opp."id" LIMIT 1;
+ RETURN (
+    "total" > 1
+    OR (
+     "total" = 1
+     AND
+     "inst"."end" IS NOT NULL
+     AND
+     AGE("inst"."end", "inst"."start") <= interval '7 days'
+   )
+ );
+END
+$func$ language plpgsql stable;
+
+CREATE FUNCTION c_opportunity_is_ondemand("opp" c_opportunity) returns boolean AS
+$func$
+BEGIN
+ RETURN NOT c_opportunity_is_scheduled(opp);
+END
+$func$ LANGUAGE plpgsql STABLE;
+
+CREATE FUNCTION c_opportunity_by_uid_likes_during("uid" uuid, "begin" timestamptz, "end" timestamptz) returns bigint AS
+$func$
+DECLARE
+ val bigint;
+BEGIN
+ SELECT COALESCE(COUNT(*), 0) INTO val FROM c_opportunity_like l LEFT JOIN c_opportunity o ON l."opportunity_id" = o."id" WHERE o."uid" = "uid" AND "when" >= "begin" AND "when" < "end";
+ RETURN val;
+END
+$func$ LANGUAGE plpgsql STABLE;
+
+CREATE FUNCTION c_opportunity_by_uid_is_status("uid" uuid, "status" integer) returns boolean AS
+$func$
+DECLARE
+ opp c_opportunity;
+BEGIN
+ SELECT * INTO opp FROM c_opportunity o WHERE o."uid" = "uid" LIMIT 1;
+ CASE status
+  WHEN 2 THEN RETURN c_opportunity_is_current(opp) = false;
+  WHEN 1 THEN RETURN c_opportunity_is_current(opp) = true;
+  ELSE RETURN true;
+ END CASE;
+END
+$func$ LANGUAGE plpgsql STABLE;
+
+CREATE FUNCTION c_opportunity_by_uid_domain("uid" uuid) returns T_PESDomain AS
+$func$
+DECLARE
+ opp c_opportunity;
+ partner c_partner;
+BEGIN
+ SELECT * INTO opp FROM c_opportunity o WHERE o."uid" = "uid" LIMIT 1;
+ CASE opp."pes_domain"
+  WHEN 'unspecified' THEN
+   SELECT * INTO partner FROM c_partner p WHERE (p."exterior"->>'uid')::uuid = opp."partner" LIMIT 1;
+   RETURN (partner."exterior"->>'pes_domain')::T_PESDomain;
+  ELSE RETURN opp."pes_domain";
+ END CASE;
+END
+$func$ LANGUAGE plpgsql STABLE;
+
+CREATE FUNCTION c_opportunity_is_current("opp" c_opportunity) returns boolean AS
+$func$
+BEGIN
+ RETURN c_opportunity_is_current_as_of(opp, CURRENT_TIMESTAMP);
+END
+$func$ LANGUAGE plpgsql STABLE;
+
+CREATE FUNCTION c_opportunity_by_uid_is_current_as_of("uid" uuid, "stamp" timestamptz) returns boolean AS
+$func$
+DECLARE
+ opp c_opportunity;
+BEGIN
+ SELECT * INTO opp FROM c_opportunity o WHERE o."uid" = "uid" LIMIT 1;
+ RETURN c_opportunity_is_current_as_of(opp, stamp);
+END
+$func$ LANGUAGE plpgsql STABLE;
+
+CREATE FUNCTION c_opportunity_by_uid_is_current("uid" uuid) returns boolean AS
+$func$
+DECLARE
+ opp c_opportunity;
+BEGIN
+ SELECT * INTO opp FROM c_opportunity o WHERE o."uid" = "uid" LIMIT 1;
+ RETURN c_opportunity_is_current(opp);
+END
+$func$ LANGUAGE plpgsql STABLE;
 
 -- SELECT string_agg("tag", ' ') INTO "tags" FROM c_opportunity_tag WHERE "opportunity_id" = "row"."id";
 -- SELECT string_agg("topic", ' ') INTO "topics" FROM c_opportunity_topic WHERE "opportunity_id" = "row"."id";
@@ -325,7 +456,7 @@ $$;
 -- SELECT string_agg("hashtag", ' ') INTO "hashtags" FROM c_opportunity_hashtag WHERE "opportunity_id" = "row"."id";
 
 -- searches should be done as WHERE c_opportunity_tsvector(c_opportunity) @@ websearch_to_tsquery(...)
-CREATE INDEX "c_opportunity_fulltext_english" ON "c_opportunity" USING gin (c_opportunity_tsvector(c_opportunity));
+CREATE INDEX "c_opportunity_via_fulltext_english" ON "c_opportunity" USING gin (c_opportunity_tsvector(c_opportunity));
 
 INSERT
     INTO c_opportunity (

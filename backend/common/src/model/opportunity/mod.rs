@@ -7,7 +7,8 @@ use crate::model::involvement;
 use crate::{gis, Database, ToFixedOffset};
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
-use geozero::ToJson;
+use geo::Geometry;
+use geozero::{wkb, ToJson};
 //use deunicode::deunicode;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -793,12 +794,12 @@ impl TryFromWithDB<Opportunity> for OpportunityForCsv {
             is_online: opp.is_online,
             location_type: opp.location_type,
             location_name: opp.location_name,
-            location_point: opp.location_point.and_then(|point| {
+            location_point: opp.location_point.0.and_then(|point| {
                 <geo::Point as Into<geo::Geometry>>::into(point)
                     .to_json()
                     .ok()
             }),
-            location_polygon: opp.location_polygon.and_then(|poly| {
+            location_polygon: opp.location_polygon.0.and_then(|poly| {
                 <geo::MultiPolygon as Into<geo::Geometry>>::into(poly)
                     .to_json()
                     .ok()
@@ -888,6 +889,63 @@ pub struct OpportunitySocialHandle {
     pub handle: String,
 }
 
+#[derive(Serialize, Deserialize, Default, Debug)]
+#[serde(transparent)]
+pub struct Point(Option<geo::Point>);
+
+#[derive(Serialize, Deserialize, Default, Debug)]
+#[serde(transparent)]
+pub struct MultiPolygon(Option<geo::MultiPolygon>);
+
+impl Into<Option<wkb::Encode<Geometry<f64>>>> for Point {
+    fn into(self) -> Option<wkb::Encode<Geometry<f64>>> {
+        if let Some(p) = self.0 {
+            Some(wkb::Encode(Geometry::Point(p)))
+        } else {
+            None
+        }
+    }
+}
+
+impl Into<Option<wkb::Encode<Geometry<f64>>>> for MultiPolygon {
+    fn into(self) -> Option<wkb::Encode<Geometry<f64>>> {
+        if let Some(p) = self.0 {
+            Some(wkb::Encode(Geometry::MultiPolygon(p)))
+        } else {
+            None
+        }
+    }
+}
+
+impl From<Option<wkb::Decode<Geometry<f64>>>> for Point {
+    fn from(value: Option<wkb::Decode<Geometry<f64>>>) -> Self {
+        if let Some(wkb::Decode {
+            geometry: Some(Geometry::Point(p)),
+        }) = value
+        {
+            Point(Some(p))
+        } else {
+            Point(None)
+        }
+    }
+}
+
+impl From<Option<wkb::Decode<Geometry<f64>>>> for MultiPolygon {
+    fn from(value: Option<wkb::Decode<Geometry<f64>>>) -> Self {
+        if let Some(wkb::Decode {
+            geometry: Some(Geometry::MultiPolygon(p)),
+        }) = value
+        {
+            MultiPolygon(Some(p))
+        } else {
+            MultiPolygon(None)
+        }
+    }
+}
+
+const OPP_SELECT_FIELDS: &'static str = r#"
+"#;
+
 #[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Opportunity {
@@ -924,8 +982,8 @@ pub struct Opportunity {
     pub is_online: bool,
     pub location_type: LocationType,
     pub location_name: String,
-    pub location_point: Option<geo::Point>,
-    pub location_polygon: Option<geo::MultiPolygon>,
+    pub location_point: Point,
+    pub location_polygon: MultiPolygon,
     pub address_street: String,
     pub address_city: String,
     pub address_state: String,
@@ -935,8 +993,16 @@ pub struct Opportunity {
 }
 
 impl Opportunity {
-    pub async fn interior(&self, _db: &Database) -> Result<OpportunityInterior, Error> {
-        todo!()
+    pub async fn interior(&self, db: &Database) -> Result<OpportunityInterior, Error> {
+        Ok(OpportunityInterior::load_by_id(
+            db,
+            self.id.ok_or_else(|| {
+                Error::Missing(String::from(
+                    "Opportunity must have an id before an OpportunityInterior can be attached",
+                ))
+            })?,
+        )
+        .await?)
     }
 
     pub async fn venues(&self, _db: &Database) -> Result<Vec<VenueType>, Error> {
@@ -1052,6 +1118,7 @@ impl std::fmt::Debug for Opportunity {
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityInterior {
+    #[serde(skip)]
     pub opportunity_id: Option<i32>,
     pub updated: DateTime<FixedOffset>,
     pub accepted: Option<bool>,
@@ -1062,6 +1129,89 @@ pub struct OpportunityInterior {
     pub contact_email: String,
     pub contact_phone: String,
     pub extra_data: serde_json::Value,
+}
+
+impl OpportunityInterior {
+    pub async fn load_by_id(db: &Database, id: i32) -> Result<OpportunityInterior, Error> {
+        Ok(sqlx::query_as!(
+            OpportunityInterior,
+            r#"
+              SELECT
+                "opportunity_id",
+                "updated" AS "updated!",
+                "accepted",
+                "withdrawn" AS "withdrawn!",
+                "submitted_by",
+                "review_status" AS "review_status: ReviewStatus",
+                "contact_name" AS "contact_name!",
+                "contact_email" AS "contact_email!",
+                "contact_phone" AS "contact_phone!",
+                "extra_data" AS "extra_data!"
+              FROM
+                c_opportunity_interior
+              WHERE
+                opportunity_id = $1
+            "#,
+            id
+        )
+        .fetch_one(db)
+        .await?)
+    }
+
+    pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
+        sqlx::query!(
+            r#"
+              INSERT
+                INTO c_opportunity_interior (
+                  "opportunity_id",
+                  "updated",
+                  "accepted",
+                  "withdrawn",
+                  "submitted_by",
+                  "review_status",
+                  "contact_name",
+                  "contact_email",
+                  "contact_phone",
+                  "extra_data"
+                )
+                VALUES (
+                  $1,
+                  NOW(),
+                  $2,
+                  $3,
+                  $4,
+                  $5,
+                  $6,
+                  $7,
+                  $8,
+                  $9
+                )
+              ON CONFLICT ("opportunity_id") DO UPDATE
+                SET
+                  "updated" = excluded."updated",
+                  "accepted" = excluded."accepted",
+                  "withdrawn" = excluded."withdrawn",
+                  "submitted_by" = excluded."submitted_by",
+                  "review_status" = excluded."review_status",
+                  "contact_name" = excluded."contact_name",
+                  "contact_email" = excluded."contact_email",
+                  "contact_phone" = excluded."contact_phone",
+                  "extra_data" = excluded."extra_data"
+            "#,
+            self.opportunity_id,
+            self.accepted,
+            self.withdrawn,
+            self.submitted_by,
+            self.review_status as ReviewStatus,
+            self.contact_name,
+            self.contact_email,
+            self.contact_phone,
+            self.extra_data,
+        )
+        .execute(db)
+        .await?;
+        Ok(())
+    }
 }
 
 impl Default for OpportunityInterior {
@@ -1089,6 +1239,65 @@ impl std::fmt::Debug for OpportunityInterior {
             serde_json::to_string_pretty(self)
                 .unwrap_or_else(|_| "## JSON serialization failed".to_string())
         )
+    }
+}
+
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct OpportunityAll {
+    #[serde(flatten)]
+    pub exterior: Opportunity,
+    #[serde(flatten)]
+    pub interior: OpportunityInterior,
+}
+
+impl OpportunityAll {
+    pub async fn load_by_id(db: &Database, id: i32) -> Result<OpportunityAll, Error> {
+        let exterior = Opportunity::load_by_id(db, id).await?;
+        let interior = OpportunityInterior::load_by_id(db, id).await?;
+
+        Ok(OpportunityAll { exterior, interior })
+    }
+
+    pub async fn load_by_id_with_overlay(db: &Database, id: i32) -> Result<OpportunityAll, Error> {
+        let exterior = Opportunity::load_by_id_with_overlay(db, id).await?;
+        let interior = OpportunityInterior::load_by_id(db, id).await?;
+
+        Ok(OpportunityAll { exterior, interior })
+    }
+
+    pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<OpportunityAll, Error> {
+        let exterior = Opportunity::load_by_uid(db, uid).await?;
+        let interior = OpportunityInterior::load_by_id(
+            db,
+            exterior
+                .id
+                .expect("records loaded from the database should always have a primary key"),
+        )
+        .await?;
+
+        Ok(OpportunityAll { exterior, interior })
+    }
+
+    pub async fn load_by_uid_with_overlay(
+        db: &Database,
+        uid: &Uuid,
+    ) -> Result<OpportunityAll, Error> {
+        let exterior = Opportunity::load_by_uid_with_overlay(db, uid).await?;
+        let interior = OpportunityInterior::load_by_id(
+            db,
+            exterior
+                .id
+                .expect("records loaded from the database should always have a primary key"),
+        )
+        .await?;
+
+        Ok(OpportunityAll { exterior, interior })
+    }
+
+    pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
+        self.interior.opportunity_id = Some(self.exterior.store(db).await?);
+        self.interior.store(db).await?;
+        Ok(())
     }
 }
 
@@ -1801,7 +2010,7 @@ impl OpportunityPseudoIter {
 impl Opportunity {
     pub async fn catalog(db: &Database) -> Result<OpportunityPseudoIter, Error> {
         Ok(OpportunityPseudoIter {
-            uids: sqlx::query!(r#"SELECT ("exterior"->>'uid')::uuid AS "uid!" FROM c_opportunity"#)
+            uids: sqlx::query!(r#"SELECT "uid" AS "uid!" FROM c_opportunity"#)
                 .map(|row| row.uid)
                 .fetch_all(db)
                 .await?
@@ -2000,7 +2209,7 @@ impl Opportunity {
         self.short_desc = ammonia::clean(&self.short_desc);
         self.description = ammonia::clean(&self.description);
 
-        if let None = &self.location_point {
+        if let None = &self.location_point.0 {
             if !self.address_street.is_empty() {
                 if let Some(found) = gis::Query::new(
                     format!(
@@ -2016,10 +2225,10 @@ impl Opportunity {
                 .lookup_one()
                 .await
                 {
-                    self.location_point = Some(geo::Point::new(
+                    self.location_point = Point(Some(geo::Point::new(
                         found.geometry.longitude as f64,
                         found.geometry.latitude as f64,
-                    ));
+                    )));
                 }
             }
         }
@@ -2062,27 +2271,115 @@ impl Opportunity {
     }
 
     pub async fn load_by_id(db: &Database, id: i32) -> Result<Opportunity, Error> {
-        let rec = sqlx::query_file!("db/opportunity/get_by_id.sql", id)
-            .fetch_one(db)
-            .await?;
-
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        Ok(sqlx::query_as!(
+            Opportunity,
+            /*sql*/
+            r#"
+            SELECT
+              "id" AS "id: _",
+              "uid" AS "uid: _",
+              "slug" AS "slug: _",
+              "partner_name" AS "partner_name: _",
+              "partner_website" AS "partner_website: _",
+              "partner_logo_url" AS "partner_logo_url: _",
+              "partner_created" AS "partner_created: _",
+              "partner_updated" AS "partner_updated: _",
+              "partner_opp_url" AS "partner_opp_url: _",
+              "organization_name" AS "organization_name: _",
+              "organization_type" AS "organization_type: _",
+              "organization_website" AS "organization_website: _",
+              "organization_logo_url" AS "organization_logo_url: _",
+              "entity_type" AS "entity_type: _",
+              "min_age" AS "min_age: _",
+              "max_age" AS "max_age: _",
+              "pes_domain" AS "pes_domain: _",
+              "ticket_required" AS "ticket_required: _",
+              "title" AS "title: _",
+              "description" AS "description: _",
+              "short_desc" AS "short_desc: _",
+              "image_url" AS "image_url: _",
+              "image_credit" AS "image_credit: _",
+              "recurrence" AS "recurrence: _",
+              "end_recurrence" AS "end_recurrence: _",
+              "timezone" AS "timezone: _",
+              "cost" AS "cost: _",
+              "is_online" AS "is_online: _",
+              "location_type" AS "location_type: _",
+              "location_name" AS "location_name: _",
+              ST_AsBinary("location_point") AS "location_point: wkb::Decode<geo::Geometry<f64>>",
+              ST_AsBinary("location_polygon") AS "location_polygon: wkb::Decode<geo::Geometry<f64>>",
+              "address_street" AS "address_street: _",
+              "address_city" AS "address_city: _",
+              "address_state" AS "address_state: _",
+              "address_country" AS "address_country: _",
+              "address_zip" AS "address_zip: _",
+              "partner" AS "partner: _"
+            FROM
+              c_opportunity
+            WHERE
+              id = $1
+            LIMIT 1
+            "#, /*sql*/
+            id
+        )
+        .fetch_one(db)
+        .await?)
     }
 
     pub async fn load_by_id_with_overlay(db: &Database, id: i32) -> Result<Opportunity, Error> {
-        let rec = sqlx::query_file!("db/opportunity/get_by_id_with_overlay.sql", id)
-            .fetch_one(db)
-            .await?;
-
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        Ok(sqlx::query_as!(
+            Opportunity,
+            /*sql*/
+            r#"
+            SELECT
+              op."id" AS "id: _",
+              op."uid" AS "uid: _",
+              op."slug" AS "slug: _",
+              COALESCE(ov."partner_name", op."partner_name") AS "partner_name!: _",
+              COALESCE(ov."partner_website", op."partner_website") AS "partner_website: _",
+              COALESCE(ov."partner_logo_url", op."partner_logo_url") AS "partner_logo_url: _",
+              op."partner_created" AS "partner_created: _",
+              op."partner_updated" AS "partner_updated: _",
+              COALESCE(ov."partner_opp_url", op."partner_opp_url") AS "partner_opp_url: _",
+              COALESCE(ov."organization_name", op."organization_name") AS "organization_name!: _",
+              COALESCE(ov."organization_type", op."organization_type") AS "organization_type!: _",
+              COALESCE(ov."organization_website", op."organization_website") AS "organization_website: _",
+              COALESCE(ov."organization_logo_url", op."organization_logo_url") AS "organization_logo_url: _",
+              COALESCE(ov."entity_type", op."entity_type") AS "entity_type!: _",
+              COALESCE(ov."min_age", op."min_age") AS "min_age!: _",
+              COALESCE(ov."max_age", op."max_age") AS "max_age!: _",
+              COALESCE(ov."pes_domain", op."pes_domain") AS "pes_domain!: _",
+              COALESCE(ov."ticket_required", op."ticket_required") AS "ticket_required!: _",
+              COALESCE(ov."title", op."title") AS "title!: _",
+              COALESCE(ov."description", op."description") AS "description!: _",
+              COALESCE(ov."short_desc", op."short_desc") AS "short_desc!: _",
+              COALESCE(ov."image_url", op."image_url") AS "image_url!: _",
+              COALESCE(ov."image_credit", op."image_credit") AS "image_credit!: _",
+              COALESCE(ov."recurrence", op."recurrence") AS "recurrence!: _",
+              COALESCE(ov."end_recurrence", op."end_recurrence") AS "end_recurrence: _",
+              COALESCE(ov."timezone", op."timezone") AS "timezone: _",
+              COALESCE(ov."cost", op."cost") AS "cost!: _",
+              COALESCE(ov."is_online", op."is_online") AS "is_online!: _",
+              COALESCE(ov."location_type", op."location_type") AS "location_type!: _",
+              COALESCE(ov."location_name", op."location_name") AS "location_name!: _",
+              ST_AsBinary(COALESCE(ov."location_point", op."location_point")) AS "location_point: wkb::Decode<geo::Geometry<f64>>",
+              ST_AsBinary(COALESCE(ov."location_polygon", op."location_polygon")) AS "location_polygon: wkb::Decode<geo::Geometry<f64>>",
+              COALESCE(ov."address_street", op."address_street") AS "address_street!: _",
+              COALESCE(ov."address_city", op."address_city") AS "address_city!: _",
+              COALESCE(ov."address_state", op."address_state") AS "address_state!: _",
+              COALESCE(ov."address_country", op."address_country") AS "address_country!: _",
+              COALESCE(ov."address_zip", op."address_zip") AS "address_zip!: _",
+              op."partner" AS "partner: _"
+            FROM
+              c_opportunity op LEFT JOIN c_opportunity_overlay ov ON op."id" = ov."opportunity_id"
+            WHERE
+              op."id" = $1
+            LIMIT 1
+            "#,/*sql*/
+            id
+        )
+        .fetch_one(db)
+        .await?)
     }
 
     pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<Opportunity, Error> {
@@ -2207,8 +2504,9 @@ impl Opportunity {
         Ok(())
     }
 
-    pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
+    pub async fn store(&mut self, db: &Database) -> Result<i32, Error> {
         self.validate().await?;
+        let mut result_id;
 
         self.set_slug_if_necessary(db).await?;
 
@@ -2221,6 +2519,7 @@ impl Opportunity {
             )
             .execute(db)
             .await?;
+            result_id = id;
         } else {
             let rec = sqlx::query_file!(
                 "db/opportunity/insert.sql",
@@ -2231,6 +2530,7 @@ impl Opportunity {
             .await?;
 
             self.id = Some(rec.id);
+            result_id = rec.id;
         };
 
         let overlay = sqlx::query_scalar!(
@@ -2270,6 +2570,6 @@ VALUES ($1, $2, $3)
             }
         }
 
-        Ok(())
+        Ok(result_id)
     }
 }

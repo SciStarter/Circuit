@@ -242,7 +242,9 @@ impl Partner {
         title: Option<impl AsRef<str>>,
         raw: Option<impl AsRef<str>>,
     ) -> Result<i64, Error> {
-        let Some(partner_id) = self.id else { return Err(Error::Missing("id".into())); };
+        let Some(partner_id) = self.id else {
+            return Err(Error::Missing("id".into()));
+        };
 
         let title = if let Some(val) = &title {
             Some(val.as_ref())
@@ -383,9 +385,9 @@ INSERT
             r#"
             SELECT COUNT(*) AS "count!: i64"
             FROM c_opportunity
-            WHERE exterior -> 'partner' @> $1::jsonb
+            WHERE "partner"= $1
             "#,
-            serde_json::to_value(self.exterior.uid)?
+            self.exterior.uid
         )
         .fetch_one(db)
         .await?
@@ -399,10 +401,10 @@ INSERT
             r#"
             SELECT COUNT(*) AS "count!: i64"
             FROM c_opportunity
-            WHERE exterior -> 'partner' @> $1::jsonb
-            AND c_opportunity_is_current(interior, exterior) = true
+            WHERE "partner" = $1
+            AND c_opportunity_is_current(c_opportunity) = true
             "#,
-            serde_json::to_value(self.exterior.uid)?
+            self.uid
         )
         .fetch_one(db)
         .await?
