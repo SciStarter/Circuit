@@ -5,7 +5,7 @@ use super::{
     person::Person,
     Error, PARTNER_NAMESPACE,
 };
-use crate::{Database, INTERNAL_UID};
+use crate::{select_opportunity, Database, INTERNAL_UID};
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
@@ -361,23 +361,12 @@ INSERT
         .await?)
     }
 
-    pub async fn load_opportunities(
-        &self,
-        db: &Database,
-    ) -> Result<Vec<Result<Opportunity, Error>>, Error> {
-        Ok(sqlx::query_file!(
-            "db/partner/fetch_opportunities.sql",
-            serde_json::to_value(self.exterior.uid)?
+    pub async fn load_opportunities(&self, db: &Database) -> Result<Vec<Opportunity>, Error> {
+        Ok(
+            select_opportunity!(r#"WHERE "partner" = $1"#, self.exterior.uid)
+                .fetch_all(db)
+                .await?,
         )
-        .map(|row| {
-            Ok(Opportunity {
-                id: Some(row.id),
-                exterior: serde_json::from_value(row.exterior)?,
-                interior: serde_json::from_value(row.interior)?,
-            })
-        })
-        .fetch_all(db)
-        .await?)
     }
 
     pub async fn count_total_opportunities(&self, db: &Database) -> Result<u32, Error> {
@@ -404,7 +393,7 @@ INSERT
             WHERE "partner" = $1
             AND c_opportunity_is_current(c_opportunity) = true
             "#,
-            self.uid
+            self.exterior.uid
         )
         .fetch_one(db)
         .await?

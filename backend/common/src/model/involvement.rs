@@ -58,8 +58,22 @@ impl Involvement {
         mode: Mode,
         location: &Option<serde_json::Value>,
     ) -> Result<(), Error> {
-        sqlx::query_file!(
-            "db/involvement/upgrade.sql",
+        sqlx::query!(
+            r#"
+insert into c_involvement (exterior, interior)
+values (
+  jsonb_build_object('opportunity', $2::jsonb, 'first', to_jsonb(now()), 'latest', to_jsonb(now()), 'mode', $3::jsonb),
+  jsonb_build_object('participant', $1::jsonb, 'location', $4::jsonb)
+)
+on conflict ((exterior -> 'opportunity'), (interior -> 'participant')) do
+update set
+  exterior = jsonb_set(
+    jsonb_set(c_involvement.exterior, '{latest}', to_jsonb(now())),
+    '{mode}',
+    greatest((c_involvement.exterior -> 'mode'), $3::jsonb)
+  ),
+  interior = case when ($4::jsonb = 'null'::jsonb) then c_involvement.interior else jsonb_set(c_involvement.interior, '{location}', $4::jsonb) end
+            "#,
             serde_json::to_value(participant)?,
             serde_json::to_value(opportunity)?,
             serde_json::to_value(mode)?,
@@ -77,8 +91,23 @@ impl Involvement {
         min_mode: Option<Mode>,
         max_mode: Option<Mode>,
     ) -> Result<u32, Error> {
-        Ok(sqlx::query_file!(
-            "db/involvement/count_by_participant.sql",
+        Ok(sqlx::query!(
+            r#"
+select count(*) as total
+from c_involvement
+where
+  ($1::jsonb) @> (interior -> 'participant')
+and
+  case
+    when $2::integer is null then (exterior ->> 'mode')::integer >= 1
+    else (exterior ->> 'mode')::integer >= greatest($2::integer, 1)
+  end
+and
+  case
+    when $3::integer is null then true
+    else (exterior ->> 'mode')::integer <= $3::integer
+  end
+            "#,
             serde_json::to_value(participant)?,
             min_mode.map(|x| x as i32),
             max_mode.map(|x| x as i32),
@@ -104,8 +133,29 @@ impl Involvement {
         };
 
         Ok(match text {
-            Some(text) if !text.is_empty() => sqlx::query_file!(
-                "db/involvement/all_by_participant_and_text.sql",
+            Some(text) if !text.is_empty() => sqlx::query!(
+                r#"
+select I.id, I.exterior, I.interior
+from c_involvement as I
+left join c_opportunity as O
+on (I.exterior ->> 'opportunity')::uuid = O."uid"
+where
+  ($1::jsonb) @> (I.interior -> 'participant')
+and
+  c_opportunity_tsvector(O) @@ websearch_to_tsquery($4)
+and
+  case
+    when $2::integer is null then (I.exterior ->> 'mode')::integer >= 1
+    else (I.exterior ->> 'mode')::integer >= greatest($2::integer, 1)
+  end
+and
+  case
+    when $3::integer is null then true
+    else (I.exterior ->> 'mode')::integer <= $3::integer
+  end
+order by I.updated desc
+limit $5 offset $6;
+                "#,
                 serde_json::to_value(participant)?,
                 min_mode.map(|x| x as i32),
                 max_mode.map(|x| x as i32),
@@ -124,8 +174,25 @@ impl Involvement {
             })
             .fetch(db)
             .err_into(),
-            _ => sqlx::query_file!(
-                "db/involvement/all_by_participant.sql",
+            _ => sqlx::query!(
+                r#"
+select id, exterior, interior
+from c_involvement
+where
+  ($1::jsonb) @> (interior -> 'participant')
+and
+  case
+    when $2::integer is null then (exterior ->> 'mode')::integer >= 1
+    else (exterior ->> 'mode')::integer >= greatest($2::integer, 1)
+  end
+and
+  case
+    when $3::integer is null then true
+    else (exterior ->> 'mode')::integer <= $3::integer
+  end
+order by updated desc
+limit $4 offset $5;
+                "#,
                 serde_json::to_value(participant)?,
                 min_mode.map(|x| x as i32),
                 max_mode.map(|x| x as i32),
@@ -150,8 +217,10 @@ impl Involvement {
         db: &'db Database,
         opportunity: &Uuid,
     ) -> Result<impl Stream<Item = Result<Involvement, Error>> + 'db, Error> {
-        Ok(sqlx::query_file!(
-            "db/involvement/all_by_opportunity.sql",
+        Ok(sqlx::query!(
+            r#"
+select id, exterior, interior from c_involvement where ($1::jsonb) @> (exterior -> 'opportunity');
+            "#,
             serde_json::to_value(opportunity)?,
         )
         .try_map(|rec| {
@@ -168,9 +237,14 @@ impl Involvement {
     }
 
     pub async fn load_by_id(db: &Database, id: i32) -> Result<Involvement, Error> {
-        let rec = sqlx::query_file!("db/involvement/get_by_id.sql", id)
-            .fetch_one(db)
-            .await?;
+        let rec = sqlx::query!(
+            r#"
+select id, exterior, interior from c_involvement where id = $1 limit 1;
+            "#,
+            id
+        )
+        .fetch_one(db)
+        .await?;
 
         Ok(Involvement {
             id: Some(rec.id),
@@ -184,8 +258,10 @@ impl Involvement {
         participant: &Uuid,
         opportunity: &Uuid,
     ) -> Result<Option<Involvement>, Error> {
-        if let Some(rec) = sqlx::query_file!(
-            "db/involvement/get_by_participant_and_opportunity.sql",
+        if let Some(rec) = sqlx::query!(
+            r#"
+select id, exterior, interior from c_involvement where ($1::jsonb) @> (interior -> 'participant') and ($2::jsonb) @> (exterior -> 'opportunity') limit 1;
+            "#,
             serde_json::to_value(participant)?,
             serde_json::to_value(opportunity)?
         )
@@ -206,8 +282,10 @@ impl Involvement {
         self.validate()?;
 
         if let Some(id) = self.id {
-            sqlx::query_file!(
-                "db/involvement/update.sql",
+            sqlx::query!(
+                r#"
+update c_involvement set exterior = $2, interior = $3 where id = $1;
+                "#,
                 id,
                 serde_json::to_value(&self.exterior)?,
                 serde_json::to_value(&self.interior)?,
@@ -215,8 +293,10 @@ impl Involvement {
             .execute(db)
             .await?;
         } else {
-            let rec = sqlx::query_file!(
-                "db/involvement/insert.sql",
+            let rec = sqlx::query!(
+                r#"
+insert into c_involvement (exterior, interior) values ($1, $2) returning id;
+                "#,
                 serde_json::to_value(&self.exterior)?,
                 serde_json::to_value(&self.interior)?,
             )

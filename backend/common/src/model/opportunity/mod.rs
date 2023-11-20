@@ -943,8 +943,112 @@ impl From<Option<wkb::Decode<Geometry<f64>>>> for MultiPolygon {
     }
 }
 
-const OPP_SELECT_FIELDS: &'static str = r#"
-"#;
+#[macro_export]
+macro_rules! select_opportunity {
+    ($rest:literal, $($arg:expr),*) => {
+        sqlx::query_as!(
+            crate::model::opportunity::Opportunity,
+            r#"
+            SELECT
+              "o"."id" AS "id: _",
+              "o"."uid" AS "uid: _",
+              "o"."slug" AS "slug: _",
+              "o"."partner_name" AS "partner_name: _",
+              "o"."partner_website" AS "partner_website: _",
+              "o"."partner_logo_url" AS "partner_logo_url: _",
+              "o"."partner_created" AS "partner_created: _",
+              "o"."partner_updated" AS "partner_updated: _",
+              "o"."partner_opp_url" AS "partner_opp_url: _",
+              "o"."organization_name" AS "organization_name: _",
+              "o"."organization_type" AS "organization_type: _",
+              "o"."organization_website" AS "organization_website: _",
+              "o"."organization_logo_url" AS "organization_logo_url: _",
+              "o"."entity_type" AS "entity_type: _",
+              "o"."min_age" AS "min_age: _",
+              "o"."max_age" AS "max_age: _",
+              "o"."pes_domain" AS "pes_domain: _",
+              "o"."ticket_required" AS "ticket_required: _",
+              "o"."title" AS "title: _",
+              "o"."description" AS "description: _",
+              "o"."short_desc" AS "short_desc: _",
+              "o"."image_url" AS "image_url: _",
+              "o"."image_credit" AS "image_credit: _",
+              "o"."recurrence" AS "recurrence: _",
+              "o"."end_recurrence" AS "end_recurrence: _",
+              "o"."timezone" AS "timezone: _",
+              "o"."cost" AS "cost: _",
+              "o"."is_online" AS "is_online: _",
+              "o"."location_type" AS "location_type: _",
+              "o"."location_name" AS "location_name: _",
+              ST_AsBinary("o"."location_point") AS "location_point: geozero::wkb::Decode<geo::Geometry<f64>>",
+              ST_AsBinary("o"."location_polygon") AS "location_polygon: geozero::wkb::Decode<geo::Geometry<f64>>",
+              "o"."address_street" AS "address_street: _",
+              "o"."address_city" AS "address_city: _",
+              "o"."address_state" AS "address_state: _",
+              "o"."address_country" AS "address_country: _",
+              "o"."address_zip" AS "address_zip: _",
+              "o"."partner" AS "partner: _"
+            FROM
+              "c_opportunity" AS "o"
+            "# + $rest,
+            $($arg),*
+        )
+    }
+}
+
+#[macro_export]
+macro_rules! select_opportunity_with_overlay {
+    ($rest:literal, $($arg:expr),*) => {
+        sqlx::query_as!(
+            crate::model::opportunity::Opportunity,
+            /*sql*/
+            r#"
+            SELECT
+              "o"."id" AS "id: _",
+              "o"."uid" AS "uid: _",
+              "o"."slug" AS "slug: _",
+              COALESCE("ov"."partner_name", "o"."partner_name") AS "partner_name!: _",
+              COALESCE("ov"."partner_website", "o"."partner_website") AS "partner_website: _",
+              COALESCE("ov"."partner_logo_url", "o"."partner_logo_url") AS "partner_logo_url: _",
+              "o"."partner_created" AS "partner_created: _",
+              "o"."partner_updated" AS "partner_updated: _",
+              COALESCE("ov"."partner_opp_url", "o"."partner_opp_url") AS "partner_opp_url: _",
+              COALESCE("ov"."organization_name", "o"."organization_name") AS "organization_name!: _",
+              COALESCE("ov"."organization_type", "o"."organization_type") AS "organization_type!: _",
+              COALESCE("ov"."organization_website", "o"."organization_website") AS "organization_website: _",
+              COALESCE("ov"."organization_logo_url", "o"."organization_logo_url") AS "organization_logo_url: _",
+              COALESCE("ov"."entity_type", "o"."entity_type") AS "entity_type!: _",
+              COALESCE("ov"."min_age", "o"."min_age") AS "min_age!: _",
+              COALESCE("ov"."max_age", "o"."max_age") AS "max_age!: _",
+              COALESCE("ov"."pes_domain", "o"."pes_domain") AS "pes_domain!: _",
+              COALESCE("ov"."ticket_required", "o"."ticket_required") AS "ticket_required!: _",
+              COALESCE("ov"."title", "o"."title") AS "title!: _",
+              COALESCE("ov"."description", "o"."description") AS "description!: _",
+              COALESCE("ov"."short_desc", "o"."short_desc") AS "short_desc!: _",
+              COALESCE("ov"."image_url", "o"."image_url") AS "image_url!: _",
+              COALESCE("ov"."image_credit", "o"."image_credit") AS "image_credit!: _",
+              COALESCE("ov"."recurrence", "o"."recurrence") AS "recurrence!: _",
+              COALESCE("ov"."end_recurrence", "o"."end_recurrence") AS "end_recurrence: _",
+              COALESCE("ov"."timezone", "o"."timezone") AS "timezone: _",
+              COALESCE("ov"."cost", "o"."cost") AS "cost!: _",
+              COALESCE("ov"."is_online", "o"."is_online") AS "is_online!: _",
+              COALESCE("ov"."location_type", "o"."location_type") AS "location_type!: _",
+              COALESCE("ov"."location_name", "o"."location_name") AS "location_name!: _",
+              ST_AsBinary(COALESCE("ov"."location_point", "o"."location_point")) AS "location_point: wkb::Decode<geo::Geometry<f64>>",
+              ST_AsBinary(COALESCE("ov"."location_polygon", "o"."location_polygon")) AS "location_polygon: wkb::Decode<geo::Geometry<f64>>",
+              COALESCE("ov"."address_street", "o"."address_street") AS "address_street!: _",
+              COALESCE("ov"."address_city", "o"."address_city") AS "address_city!: _",
+              COALESCE("ov"."address_state", "o"."address_state") AS "address_state!: _",
+              COALESCE("ov"."address_country", "o"."address_country") AS "address_country!: _",
+              COALESCE("ov"."address_zip", "o"."address_zip") AS "address_zip!: _",
+              "o"."partner" AS "partner: _"
+            FROM
+              c_opportunity AS "o" LEFT JOIN c_opportunity_overlay AS "ov" ON "o"."id" = "ov"."opportunity_id"
+            "# + $rest,
+            $($arg),*
+        )
+    }
+}
 
 #[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
@@ -2271,156 +2375,42 @@ impl Opportunity {
     }
 
     pub async fn load_by_id(db: &Database, id: i32) -> Result<Opportunity, Error> {
-        Ok(sqlx::query_as!(
-            Opportunity,
-            /*sql*/
-            r#"
-            SELECT
-              "id" AS "id: _",
-              "uid" AS "uid: _",
-              "slug" AS "slug: _",
-              "partner_name" AS "partner_name: _",
-              "partner_website" AS "partner_website: _",
-              "partner_logo_url" AS "partner_logo_url: _",
-              "partner_created" AS "partner_created: _",
-              "partner_updated" AS "partner_updated: _",
-              "partner_opp_url" AS "partner_opp_url: _",
-              "organization_name" AS "organization_name: _",
-              "organization_type" AS "organization_type: _",
-              "organization_website" AS "organization_website: _",
-              "organization_logo_url" AS "organization_logo_url: _",
-              "entity_type" AS "entity_type: _",
-              "min_age" AS "min_age: _",
-              "max_age" AS "max_age: _",
-              "pes_domain" AS "pes_domain: _",
-              "ticket_required" AS "ticket_required: _",
-              "title" AS "title: _",
-              "description" AS "description: _",
-              "short_desc" AS "short_desc: _",
-              "image_url" AS "image_url: _",
-              "image_credit" AS "image_credit: _",
-              "recurrence" AS "recurrence: _",
-              "end_recurrence" AS "end_recurrence: _",
-              "timezone" AS "timezone: _",
-              "cost" AS "cost: _",
-              "is_online" AS "is_online: _",
-              "location_type" AS "location_type: _",
-              "location_name" AS "location_name: _",
-              ST_AsBinary("location_point") AS "location_point: wkb::Decode<geo::Geometry<f64>>",
-              ST_AsBinary("location_polygon") AS "location_polygon: wkb::Decode<geo::Geometry<f64>>",
-              "address_street" AS "address_street: _",
-              "address_city" AS "address_city: _",
-              "address_state" AS "address_state: _",
-              "address_country" AS "address_country: _",
-              "address_zip" AS "address_zip: _",
-              "partner" AS "partner: _"
-            FROM
-              c_opportunity
-            WHERE
-              id = $1
-            LIMIT 1
-            "#, /*sql*/
-            id
-        )
-        .fetch_one(db)
-        .await?)
+        Ok(select_opportunity!(r#"WHERE "id" = $1"#, id)
+            .fetch_one(db)
+            .await?)
     }
 
     pub async fn load_by_id_with_overlay(db: &Database, id: i32) -> Result<Opportunity, Error> {
-        Ok(sqlx::query_as!(
-            Opportunity,
-            /*sql*/
-            r#"
-            SELECT
-              op."id" AS "id: _",
-              op."uid" AS "uid: _",
-              op."slug" AS "slug: _",
-              COALESCE(ov."partner_name", op."partner_name") AS "partner_name!: _",
-              COALESCE(ov."partner_website", op."partner_website") AS "partner_website: _",
-              COALESCE(ov."partner_logo_url", op."partner_logo_url") AS "partner_logo_url: _",
-              op."partner_created" AS "partner_created: _",
-              op."partner_updated" AS "partner_updated: _",
-              COALESCE(ov."partner_opp_url", op."partner_opp_url") AS "partner_opp_url: _",
-              COALESCE(ov."organization_name", op."organization_name") AS "organization_name!: _",
-              COALESCE(ov."organization_type", op."organization_type") AS "organization_type!: _",
-              COALESCE(ov."organization_website", op."organization_website") AS "organization_website: _",
-              COALESCE(ov."organization_logo_url", op."organization_logo_url") AS "organization_logo_url: _",
-              COALESCE(ov."entity_type", op."entity_type") AS "entity_type!: _",
-              COALESCE(ov."min_age", op."min_age") AS "min_age!: _",
-              COALESCE(ov."max_age", op."max_age") AS "max_age!: _",
-              COALESCE(ov."pes_domain", op."pes_domain") AS "pes_domain!: _",
-              COALESCE(ov."ticket_required", op."ticket_required") AS "ticket_required!: _",
-              COALESCE(ov."title", op."title") AS "title!: _",
-              COALESCE(ov."description", op."description") AS "description!: _",
-              COALESCE(ov."short_desc", op."short_desc") AS "short_desc!: _",
-              COALESCE(ov."image_url", op."image_url") AS "image_url!: _",
-              COALESCE(ov."image_credit", op."image_credit") AS "image_credit!: _",
-              COALESCE(ov."recurrence", op."recurrence") AS "recurrence!: _",
-              COALESCE(ov."end_recurrence", op."end_recurrence") AS "end_recurrence: _",
-              COALESCE(ov."timezone", op."timezone") AS "timezone: _",
-              COALESCE(ov."cost", op."cost") AS "cost!: _",
-              COALESCE(ov."is_online", op."is_online") AS "is_online!: _",
-              COALESCE(ov."location_type", op."location_type") AS "location_type!: _",
-              COALESCE(ov."location_name", op."location_name") AS "location_name!: _",
-              ST_AsBinary(COALESCE(ov."location_point", op."location_point")) AS "location_point: wkb::Decode<geo::Geometry<f64>>",
-              ST_AsBinary(COALESCE(ov."location_polygon", op."location_polygon")) AS "location_polygon: wkb::Decode<geo::Geometry<f64>>",
-              COALESCE(ov."address_street", op."address_street") AS "address_street!: _",
-              COALESCE(ov."address_city", op."address_city") AS "address_city!: _",
-              COALESCE(ov."address_state", op."address_state") AS "address_state!: _",
-              COALESCE(ov."address_country", op."address_country") AS "address_country!: _",
-              COALESCE(ov."address_zip", op."address_zip") AS "address_zip!: _",
-              op."partner" AS "partner: _"
-            FROM
-              c_opportunity op LEFT JOIN c_opportunity_overlay ov ON op."id" = ov."opportunity_id"
-            WHERE
-              op."id" = $1
-            LIMIT 1
-            "#,/*sql*/
-            id
+        Ok(
+            select_opportunity_with_overlay!(r#"WHERE "o"."id" = $1"#, id)
+                .fetch_one(db)
+                .await?,
         )
-        .fetch_one(db)
-        .await?)
     }
 
     pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<Opportunity, Error> {
-        let rec = sqlx::query_file!("db/opportunity/get_by_uid.sql", serde_json::to_value(uid)?)
+        Ok(select_opportunity!(r#"WHERE "uid" = $1"#, uid)
             .fetch_one(db)
-            .await?;
-
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+            .await?)
     }
 
     pub async fn load_by_uid_with_overlay(db: &Database, uid: &Uuid) -> Result<Opportunity, Error> {
-        let rec = sqlx::query_file!(
-            "db/opportunity/get_by_uid_with_overlay.sql",
-            serde_json::to_value(uid)?
-        )
-        .fetch_one(db)
-        .await?;
-
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        Ok(select_opportunity_with_overlay!(r#"WHERE "uid" = $1"#, uid)
+            .fetch_one(db)
+            .await?)
     }
 
     pub async fn id_by_uid(db: &Database, uid: &Uuid) -> Result<Option<i32>, Error> {
-        let rec = sqlx::query_file!("db/opportunity/id_by_uid.sql", serde_json::to_value(uid)?)
+        let rec = sqlx::query!(r#"SELECT "id" FROM c_opportunity WHERE "uid" = $1"#, uid)
             .fetch_optional(db)
             .await?;
-
         Ok(rec.map(|row| row.id))
     }
 
     pub async fn exists_by_uid(db: &Database, uid: &Uuid) -> Result<bool, Error> {
-        let rec = sqlx::query_file!(
-            "db/opportunity/exists_by_uid.sql",
-            serde_json::to_value(uid)?
+        let rec = sqlx::query!(
+            r#"SELECT exists(SELECT 1 FROM c_opportunity WHERE "uid" = $1)"#,
+            uid
         )
         .fetch_one(db)
         .await?;
@@ -2437,52 +2427,51 @@ impl Opportunity {
     }
 
     pub async fn load_by_slug(db: &Database, slug: &str) -> Result<Opportunity, Error> {
-        let rec = sqlx::query_file!("db/opportunity/get_by_slug.sql", slug)
+        Ok(select_opportunity!(r#"WHERE "slug" = lower($1)"#, slug)
             .fetch_one(db)
-            .await?;
-
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+            .await?)
     }
 
     pub async fn load_by_slug_with_overlay(
         db: &Database,
         slug: &str,
     ) -> Result<Opportunity, Error> {
-        let rec = sqlx::query_file!("db/opportunity/get_by_slug_with_overlay.sql", slug)
-            .fetch_one(db)
-            .await?;
-
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        Ok(
+            select_opportunity_with_overlay!(r#"WHERE "slug" = lower($1)"#, slug)
+                .fetch_one(db)
+                .await?,
+        )
     }
 
     pub async fn id_by_slug(db: &Database, slug: &str) -> Result<Option<i32>, Error> {
-        let rec = sqlx::query_file!("db/opportunity/id_by_slug.sql", slug)
-            .fetch_optional(db)
-            .await?;
+        let rec = sqlx::query!(
+            r#"SELECT "id" from c_opportunity WHERE "slug" = lower($1)"#,
+            slug
+        )
+        .fetch_optional(db)
+        .await?;
 
         Ok(rec.map(|row| row.id))
     }
 
     pub async fn uid_by_slug(db: &Database, slug: &str) -> Result<Option<Uuid>, Error> {
-        let rec = sqlx::query_file!("db/opportunity/uid_by_slug.sql", slug)
-            .fetch_optional(db)
-            .await?;
+        let rec = sqlx::query!(
+            r#"SELECT "uid" FROM c_opportunity WHERE "slug" = lower($1)"#,
+            slug
+        )
+        .fetch_optional(db)
+        .await?;
 
-        Ok(rec.map(|row| row.uid).flatten())
+        Ok(rec.map(|row| row.uid))
     }
 
     pub async fn exists_by_slug(db: &Database, slug: &str) -> Result<bool, Error> {
-        let rec = sqlx::query_file!("db/opportunity/exists_by_slug.sql", slug)
-            .fetch_one(db)
-            .await?;
+        let rec = sqlx::query!(
+            r#"SELECT exists(SELECT 1 FROM c_opportunity WHERE "slug" = lower($1))"#,
+            slug
+        )
+        .fetch_one(db)
+        .await?;
 
         Ok(rec.exists.unwrap_or(false))
     }

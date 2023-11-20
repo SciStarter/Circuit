@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::{cache_json, Database};
+use crate::{cache_json, model::opportunity::Domain, Database};
 
 static OPENCAGE_API_KEY: Lazy<String> =
     Lazy::new(|| std::env::var("OPENCAGE_API_KEY").unwrap_or_else(|_| String::new()));
@@ -203,12 +203,12 @@ pub async fn opp_regional_detailed_counts(
         r#"
 SELECT COUNT(x.*) AS "result!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  SELECT DISTINCT ON (o."title", o."partner") 1
   FROM c_opportunity o
   WHERE
-    o.exterior->>'location_type' = 'any' AND
-    c_opportunity_is_current(o.interior, o.exterior)
-  ORDER BY exterior->>'title', exterior->>'partner'
+    o."location_type" = 'any' AND
+    c_opportunity_is_current(o)
+  ORDER BY "title", "partner"
 ) x
 "#
     )
@@ -217,22 +217,22 @@ FROM (
 
     let anywhere_domains = sqlx::query!(
         r#"
-SELECT x.exterior->>'pes_domain' AS "domain!", COUNT(x.*) AS "total!"
+SELECT x."pes_domain" AS "domain!: Domain", COUNT(x.*) AS "total!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *
+  SELECT DISTINCT ON (o."title", o."partner") *
   FROM c_opportunity o
   WHERE
-    c_opportunity_is_current(o.interior, o.exterior) AND
-    o.exterior->>'pes_domain' != 'unspecified' AND
-    o.exterior->>'location_type' = 'any'
-  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+    c_opportunity_is_current(o) AND
+    o."pes_domain" != 'unspecified' AND
+    o."location_type" = 'any'
+  ORDER BY o."title", o."partner"
   ) x
-GROUP BY exterior->>'pes_domain'
+GROUP BY "pes_domain"
 ORDER BY "total!" DESC
 "#
     )
     .map(|row| OverviewDomain {
-        name: row.domain.to_owned(),
+        name: row.domain.as_ref().to_owned(),
         value: row.total,
     })
     .fetch_all(&db)
@@ -244,13 +244,13 @@ ORDER BY "total!" DESC
             r#"
 SELECT COUNT(x.*) AS "result!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  SELECT DISTINCT ON (o."title", o."partner") 1
   FROM c_opportunity o JOIN c_region r ON r."name" = $1
   WHERE
-    exterior->>'location_type' = 'at' AND
-    c_opportunity_is_current(o.interior, o.exterior) AND
+    "location_type" = 'at' AND
+    c_opportunity_is_current(o) AND
     ST_Intersects(o.location_point, r.geometry)
-  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+  ORDER BY o."title", o."partner"
 ) x
 "#,
             &name
@@ -259,24 +259,24 @@ FROM (
         .await?;
         let points_domains = sqlx::query!(
             r#"
-SELECT x.exterior->>'pes_domain' AS "domain!", COUNT(x.*) AS "total!"
+SELECT x."pes_domain" AS "domain!: Domain", COUNT(x.*) AS "total!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *
+  SELECT DISTINCT ON (o."title", o."partner") *
   FROM c_opportunity o JOIN c_region r ON r."name" = $1
   WHERE
-    c_opportunity_is_current(o.interior, o.exterior) AND
-    o.exterior->>'pes_domain' != 'unspecified' AND
-    o.exterior->>'location_type' = 'at' AND
+    c_opportunity_is_current(o) AND
+    o."pes_domain" != 'unspecified' AND
+    o."location_type" = 'at' AND
     ST_Intersects(o.location_point, r.geometry)
-  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+  ORDER BY o."title", o."partner"
 ) x
-GROUP BY x.exterior->>'pes_domain'
+GROUP BY x."pes_domain"
 ORDER BY "total!" DESC
 "#,
             &name
         )
         .map(|row| OverviewDomain {
-            name: row.domain.to_owned(),
+            name: row.domain.as_ref().to_owned(),
             value: row.total,
         })
         .fetch_all(&db)
@@ -286,13 +286,13 @@ ORDER BY "total!" DESC
             r#"
 SELECT COUNT(x.*) AS "result!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  SELECT DISTINCT ON (o."title", o."partner") 1
   FROM c_opportunity o JOIN c_region r ON r."name" = $1
   WHERE
-    o.exterior->>'location_type' = 'near' AND
-    c_opportunity_is_current(o.interior, o.exterior) AND
+    o."location_type" = 'near' AND
+    c_opportunity_is_current(o) AND
     ST_Intersects(o.location_polygon, r.geometry)
-  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+  ORDER BY o."title", o."partner"
 ) x
 "#,
             &name
@@ -302,24 +302,24 @@ FROM (
 
         let polygons_domains = sqlx::query!(
             r#"
-SELECT x.exterior->>'pes_domain' AS "domain!", COUNT(x.*) AS "total!"
+SELECT x."pes_domain" AS "domain!: Domain", COUNT(x.*) AS "total!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *
+  SELECT DISTINCT ON (o."title", o."partner") *
   FROM c_opportunity o JOIN c_region r ON r."name" = $1
   WHERE
-    c_opportunity_is_current(o.interior, o.exterior) AND
-    o.exterior->>'pes_domain' != 'unspecified' AND
-    o.exterior->>'location_type' = 'near' AND
+    c_opportunity_is_current(o) AND
+    o."pes_domain" != 'unspecified' AND
+    o."location_type" = 'near' AND
     ST_Intersects(o.location_polygon, r.geometry)
-  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+  ORDER BY o."title", o."partner"
 ) x
-GROUP BY x.exterior->>'pes_domain'
+GROUP BY x."pes_domain"
 ORDER BY "total!" DESC
 "#,
             &name
         )
         .map(|row| OverviewDomain {
-            name: row.domain.to_owned(),
+            name: row.domain.as_ref().to_owned(),
             value: row.total,
         })
         .fetch_all(&db)
@@ -336,12 +336,12 @@ ORDER BY "total!" DESC
             r#"
 SELECT COUNT(x.*) AS "result!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  SELECT DISTINCT ON (o."title", o."partner") 1
   FROM c_opportunity o
   WHERE
-    exterior->>'location_type' = 'at' AND
-    c_opportunity_is_current(o.interior, o.exterior)
-  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+    "location_type" = 'at' AND
+    c_opportunity_is_current(o)
+  ORDER BY o."title", o."partner"
 ) x
 "#
         )
@@ -350,22 +350,22 @@ FROM (
 
         let points_domains = sqlx::query!(
             r#"
-SELECT x.exterior->>'pes_domain' AS "domain!", COUNT(x.*) AS "total!"
+SELECT x."pes_domain" AS "domain!: Domain", COUNT(x.*) AS "total!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *
+  SELECT DISTINCT ON (o."title", o."partner") *
   FROM c_opportunity o
   WHERE
-    c_opportunity_is_current(o.interior, o.exterior) AND
-    o.exterior->>'pes_domain' != 'unspecified' AND
-    o.exterior->>'location_type' = 'at'
-  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+    c_opportunity_is_current(o) AND
+    o."pes_domain" != 'unspecified' AND
+    o."location_type" = 'at'
+  ORDER BY o."title", o."partner"
 ) x
-GROUP BY x.exterior->>'pes_domain'
+GROUP BY x."pes_domain"
 ORDER BY "total!" DESC
 "#
         )
         .map(|row| OverviewDomain {
-            name: row.domain.to_owned(),
+            name: row.domain.as_ref().to_owned(),
             value: row.total,
         })
         .fetch_all(&db)
@@ -375,12 +375,12 @@ ORDER BY "total!" DESC
             r#"
 SELECT COUNT(x.*) AS "result!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  SELECT DISTINCT ON (o."title", o."partner") 1
   FROM c_opportunity o
   WHERE
-    o.exterior->>'location_type' = 'near' AND
-    c_opportunity_is_current(o.interior, o.exterior) 
-  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+    o."location_type" = 'near' AND
+    c_opportunity_is_current(o) 
+  ORDER BY o."title", o."partner"
 ) x
 "#
         )
@@ -389,22 +389,22 @@ FROM (
 
         let polygons_domains = sqlx::query!(
             r#"
-SELECT x.exterior->>'pes_domain' AS "domain!", COUNT(x.*) AS "total!"
+SELECT x."pes_domain" AS "domain!: Domain", COUNT(x.*) AS "total!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *
+  SELECT DISTINCT ON (o."title", o."partner") *
   FROM c_opportunity o
   WHERE
-    c_opportunity_is_current(o.interior, o.exterior) AND
-    o.exterior->>'pes_domain' != 'unspecified' AND
-    o.exterior->>'location_type' = 'near'
-  ORDER BY o.exterior->>'title', o.exterior->>'partner'
+    c_opportunity_is_current(o) AND
+    o."pes_domain" != 'unspecified' AND
+    o."location_type" = 'near'
+  ORDER BY o."title", o."partner"
 ) x
-GROUP BY x.exterior->>'pes_domain'
+GROUP BY x."pes_domain"
 ORDER BY "total!" DESC
 "#
         )
         .map(|row| OverviewDomain {
-            name: row.domain.to_owned(),
+            name: row.domain.as_ref().to_owned(),
             value: row.total,
         })
         .fetch_all(&db)
@@ -442,99 +442,53 @@ pub async fn opps_regional_overview_calc(db: Database) -> Result<serde_json::Val
         r#"
 SELECT COUNT(x.*) AS "result!"
 FROM (
-  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
+  SELECT DISTINCT ON (o."title", o."partner") 1
   FROM c_opportunity o
   WHERE
-    o.exterior->>'location_type' = 'any' AND
-    c_opportunity_is_current(o.interior, o.exterior)
-  ORDER BY exterior->>'title', exterior->>'partner'
+    o."location_type" = 'any' AND
+    c_opportunity_is_current(o)
+  ORDER BY "title", "partner"
 ) x
 "#
     )
     .fetch_one(&db)
     .await?;
 
-    // !! SQLx versions <= 0.7.1 fail to parse the EXPLAIN output for this query during compile
-    //     let states: BTreeMap<String, OverviewState> = sqlx::query!(
-    //         r#"
-    // SELECT
-    //   r."name" AS "name!",
-    //   (
-    //     SELECT COUNT(x.*)
-    //     FROM (
-    //       SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
-    //       FROM c_opportunity o
-    //       WHERE
-    //         c_opportunity_is_current(o.interior, o.exterior) AND
-    //         ST_Intersects(r.geometry, o.location_point)
-    //       ORDER BY o.exterior->>'title', o.exterior->>'partner'
-    //     ) x
-    //   ) AS "point!",
-    //   (
-    //     SELECT COUNT(x.*)
-    //     FROM (
-    //       SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
-    //       FROM c_opportunity o
-    //       WHERE
-    //         c_opportunity_is_current(o.interior, o.exterior) AND
-    //         ST_Intersects(r.geometry, o.location_polygon)
-    //       ORDER BY o.exterior->>'title', o.exterior->>'partner'
-    //     ) x
-    //   ) AS "polygon!"
-    //   FROM c_region r
-    // "#
-    //     )
-    //     .map(|row| {
-    //         (
-    //             row.name.to_owned(),
-    //             OverviewState {
-    //                 point: row.point,
-    //                 polygon: row.polygon,
-    //             },
-    //         )
-    //     })
-    //     .fetch_all(&db)
-    //     .await?
-    //     .into_iter()
-    //     .collect();
-
-    // Temporary runtime solution instead
-    use sqlx::Row;
-    let states: BTreeMap<String, OverviewState> = sqlx::query(
+    let states: BTreeMap<String, OverviewState> = sqlx::query!(
         r#"
-SELECT
-  r."name" AS "name!",
-  (
-    SELECT COUNT(x.*)
-    FROM (
-      SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
-      FROM c_opportunity o
-      WHERE
-        c_opportunity_is_current(o.interior, o.exterior) AND
-        ST_Intersects(r.geometry, o.location_point)
-      ORDER BY o.exterior->>'title', o.exterior->>'partner'
-    ) x
-  ) AS "point!",
-  (
-    SELECT COUNT(x.*)
-    FROM (
-      SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') 1
-      FROM c_opportunity o
-      WHERE
-        c_opportunity_is_current(o.interior, o.exterior) AND
-        ST_Intersects(r.geometry, o.location_polygon)
-      ORDER BY o.exterior->>'title', o.exterior->>'partner'
-    ) x
-  ) AS "polygon!"
-FROM c_region r
-"#,
+    SELECT
+      r."name" AS "name!",
+      (
+        SELECT COUNT(x.*)
+        FROM (
+          SELECT DISTINCT ON (o."title", o."partner") 1
+          FROM c_opportunity o
+          WHERE
+            c_opportunity_is_current(o) AND
+            ST_Intersects(r.geometry, o.location_point)
+          ORDER BY o."title", o."partner"
+        ) x
+      ) AS "point!",
+      (
+        SELECT COUNT(x.*)
+        FROM (
+          SELECT DISTINCT ON (o."title", o."partner") 1
+          FROM c_opportunity o
+          WHERE
+            c_opportunity_is_current(o) AND
+            ST_Intersects(r.geometry, o.location_polygon)
+          ORDER BY o."title", o."partner"
+        ) x
+      ) AS "polygon!"
+      FROM c_region r
+    "#
     )
-    .map(|row: sqlx::postgres::PgRow| {
+    .map(|row| {
         (
-            row.get("name!"),
+            row.name.to_owned(),
             OverviewState {
-                point: row.get("point!"),
-                polygon: row.get("polygon!"),
+                point: row.point,
+                polygon: row.polygon,
             },
         )
     })
@@ -542,6 +496,51 @@ FROM c_region r
     .await?
     .into_iter()
     .collect();
+
+    // Temporary runtime solution instead
+    // use sqlx::Row;
+    //     let states: BTreeMap<String, OverviewState> = sqlx::query(
+    //         r#"
+    // SELECT
+    //   r."name" AS "name!",
+    //   (
+    //     SELECT COUNT(x.*)
+    //     FROM (
+    //       SELECT DISTINCT ON (o."title", o."partner") 1
+    //       FROM c_opportunity o
+    //       WHERE
+    //         c_opportunity_is_current(o.interior, o.exterior) AND
+    //         ST_Intersects(r.geometry, o.location_point)
+    //       ORDER BY o."title", o."partner"
+    //     ) x
+    //   ) AS "point!",
+    //   (
+    //     SELECT COUNT(x.*)
+    //     FROM (
+    //       SELECT DISTINCT ON (o."title", o."partner") 1
+    //       FROM c_opportunity o
+    //       WHERE
+    //         c_opportunity_is_current(o.interior, o.exterior) AND
+    //         ST_Intersects(r.geometry, o.location_polygon)
+    //       ORDER BY o."title", o."partner"
+    //     ) x
+    //   ) AS "polygon!"
+    // FROM c_region r
+    // "#,
+    //     )
+    //     .map(|row: sqlx::postgres::PgRow| {
+    //         (
+    //             row.get("name!"),
+    //             OverviewState {
+    //                 point: row.get("point!"),
+    //                 polygon: row.get("polygon!"),
+    //             },
+    //         )
+    //     })
+    //     .fetch_all(&db)
+    //     .await?
+    //     .into_iter()
+    //     .collect();
     // End of temporary runtime solution
 
     let counts = opp_regional_detailed_counts(db.clone(), None).await?;

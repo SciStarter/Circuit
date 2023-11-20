@@ -13,7 +13,23 @@ pub async fn reviews_for_slug(db: &Database, slug: &str) -> Result<Reviews, Erro
         reviews: vec![],
     };
 
-    let mut stream = sqlx::query_file_as!(Review, "db/opportunity/all_reviews.sql", slug).fetch(db);
+    let mut stream = sqlx::query_as!(
+        Review,
+        r#"
+        SELECT R."id", R."person", R."rating", R."comment", R."when",
+          CASE WHEN P."exterior" IS NOT null THEN (P."exterior" ->> 'username') ELSE '' END AS "username",
+          CASE WHEN P."exterior" IS NOT null THEN (P."exterior" ->> 'image_url') ELSE '' END AS "image_url"
+        FROM
+          c_opportunity_review R
+          INNER JOIN c_opportunity O on R.opportunity_id = O.id
+          LEFT OUTER JOIN c_person P on R.person = (P.exterior ->> 'uid')::uuid
+        WHERE
+          O."slug" = lower($1)
+        ORDER BY
+          R."when" DESC
+        "#,
+        slug
+    ).fetch(db);
 
     while let Some(result) = stream.next().await {
         let review = result?;
@@ -39,19 +55,19 @@ pub async fn add_review_for_slug(
         .await?
         .ok_or_else(|| Error::NoSuch("opportunity"))?;
 
-    let result = sqlx::query(
-        r"
-            insert into c_opportunity_review (opportunity_id, person, rating, comment)
-            values ($1, $2, $3, $4)
-            on conflict (opportunity_id, person) do update set rating = $3, comment = $4
-            returning id
-        ",
+    let result = sqlx::query!(
+        r#"
+        INSERT INTO c_opportunity_review (opportunity_id, person, rating, comment)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (opportunity_id, person) DO UPDATE SET rating = $3, comment = $4
+        RETURNING id
+        "#,
+        opp_id,
+        person,
+        rating,
+        comment
     )
-    .bind(opp_id)
-    .bind(person)
-    .bind(rating)
-    .bind(comment)
-    .map(|row| row.get::<i32, _>(0))
+    .map(|row| row.id)
     .fetch_one(db)
     .await?;
 
@@ -59,10 +75,12 @@ pub async fn add_review_for_slug(
 }
 
 pub async fn report_review(db: &Database, id: i32) -> Result<(), Error> {
-    sqlx::query("update c_opportunity_review set flags = flags + 1 where id = $1")
-        .bind(id)
-        .execute(db)
-        .await?;
+    sqlx::query!(
+        "UPDATE c_opportunity_review SET flags = flags + 1 WHERE id = $1",
+        id
+    )
+    .execute(db)
+    .await?;
     Ok(())
 }
 
@@ -75,7 +93,11 @@ pub async fn add_like_for_slug(
         .await?
         .ok_or_else(|| Error::NoSuch("opportunity"))?;
 
-    sqlx::query_file!("db/opportunity/add_like.sql", opp_id, person.clone())
+    sqlx::query!(
+        r#"INSERT INTO c_opportunity_like ("opportunity_id", "person") VALUES ($1, $2) ON CONFLICT DO NOTHING"#,
+        opp_id,
+        person.clone()
+    )
         .execute(db)
         .await?;
 
@@ -88,7 +110,7 @@ pub async fn remove_like_for_slug(db: &Database, slug: &str, person: &Uuid) -> R
         .ok_or_else(|| Error::NoSuch("opportunity"))?;
 
     sqlx::query!(
-        r#"delete from c_opportunity_like where opportunity_id = $1 and person = $2"#,
+        r#"DELETE FROM c_opportunity_like WHERE opportunity_id = $1 AND person = $2"#,
         opp_id,
         person
     )
@@ -99,7 +121,7 @@ pub async fn remove_like_for_slug(db: &Database, slug: &str, person: &Uuid) -> R
 }
 
 pub async fn likes_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
-    Ok(sqlx::query_file!("db/opportunity/count_likes.sql", slug)
+    Ok(sqlx::query!(r#"SELECT count(*) AS "likes" FROM c_opportunity_like AS "l" INNER JOIN c_opportunity AS "o" ON "l"."opportunity_id" = "o"."id" WHERE "o"."slug" = lower($1)"#, slug)
         .map(|row| row.likes)
         .fetch_one(db)
         .await?
@@ -112,7 +134,10 @@ pub async fn likes_for_slug_and_person(
     person: &Uuid,
 ) -> Result<u32, Error> {
     Ok(
-        sqlx::query_file!("db/opportunity/count_person_likes.sql", slug, person)
+        sqlx::query!(
+            r#"SELECT count(*) AS "likes" FROM c_opportunity_like AS "l" INNER JOIN c_opportunity AS "o" ON "l"."opportunity_id" = "o"."id" WHERE "o"."slug" = lower($1) AND "l"."person" = $2"#,
+            slug,
+            person)
             .map(|row| row.likes)
             .fetch_one(db)
             .await?
@@ -121,13 +146,22 @@ pub async fn likes_for_slug_and_person(
 }
 
 pub async fn saves_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
-    Ok(
-        sqlx::query_file!("db/opportunity/count_saves_by_slug.sql", slug)
-            .map(|row| row.saves)
-            .fetch_one(db)
-            .await?
-            .unwrap_or(0) as u32,
+    Ok(sqlx::query!(
+        r#"
+        SELECT count(*) AS "saves"
+        FROM
+          c_involvement AS "i"
+          INNER JOIN c_opportunity AS "o" ON ("i"."exterior"->>'opportunity')::uuid = "o"."uid"
+        WHERE
+          ("i"."exterior"->'mode')::integer = 20
+          AND "o"."slug" = lower($1)
+        "#,
+        slug
     )
+    .map(|row| row.saves)
+    .fetch_one(db)
+    .await?
+    .unwrap_or(0) as u32)
 }
 
 pub async fn add_save_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
@@ -168,13 +202,22 @@ pub async fn add_interest_for_slug(db: &Database, slug: &str, person: &Uuid) -> 
 }
 
 pub async fn didits_for_slug(db: &Database, slug: &str) -> Result<u32, Error> {
-    Ok(
-        sqlx::query_file!("db/opportunity/count_didit_by_slug.sql", slug)
-            .map(|row| row.didit)
-            .fetch_one(db)
-            .await?
-            .unwrap_or(0) as u32,
+    Ok(sqlx::query!(
+        r#"
+        SELECT count(*) AS "didit"
+        FROM
+          c_involvement AS "i"
+          INNER JOIN c_opportunity AS "o" ON ("i"."exterior"->>'opportunity')::uuid = "o"."uid"
+        WHERE
+          ("i"."exterior"->'mode')::integer >= 30
+          AND "o"."slug" = lower($1)
+        "#,
+        slug
     )
+    .map(|row| row.didit)
+    .fetch_one(db)
+    .await?
+    .unwrap_or(0) as u32)
 }
 
 pub async fn add_didit_for_slug(db: &Database, slug: &str, person: &Uuid) -> Result<(), Error> {
