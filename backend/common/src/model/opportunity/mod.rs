@@ -13,7 +13,7 @@ use geozero::{wkb, ToJson};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use sqlx::postgres::PgArguments;
+use sqlx::postgres::{PgArguments, PgHasArrayType, PgTypeInfo};
 use sqlx::query::Query;
 use sqlx::{prelude::*, Postgres};
 use std::collections::{HashSet, VecDeque};
@@ -74,7 +74,7 @@ impl ReviewStatus {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
 #[sqlx(type_name = "T_Recurrence", rename_all = "snake_case")]
 pub enum Recurrence {
@@ -189,7 +189,7 @@ pub struct PageOptions {
     pub layout: PageLayout,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone, sqlx::Type)]
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
 #[sqlx(type_name = "T_EntityType", rename_all = "snake_case")]
 pub enum EntityType {
@@ -200,6 +200,12 @@ pub enum EntityType {
     #[serde(other)]
     #[default]
     Opportunity,
+}
+
+impl PgHasArrayType for EntityType {
+    fn array_type_info() -> PgTypeInfo {
+        PgTypeInfo::with_name("_T_EntityType")
+    }
 }
 
 impl super::SelectOption for EntityType {
@@ -245,9 +251,20 @@ impl super::SelectOption for EntityType {
 }
 
 #[derive(
-    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    EnumString,
+    AsRefStr,
+    Copy,
+    Clone,
+    PartialEq,
+    sqlx::Type,
 )]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "T_VenueType", rename_all = "snake_case")]
 pub enum VenueType {
     Indoors,
     Outdoors,
@@ -285,7 +302,17 @@ impl super::SelectOption for VenueType {
 }
 
 #[derive(
-    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,, sqlx::Type
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    EnumString,
+    AsRefStr,
+    Copy,
+    Clone,
+    PartialEq,
+    sqlx::Type,
 )]
 #[serde(rename_all = "snake_case")]
 #[sqlx(type_name = "T_PESDomain", rename_all = "snake_case")]
@@ -389,6 +416,12 @@ pub enum Descriptor {
     Workshop,
 }
 
+impl PgHasArrayType for Descriptor {
+    fn array_type_info() -> PgTypeInfo {
+        PgTypeInfo::with_name("_T_Descriptor")
+    }
+}
+
 impl std::fmt::Display for Descriptor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let json = serde_json::to_string(self).map_err(|_| std::fmt::Error)?;
@@ -473,6 +506,12 @@ pub enum Topic {
     Sound,
     Technology,
     Transportation,
+}
+
+impl PgHasArrayType for Topic {
+    fn array_type_info() -> PgTypeInfo {
+        PgTypeInfo::with_name("_T_Topic")
+    }
 }
 
 impl std::fmt::Display for Topic {
@@ -889,16 +928,19 @@ pub struct OpportunitySocialHandle {
     pub handle: String,
 }
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+type IntoWKB = Option<wkb::Encode<Geometry<f64>>>;
+type FromWKB = Option<wkb::Decode<Geometry<f64>>>;
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 #[serde(transparent)]
 pub struct Point(Option<geo::Point>);
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 #[serde(transparent)]
 pub struct MultiPolygon(Option<geo::MultiPolygon>);
 
-impl Into<Option<wkb::Encode<Geometry<f64>>>> for Point {
-    fn into(self) -> Option<wkb::Encode<Geometry<f64>>> {
+impl Into<IntoWKB> for Point {
+    fn into(self) -> IntoWKB {
         if let Some(p) = self.0 {
             Some(wkb::Encode(Geometry::Point(p)))
         } else {
@@ -907,8 +949,8 @@ impl Into<Option<wkb::Encode<Geometry<f64>>>> for Point {
     }
 }
 
-impl Into<Option<wkb::Encode<Geometry<f64>>>> for MultiPolygon {
-    fn into(self) -> Option<wkb::Encode<Geometry<f64>>> {
+impl Into<IntoWKB> for MultiPolygon {
+    fn into(self) -> IntoWKB {
         if let Some(p) = self.0 {
             Some(wkb::Encode(Geometry::MultiPolygon(p)))
         } else {
@@ -917,8 +959,8 @@ impl Into<Option<wkb::Encode<Geometry<f64>>>> for MultiPolygon {
     }
 }
 
-impl From<Option<wkb::Decode<Geometry<f64>>>> for Point {
-    fn from(value: Option<wkb::Decode<Geometry<f64>>>) -> Self {
+impl From<FromWKB> for Point {
+    fn from(value: FromWKB) -> Self {
         if let Some(wkb::Decode {
             geometry: Some(Geometry::Point(p)),
         }) = value
@@ -930,8 +972,8 @@ impl From<Option<wkb::Decode<Geometry<f64>>>> for Point {
     }
 }
 
-impl From<Option<wkb::Decode<Geometry<f64>>>> for MultiPolygon {
-    fn from(value: Option<wkb::Decode<Geometry<f64>>>) -> Self {
+impl From<FromWKB> for MultiPolygon {
+    fn from(value: FromWKB) -> Self {
         if let Some(wkb::Decode {
             geometry: Some(Geometry::MultiPolygon(p)),
         }) = value
@@ -944,8 +986,48 @@ impl From<Option<wkb::Decode<Geometry<f64>>>> for MultiPolygon {
 }
 
 #[macro_export]
+macro_rules! select_opportunity_ref {
+    ($rest:literal, $($arg:expr),* $(,)?) => {
+        sqlx::query_as!(
+            crate::model::opportunity::OpportunityReference,
+            r#"
+            SELECT
+              "o"."uid" AS "uid: _",
+              "o"."slug" AS "slug: _",
+              "o"."title" AS "title: _",
+              "o"."image_url" AS "image_url: _",
+              "o"."short_desc" AS "short_desc: _"
+            FROM
+              "c_opportunity" AS "o"
+            "# + $rest,
+            $($arg),*
+        )
+    }
+}
+
+#[macro_export]
+macro_rules! select_opportunity_ref_with_overlay {
+    ($rest:literal, $($arg:expr),* $(,)?) => {
+        sqlx::query_as!(
+            crate::model::opportunity::OpportunityReference,
+            r#"
+            SELECT
+              "o"."uid" AS "uid: _",
+              "o"."slug" AS "slug: _",
+              coalesce("ov"."title", "o"."title") AS "title: _",
+              coalesce("ov"."image_url", "o"."image_url") AS "image_url: _",
+              coalesce("ov"."short_desc", "o"."short_desc") AS "short_desc: _"
+            FROM
+              c_opportunity AS "o" LEFT JOIN c_opportunity_overlay AS "ov" ON "o"."id" = "ov"."opportunity_id"
+            "# + $rest,
+            $($arg),*
+        )
+    }
+}
+
+#[macro_export]
 macro_rules! select_opportunity {
-    ($rest:literal, $($arg:expr),*) => {
+    ($rest:literal, $($arg:expr),* $(,)?) => {
         sqlx::query_as!(
             crate::model::opportunity::Opportunity,
             r#"
@@ -998,7 +1080,7 @@ macro_rules! select_opportunity {
 
 #[macro_export]
 macro_rules! select_opportunity_with_overlay {
-    ($rest:literal, $($arg:expr),*) => {
+    ($rest:literal, $($arg:expr),* $(,)?) => {
         sqlx::query_as!(
             crate::model::opportunity::Opportunity,
             /*sql*/
@@ -1303,7 +1385,7 @@ impl OpportunityInterior {
                   "extra_data" = excluded."extra_data"
             "#,
             self.opportunity_id,
-            self.accepted,
+            self.accepted.unwrap_or(true),
             self.withdrawn,
             self.submitted_by,
             self.review_status as ReviewStatus,
@@ -1352,6 +1434,16 @@ pub struct OpportunityAll {
     pub exterior: Opportunity,
     #[serde(flatten)]
     pub interior: OpportunityInterior,
+}
+
+#[async_trait::async_trait]
+impl TryFromWithDB<Opportunity> for OpportunityAll {
+    async fn try_from_with_db(db: &Database, source: Opportunity) -> Result<Self, Error> {
+        Ok(OpportunityAll {
+            exterior: source,
+            interior: source.interior(db).await?,
+        })
+    }
 }
 
 impl OpportunityAll {
@@ -1421,8 +1513,9 @@ impl std::fmt::Display for OpportunityReference {
     }
 }
 
-#[derive(Serialize, Default, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Serialize, Default, Deserialize, Debug, Copy, Clone, Eq, PartialEq, sqlx::Type)]
 #[serde(rename_all = "kebab-case")]
+#[sqlx(type_name = "T_OpportunityQueryPhysical", rename_all = "kebab-case")]
 pub enum OpportunityQueryPhysical {
     #[default]
     InPersonOrOnline,
@@ -1430,8 +1523,9 @@ pub enum OpportunityQueryPhysical {
     Online,
 }
 
-#[derive(Serialize, Default, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Serialize, Default, Deserialize, Debug, Copy, Clone, Eq, PartialEq, sqlx::Type)]
 #[serde(rename_all = "kebab-case")]
+#[sqlx(type_name = "T_OpportunityQueryTemporal", rename_all = "kebab-case")]
 pub enum OpportunityQueryTemporal {
     #[default]
     OnDemandOrScheduled,
@@ -1439,8 +1533,9 @@ pub enum OpportunityQueryTemporal {
     OnDemand,
 }
 
-#[derive(Serialize, Default, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Serialize, Default, Deserialize, Debug, Copy, Clone, Eq, PartialEq, sqlx::Type)]
 #[serde(rename_all = "kebab-case")]
+#[sqlx(type_name = "T_OpportunityQueryOrdering", rename_all = "kebab-case")]
 pub enum OpportunityQueryOrdering {
     #[default]
     Alphabetical,
@@ -1459,7 +1554,8 @@ pub enum OpportunityQueryOrdering {
 /// ```
 /// Opportunity::load_matching(db.acquire().await?, OpportunityQuery { title_contains: "hello".to_string(), ..Default::default() })
 /// ```
-#[derive(Default, Serialize, Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug, sqlx::Type)]
+#[sqlx(type_name = "T_OpportunityQuery")]
 pub struct OpportunityQuery {
     pub uid: Option<Uuid>,
     pub slug: Option<String>,
@@ -1487,8 +1583,8 @@ pub struct OpportunityQuery {
     pub venue_type: Option<VenueType>,
     pub host: Option<String>,
     pub sort: Option<OpportunityQueryOrdering>,
-    pub page: Option<u32>,
-    pub per_page: Option<u8>,
+    pub page: Option<i32>,
+    pub per_page: Option<i8>,
     pub involved: Option<Uuid>,
     pub saved: Option<Uuid>,
     pub participated: Option<Uuid>,
@@ -1496,7 +1592,7 @@ pub struct OpportunityQuery {
     pub sample: Option<f32>,
     pub exclude: Option<Vec<Uuid>>,
     pub current: Option<bool>,
-    pub calendar: Option<(u32, u8)>,
+    pub calendar: Option<(i32, i8)>,
     pub region: Option<String>,
 }
 
@@ -2210,38 +2306,32 @@ impl Opportunity {
         ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<OpportunityReference>, Error> {
-        let (query_string, query_params) = build_matching_query(
-            &[
-                "(primary_table.exterior -> 'uid') as uid",
-                "(primary_table.exterior -> 'slug') as slug",
-                "(primary_table.exterior -> 'title') as title",
-                "(primary_table.exterior -> 'image_url') as image_url",
-                "(primary_table.exterior -> 'short_desc') as short_desc",
-            ],
-            query,
-            ordering,
-            pagination,
-        )?;
+        Ok(select_opportunity_ref!(
+            r#"
+            WHERE
+              c_opportunity_matches("o", $1)
+            "#,
+            *query as OpportunityQuery,
+        )
+        .fetch_all(db)
+        .await?)
+    }
 
-        let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
-
-        query_obj
-            .map(|rec| {
-                Ok(OpportunityReference {
-                    uid: serde_json::from_value(rec.get("uid"))?,
-                    slug: serde_json::from_value(
-                        rec.try_get("slug")
-                            .unwrap_or_else(|_| serde_json::Value::String(String::new())),
-                    )?,
-                    title: serde_json::from_value(rec.get("title"))?,
-                    image_url: serde_json::from_value(rec.get("image_url"))?,
-                    short_desc: serde_json::from_value(rec.get("short_desc"))?,
-                })
-            })
-            .fetch_all(db)
-            .await?
-            .into_iter()
-            .collect()
+    pub async fn load_matching_refs_with_overlay(
+        db: &Database,
+        query: &OpportunityQuery,
+        ordering: OpportunityQueryOrdering,
+        pagination: Pagination,
+    ) -> Result<Vec<OpportunityReference>, Error> {
+        Ok(select_opportunity_ref_with_overlay!(
+            r#"
+            WHERE
+              c_opportunity_matches("o", $1)
+            "#,
+            *query as OpportunityQuery,
+        )
+        .fetch_all(db)
+        .await?)
     }
 
     pub async fn load_matching(
@@ -2250,22 +2340,32 @@ impl Opportunity {
         ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<Opportunity>, Error> {
-        let (query_string, query_params) = build_matching_query(&[], query, ordering, pagination)?;
+        Ok(select_opportunity!(
+            r#"
+            WHERE
+              c_opportunity_matches("o", $1)
+            "#,
+            *query as OpportunityQuery,
+        )
+        .fetch_all(db)
+        .await?)
+    }
 
-        let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
-
-        query_obj
-            .map(|rec| {
-                Ok(Opportunity {
-                    id: Some(rec.get("id")),
-                    exterior: serde_json::from_value(rec.get("exterior"))?,
-                    interior: serde_json::from_value(rec.get("interior"))?,
-                })
-            })
-            .fetch_all(db)
-            .await?
-            .into_iter()
-            .collect()
+    pub async fn load_matching_with_overlay(
+        db: &Database,
+        query: &OpportunityQuery,
+        ordering: OpportunityQueryOrdering,
+        pagination: Pagination,
+    ) -> Result<Vec<Opportunity>, Error> {
+        Ok(select_opportunity_with_overlay!(
+            r#"
+            WHERE
+              c_opportunity_matches("o", $1)
+            "#,
+            *query as OpportunityQuery,
+        )
+        .fetch_all(db)
+        .await?)
     }
 
     pub fn to_reference(&self) -> OpportunityReference {
@@ -2495,25 +2595,249 @@ impl Opportunity {
 
     pub async fn store(&mut self, db: &Database) -> Result<i32, Error> {
         self.validate().await?;
-        let mut result_id;
+        let result_id;
 
         self.set_slug_if_necessary(db).await?;
 
         if let Some(id) = self.id {
-            sqlx::query_file!(
-                "db/opportunity/update.sql",
+            sqlx::query!(
+                r#"
+                UPDATE c_opportunity
+                SET
+                   "partner_name" = $2,
+                   "partner_website" = $3,
+                   "partner_logo_url" = $4,
+                   "partner_created" = $5,
+                   "partner_updated" = $6,
+                   "partner_opp_url" = $7,
+                   "organization_name" = $8,
+                   "organization_type" = $9,
+                   "organization_website" = $10,
+                   "organization_logo_url" = $11,
+                   "entity_type" = $12,
+                   "min_age" = $13,
+                   "max_age" = $14,
+                   "pes_domain" = $15,
+                   "ticket_required" = $16,
+                   "title" = $17,
+                   "description" = $18,
+                   "short_desc" = $19,
+                   "image_url" = $20,
+                   "image_credit" = $21,
+                   "recurrence" = $22,
+                   "end_recurrence" = $23,
+                   "timezone" = $24,
+                   "cost" = $25,
+                   "is_online" = $26,
+                   "location_type" = $27,
+                   "location_name" = $28,
+                   "location_point" = $29,
+                   "location_polygon" = $30,
+                   "address_street" = $31,
+                   "address_city" = $32,
+                   "address_state" = $33,
+                   "address_country" = $34,
+                   "address_zip" = $35,
+                   "partner" = $36
+                WHERE "id" = $1
+                "#,
                 id,
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.partner_name,
+                self.partner_website,
+                self.partner_logo_url,
+                self.partner_created,
+                self.partner_updated,
+                self.partner_opp_url,
+                self.organization_name,
+                self.organization_type as OrganizationType,
+                self.organization_website,
+                self.organization_logo_url,
+                self.entity_type as EntityType,
+                self.min_age,
+                self.max_age,
+                self.pes_domain as Domain,
+                self.ticket_required,
+                self.title,
+                self.description,
+                self.short_desc,
+                self.image_url,
+                self.image_credit,
+                self.recurrence as Recurrence,
+                self.end_recurrence,
+                self.timezone,
+                self.cost as Cost,
+                self.is_online,
+                self.location_type as LocationType,
+                self.location_name,
+                <Point as Into<IntoWKB>>::into(self.location_point.clone()) as IntoWKB,
+                <MultiPolygon as Into<IntoWKB>>::into(self.location_polygon.clone()) as IntoWKB,
+                self.address_street,
+                self.address_city,
+                self.address_state,
+                self.address_country,
+                self.address_zip,
+                self.partner,
             )
             .execute(db)
             .await?;
             result_id = id;
         } else {
-            let rec = sqlx::query_file!(
-                "db/opportunity/insert.sql",
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+            let rec = sqlx::query!(
+                r#"
+                INSERT INTO c_opportunity (
+                   "uid",
+                   "slug",
+                   "partner_name",
+                   "partner_website",
+                   "partner_logo_url",
+                   "partner_created",
+                   "partner_updated",
+                   "partner_opp_url",
+                   "organization_name",
+                   "organization_type",
+                   "organization_website",
+                   "organization_logo_url",
+                   "entity_type",
+                   "min_age",
+                   "max_age",
+                   "pes_domain",
+                   "ticket_required",
+                   "title",
+                   "description",
+                   "short_desc",
+                   "image_url",
+                   "image_credit",
+                   "recurrence",
+                   "end_recurrence",
+                   "timezone",
+                   "cost",
+                   "is_online",
+                   "location_type",
+                   "location_name",
+                   "location_point",
+                   "location_polygon",
+                   "address_street",
+                   "address_city",
+                   "address_state",
+                   "address_country",
+                   "address_zip",
+                   "partner"
+                )
+                VALUES (
+                  $1,
+                  $2,
+                  $3,
+                  $4,
+                  $5,
+                  $6,
+                  $7,
+                  $8,
+                  $9,
+                  $10,
+                  $11,
+                  $12,
+                  $13,
+                  $14,
+                  $15,
+                  $16,
+                  $17,
+                  $18,
+                  $19,
+                  $20,
+                  $21,
+                  $22,
+                  $23,
+                  $24,
+                  $25,
+                  $26,
+                  $27,
+                  $28,
+                  $29,
+                  ST_SetSRID($30::geometry, 4326)::geography,
+                  ST_SetSRID($31::geometry, 4326)::geography,
+                  $32,
+                  $33,
+                  $34,
+                  $35,
+                  $36,
+                  $37
+                )
+                ON CONFLICT ("partner", "title") DO
+                UPDATE SET
+                   "partner_name" = excluded."partner_name",
+                   "partner_website" = excluded."partner_website",
+                   "partner_logo_url" = excluded."partner_logo_url",
+                   "partner_created" = excluded."partner_created",
+                   "partner_updated" = excluded."partner_updated",
+                   "partner_opp_url" = excluded."partner_opp_url",
+                   "organization_name" = excluded."organization_name",
+                   "organization_type" = excluded."organization_type",
+                   "organization_website" = excluded."organization_website",
+                   "organization_logo_url" = excluded."organization_logo_url",
+                   "entity_type" = excluded."entity_type",
+                   "min_age" = excluded."min_age",
+                   "max_age" = excluded."max_age",
+                   "pes_domain" = excluded."pes_domain",
+                   "ticket_required" = excluded."ticket_required",
+                   "title" = excluded."title",
+                   "description" = excluded."description",
+                   "short_desc" = excluded."short_desc",
+                   "image_url" = excluded."image_url",
+                   "image_credit" = excluded."image_credit",
+                   "recurrence" = excluded."recurrence",
+                   "end_recurrence" = excluded."end_recurrence",
+                   "timezone" = excluded."timezone",
+                   "cost" = excluded."cost",
+                   "is_online" = excluded."is_online",
+                   "location_type" = excluded."location_type",
+                   "location_name" = excluded."location_name",
+                   "location_point" = excluded."location_point",
+                   "location_polygon" = excluded."location_polygon",
+                   "address_street" = excluded."address_street",
+                   "address_city" = excluded."address_city",
+                   "address_state" = excluded."address_state",
+                   "address_country" = excluded."address_country",
+                   "address_zip" = excluded."address_zip",
+                   "partner" = excluded."partner"
+                RETURNING "id"
+                "#,
+                self.uid,
+                self.slug,
+                self.partner_name,
+                self.partner_website,
+                self.partner_logo_url,
+                self.partner_created,
+                self.partner_updated,
+                self.partner_opp_url,
+                self.organization_name,
+                self.organization_type as OrganizationType,
+                self.organization_website,
+                self.organization_logo_url,
+                self.entity_type as EntityType,
+                self.min_age,
+                self.max_age,
+                self.pes_domain as Domain,
+                self.ticket_required,
+                self.title,
+                self.description,
+                self.short_desc,
+                self.image_url,
+                self.image_credit,
+                self.recurrence as Recurrence,
+                self.end_recurrence,
+                self.timezone,
+                self.cost as Cost,
+                self.is_online,
+                self.location_type as LocationType,
+                self.location_name,
+                <Point as Into<IntoWKB>>::into(self.location_point.clone()) as IntoWKB,
+                <MultiPolygon as Into<IntoWKB>>::into(self.location_polygon.clone()) as IntoWKB,
+                self.address_street,
+                self.address_city,
+                self.address_state,
+                self.address_country,
+                self.address_zip,
+                self.partner
             )
             .fetch_one(db)
             .await?;
@@ -2521,43 +2845,6 @@ impl Opportunity {
             self.id = Some(rec.id);
             result_id = rec.id;
         };
-
-        let overlay = sqlx::query_scalar!(
-            r#"SELECT true AS "exists!" FROM c_opportunity_overlay WHERE opportunity_id = $1"#,
-            self.id
-        )
-        .fetch_optional(db)
-        .await?;
-
-        if overlay.is_none() {
-            let other = sqlx::query!(
-                r#"
-SELECT v.interior AS "interior!", v.exterior AS "exterior!"
-FROM c_opportunity_overlay v JOIN c_opportunity o ON v.opportunity_id = o.id
-WHERE
-  o.exterior->>'title' = $1 AND
-  o.exterior->>'partner' = $2
-"#,
-                &self.title,
-                self.partner.to_string(),
-            )
-            .fetch_optional(db)
-            .await?;
-
-            if let Some(other) = other {
-                sqlx::query!(
-                    r#"
-INSERT INTO c_opportunity_overlay (opportunity_id, interior, exterior)
-VALUES ($1, $2, $3)
-"#,
-                    self.id,
-                    other.interior,
-                    other.exterior,
-                )
-                .execute(db)
-                .await?;
-            }
-        }
 
         Ok(result_id)
     }

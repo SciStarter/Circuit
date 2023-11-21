@@ -2,7 +2,6 @@ use crate::model::involvement::Involvement;
 use crate::model::{involvement, Error};
 use crate::Database;
 use async_std::prelude::*;
-use sqlx::prelude::*;
 use uuid::Uuid;
 
 use super::{Opportunity, Review, Reviews};
