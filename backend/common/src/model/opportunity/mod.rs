@@ -2207,6 +2207,22 @@ impl OpportunityPseudoIter {
     }
 }
 
+fn limit_offset(pagination: Pagination) -> Result<(Option<i32>, Option<i32>), Error> {
+    Ok(match pagination {
+        Pagination::All => (None, None),
+        Pagination::One => (Some(1), Some(0)),
+        Pagination::Page { index, size } => {
+            let index: i32 = index
+                .try_into()
+                .map_err(|_| Error::OutOfBounds("pagination index".into()))?;
+            let size: i32 = index
+                .try_into()
+                .map_err(|_| Error::OutOfBounds("pagination size".into()))?;
+            (Some(size), Some(index * size))
+        }
+    })
+}
+
 impl Opportunity {
     pub async fn catalog(db: &Database) -> Result<OpportunityPseudoIter, Error> {
         Ok(OpportunityPseudoIter {
@@ -2284,35 +2300,149 @@ impl Opportunity {
     }
 
     pub async fn count_matching(db: &Database, query: &OpportunityQuery) -> Result<u32, Error> {
-        let (query_string, query_params) = build_matching_query(
-            &["count(primary_table.*) as matches"],
-            query,
-            OpportunityQueryOrdering::Any,
-            Pagination::One,
-        )?;
-
-        let query_obj = ParamValue::add_all_to_query(query_params, sqlx::query(&query_string))?;
-
-        Ok(query_obj
-            .fetch_one(db)
-            .await?
-            .try_get::<i64, _>("matches")
-            .unwrap_or(0) as u32)
+        Ok(sqlx::query_scalar!(
+            r#"
+            SELECT coalesce(count(*), 0) AS "matches"
+            FROM c_opportunity "o"
+            WHERE c_opportunity_matches("o", $1)
+            "#,
+            *query as OpportunityQuery
+        )
+        .fetch_one(db)
+        .await?)
     }
 
     pub async fn load_matching_refs(
         db: &Database,
         query: &OpportunityQuery,
-        ordering: OpportunityQueryOrdering,
+        mut ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<OpportunityReference>, Error> {
-        Ok(select_opportunity_ref!(
-            r#"
-            WHERE
-              c_opportunity_matches("o", $1)
-            "#,
-            *query as OpportunityQuery,
-        )
+        let (limit, offset) = limit_offset(pagination)?;
+
+        if ordering == OpportunityQueryOrdering::Closest && query.near.is_none() {
+            ordering = OpportunityQueryOrdering::Alphabetical;
+        }
+
+        Ok(match ordering {
+            OpportunityQueryOrdering::Alphabetical => select_opportunity_ref!(
+                r#"
+                WHERE
+                  c_opportunity_matches("o", $1)
+                ORDER BY
+                  "o"."partner" = $1."prefer_partner" DESC,
+                  "o"."title" ASC
+                LIMIT $2
+                OFFSET $3
+                "#,
+                *query as OpportunityQuery,
+                limit,
+                offset,
+            ),
+            OpportunityQueryOrdering::Closest => {
+                let beginning = match query.beginning {
+                    Some(time) => time,
+                    None => Utc::now().fixed_offset(),
+                };
+
+                if let Some((longitude, latitude, distance)) = query.near {
+                    select_opportunity_ref!(
+                        r#"
+                        WHERE
+                          c_opportunity_matches("o", $1)
+                        ORDER BY
+                          "o"."partner" = $1."prefer_partner" DESC,
+                          CASE WHEN "o"."location_type" = 'any' OR "o"."is_online" = true THEN 2 ELSE 1
+                          END ASC,
+                          c_opportunity_distance("o", ST_SetSRID(ST_Point($4, $5), 4326)) ASC,
+                          c_opportunity_until("o", $6) ASC
+                        LIMIT $2
+                        OFFSET $3
+                        "#,
+                        *query as OpportunityQuery,
+                        limit,
+                        offset,
+                        longitude,
+                        latitude,
+                        beginning,
+                    )
+                } else {
+                    // Unreachable because the above *if* would have
+                    // converted this to an Alphabetical query
+                    // already.
+                    unreachable!()
+                }
+            }
+            OpportunityQueryOrdering::Soonest => {
+                let beginning = match query.beginning {
+                    Some(time) => time,
+                    None => Utc::now().fixed_offset(),
+                };
+
+                select_opportunity_ref!(
+                    r#"
+                WHERE
+                  c_opportunity_matches("o", $1)
+                ORDER BY
+                  "o"."partner" = $1."prefer_partner" DESC,
+                  c_opportunity_until("o", $4) ASC
+                LIMIT $2
+                OFFSET $3
+                "#,
+                    *query as OpportunityQuery,
+                    limit,
+                    offset,
+                    beginning
+                )
+            }
+            OpportunityQueryOrdering::Any => select_opportunity_ref!(
+                r#"
+                WHERE
+                  c_opportunity_matches("o", $1)
+                LIMIT $2
+                OFFSET $3
+                "#,
+                *query as OpportunityQuery,
+                limit,
+                offset
+            ),
+            OpportunityQueryOrdering::Native => select_opportunity_ref!(
+                r#"
+                WHERE
+                  c_opportunity_matches("o", $1)
+                ORDER BY "o"."id"
+                LIMIT $2
+                OFFSET $3
+                "#,
+                *query as OpportunityQuery,
+                limit,
+                offset
+            ),
+            OpportunityQueryOrdering::Unique => select_opportunity_ref!(
+                r#"
+                WHERE
+                  c_opportunity_matches("o", $1)
+                ORDER BY "o"."partner", "o"."title"
+                LIMIT $2
+                OFFSET $3
+                "#,
+                *query as OpportunityQuery,
+                limit,
+                offset
+            ),
+            OpportunityQueryOrdering::PartnerName => select_opportunity_ref!(
+                r#"
+                WHERE
+                  c_opportunity_matches("o", $1)
+                ORDER BY "o"."partner_name"
+                LIMIT $2
+                OFFSET $3
+                "#,
+                *query as OpportunityQuery,
+                limit,
+                offset
+            ),
+        }
         .fetch_all(db)
         .await?)
     }
@@ -2323,12 +2453,18 @@ impl Opportunity {
         ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<OpportunityReference>, Error> {
+        let (limit, offset) = limit_offset(pagination)?;
+
         Ok(select_opportunity_ref_with_overlay!(
             r#"
             WHERE
               c_opportunity_matches("o", $1)
+            LIMIT $2
+            OFFSET $3
             "#,
             *query as OpportunityQuery,
+            limit,
+            offset
         )
         .fetch_all(db)
         .await?)
@@ -2340,12 +2476,18 @@ impl Opportunity {
         ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<Opportunity>, Error> {
+        let (limit, offset) = limit_offset(pagination)?;
+
         Ok(select_opportunity!(
             r#"
             WHERE
               c_opportunity_matches("o", $1)
+            LIMIT $2
+            OFFSET $3
             "#,
             *query as OpportunityQuery,
+            limit,
+            offset
         )
         .fetch_all(db)
         .await?)
@@ -2357,12 +2499,18 @@ impl Opportunity {
         ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<Opportunity>, Error> {
+        let (limit, offset) = limit_offset(pagination)?;
+
         Ok(select_opportunity_with_overlay!(
             r#"
             WHERE
               c_opportunity_matches("o", $1)
+            LIMIT $2
+            OFFSET $3
             "#,
             *query as OpportunityQuery,
+            limit,
+            offset
         )
         .fetch_all(db)
         .await?)

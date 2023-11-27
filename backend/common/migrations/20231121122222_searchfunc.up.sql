@@ -75,6 +75,40 @@ CREATE TYPE T_OpportunityQuery AS (
     "region" text
 );
 
+CREATE FUNCTION c_opportunity_distance(opp c_opportunity, "from" point) RETURNS float8
+    LANGUAGE sql
+    STABLE
+    RETURN CASE
+      WHEN "o"."location_polygon" IS NOT NULL THEN CASE
+        WHEN ST_CoveredBy("from", "o"."location_polygon") THEN
+          sqrt(ST_Area("o"."location_polygon", false))
+        ELSE
+          sqrt(ST_Area("o"."location_polygon", false)) + ST_Distance("from", "o"."location_polygon", false)
+        END
+      WHEN "o"."location_point" IS NOT NULL THEN
+        ST_Distance("from", "o"."location_point")
+      ELSE
+        -- This constant number is roughly the square root of the surface area of the earth, in meters, i.e. about as far away as you can get
+        22585394        
+      END
+;
+
+CREATE FUNCTION c_opportunity_until(opp c_opportunity, "from" timestamptz) RETURNS interval
+    LANGUAGE sql
+    STABLE
+    RETURN CASE
+      WHEN opp."recurrence" = 'weekly' AND (opp."end_recurrence" IS NULL OR opp."end_recurrence" > "from") THEN '4 days'::interval
+      WHEN opp."recurrence" = 'daily'  AND (opp."end_recurrence" IS NULL OR opp."end_recurrence" > "from") THEN '2 days'::interval
+      ELSE (
+        SELECT min("i"."start")
+        FROM c_opportunity_instance AS "i"
+        WHERE
+          "i"."opportunity_id" = opp."id"
+          AND "i"."start" >= "from"
+      ) - "from"
+      END
+;
+
 CREATE FUNCTION c_opportunity_matches(opp c_opportunity, query T_OpportunityQuery) RETURNS bool
     LANGUAGE sql
     STABLE
