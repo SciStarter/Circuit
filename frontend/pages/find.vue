@@ -3,7 +3,7 @@
   <div v-if="filtering == false" class="mobile-search-recap mobile-only">
     <div>
       <div v-if="query.text != ''" class="bold">{{query.text}}</div>
-      <div><span class="bold" v-if="city">{{city}}</span> <span v-if="place.proximity"> within {{within_display}} miles</span><span v-else> within 25 miles</span></div>
+      <div><span class="bold" v-if="place.longitude || place.latitude">{{place.near}}</span> <span v-if="place.proximity"> within {{within_display}} miles</span></div>
       <div>{{beginning_display}}<span v-if="ending_display"> &mdash; {{ending_display}}</span></div>
       <div v-if="filter_num > 0">+ {{filter_num}} filters</div>
     </div>
