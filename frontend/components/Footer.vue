@@ -39,6 +39,7 @@
       </li>
     </ul>
 
+    <div class="footer3">
     <div class="partner">
       <div class="nsf-logo">
         <img src="~assets/img/NSF-small.png">
@@ -52,9 +53,37 @@
         Foundation.
       </div>
     </div>
+
+    <div class="footer-socials">
+        <a href="https://www.facebook.com/find.science.near.me/"><FacebookIcon /></a>
+        <a href="https://www.instagram.com/science_near_me/"><InstagramIcon /></a>
+        <a href="https://twitter.com/science_near_me"><TwitterIcon /></a>
+        <a href="https://www.linkedin.com/company/science-near-me/"><LinkedinIcon /></a>
+    </div>
+
+    </div>
     </div>
   </footer>
 </template>
+
+
+<script>
+import TwitterIcon from '~/assets/img/square-x-twitter.svg?inline'
+import FacebookIcon from '~/assets/img/square-facebook.svg?inline'
+import LinkedinIcon from '~/assets/img/square-linkedin.svg?inline'
+import InstagramIcon from '~/assets/img/square-instagram.svg?inline'
+
+export default {
+    name: "Footer",
+
+    components: {
+        TwitterIcon,
+        FacebookIcon,
+        LinkedinIcon,
+        InstagramIcon
+    }
+  }
+</script>
 
 <style lang="scss" scoped>
 
@@ -408,6 +437,20 @@ footer {
             margin: 16px 16px 16px 0px;
         }
     }
+
+    .footer-socials {
+      display: flex;
+
+      a {
+        margin-right: 1rem;
+      }
+
+      svg {
+        height: 24px;
+        fill:#fff;
+      }
+    }
+
 }
 
 .subfooter {
@@ -709,8 +752,13 @@ footer {
             }
         }
 
-        .partner {
+        .footer3 {
           width: calc(50% - 0.5rem);
+
+          .footer-socials {
+            padding-left: calc(56px + 1rem);
+          }
+
         }
 
 

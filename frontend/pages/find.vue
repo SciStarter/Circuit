@@ -1310,6 +1310,7 @@ export default {
     border-radius: 6px;
     margin-right: 8px;
     cursor: pointer;
+    white-space: nowrap;
 
     svg {
       width: 16px;
@@ -1323,6 +1324,7 @@ export default {
 }
 .qf-button-group {
   margin-right: 8px;
+  white-space: nowrap;
   button {
     font-size: .75rem;
     padding: .25rem .5rem;
@@ -1400,7 +1402,7 @@ export default {
   font-weight: bold!important;
 }
 
-@media (max-width:405px){
+@media (max-width:500px){
   .quickfilter {
     flex-wrap: wrap;
     > .qf-button-group, :deep(.mini-select) {
