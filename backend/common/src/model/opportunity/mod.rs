@@ -992,13 +992,15 @@ macro_rules! select_opportunity_ref {
             crate::model::opportunity::OpportunityReference,
             r#"
             SELECT
-              "o"."uid" AS "uid: _",
-              "o"."slug" AS "slug: _",
-              "o"."title" AS "title: _",
-              "o"."image_url" AS "image_url: _",
-              "o"."short_desc" AS "short_desc: _"
+              "o"."id" AS "id: _",
+              "o"."uid" AS "uid!: _",
+              "o"."slug" AS "slug!: _",
+              "o"."title" AS "title!: _",
+              "o"."image_url" AS "image_url!: _",
+              "o"."short_desc" AS "short_desc!: _"
             FROM
               "c_opportunity" AS "o"
+              JOIN "c_opportunity_interior" AS "interior" ON "o"."id" = "interior"."opportunity_id"
             "# + $rest,
             $($arg),*
         )
@@ -1012,13 +1014,16 @@ macro_rules! select_opportunity_ref_with_overlay {
             crate::model::opportunity::OpportunityReference,
             r#"
             SELECT
-              "o"."uid" AS "uid: _",
-              "o"."slug" AS "slug: _",
-              coalesce("ov"."title", "o"."title") AS "title: _",
-              coalesce("ov"."image_url", "o"."image_url") AS "image_url: _",
-              coalesce("ov"."short_desc", "o"."short_desc") AS "short_desc: _"
+              "o"."id" AS "id: _",
+              "o"."uid" AS "uid!: _",
+              "o"."slug" AS "slug!: _",
+              coalesce("ov"."title", "o"."title") AS "title!: _",
+              coalesce("ov"."image_url", "o"."image_url") AS "image_url!: _",
+              coalesce("ov"."short_desc", "o"."short_desc") AS "short_desc!: _"
             FROM
-              c_opportunity AS "o" LEFT JOIN c_opportunity_overlay AS "ov" ON "o"."id" = "ov"."opportunity_id"
+              c_opportunity AS "o"
+              JOIN "c_opportunity_interior" AS "interior" ON "o"."id" = "interior"."opportunity_id"
+              LEFT JOIN c_opportunity_overlay AS "ov" ON "o"."id" = "ov"."opportunity_id"
             "# + $rest,
             $($arg),*
         )
@@ -1033,45 +1038,46 @@ macro_rules! select_opportunity {
             r#"
             SELECT
               "o"."id" AS "id: _",
-              "o"."uid" AS "uid: _",
-              "o"."slug" AS "slug: _",
-              "o"."partner_name" AS "partner_name: _",
+              "o"."uid" AS "uid!: _",
+              "o"."slug" AS "slug!: _",
+              "o"."partner_name" AS "partner_name!: _",
               "o"."partner_website" AS "partner_website: _",
               "o"."partner_logo_url" AS "partner_logo_url: _",
               "o"."partner_created" AS "partner_created: _",
               "o"."partner_updated" AS "partner_updated: _",
               "o"."partner_opp_url" AS "partner_opp_url: _",
-              "o"."organization_name" AS "organization_name: _",
-              "o"."organization_type" AS "organization_type: _",
+              "o"."organization_name" AS "organization_name!: _",
+              "o"."organization_type" AS "organization_type!: _",
               "o"."organization_website" AS "organization_website: _",
               "o"."organization_logo_url" AS "organization_logo_url: _",
-              "o"."entity_type" AS "entity_type: _",
-              "o"."min_age" AS "min_age: _",
-              "o"."max_age" AS "max_age: _",
-              "o"."pes_domain" AS "pes_domain: _",
-              "o"."ticket_required" AS "ticket_required: _",
-              "o"."title" AS "title: _",
-              "o"."description" AS "description: _",
-              "o"."short_desc" AS "short_desc: _",
-              "o"."image_url" AS "image_url: _",
-              "o"."image_credit" AS "image_credit: _",
-              "o"."recurrence" AS "recurrence: _",
+              "o"."entity_type" AS "entity_type!: _",
+              "o"."min_age" AS "min_age!: _",
+              "o"."max_age" AS "max_age!: _",
+              "o"."pes_domain" AS "pes_domain!: _",
+              "o"."ticket_required" AS "ticket_required!: _",
+              "o"."title" AS "title!: _",
+              "o"."description" AS "description!: _",
+              "o"."short_desc" AS "short_desc!: _",
+              "o"."image_url" AS "image_url!: _",
+              "o"."image_credit" AS "image_credit!: _",
+              "o"."recurrence" AS "recurrence!: _",
               "o"."end_recurrence" AS "end_recurrence: _",
               "o"."timezone" AS "timezone: _",
-              "o"."cost" AS "cost: _",
-              "o"."is_online" AS "is_online: _",
-              "o"."location_type" AS "location_type: _",
-              "o"."location_name" AS "location_name: _",
+              "o"."cost" AS "cost!: _",
+              "o"."is_online" AS "is_online!: _",
+              "o"."location_type" AS "location_type!: _",
+              "o"."location_name" AS "location_name!: _",
               ST_AsBinary("o"."location_point") AS "location_point: geozero::wkb::Decode<geo::Geometry<f64>>",
               ST_AsBinary("o"."location_polygon") AS "location_polygon: geozero::wkb::Decode<geo::Geometry<f64>>",
-              "o"."address_street" AS "address_street: _",
-              "o"."address_city" AS "address_city: _",
-              "o"."address_state" AS "address_state: _",
-              "o"."address_country" AS "address_country: _",
-              "o"."address_zip" AS "address_zip: _",
-              "o"."partner" AS "partner: _"
+              "o"."address_street" AS "address_street!: _",
+              "o"."address_city" AS "address_city!: _",
+              "o"."address_state" AS "address_state!: _",
+              "o"."address_country" AS "address_country!: _",
+              "o"."address_zip" AS "address_zip!: _",
+              "o"."partner" AS "partner!: _"
             FROM
               "c_opportunity" AS "o"
+              JOIN "c_opportunity_interior" AS "interior" ON "o"."id" = "interior"."opportunity_id"
             "# + $rest,
             $($arg),*
         )
@@ -1087,8 +1093,8 @@ macro_rules! select_opportunity_with_overlay {
             r#"
             SELECT
               "o"."id" AS "id: _",
-              "o"."uid" AS "uid: _",
-              "o"."slug" AS "slug: _",
+              "o"."uid" AS "uid!: _",
+              "o"."slug" AS "slug!: _",
               COALESCE("ov"."partner_name", "o"."partner_name") AS "partner_name!: _",
               COALESCE("ov"."partner_website", "o"."partner_website") AS "partner_website: _",
               COALESCE("ov"."partner_logo_url", "o"."partner_logo_url") AS "partner_logo_url: _",
@@ -1123,9 +1129,11 @@ macro_rules! select_opportunity_with_overlay {
               COALESCE("ov"."address_state", "o"."address_state") AS "address_state!: _",
               COALESCE("ov"."address_country", "o"."address_country") AS "address_country!: _",
               COALESCE("ov"."address_zip", "o"."address_zip") AS "address_zip!: _",
-              "o"."partner" AS "partner: _"
+              "o"."partner" AS "partner!: _"
             FROM
-              c_opportunity AS "o" LEFT JOIN c_opportunity_overlay AS "ov" ON "o"."id" = "ov"."opportunity_id"
+              c_opportunity AS "o"
+              JOIN "c_opportunity_interior" AS "interior" ON "o"."id" = "interior"."opportunity_id"
+              LEFT JOIN c_opportunity_overlay AS "ov" ON "o"."id" = "ov"."opportunity_id"
             "# + $rest,
             $($arg),*
         )
@@ -1179,6 +1187,20 @@ pub struct Opportunity {
 }
 
 impl Opportunity {
+    pub async fn from_ref(
+        oref: &OpportunityReference,
+        db: &Database,
+    ) -> Result<Opportunity, Error> {
+        Ok(Opportunity::load_by_id(db, oref.id).await?)
+    }
+
+    pub async fn from_ref_with_overlay(
+        oref: &OpportunityReference,
+        db: &Database,
+    ) -> Result<Opportunity, Error> {
+        Ok(Opportunity::load_by_id_with_overlay(db, oref.id).await?)
+    }
+
     pub async fn interior(&self, db: &Database) -> Result<OpportunityInterior, Error> {
         Ok(OpportunityInterior::load_by_id(
             db,
@@ -1500,6 +1522,7 @@ impl OpportunityAll {
 #[derive(Serialize, Deserialize, Default, FromRow)]
 #[serde(default)]
 pub struct OpportunityReference {
+    pub id: i32,
     pub uid: Uuid,
     pub slug: String,
     pub title: String,
@@ -1568,7 +1591,9 @@ pub struct OpportunityQuery {
     pub partner: Option<Uuid>,
     pub partner_member: Option<Uuid>,
     pub prefer_partner: Option<Uuid>,
-    pub near: Option<(f32, f32, f32)>,
+    pub near_longitude: Option<f64>,
+    pub near_latitude: Option<f64>,
+    pub near_distance: Option<f64>,
     pub physical: Option<OpportunityQueryPhysical>,
     pub temporal: Option<OpportunityQueryTemporal>,
     pub text: Option<String>,
@@ -1592,7 +1617,8 @@ pub struct OpportunityQuery {
     pub sample: Option<f32>,
     pub exclude: Option<Vec<Uuid>>,
     pub current: Option<bool>,
-    pub calendar: Option<(i32, i8)>,
+    pub calendar_year: Option<i32>,
+    pub calendar_month: Option<i32>,
     pub region: Option<String>,
 }
 
@@ -2207,17 +2233,13 @@ impl OpportunityPseudoIter {
     }
 }
 
-fn limit_offset(pagination: Pagination) -> Result<(Option<i32>, Option<i32>), Error> {
+fn limit_offset(pagination: Pagination) -> Result<(Option<i64>, Option<i64>), Error> {
     Ok(match pagination {
         Pagination::All => (None, None),
         Pagination::One => (Some(1), Some(0)),
         Pagination::Page { index, size } => {
-            let index: i32 = index
-                .try_into()
-                .map_err(|_| Error::OutOfBounds("pagination index".into()))?;
-            let size: i32 = index
-                .try_into()
-                .map_err(|_| Error::OutOfBounds("pagination size".into()))?;
+            let index: i64 = index.into();
+            let size: i64 = size.into();
             (Some(size), Some(index * size))
         }
     })
@@ -2299,14 +2321,14 @@ impl Opportunity {
         Ok(!self.current(db).await?)
     }
 
-    pub async fn count_matching(db: &Database, query: &OpportunityQuery) -> Result<u32, Error> {
+    pub async fn count_matching(db: &Database, query: OpportunityQuery) -> Result<i32, Error> {
         Ok(sqlx::query_scalar!(
             r#"
-            SELECT coalesce(count(*), 0) AS "matches"
+            SELECT coalesce(count(*), 0) AS "matches!: i32"
             FROM c_opportunity "o"
-            WHERE c_opportunity_matches("o", $1)
+            WHERE c_opportunity_matches("o", "interior", $1)
             "#,
-            *query as OpportunityQuery
+            query as OpportunityQuery
         )
         .fetch_one(db)
         .await?)
@@ -2314,137 +2336,148 @@ impl Opportunity {
 
     pub async fn load_matching_refs(
         db: &Database,
-        query: &OpportunityQuery,
+        query: OpportunityQuery,
         mut ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<OpportunityReference>, Error> {
         let (limit, offset) = limit_offset(pagination)?;
 
-        if ordering == OpportunityQueryOrdering::Closest && query.near.is_none() {
+        let beginning = match query.beginning {
+            Some(time) => time,
+            None => Utc::now().fixed_offset(),
+        };
+
+        if ordering == OpportunityQueryOrdering::Closest
+            && query
+                .near_longitude
+                .and(query.near_latitude)
+                .and(query.near_distance)
+                .is_none()
+        {
             ordering = OpportunityQueryOrdering::Alphabetical;
         }
 
         Ok(match ordering {
-            OpportunityQueryOrdering::Alphabetical => select_opportunity_ref!(
-                r#"
+            OpportunityQueryOrdering::Alphabetical => {
+                select_opportunity_ref!(
+                    r#"
                 WHERE
-                  c_opportunity_matches("o", $1)
+                  c_opportunity_matches("o", "interior", $1)
                 ORDER BY
                   "o"."partner" = $1."prefer_partner" DESC,
                   "o"."title" ASC
                 LIMIT $2
                 OFFSET $3
                 "#,
-                *query as OpportunityQuery,
-                limit,
-                offset,
-            ),
-            OpportunityQueryOrdering::Closest => {
-                let beginning = match query.beginning {
-                    Some(time) => time,
-                    None => Utc::now().fixed_offset(),
-                };
-
-                if let Some((longitude, latitude, distance)) = query.near {
-                    select_opportunity_ref!(
-                        r#"
-                        WHERE
-                          c_opportunity_matches("o", $1)
-                        ORDER BY
-                          "o"."partner" = $1."prefer_partner" DESC,
-                          CASE WHEN "o"."location_type" = 'any' OR "o"."is_online" = true THEN 2 ELSE 1
-                          END ASC,
-                          c_opportunity_distance("o", ST_SetSRID(ST_Point($4, $5), 4326)) ASC,
-                          c_opportunity_until("o", $6) ASC
-                        LIMIT $2
-                        OFFSET $3
-                        "#,
-                        *query as OpportunityQuery,
-                        limit,
-                        offset,
-                        longitude,
-                        latitude,
-                        beginning,
-                    )
-                } else {
-                    // Unreachable because the above *if* would have
-                    // converted this to an Alphabetical query
-                    // already.
-                    unreachable!()
-                }
+                    query as OpportunityQuery,
+                    limit,
+                    offset,
+                )
+                .fetch_all(db)
+                .await?
             }
-            OpportunityQueryOrdering::Soonest => {
-                let beginning = match query.beginning {
-                    Some(time) => time,
-                    None => Utc::now().fixed_offset(),
-                };
-
+            OpportunityQueryOrdering::Closest => {
                 select_opportunity_ref!(
                     r#"
-                WHERE
-                  c_opportunity_matches("o", $1)
-                ORDER BY
-                  "o"."partner" = $1."prefer_partner" DESC,
-                  c_opportunity_until("o", $4) ASC
-                LIMIT $2
-                OFFSET $3
-                "#,
-                    *query as OpportunityQuery,
+                    WHERE
+                      c_opportunity_matches("o", "interior", $1)
+                    ORDER BY
+                      "o"."partner" = $1."prefer_partner" DESC,
+                      CASE WHEN "o"."location_type" = 'any' OR "o"."is_online" = true THEN 2 ELSE 1 END ASC,
+                      c_opportunity_locality("o", ST_SetSRID(ST_Point($1."near_longitude", $1."near_latitude"), 4326)) ASC
+                    LIMIT $2
+                    OFFSET $3
+                    "#,
+                    query as OpportunityQuery,
+                    limit,
+                    offset,
+                )
+                .fetch_all(db)
+                .await?
+            }
+            OpportunityQueryOrdering::Soonest => {
+                select_opportunity_ref!(
+                    r#"
+                    WHERE
+                      c_opportunity_matches("o", "interior", $1)
+                    ORDER BY
+                      "o"."partner" = $1."prefer_partner" DESC,
+                      c_opportunity_until("o", $4) ASC
+                    LIMIT $2
+                    OFFSET $3
+                    "#,
+                    query as OpportunityQuery,
                     limit,
                     offset,
                     beginning
                 )
+                .fetch_all(db)
+                .await?
             }
-            OpportunityQueryOrdering::Any => select_opportunity_ref!(
-                r#"
+            OpportunityQueryOrdering::Any => {
+                select_opportunity_ref!(
+                    r#"
                 WHERE
-                  c_opportunity_matches("o", $1)
+                  c_opportunity_matches("o", "interior", $1)
                 LIMIT $2
                 OFFSET $3
                 "#,
-                *query as OpportunityQuery,
-                limit,
-                offset
-            ),
-            OpportunityQueryOrdering::Native => select_opportunity_ref!(
-                r#"
+                    query as OpportunityQuery,
+                    limit,
+                    offset
+                )
+                .fetch_all(db)
+                .await?
+            }
+            OpportunityQueryOrdering::Native => {
+                select_opportunity_ref!(
+                    r#"
                 WHERE
-                  c_opportunity_matches("o", $1)
+                  c_opportunity_matches("o", "interior", $1)
                 ORDER BY "o"."id"
                 LIMIT $2
                 OFFSET $3
                 "#,
-                *query as OpportunityQuery,
-                limit,
-                offset
-            ),
-            OpportunityQueryOrdering::Unique => select_opportunity_ref!(
-                r#"
+                    query as OpportunityQuery,
+                    limit,
+                    offset
+                )
+                .fetch_all(db)
+                .await?
+            }
+            OpportunityQueryOrdering::Unique => {
+                select_opportunity_ref!(
+                    r#"
                 WHERE
-                  c_opportunity_matches("o", $1)
+                  c_opportunity_matches("o", "interior", $1)
                 ORDER BY "o"."partner", "o"."title"
                 LIMIT $2
                 OFFSET $3
                 "#,
-                *query as OpportunityQuery,
-                limit,
-                offset
-            ),
-            OpportunityQueryOrdering::PartnerName => select_opportunity_ref!(
-                r#"
+                    query as OpportunityQuery,
+                    limit,
+                    offset
+                )
+                .fetch_all(db)
+                .await?
+            }
+            OpportunityQueryOrdering::PartnerName => {
+                select_opportunity_ref!(
+                    r#"
                 WHERE
-                  c_opportunity_matches("o", $1)
+                  c_opportunity_matches("o", "interior", $1)
                 ORDER BY "o"."partner_name"
                 LIMIT $2
                 OFFSET $3
                 "#,
-                *query as OpportunityQuery,
-                limit,
-                offset
-            ),
-        }
-        .fetch_all(db)
-        .await?)
+                    query as OpportunityQuery,
+                    limit,
+                    offset
+                )
+                .fetch_all(db)
+                .await?
+            }
+        })
     }
 
     pub async fn load_matching_refs_with_overlay(
@@ -2453,71 +2486,44 @@ impl Opportunity {
         ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<OpportunityReference>, Error> {
-        let (limit, offset) = limit_offset(pagination)?;
-
-        Ok(select_opportunity_ref_with_overlay!(
-            r#"
-            WHERE
-              c_opportunity_matches("o", $1)
-            LIMIT $2
-            OFFSET $3
-            "#,
-            *query as OpportunityQuery,
-            limit,
-            offset
-        )
-        .fetch_all(db)
-        .await?)
+        todo!()
     }
 
     pub async fn load_matching(
         db: &Database,
-        query: &OpportunityQuery,
+        query: OpportunityQuery,
         ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<Opportunity>, Error> {
-        let (limit, offset) = limit_offset(pagination)?;
+        let refs = Opportunity::load_matching_refs(db, query, ordering, pagination).await?;
+        let mut out = Vec::with_capacity(refs.len());
 
-        Ok(select_opportunity!(
-            r#"
-            WHERE
-              c_opportunity_matches("o", $1)
-            LIMIT $2
-            OFFSET $3
-            "#,
-            *query as OpportunityQuery,
-            limit,
-            offset
-        )
-        .fetch_all(db)
-        .await?)
+        for oref in refs.into_iter() {
+            out.push(Opportunity::from_ref(&oref, db).await?);
+        }
+
+        Ok(out)
     }
 
     pub async fn load_matching_with_overlay(
         db: &Database,
-        query: &OpportunityQuery,
+        query: OpportunityQuery,
         ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<Opportunity>, Error> {
-        let (limit, offset) = limit_offset(pagination)?;
+        let refs = Opportunity::load_matching_refs(db, query, ordering, pagination).await?;
+        let mut out = Vec::with_capacity(refs.len());
 
-        Ok(select_opportunity_with_overlay!(
-            r#"
-            WHERE
-              c_opportunity_matches("o", $1)
-            LIMIT $2
-            OFFSET $3
-            "#,
-            *query as OpportunityQuery,
-            limit,
-            offset
-        )
-        .fetch_all(db)
-        .await?)
+        for oref in refs.into_iter() {
+            out.push(Opportunity::from_ref_with_overlay(&oref, db).await?);
+        }
+
+        Ok(out)
     }
 
     pub fn to_reference(&self) -> OpportunityReference {
         OpportunityReference {
+            id: self.id.unwrap_or(0),
             uid: self.uid.clone(),
             slug: self.slug.clone(),
             title: self.title.clone(),
@@ -2528,6 +2534,7 @@ impl Opportunity {
 
     pub fn into_reference(self) -> OpportunityReference {
         OpportunityReference {
+            id: self.id.unwrap_or(0),
             uid: self.uid,
             slug: self.slug,
             title: self.title,
