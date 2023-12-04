@@ -16,6 +16,8 @@ DROP FUNCTION IF EXISTS "c_opportunity_is_ongoing";
 
 DROP INDEX "c_opportunity_hashtag_via_opportunity_id";
 DROP INDEX "c_opportunity_hashtag_via_hashtag";
+DROP INDEX "c_opportunity_venue_type_via_opportunity_id";
+DROP INDEX "c_opportunity_venue_type_via_venue_type";
 DROP INDEX "c_opportunity_descriptor_via_opportunity_id";
 DROP INDEX "c_opportunity_descriptor_via_descriptor";
 DROP INDEX "c_opportunity_topic_via_opportunity_id";
@@ -38,6 +40,7 @@ DROP TRIGGER c_opportunity_set_updated ON c_opportunity;
 DROP TABLE "c_opportunity_tag";
 DROP TABLE "c_opportunity_topic";
 DROP TABLE "c_opportunity_descriptor";
+DROP TABLE "c_opportunity_venue_type";
 DROP TABLE "c_opportunity_hashtag";
 DROP TABLE "c_opportunity_instance";
 DROP TABLE "c_opportunity_interior";
@@ -45,6 +48,7 @@ DROP TABLE "c_opportunity_overlay";
 DROP TABLE "c_opportunity";
 
 DROP TYPE T_ReviewStatus;
+DROP TYPE T_VenueType;
 DROP TYPE T_Descriptor;
 DROP TYPE T_Topic;
 DROP TYPE T_LocationType;

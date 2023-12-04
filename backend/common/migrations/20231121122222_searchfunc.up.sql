@@ -22,20 +22,8 @@ CREATE TYPE T_OpportunityQueryOrdering AS ENUM (
     'partner-name'
 );
 
-CREATE TYPE T_VenueType AS ENUM (
-    'indoors',
-    'outdoors',
-    -- Following variants are deprecated
-    'museum_or_science_center',
-    'library',
-    'pk12school'
-    'community_organization',
-    'bar',
-    'college_university',
-    'unspecified'
-);
-
 CREATE TYPE T_OpportunityQuery AS (
+    "id" integer,
     "uid" uuid,
     "slug" text,
     "accepted" bool,
@@ -77,6 +65,54 @@ CREATE TYPE T_OpportunityQuery AS (
     "calendar_month" int4,
     "region" text
 );
+
+CREATE FUNCTION c_opportunity_query_default() RETURNS T_OpportunityQuery
+    LANGUAGE sql
+    STABLE
+    RETURN row(
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    )
+;
+    
 
 CREATE FUNCTION c_opportunity_distance(opp c_opportunity, "from" geography(POINT, 4326)) RETURNS float8
     LANGUAGE sql
@@ -145,7 +181,11 @@ CREATE FUNCTION c_opportunities_matching("query" T_OpportunityQuery)
         "c_opportunity" AS "opp"
         JOIN "c_opportunity_interior" AS "interior" ON "interior"."opportunity_id" = "opp"."id"
       WHERE (
-        CASE WHEN "query"."uid" IS NOT NULL
+        CASE WHEN "query"."id" IS NOT NULL
+          THEN "opp"."id" = "query"."id"
+          ELSE true
+        END
+        AND CASE WHEN "query"."uid" IS NOT NULL
           THEN "opp"."uid" = "query"."uid"
           ELSE true
         END
@@ -273,7 +313,61 @@ CREATE FUNCTION c_opportunities_matching("query" T_OpportunityQuery)
           ELSE true
         END
         AND CASE WHEN "query"."kids_only" IS NOT NULL
-          THEN !!!
+          THEN "opp"."max_age" <= 18
+          ELSE true
+        END
+        AND CASE WHEN "query"."adults_only" IS NOT NULL
+          THEN "opp"."min_age" >= 21
+          ELSE true
+        END
+        AND CASE WHEN "query"."cost" IS NOT NULL
+          THEN "opp"."cost" = "query"."cost"
+          ELSE true
+        END
+        AND CASE WHEN "query"."venue_type" IS NOT NULL              
+          THEN exists(SELECT 1 FROM c_opportunity_venue_type WHERE "opportunity_id" = "opp"."id" AND "venue_type" = "query"."venue_type") 
+          ELSE true
+        END
+        AND CASE WHEN "query"."host" IS NOT NULL
+          THEN "opp"."organization_name" ILIKE ('%' || "query"."host" || '%')
+          ELSE true
+        END
+        AND CASE WHEN "query"."physical" IS NOT NULL
+          THEN CASE
+            WHEN "query"."physical" = 'in-person'
+              THEN "opp"."is_online" = false
+              -- AND "opp"."location_type" != 'any'
+              -- AND "opp"."location_type" != 'unknown'
+              -- AND (
+              --   "opp"."location_polygon" IS NULL
+              --   OR ST_Area(primary_table.location_polygon, false) <= 25899752356
+              -- )
+            WHEN "query"."physical" = 'online'
+              THEN "opp"."is_online" = true
+              -- OR (
+              --   "opp"."location_polygon" IS NOT NULL
+              --   AND ST_Area(primary_table.location_polygon, false) > 25899752356
+              -- )
+            ELSE true
+            END
+          ELSE true
+        END
+        AND CASE WHEN "query"."temporal" IS NOT NULL
+          THEN CASE
+            WHEN "query"."temporal" = 'scheduled'
+              THEN c_opportunity_is_scheduled("opp")
+            WHEN "query"."temporal" = 'on-demand'
+              THEN c_opportunity_is_ondemand("opp")
+            ELSE true
+            END
+          ELSE true
+        END
+        AND CASE WHEN "query"."sample" IS NOT NULL
+          THEN random() < "query"."sample"
+          ELSE true
+        END
+        AND CASE WHEN "query"."exclude" IS NOT NULL
+          THEN "opp"."uid" != any("query"."exclude")
           ELSE true
         END
         AND CASE WHEN "query"."near_distance" IS NOT NULL AND "query"."near_distance" > 0.001 AND "query"."near_longitude" IS NOT NULL AND "query"."near_latitude" IS NOT NULL

@@ -176,6 +176,19 @@ CREATE TYPE T_Descriptor AS ENUM (
     'workshop'
 );
 
+CREATE TYPE T_VenueType AS ENUM (
+    'indoors',
+    'outdoors',
+    -- Following variants are deprecated
+    'museum_or_science_center',
+    'library',
+    'pk12school'
+    'community_organization',
+    'bar',
+    'college_university',
+    'unspecified'
+);
+
 CREATE TYPE T_ReviewStatus AS ENUM (
     'draft',
     'pending',
@@ -301,6 +314,17 @@ CREATE TABLE c_opportunity_descriptor (
 
 CREATE INDEX c_opportunity_descriptor_via_opportunity_id ON c_opportunity_descriptor ("opportunity_id");
 CREATE INDEX c_opportunity_descriptor_via_descriptor ON c_opportunity_descriptor ("descriptor");
+
+CREATE TABLE c_opportunity_venue_type (
+    "id" serial PRIMARY KEY,
+    "overlay" boolean NOT NULL DEFAULT false,
+    "opportunity_id" integer NOT NULL REFERENCES "c_opportunity" ON DELETE CASCADE,
+    "venue_type" T_VenueType NOT NULL,
+    UNIQUE ("opportunity_id", "venue_type")
+);
+
+CREATE INDEX c_opportunity_venue_type_via_opportunity_id ON c_opportunity_venue_type ("opportunity_id");
+CREATE INDEX c_opportunity_venue_type_via_venue_type ON c_opportunity_venue_type ("venue_type");
 
 CREATE TABLE c_opportunity_hashtag (
     "id" serial PRIMARY KEY,
@@ -714,6 +738,41 @@ INSERT
         o."descriptor"::T_Descriptor
     FROM
         old_descriptors o
+    ON CONFLICT
+        DO NOTHING
+;
+
+WITH old_venue_types AS (
+    SELECT
+        (
+            SELECT
+                cn."id"
+            FROM
+                c_opportunity_v1 cn
+            WHERE
+                cn.exterior->>'partner' = c.exterior->>'partner' AND
+                cn.exterior->>'title' = c.exterior->>'title'
+            ORDER BY cn."updated" DESC
+            LIMIT 1
+        ) AS "opportunity_id",
+        c.exterior->>'partner' AS "partner",
+        c.exterior->>'title' AS "title",
+        c.updated AS "updated",
+        t AS "venue_type"
+    FROM
+        c_opportunity_v1 AS c,
+        jsonb_array_elements_text(c.exterior->'opp_venue') AS t
+)
+INSERT
+    INTO c_opportunity_venue_type (
+        "opportunity_id",
+        "venue_type"
+    )
+    SELECT
+        o."opportunity_id",
+        o."venue_type"::T_VenueType
+    FROM
+        old_venue_types o
     ON CONFLICT
         DO NOTHING
 ;
