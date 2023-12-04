@@ -3,7 +3,6 @@ pub mod for_slug;
 //use super::partner::LoggedErrorLevel;
 use super::person::PermitAction;
 use super::Error;
-use crate::model::involvement;
 use crate::{gis, Database, ToFixedOffset};
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
@@ -16,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::postgres::{PgArguments, PgHasArrayType, PgTypeInfo};
 use sqlx::query::Query;
 use sqlx::{prelude::*, Postgres};
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::convert::AsRef;
 use strum::IntoEnumIterator;
 use strum_macros::{AsRefStr, EnumIter, EnumString};
@@ -670,6 +669,10 @@ fn nineninetynine() -> i16 {
     999
 }
 
+fn en_us() -> Vec<String> {
+    vec!["en-US".to_string()]
+}
+
 #[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct AnnotatedOpportunityExterior {
@@ -746,17 +749,17 @@ impl TryFromWithDB<Opportunity> for OpportunityForCsv {
 
         Ok(OpportunityForCsv {
             uid: opp.uid,
-            slug: opp.slug,
-            partner_name: opp.partner_name,
-            partner_website: opp.partner_website,
-            partner_logo_url: opp.partner_logo_url,
+            slug: opp.slug.clone(),
+            partner_name: opp.partner_name.clone(),
+            partner_website: opp.partner_website.clone(),
+            partner_logo_url: opp.partner_logo_url.clone(),
             partner_created: opp.partner_created,
             partner_updated: opp.partner_updated,
-            partner_opp_url: opp.partner_opp_url,
-            organization_name: opp.organization_name,
+            partner_opp_url: opp.partner_opp_url.clone(),
+            organization_name: opp.organization_name.clone(),
             organization_type: opp.organization_type,
-            organization_website: opp.organization_website,
-            organization_logo_url: opp.organization_logo_url,
+            organization_website: opp.organization_website.clone(),
+            organization_logo_url: opp.organization_logo_url.clone(),
             entity_type: opp.entity_type,
             opp_venue: opp
                 .venues(db)
@@ -805,11 +808,11 @@ impl TryFromWithDB<Opportunity> for OpportunityForCsv {
                     accum
                 }),
             ticket_required: opp.ticket_required,
-            title: opp.title,
-            description: opp.description,
-            short_desc: opp.short_desc,
-            image_url: opp.image_url,
-            image_credit: opp.image_credit,
+            title: opp.title.clone(),
+            description: opp.description.clone(),
+            short_desc: opp.short_desc.clone(),
+            image_url: opp.image_url.clone(),
+            image_credit: opp.image_credit.clone(),
             start_datetimes: instances.iter().fold(String::new(), |mut accum, add| {
                 if !accum.is_empty() {
                     accum.push_str(", ");
@@ -827,27 +830,27 @@ impl TryFromWithDB<Opportunity> for OpportunityForCsv {
             }),
             recurrence: opp.recurrence,
             end_recurrence: opp.end_recurrence.map(|dt| dt.to_rfc3339()),
-            timezone: opp.timezone,
+            timezone: opp.timezone.clone(),
             cost: opp.cost,
             languages: opp.languages(db).await?.join(", "),
             is_online: opp.is_online,
             location_type: opp.location_type,
-            location_name: opp.location_name,
+            location_name: opp.location_name.clone(),
             location_point: opp.location_point.0.and_then(|point| {
                 <geo::Point as Into<geo::Geometry>>::into(point)
                     .to_json()
                     .ok()
             }),
-            location_polygon: opp.location_polygon.0.and_then(|poly| {
-                <geo::MultiPolygon as Into<geo::Geometry>>::into(poly)
+            location_polygon: opp.location_polygon.0.as_ref().and_then(|poly| {
+                <geo::MultiPolygon as Into<geo::Geometry>>::into(poly.clone())
                     .to_json()
                     .ok()
             }),
-            address_street: opp.address_street,
-            address_city: opp.address_city,
-            address_state: opp.address_state,
-            address_country: opp.address_country,
-            address_zip: opp.address_zip,
+            address_street: opp.address_street.clone(),
+            address_city: opp.address_city.clone(),
+            address_state: opp.address_state.clone(),
+            address_country: opp.address_country.clone(),
+            address_zip: opp.address_zip.clone(),
             opp_hashtags: opp.hashtags(db).await?.join(", "),
             partner: opp.partner,
             accepted: interior.accepted,
@@ -1323,12 +1326,6 @@ impl std::fmt::Debug for Opportunity {
     }
 }
 
-#[derive(Default, Serialize, Deserialize)]
-pub struct OpportunityWithRelated {
-    #[serde(flatten)]
-    opp: Opportunity,
-}
-
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityInterior {
@@ -1456,10 +1453,78 @@ impl std::fmt::Debug for OpportunityInterior {
     }
 }
 
+#[derive(Default, Debug, Serialize, Deserialize)]
+pub struct OpportunityWithRelated {
+    #[serde(flatten)]
+    pub opp: Opportunity,
+    pub opp_venue: Vec<VenueType>,
+    pub opp_descriptor: Vec<Descriptor>,
+    pub tags: HashSet<String>,
+    pub opp_topics: Vec<Topic>,
+    #[serde(alias = "start_dates")]
+    pub start_datetimes: Vec<DateTime<FixedOffset>>,
+    pub has_end: bool,
+    #[serde(alias = "end_dates")]
+    pub end_datetimes: Vec<DateTime<FixedOffset>>,
+    #[serde(default = "en_us")]
+    pub languages: Vec<String>,
+    pub opp_hashtags: Vec<String>,
+    pub opp_social_handles: HashMap<String, String>,
+}
+
+impl OpportunityWithRelated {
+    pub async fn load_by_id(db: &Database, id: i32) -> Result<OpportunityWithRelated, Error> {
+        todo!()
+    }
+
+    pub async fn load_by_id_with_overlay(
+        db: &Database,
+        id: i32,
+    ) -> Result<OpportunityWithRelated, Error> {
+        todo!()
+    }
+
+    pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<OpportunityWithRelated, Error> {
+        todo!()
+    }
+
+    pub async fn load_by_uid_with_overlay(
+        db: &Database,
+        uid: &Uuid,
+    ) -> Result<OpportunityWithRelated, Error> {
+        todo!()
+    }
+
+    pub async fn store(&mut self, db: &Database) -> Result<i32, Error> {
+        todo!()
+    }
+}
+
+#[async_trait::async_trait]
+impl TryFromWithDB<Opportunity> for OpportunityWithRelated {
+    async fn try_from_with_db(db: &Database, source: Opportunity) -> Result<Self, Error> {
+        let instances = source.instances(db).await?;
+
+        Ok(OpportunityWithRelated {
+            opp_venue: source.venues(db).await?,
+            opp_descriptor: source.descriptors(db).await?,
+            tags: source.tags(db).await?,
+            opp_topics: source.topics(db).await?,
+            start_datetimes: instances.iter().map(|i| i.start).collect(),
+            has_end: instances.iter().any(|i| i.end.is_some()),
+            end_datetimes: instances.iter().flat_map(|i| i.end).collect(),
+            languages: source.languages(db).await?,
+            opp_hashtags: source.hashtags(db).await?,
+            opp_social_handles: source.social_handles(db).await?.into_iter().collect(),
+            opp: source,
+        })
+    }
+}
+
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct OpportunityAll {
     #[serde(flatten)]
-    pub exterior: Opportunity,
+    pub exterior: OpportunityWithRelated,
     #[serde(flatten)]
     pub interior: OpportunityInterior,
 }
@@ -1468,32 +1533,33 @@ pub struct OpportunityAll {
 impl TryFromWithDB<Opportunity> for OpportunityAll {
     async fn try_from_with_db(db: &Database, source: Opportunity) -> Result<Self, Error> {
         Ok(OpportunityAll {
-            exterior: source,
             interior: source.interior(db).await?,
+            exterior: OpportunityWithRelated::try_from_with_db(db, source).await?,
         })
     }
 }
 
 impl OpportunityAll {
     pub async fn load_by_id(db: &Database, id: i32) -> Result<OpportunityAll, Error> {
-        let exterior = Opportunity::load_by_id(db, id).await?;
+        let exterior = OpportunityWithRelated::load_by_id(db, id).await?;
         let interior = OpportunityInterior::load_by_id(db, id).await?;
 
         Ok(OpportunityAll { exterior, interior })
     }
 
     pub async fn load_by_id_with_overlay(db: &Database, id: i32) -> Result<OpportunityAll, Error> {
-        let exterior = Opportunity::load_by_id_with_overlay(db, id).await?;
+        let exterior = OpportunityWithRelated::load_by_id_with_overlay(db, id).await?;
         let interior = OpportunityInterior::load_by_id(db, id).await?;
 
         Ok(OpportunityAll { exterior, interior })
     }
 
     pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<OpportunityAll, Error> {
-        let exterior = Opportunity::load_by_uid(db, uid).await?;
+        let exterior = OpportunityWithRelated::load_by_uid(db, uid).await?;
         let interior = OpportunityInterior::load_by_id(
             db,
             exterior
+                .opp
                 .id
                 .expect("records loaded from the database should always have a primary key"),
         )
@@ -1506,10 +1572,11 @@ impl OpportunityAll {
         db: &Database,
         uid: &Uuid,
     ) -> Result<OpportunityAll, Error> {
-        let exterior = Opportunity::load_by_uid_with_overlay(db, uid).await?;
+        let exterior = OpportunityWithRelated::load_by_uid_with_overlay(db, uid).await?;
         let interior = OpportunityInterior::load_by_id(
             db,
             exterior
+                .opp
                 .id
                 .expect("records loaded from the database should always have a primary key"),
         )

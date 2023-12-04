@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use super::{
-    opportunity::{Domain, Opportunity, OrganizationType},
+    opportunity::{Domain, Opportunity, OpportunityQuery, OrganizationType},
     person::Person,
     Error, PARTNER_NAMESPACE,
 };
@@ -362,11 +362,11 @@ INSERT
     }
 
     pub async fn load_opportunities(&self, db: &Database) -> Result<Vec<Opportunity>, Error> {
-        Ok(
-            select_opportunity!(r#"WHERE "partner" = $1"#, self.exterior.uid)
-                .fetch_all(db)
-                .await?,
-        )
+        let mut q = OpportunityQuery::default();
+        q.uid = Some(self.exterior.uid);
+        Ok(select_opportunity!("", q as OpportunityQuery)
+            .fetch_all(db)
+            .await?)
     }
 
     pub async fn count_total_opportunities(&self, db: &Database) -> Result<u32, Error> {
