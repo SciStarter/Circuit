@@ -261,7 +261,8 @@ CREATE TABLE c_opportunity_instance (
     "id" serial PRIMARY KEY,
     "opportunity_id" integer NOT NULL REFERENCES "c_opportunity" ON DELETE CASCADE,
     "start" timestamptz NOT NULL,
-    "end" timestamptz
+    "end" timestamptz,
+    UNIQUE ("opportunity_id", "start")
 );
 
 CREATE INDEX c_opportunity_instance_via_opportunity_id ON c_opportunity_instance ("opportunity_id");
@@ -335,6 +336,16 @@ CREATE TABLE c_opportunity_hashtag (
 
 CREATE INDEX c_opportunity_hashtag_via_opportunity_id ON c_opportunity_hashtag ("opportunity_id");
 CREATE INDEX c_opportunity_hashtag_via_hashtag ON c_opportunity_hashtag ("hashtag");
+
+CREATE TABLE c_opportunity_language (
+    "id" serial PRIMARY KEY,
+    "opportunity_id" integer NOT NULL REFERENCES "c_opportunity" ON DELETE CASCADE,
+    "language" text NOT NULL,
+    UNIQUE ("opportunity_id", "language")
+);
+
+CREATE INDEX c_opportunity_language_via_opportunity_id ON c_opportunity_language ("opportunity_id");
+CREATE INDEX c_opportunity_language_via_language ON c_opportunity_language ("language");
 
 CREATE FUNCTION "c_opportunity_tsvector" ("row" c_opportunity) RETURNS tsvector
 LANGUAGE plpgsql
@@ -635,6 +646,8 @@ INSERT
         o."end"::timestamptz AS "end"
     FROM
         old_instances o
+    ON CONFLICT ("opportunity_id", "start")
+        DO NOTHING
 ;
 
 WITH old_tags AS (

@@ -872,12 +872,14 @@ pub struct OpportunityInstance {
 }
 
 impl OpportunityInstance {
-    pub async fn delete(&self) -> Result<(), Error> {
-        if let Some(_id) = self.id {
-            todo!()
-        } else {
-            Ok(())
+    pub async fn delete(&self, db: &Database) -> Result<(), Error> {
+        if let Some(id) = self.id {
+            sqlx::query!(r#"DELETE FROM c_opportunity_instance WHERE id = $1"#, id)
+                .execute(db)
+                .await?;
         }
+
+        Ok(())
     }
 }
 
@@ -1146,7 +1148,7 @@ macro_rules! select_opportunity_with_overlay {
 #[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Opportunity {
-    pub id: Option<i32>,
+    id: Option<i32>,
     pub uid: Uuid,
     pub slug: String,
     pub partner_name: String,
@@ -1190,6 +1192,16 @@ pub struct Opportunity {
 }
 
 impl Opportunity {
+    pub fn id(&self) -> Result<i32, Error> {
+        let Some(id) = self.id else {
+            return Err(Error::NoSuch(
+                "Opportunity must be stored before id and related tables are available",
+            ));
+        };
+
+        Ok(id)
+    }
+
     pub async fn from_ref(
         oref: &OpportunityReference,
         db: &Database,
@@ -1205,71 +1217,311 @@ impl Opportunity {
     }
 
     pub async fn interior(&self, db: &Database) -> Result<OpportunityInterior, Error> {
-        Ok(OpportunityInterior::load_by_id(
-            db,
-            self.id.ok_or_else(|| {
-                Error::Missing(String::from(
-                    "Opportunity must have an id before an OpportunityInterior can be attached",
-                ))
-            })?,
+        Ok(OpportunityInterior::load_by_id(db, self.id()?).await?)
+    }
+
+    pub async fn venue_types(&self, db: &Database) -> Result<Vec<VenueType>, Error> {
+        struct Row {
+            value: VenueType,
+        }
+
+        Ok(sqlx::query_as!(
+            Row,
+            r#"SELECT venue_type AS "value!: VenueType" FROM c_opportunity_venue_type WHERE opportunity_id = $1 AND overlay = false"#,
+            self.id()?,
+        ).fetch_all(db).await?.into_iter().map(|r| r.value).collect())
+    }
+
+    pub async fn venue_types_with_overlay(&self, db: &Database) -> Result<Vec<VenueType>, Error> {
+        struct Row {
+            value: VenueType,
+        }
+
+        Ok(sqlx::query_as!(
+            Row,
+            r#"SELECT venue_type AS "value!: VenueType" FROM c_opportunity_venue_type WHERE opportunity_id = $1"#,
+            self.id()?,
+        ).fetch_all(db).await?.into_iter().map(|r| r.value).collect())
+    }
+
+    pub async fn set_venue_types(
+        &self,
+        db: &Database,
+        vals: Vec<VenueType>,
+        overlay: bool,
+    ) -> Result<(), Error> {
+        sqlx::query!(
+            r#"
+            DELETE FROM c_opportunity_venue_type WHERE "opportunity_id" = $1 AND "overlay" = $2
+            "#,
+            self.id()?,
+            overlay,
         )
-        .await?)
-    }
+        .execute(db)
+        .await?;
 
-    pub async fn venues(&self, _db: &Database) -> Result<Vec<VenueType>, Error> {
-        todo!()
-    }
+        for val in vals {
+            sqlx::query!(
+                r#"
+                INSERT INTO c_opportunity_venue_type ("opportunity_id", "venue_type", "overlay")
+                VALUES ($1, $2, $3)
+                ON CONFLICT ("opportunity_id", "venue_type") DO UPDATE
+                SET "overlay" = EXCLUDED."overlay"
+                "#,
+                self.id()?,
+                val as VenueType,
+                overlay,
+            )
+            .execute(db)
+            .await?;
+        }
 
-    pub async fn set_venues(&self, _db: &Database, _vals: Vec<VenueType>) -> Result<(), Error> {
-        todo!()
+        Ok(())
     }
 
     #[doc(alias = "activity_types")]
-    pub async fn descriptors(&self, _db: &Database) -> Result<Vec<Descriptor>, Error> {
-        todo!()
+    pub async fn descriptors(&self, db: &Database) -> Result<Vec<Descriptor>, Error> {
+        struct Row {
+            value: Descriptor,
+        }
+
+        Ok(sqlx::query_as!(
+            Row,
+            r#"SELECT descriptor AS "value!: Descriptor" FROM c_opportunity_descriptor WHERE opportunity_id = $1 AND overlay = false"#,
+            self.id()?,
+        ).fetch_all(db).await?.into_iter().map(|r| r.value).collect())
+    }
+
+    #[doc(alias = "activity_types_with_overlay")]
+    pub async fn descriptors_with_overlay(&self, db: &Database) -> Result<Vec<Descriptor>, Error> {
+        struct Row {
+            value: Descriptor,
+        }
+
+        Ok(sqlx::query_as!(
+            Row,
+            r#"SELECT descriptor AS "value!: Descriptor" FROM c_opportunity_descriptor WHERE opportunity_id = $1"#,
+            self.id()?,
+        ).fetch_all(db).await?.into_iter().map(|r| r.value).collect())
     }
 
     #[doc(alias = "set_activity_types")]
     pub async fn set_descriptors(
         &self,
-        _db: &Database,
-        _vals: Vec<Descriptor>,
+        db: &Database,
+        vals: Vec<Descriptor>,
+        overlay: bool,
     ) -> Result<(), Error> {
-        todo!()
+        sqlx::query!(
+            r#"
+            DELETE FROM c_opportunity_descriptor WHERE "opportunity_id" = $1 AND "overlay" = $2
+            "#,
+            self.id()?,
+            overlay,
+        )
+        .execute(db)
+        .await?;
+
+        for val in vals {
+            sqlx::query!(
+                r#"
+                INSERT INTO c_opportunity_descriptor ("opportunity_id", "descriptor", "overlay")
+                VALUES ($1, $2, $3)
+                ON CONFLICT ("opportunity_id", "descriptor") DO UPDATE
+                SET "overlay" = EXCLUDED."overlay"
+                "#,
+                self.id()?,
+                val as Descriptor,
+                overlay,
+            )
+            .execute(db)
+            .await?;
+        }
+
+        Ok(())
     }
 
-    pub async fn topics(&self, _db: &Database) -> Result<Vec<Topic>, Error> {
-        todo!()
+    pub async fn topics(&self, db: &Database) -> Result<Vec<Topic>, Error> {
+        struct Row {
+            value: Topic,
+        }
+
+        Ok(sqlx::query_as!(
+            Row,
+            r#"SELECT topic AS "value!: Topic" FROM c_opportunity_topic WHERE opportunity_id = $1 AND overlay = false"#,
+            self.id()?,
+        ).fetch_all(db).await?.into_iter().map(|r| r.value).collect())
     }
 
-    pub async fn set_topics(&self, _db: &Database, _vals: Vec<Topic>) -> Result<(), Error> {
-        todo!()
+    pub async fn topics_with_overlay(&self, db: &Database) -> Result<Vec<Topic>, Error> {
+        struct Row {
+            value: Topic,
+        }
+
+        Ok(sqlx::query_as!(
+            Row,
+            r#"SELECT topic AS "value!: Topic" FROM c_opportunity_topic WHERE opportunity_id = $1"#,
+            self.id()?,
+        )
+        .fetch_all(db)
+        .await?
+        .into_iter()
+        .map(|r| r.value)
+        .collect())
     }
 
-    pub async fn tags(&self, _db: &Database) -> Result<HashSet<String>, Error> {
-        todo!()
+    pub async fn set_topics(
+        &self,
+        db: &Database,
+        vals: Vec<Topic>,
+        overlay: bool,
+    ) -> Result<(), Error> {
+        sqlx::query!(
+            r#"
+            DELETE FROM c_opportunity_topic WHERE "opportunity_id" = $1 AND "overlay" = $2
+            "#,
+            self.id()?,
+            overlay,
+        )
+        .execute(db)
+        .await?;
+
+        for val in vals {
+            sqlx::query!(
+                r#"
+                INSERT INTO c_opportunity_topic ("opportunity_id", "topic", "overlay")
+                VALUES ($1, $2, $3)
+                ON CONFLICT ("opportunity_id", "topic") DO UPDATE
+                SET "overlay" = EXCLUDED."overlay"
+                "#,
+                self.id()?,
+                val as Topic,
+                overlay,
+            )
+            .execute(db)
+            .await?;
+        }
+
+        Ok(())
     }
 
-    pub async fn set_tags<Tag>(&self, _db: &Database, _vals: HashSet<Tag>) -> Result<(), Error>
+    pub async fn tags(&self, db: &Database) -> Result<HashSet<String>, Error> {
+        struct Row {
+            value: String,
+        }
+
+        Ok(sqlx::query_as!(
+            Row,
+            r#"SELECT tag AS "value!" FROM c_opportunity_tag WHERE opportunity_id = $1 AND overlay = false"#,
+            self.id()?,
+        ).fetch_all(db).await?.into_iter().map(|r| r.value).collect())
+    }
+
+    pub async fn tags_with_overlay(&self, db: &Database) -> Result<HashSet<String>, Error> {
+        struct Row {
+            value: String,
+        }
+
+        Ok(sqlx::query_as!(
+            Row,
+            r#"SELECT tag AS "value!" FROM c_opportunity_tag WHERE opportunity_id = $1"#,
+            self.id()?,
+        )
+        .fetch_all(db)
+        .await?
+        .into_iter()
+        .map(|r| r.value)
+        .collect())
+    }
+
+    pub async fn set_tags<Tag>(
+        &self,
+        db: &Database,
+        vals: HashSet<Tag>,
+        overlay: bool,
+    ) -> Result<(), Error>
     where
         Tag: AsRef<str>,
     {
-        todo!()
+        sqlx::query!(
+            r#"
+            DELETE FROM c_opportunity_tag WHERE "opportunity_id" = $1 AND "overlay" = $2
+            "#,
+            self.id()?,
+            overlay,
+        )
+        .execute(db)
+        .await?;
+
+        for val in vals {
+            sqlx::query!(
+                r#"
+                INSERT INTO c_opportunity_tag ("opportunity_id", "tag", "overlay")
+                VALUES ($1, lower($2), $3)
+                ON CONFLICT ("opportunity_id", "tag") DO UPDATE
+                SET "overlay" = EXCLUDED."overlay"
+                "#,
+                self.id()?,
+                val.as_ref(),
+                overlay,
+            )
+            .execute(db)
+            .await?;
+        }
+
+        Ok(())
     }
 
-    pub async fn instances(&self, _db: &Database) -> Result<Vec<OpportunityInstance>, Error> {
-        todo!()
+    pub async fn instances(&self, db: &Database) -> Result<Vec<OpportunityInstance>, Error> {
+        struct Row {
+            id: i32,
+            opportunity_id: i32,
+            start: DateTime<Utc>,
+            end: Option<DateTime<Utc>>,
+        }
+
+        Ok(sqlx::query_as!(
+            Row,
+            r#"SELECT "id", "opportunity_id", "start", "end" FROM c_opportunity_instance WHERE opportunity_id = $1"#,
+            self.id()?,
+        )
+           .map(|row| OpportunityInstance {
+               id: Some(row.id),
+               opportunity_id: Some(row.opportunity_id),
+               start: row.start.fixed_offset(),
+               end: row.end.map(|dt| dt.fixed_offset())
+           })
+        .fetch_all(db)
+        .await?)
     }
 
     pub async fn ensure_instance(
         &self,
-        _db: &Database,
-        _inst: OpportunityInstance,
+        db: &Database,
+        inst: OpportunityInstance,
     ) -> Result<(), Error> {
-        todo!()
+        sqlx::query!(
+            r#"
+            INSERT INTO c_opportunity_instance ("opportunity_id", "start", "end")
+            VALUES ($1, $2, $3)
+            ON CONFLICT ("opportunity_id", "start")
+            DO UPDATE SET "end" = EXCLUDED."end"
+            "#,
+            self.id()?,
+            inst.start,
+            inst.end
+        )
+        .execute(db)
+        .await?;
+
+        Ok(())
     }
 
     pub async fn hashtags(&self, _db: &Database) -> Result<Vec<String>, Error> {
+        todo!()
+    }
+
+    pub async fn hashtags_with_overlay(&self, _db: &Database) -> Result<Vec<String>, Error> {
         todo!()
     }
 
@@ -1281,6 +1533,13 @@ impl Opportunity {
     }
 
     pub async fn social_handles(&self, _db: &Database) -> Result<Vec<(String, String)>, Error> {
+        todo!()
+    }
+
+    pub async fn social_handles_with_overlay(
+        &self,
+        _db: &Database,
+    ) -> Result<Vec<(String, String)>, Error> {
         todo!()
     }
 
@@ -1696,65 +1955,82 @@ pub struct OpportunityQuery {
     pub region: Option<String>,
 }
 
-#[derive(Debug)]
-enum ParamValue {
-    // Raw here means it's not converted to JSON before sending it to
-    // the database.
-    RawString(String),
-    RawFloat(f32),
-    RawInt(i32),
-    RawBool(bool),
-    //RawUuid(Uuid),
-    RawVecString(Vec<String>),
-    Bool(bool),
-    Uuid(Uuid),
-    VecString(Vec<String>),
-    //VecTopic(Vec<Topic>),
-    VecEntityType(Vec<EntityType>),
-    //VecDescriptor(Vec<Descriptor>),
-    VecVenueType(Vec<VenueType>),
-    VecUuid(Vec<Uuid>),
-}
-
-impl ParamValue {
-    fn append(self, params: &mut Vec<ParamValue>) -> usize {
-        params.push(self);
-        params.len()
+impl OpportunityQuery {
+    pub fn with_id(mut self, id: i32) -> Self {
+        self.id = Some(id);
+        self
     }
 
-    fn add_to_query(
-        self,
-        query: Query<Postgres, PgArguments>,
-    ) -> Result<Query<Postgres, PgArguments>, Error> {
-        Ok(match self {
-            ParamValue::RawString(val) => query.bind(val),
-            ParamValue::RawFloat(val) => query.bind(val),
-            ParamValue::RawInt(val) => query.bind(val),
-            ParamValue::RawBool(val) => query.bind(val),
-            //ParamValue::RawUuid(val) => query.bind(val),
-            ParamValue::RawVecString(val) => query.bind(val),
-            ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
-            //ParamValue::VecTopic(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::VecEntityType(val) => query.bind(serde_json::to_value(val)?),
-            //ParamValue::VecDescriptor(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::VecVenueType(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::VecUuid(val) => query.bind(serde_json::to_value(val)?),
-        })
+    pub fn with_uid(mut self, uid: Uuid) -> Self {
+        self.uid = Some(uid);
+        self
     }
 
-    fn add_all_to_query<'req>(
-        params: Vec<ParamValue>,
-        mut query: Query<Postgres, PgArguments>,
-    ) -> Result<Query<Postgres, PgArguments>, Error> {
-        for value in params.into_iter() {
-            query = value.add_to_query(query)?;
-        }
-
-        Ok(query)
+    pub fn with_slug(mut self, slug: impl AsRef<str>) -> Self {
+        self.slug = Some(slug.as_ref().to_string());
+        self
     }
 }
+
+// #[derive(Debug)]
+// enum ParamValue {
+//     // Raw here means it's not converted to JSON before sending it to
+//     // the database.
+//     RawString(String),
+//     RawFloat(f32),
+//     RawInt(i32),
+//     RawBool(bool),
+//     //RawUuid(Uuid),
+//     RawVecString(Vec<String>),
+//     Bool(bool),
+//     Uuid(Uuid),
+//     VecString(Vec<String>),
+//     //VecTopic(Vec<Topic>),
+//     VecEntityType(Vec<EntityType>),
+//     //VecDescriptor(Vec<Descriptor>),
+//     VecVenueType(Vec<VenueType>),
+//     VecUuid(Vec<Uuid>),
+// }
+
+// impl ParamValue {
+//     fn append(self, params: &mut Vec<ParamValue>) -> usize {
+//         params.push(self);
+//         params.len()
+//     }
+
+//     fn add_to_query(
+//         self,
+//         query: Query<Postgres, PgArguments>,
+//     ) -> Result<Query<Postgres, PgArguments>, Error> {
+//         Ok(match self {
+//             ParamValue::RawString(val) => query.bind(val),
+//             ParamValue::RawFloat(val) => query.bind(val),
+//             ParamValue::RawInt(val) => query.bind(val),
+//             ParamValue::RawBool(val) => query.bind(val),
+//             //ParamValue::RawUuid(val) => query.bind(val),
+//             ParamValue::RawVecString(val) => query.bind(val),
+//             ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
+//             ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
+//             ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
+//             //ParamValue::VecTopic(val) => query.bind(serde_json::to_value(val)?),
+//             ParamValue::VecEntityType(val) => query.bind(serde_json::to_value(val)?),
+//             //ParamValue::VecDescriptor(val) => query.bind(serde_json::to_value(val)?),
+//             ParamValue::VecVenueType(val) => query.bind(serde_json::to_value(val)?),
+//             ParamValue::VecUuid(val) => query.bind(serde_json::to_value(val)?),
+//         })
+//     }
+
+//     fn add_all_to_query<'req>(
+//         params: Vec<ParamValue>,
+//         mut query: Query<Postgres, PgArguments>,
+//     ) -> Result<Query<Postgres, PgArguments>, Error> {
+//         for value in params.into_iter() {
+//             query = value.add_to_query(query)?;
+//         }
+
+//         Ok(query)
+//     }
+// }
 
 // fn build_matching_query(
 //     fields: &[&str],
@@ -2303,7 +2579,7 @@ impl OpportunityPseudoIter {
         let Some(uid) = self.uids.pop_front() else {
             return None;
         };
-        Opportunity::load_by_uid(db, &uid).await.ok()
+        Opportunity::load_by_uid(db, uid).await.ok()
     }
 }
 
@@ -2689,45 +2965,41 @@ impl Opportunity {
     }
 
     pub async fn load_by_id(db: &Database, id: i32) -> Result<Opportunity, Error> {
-        let mut q = OpportunityQuery::default();
-        q.id = Some(id);
+        let q = OpportunityQuery::default().with_id(id);
         Ok(select_opportunity!("", q as OpportunityQuery)
             .fetch_one(db)
             .await?)
     }
 
     pub async fn load_by_id_with_overlay(db: &Database, id: i32) -> Result<Opportunity, Error> {
-        let mut q = OpportunityQuery::default();
-        q.id = Some(id);
+        let q = OpportunityQuery::default().with_id(id);
         Ok(select_opportunity_with_overlay!("", q as OpportunityQuery)
             .fetch_one(db)
             .await?)
     }
 
-    pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<Opportunity, Error> {
-        let mut q = OpportunityQuery::default();
-        q.uid = Some(*uid);
+    pub async fn load_by_uid(db: &Database, uid: Uuid) -> Result<Opportunity, Error> {
+        let q = OpportunityQuery::default().with_uid(uid);
         Ok(select_opportunity!("", q as OpportunityQuery)
             .fetch_one(db)
             .await?)
     }
 
-    pub async fn load_by_uid_with_overlay(db: &Database, uid: &Uuid) -> Result<Opportunity, Error> {
-        let mut q = OpportunityQuery::default();
-        q.uid = Some(*uid);
+    pub async fn load_by_uid_with_overlay(db: &Database, uid: Uuid) -> Result<Opportunity, Error> {
+        let q = OpportunityQuery::default().with_uid(uid);
         Ok(select_opportunity_with_overlay!("", q as OpportunityQuery)
             .fetch_one(db)
             .await?)
     }
 
-    pub async fn id_by_uid(db: &Database, uid: &Uuid) -> Result<Option<i32>, Error> {
+    pub async fn id_by_uid(db: &Database, uid: Uuid) -> Result<Option<i32>, Error> {
         let rec = sqlx::query!(r#"SELECT "id" FROM c_opportunity WHERE "uid" = $1"#, uid)
             .fetch_optional(db)
             .await?;
         Ok(rec.map(|row| row.id))
     }
 
-    pub async fn exists_by_uid(db: &Database, uid: &Uuid) -> Result<bool, Error> {
+    pub async fn exists_by_uid(db: &Database, uid: Uuid) -> Result<bool, Error> {
         let rec = sqlx::query!(
             r#"SELECT exists(SELECT 1 FROM c_opportunity WHERE "uid" = $1)"#,
             uid
@@ -2740,15 +3012,14 @@ impl Opportunity {
 
     pub async fn set_id_if_necessary(&mut self, db: &Database) -> Result<(), Error> {
         if let None = self.id {
-            self.id = Opportunity::id_by_uid(db, &self.uid).await?;
+            self.id = Opportunity::id_by_uid(db, self.uid).await?;
         }
 
         Ok(())
     }
 
-    pub async fn load_by_slug(db: &Database, slug: &str) -> Result<Opportunity, Error> {
-        let mut q = OpportunityQuery::default();
-        q.slug = Some(slug.to_owned());
+    pub async fn load_by_slug(db: &Database, slug: impl AsRef<str>) -> Result<Opportunity, Error> {
+        let q = OpportunityQuery::default().with_slug(slug);
         Ok(select_opportunity!("", q as OpportunityQuery)
             .fetch_one(db)
             .await?)
@@ -2756,19 +3027,18 @@ impl Opportunity {
 
     pub async fn load_by_slug_with_overlay(
         db: &Database,
-        slug: &str,
+        slug: impl AsRef<str>,
     ) -> Result<Opportunity, Error> {
-        let mut q = OpportunityQuery::default();
-        q.slug = Some(slug.to_owned());
+        let q = OpportunityQuery::default().with_slug(slug);
         Ok(select_opportunity_with_overlay!("", q as OpportunityQuery)
             .fetch_one(db)
             .await?)
     }
 
-    pub async fn id_by_slug(db: &Database, slug: &str) -> Result<Option<i32>, Error> {
+    pub async fn id_by_slug(db: &Database, slug: impl AsRef<str>) -> Result<Option<i32>, Error> {
         let rec = sqlx::query!(
             r#"SELECT "id" from c_opportunity WHERE "slug" = lower($1)"#,
-            slug
+            slug.as_ref()
         )
         .fetch_optional(db)
         .await?;
@@ -2776,10 +3046,10 @@ impl Opportunity {
         Ok(rec.map(|row| row.id))
     }
 
-    pub async fn uid_by_slug(db: &Database, slug: &str) -> Result<Option<Uuid>, Error> {
+    pub async fn uid_by_slug(db: &Database, slug: impl AsRef<str>) -> Result<Option<Uuid>, Error> {
         let rec = sqlx::query!(
             r#"SELECT "uid" FROM c_opportunity WHERE "slug" = lower($1)"#,
-            slug
+            slug.as_ref()
         )
         .fetch_optional(db)
         .await?;
@@ -2787,10 +3057,10 @@ impl Opportunity {
         Ok(rec.map(|row| row.uid))
     }
 
-    pub async fn exists_by_slug(db: &Database, slug: &str) -> Result<bool, Error> {
+    pub async fn exists_by_slug(db: &Database, slug: impl AsRef<str>) -> Result<bool, Error> {
         let rec = sqlx::query!(
             r#"SELECT exists(SELECT 1 FROM c_opportunity WHERE "slug" = lower($1))"#,
-            slug
+            slug.as_ref()
         )
         .fetch_one(db)
         .await?;

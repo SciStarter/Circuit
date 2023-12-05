@@ -14,6 +14,8 @@ DROP FUNCTION "c_opportunity_by_uid_is_current_as_of";
 DROP FUNCTION "c_opportunity_by_uid_is_current";
 DROP FUNCTION IF EXISTS "c_opportunity_is_ongoing";
 
+DROP INDEX "c_opportunity_language_via_language";
+DROP INDEX "c_opportunity_language_via_opportunity_id";
 DROP INDEX "c_opportunity_hashtag_via_opportunity_id";
 DROP INDEX "c_opportunity_hashtag_via_hashtag";
 DROP INDEX "c_opportunity_venue_type_via_opportunity_id";
@@ -42,6 +44,7 @@ DROP TABLE "c_opportunity_topic";
 DROP TABLE "c_opportunity_descriptor";
 DROP TABLE "c_opportunity_venue_type";
 DROP TABLE "c_opportunity_hashtag";
+DROP TABLE "c_opportunity_language";
 DROP TABLE "c_opportunity_instance";
 DROP TABLE "c_opportunity_interior";
 DROP TABLE "c_opportunity_overlay";

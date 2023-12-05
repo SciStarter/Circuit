@@ -2,6 +2,7 @@ DROP FUNCTION c_opportunities_matching;
 DROP FUNCTION c_opportunity_until;
 DROP FUNCTION c_opportunity_locality;
 DROP FUNCTION c_opportunity_distance;
+DROP FUNCTION c_opportunity_query_default;
 DROP TYPE T_OpportunityQuery;
 DROP TYPE T_OpportunityQueryOrdering;
 DROP TYPE T_OpportunityQueryTemporal;

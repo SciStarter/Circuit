@@ -35,7 +35,7 @@ impl LogIdentifier {
     pub async fn get_opportunity(&self, db: &Database) -> Result<Opportunity, Error> {
         match self {
             LogIdentifier::Id(id) => Ok(Opportunity::load_by_id(db, *id).await?),
-            LogIdentifier::Uid(uid) => Ok(Opportunity::load_by_uid(db, uid).await?),
+            LogIdentifier::Uid(uid) => Ok(Opportunity::load_by_uid(db, *uid).await?),
             LogIdentifier::Slug(slug) => Ok(Opportunity::load_by_slug(db, slug).await?),
         }
     }
@@ -153,7 +153,7 @@ impl From<ParticipationRow> for Participation {
 impl Participation {
     pub async fn expand(self, db: &Database) -> Result<ExpandedParticipation, Error> {
         Ok(ExpandedParticipation {
-            opportunity: Opportunity::load_by_uid(db, &self.opportunity).await?,
+            opportunity: Opportunity::load_by_uid(db, self.opportunity).await?,
             when: self.when,
         })
     }
