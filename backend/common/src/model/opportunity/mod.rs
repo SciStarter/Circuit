@@ -689,6 +689,7 @@ pub struct AnnotatedOpportunityExterior {
 pub struct OpportunityForCsv {
     pub uid: Uuid,
     pub slug: String,
+    pub gpt_record: bool,
     pub partner_name: String,
     pub partner_website: Option<String>,
     pub partner_logo_url: Option<String>,
@@ -1045,6 +1046,7 @@ macro_rules! select_opportunity {
               ("match"."opp")."id" AS "id!: _",
               ("match"."opp")."uid" AS "uid!: _",
               ("match"."opp")."slug" AS "slug!: _",
+              ("match"."opp")."gpt_record" AS "gpt_record!: _",
               ("match"."opp")."partner_name" AS "partner_name!: _",
               ("match"."opp")."partner_website" AS "partner_website: _",
               ("match"."opp")."partner_logo_url" AS "partner_logo_url: _",
@@ -1100,6 +1102,7 @@ macro_rules! select_opportunity_with_overlay {
               ("match"."opp")."id" AS "id: _",
               ("match"."opp")."uid" AS "uid!: _",
               ("match"."opp")."slug" AS "slug!: _",
+              ("match"."opp")."gpt_record" AS "gpt_record!: _",
               COALESCE("ov"."partner_name", ("match"."opp")."partner_name") AS "partner_name!: _",
               COALESCE("ov"."partner_website", ("match"."opp")."partner_website") AS "partner_website: _",
               COALESCE("ov"."partner_logo_url", ("match"."opp")."partner_logo_url") AS "partner_logo_url: _",

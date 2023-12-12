@@ -28,6 +28,7 @@ DROP INDEX "c_opportunity_tag_via_tag";
 DROP INDEX "c_opportunity_tag_via_opportunity_id";
 DROP INDEX "c_opportunity_instance_via_opportunity_id";
 
+DROP INDEX "c_opportunity_via_gpt_record";
 DROP INDEX "c_opportunity_via_location_polygon";
 DROP INDEX "c_opportunity_via_location_point";
 DROP INDEX "c_opportunity_via_location_type";

@@ -203,6 +203,7 @@ CREATE TABLE "c_opportunity" (
     "slug" text UNIQUE NOT NULL CHECK ("slug" = lower("slug")),
     "created" timestamptz NOT NULL DEFAULT now(),
     "updated" timestamptz NOT NULL DEFAULT now(),
+    "gpt_record" boolean NOT NULL DEFAULT false,
     "partner_name" text NOT NULL,
     "partner_website" text,
     "partner_logo_url" text,
@@ -251,6 +252,7 @@ CREATE INDEX c_opportunity_via_organization_name ON c_opportunity ("organization
 CREATE INDEX c_opportunity_via_partner ON c_opportunity ("partner");
 CREATE INDEX c_opportunity_via_location_point ON c_opportunity USING GIST ("location_point");
 CREATE INDEX c_opportunity_via_location_polygon ON c_opportunity USING GIST ("location_polygon");
+CREATE INDEX c_opportunity_via_gpt_record ON c_opportunity ("gpt_record");
 
 SELECT setval(
     (SELECT pg_get_serial_sequence('c_opportunity', 'id')),

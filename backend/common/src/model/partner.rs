@@ -128,6 +128,7 @@ pub struct Contact {
 pub struct PartnerExterior {
     pub uid: Uuid,
     pub name: String,
+    pub gpt_record: bool,
     pub organization_type: OrganizationType,
     pub pes_domain: Domain,
     pub url: Option<String>,
