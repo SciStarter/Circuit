@@ -7,7 +7,10 @@ use common::{
     model::{
         analytics::{RelativeTimePeriod, Status as AnayticsStatus},
         invitation::{Invitation, InvitationMode},
-        opportunity::{EntityType, LocationType, OpportunityQuery, OpportunityQueryOrdering},
+        opportunity::{
+            EntityType, LocationType, OpportunityAll, OpportunityQuery, OpportunityQueryOrdering,
+            OpportunityWithRelated,
+        },
         person::PersonPrivilegedReference,
         Opportunity, Pagination, Partner, Person, SelectOption,
     },
@@ -642,24 +645,24 @@ pub async fn opps_regional_detailed(req: tide::Request<Database>) -> tide::Resul
     query.current = Some(true);
     query.region = Some(params.name.clone());
 
-    let matches: Vec<_> = Opportunity::load_matching(
+    let matches: Vec<_> = OpportunityWithRelated::load_matching(
         req.state(),
-        &query,
+        query,
         OpportunityQueryOrdering::Unique,
         Pagination::All,
     )
     .await?
     .into_iter()
     .map(|m| MapPoint {
-        uid: m.exterior.uid.to_string(),
-        title: m.exterior.title,
-        slug: m.exterior.slug,
-        organization_name: m.exterior.organization_name,
-        start_datetimes: m.exterior.start_datetimes,
-        end_datetimes: m.exterior.end_datetimes,
-        location_type: m.exterior.location_type,
-        location_point: m.exterior.location_point,
-        location_polygon: m.exterior.location_polygon,
+        uid: m.opp.uid.to_string(),
+        title: m.opp.title,
+        slug: m.opp.slug,
+        organization_name: m.opp.organization_name,
+        start_datetimes: m.start_datetimes,
+        end_datetimes: m.end_datetimes,
+        location_type: m.opp.location_type,
+        location_point: m.opp.location_point.into(),
+        location_polygon: m.opp.location_polygon.into(),
     })
     .collect();
 

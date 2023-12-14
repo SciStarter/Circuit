@@ -8,14 +8,14 @@
     <link rel="stylesheet" href="/api/docs/manage.css">
     <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.1/dist/cdn.min.js"></script>
-    <title><%= &opportunity.exterior.partner_name %> : <%= &opportunity.exterior.title %> : Overlay</title>
+    <title><%= &opportunity.partner_name %> : <%= &opportunity.title %> : Overlay</title>
   </head>
   <body>
     <section class="section">
       <div class="container">
-        <a href="../<%= opportunity.exterior.uid.to_string() %>">Back to opportunity</a>
+        <a href="../<%= opportunity.uid.to_string() %>">Back to opportunity</a>
 
-        <h1 class="title"><%= &opportunity.exterior.partner_name %> : <%= &opportunity.exterior.title %> : Overlay</h1>
+        <h1 class="title"><%= &opportunity.partner_name %> : <%= &opportunity.title %> : Overlay</h1>
 
         <% if message.len() > 0 { %>
           <%- message %>

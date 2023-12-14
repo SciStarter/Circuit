@@ -7,21 +7,21 @@
     <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
     <link rel="stylesheet" href="/api/docs/manage.css">
     <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
-    <title><%= opportunity.exterior.partner_name %> : <%= opportunity.exterior.title %></title>
+    <title><%= opportunity.exterior.opp.partner_name %> : <%= opportunity.exterior.opp.title %></title>
   </head>
   <body>
     <section class="section">
       <div class="container">
         <a href=".">Back to opportunity list</a>
-        <h1 class="title"><%= opportunity.exterior.partner_name %> : <%= opportunity.exterior.title %></h1>
+        <h1 class="title"><%= opportunity.exterior.opp.partner_name %> : <%= opportunity.exterior.opp.title %></h1>
 
         <% if message.len() > 0 { %>
           <%- message %>
         <% } %>
 
         <p style="padding: 1rem 0px">
-          <a href="<%= opportunity.exterior.uid.to_string() %>/overlay">Edit overlay</a><br>
-          <a href="/<%= opportunity.exterior.slug %>" target="_blank">View on site</a>
+          <a href="<%= opportunity.exterior.opp.uid.to_string() %>/overlay">Edit overlay</a><br>
+          <a href="/<%= opportunity.exterior.opp.slug %>" target="_blank">View on site</a>
         </p>
 
         <form method="post">
@@ -32,7 +32,7 @@
                 <div class="control">
                   <select name="partner">
                     <% for p_ref in all_partners { %>
-                      <option value="<%= p_ref.uid.to_string() %>"<% if p_ref.uid == opportunity.exterior.partner { %> selected<% } %>><%= p_ref.name %></option>
+                      <option value="<%= p_ref.uid.to_string() %>"<% if p_ref.uid == opportunity.exterior.opp.partner { %> selected<% } %>><%= p_ref.name %></option>
                     <% } %>
                   </select>
                 </div>
@@ -42,7 +42,7 @@
               <div class="field">
                 <label class="label">UID</label>
                 <div class="control">
-                  <input class="input" type="text" value="<%= opportunity.exterior.uid.to_string() %>" disabled>
+                  <input class="input" type="text" value="<%= opportunity.exterior.opp.uid.to_string() %>" disabled>
                 </div>
               </div>
             </div>
@@ -50,7 +50,7 @@
               <div class="field">
                 <label class="label">Created</label>
                 <div class="control">
-                  <% if let Some(dt) = opportunity.exterior.partner_created { %>
+                  <% if let Some(dt) = opportunity.exterior.opp.partner_created { %>
                     <input class="input" type="text" value="<%= dt.to_rfc3339() %>" disabled>
                   <% } else { %>
                     <input class="input" type="text" value="" disabled>
@@ -62,7 +62,7 @@
               <div class="field">
                 <label class="label">Updated</label>
                 <div class="control">
-                  <% if let Some(dt) = opportunity.exterior.partner_updated { %>
+                  <% if let Some(dt) = opportunity.exterior.opp.partner_updated { %>
                     <input class="input" type="text" value="<%= dt.to_rfc3339() %>" disabled>
                     <% } else { %>
                     <input class="input" type="text" value="" disabled>
@@ -89,7 +89,7 @@
           <div class="field">
             <label class="label">Slug</label>
             <div class="control">
-              <input class="input" type="text" name="slug" value="<%= opportunity.exterior.slug %>">
+              <input class="input" type="text" name="slug" value="<%= opportunity.exterior.opp.slug %>">
             </div>
           </div>
 
@@ -99,48 +99,40 @@
               <div class="select">
                 <select class="input" name="entity_type">
                   <% for opt in common::model::opportunity::EntityType::all_options() { %>
-                    <% if let EntityType::Page(options) = &opportunity.exterior.entity_type { %>
-                      <% if let EntityType::Page(item_options) = opt.2 { %>
-                        <option value="<%= opt.0 %>"<% if item_options.layout == options.layout { %> selected<% } %>><%= opt.1 %></option>
-                      <% } else { %>
-                        <option value="<%= opt.0 %>"><%= opt.1 %></option>
-                      <% } %>
-                    <% } else { %>
-                      <option value="<%= opt.0 %>"<% if opt.2 == opportunity.exterior.entity_type { %> selected<% } %>><%= opt.1 %></option>
-                    <% } %>
+                  <option value="<%= opt.0 %>"<% if opt.2 == opportunity.exterior.opp.entity_type { %> selected<% } %>><%= opt.1 %></option>
                   <% } %>
                 </select>
               </div>
             </div>
           </div>
 
-          <% if let EntityType::Page(_options) = opportunity.exterior.entity_type { %>
+          <% if opportunity.exterior.opp.entity_type.is_page() { %>
 
             <div class="field">
               <label class="label">Title</label>
               <div class="control">
-                <input class="input" type="text" name="title" value="<%= opportunity.exterior.title %>">
+                <input class="input" type="text" name="title" value="<%= opportunity.exterior.opp.title %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Canonical URL</label>
               <div class="control">
-                <input class="input" type="text" name="partner_opp_url" value="<% if let Some(url) = opportunity.exterior.partner_opp_url { %><%= url %><% } %>">
+                <input class="input" type="text" name="partner_opp_url" value="<% if let Some(url) = opportunity.exterior.opp.partner_opp_url { %><%= url %><% } %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Description for sharing</label>
               <div class="control">
-                <input class="input" type="text" name="short_desc" value="<%= opportunity.exterior.short_desc %>">
+                <input class="input" type="text" name="short_desc" value="<%= opportunity.exterior.opp.short_desc %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Image for sharing (e.g. <em>https://some.aws.url/image.jpg</em>)</label>
               <div class="control">
-                <input class="input" type="text" name="image_url" value="<%= opportunity.exterior.image_url %>">
+                <input class="input" type="text" name="image_url" value="<%= opportunity.exterior.opp.image_url %>">
               </div>
             </div>
 
@@ -148,9 +140,9 @@
 
             <%# consider adding .wysiwyg textareas to edit the page blocks inline %>
 
-            <a href="/<%= opportunity.exterior.slug %>" target="_preview">view page in tab</a>
+            <a href="/<%= opportunity.exterior.opp.slug %>" target="_preview">view page in tab</a>
 
-            <input type="hidden" name="partner_name" value="<%= opportunity.exterior.partner_name %>">
+            <input type="hidden" name="partner_name" value="<%= opportunity.exterior.opp.partner_name %>">
             <input type="hidden" name="tags" value="<%= opportunity.exterior.tags.iter().cloned().collect::<Vec<_>>().join(", ") %>">
 
           <% } else { %>
@@ -158,14 +150,14 @@
             <div class="field">
               <label class="label">Partner Name</label>
               <div class="control">
-                <input class="input" type="text" name="partner_name" value="<%= opportunity.exterior.partner_name %>">
+                <input class="input" type="text" name="partner_name" value="<%= opportunity.exterior.opp.partner_name %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Partner Website</label>
               <div class="control">
-                <% if let Some(val) = opportunity.exterior.partner_website { %>
+                <% if let Some(val) = opportunity.exterior.opp.partner_website { %>
                   <input class="input" type="text" name="partner_website" value="<%= val %>">
                 <% } else { %>
                   <input class="input" type="text" name="partner_website" value="">
@@ -176,7 +168,7 @@
             <div class="field">
               <label class="label">Partner Logo URL</label>
               <div class="control">
-                <% if let Some(val) = opportunity.exterior.partner_logo_url { %>
+                <% if let Some(val) = opportunity.exterior.opp.partner_logo_url { %>
                   <input class="input" type="text" name="partner_logo_url" value="<%= val %>">
                 <% } else { %>
                   <input class="input" type="text" name="partner_logo_url" value="">
@@ -187,14 +179,14 @@
             <div class="field">
               <label class="label">Partner Opportunity URL</label>
               <div class="control">
-                <input class="input" type="text" name="partner_opp_url" value="<% if let Some(url) = opportunity.exterior.partner_opp_url { %><%= url %><% } %>">
+                <input class="input" type="text" name="partner_opp_url" value="<% if let Some(url) = opportunity.exterior.opp.partner_opp_url { %><%= url %><% } %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Organization Name</label>
               <div class="control">
-                <input class="input" type="text" name="organization_name" value="<%= opportunity.exterior.organization_name %>">
+                <input class="input" type="text" name="organization_name" value="<%= opportunity.exterior.opp.organization_name %>">
               </div>
             </div>
 
@@ -204,7 +196,7 @@
                 <div class="select">
                   <select class="input" name="organization_type">
                     <% for opt in common::model::opportunity::OrganizationType::all_options() { %>
-                      <option value="<%= opt.0 %>"<% if opt.2 == opportunity.exterior.organization_type { %> selected<% } %>><%= opt.1 %></option>
+                      <option value="<%= opt.0 %>"<% if opt.2 == opportunity.exterior.opp.organization_type { %> selected<% } %>><%= opt.1 %></option>
                     <% } %>
                   </select>
                 </div>
@@ -214,7 +206,7 @@
             <div class="field">
               <label class="label">Organization Website</label>
               <div class="control">
-                <% if let Some(val) = opportunity.exterior.organization_website { %>
+                <% if let Some(val) = opportunity.exterior.opp.organization_website { %>
                   <input class="input" type="text" name="organization_website" value="<%= val %>">
                 <% } else { %>
                   <input class="input" type="text" name="organization_website">
@@ -225,7 +217,7 @@
             <div class="field">
               <label class="label">Organization Logo URL</label>
               <div class="control">
-                <% if let Some(val) = opportunity.exterior.organization_logo_url { %>
+                <% if let Some(val) = opportunity.exterior.opp.organization_logo_url { %>
                   <input class="input" type="text" name="organization_logo_url" value="<%= val %>">
                 <% } else { %>
                   <input class="input" type="text" name="organization_logo_url" value="">
@@ -276,14 +268,14 @@
             <div class="field">
               <label class="label">Opportunity Minimum Age</label>
               <div class="control">
-                <input class="input" type="number" name="min_age" value="<%= opportunity.exterior.min_age %>">
+                <input class="input" type="number" name="min_age" value="<%= opportunity.exterior.opp.min_age %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Opportunity Maximum Age</label>
               <div class="control">
-                <input class="input" type="number" name="max_age" value="<%= opportunity.exterior.max_age %>">
+                <input class="input" type="number" name="max_age" value="<%= opportunity.exterior.opp.max_age %>">
               </div>
             </div>
 
@@ -293,7 +285,7 @@
                 <div class="select">
                   <select class="input" name="pes_domain">
                     <% for opt in common::model::opportunity::Domain::all_options() { %>
-                      <option value="<%= opt.0 %>"<% if opt.2 == opportunity.exterior.pes_domain { %> selected<% } %>><%= opt.1 %></option>
+                      <option value="<%= opt.0 %>"<% if opt.2 == opportunity.exterior.opp.pes_domain { %> selected<% } %>><%= opt.1 %></option>
                     <% } %>
                   </select>
                 </div>
@@ -330,42 +322,42 @@
             <div class="field">
               <label class="label">Ticket Required</label>
               <div class="control">
-                <label class="checkbox"><input type="checkbox" name="ticket_required" value="true"<% if opportunity.exterior.ticket_required { %> checked<% } %>>Is a ticket required?</label>
+                <label class="checkbox"><input type="checkbox" name="ticket_required" value="true"<% if opportunity.exterior.opp.ticket_required { %> checked<% } %>>Is a ticket required?</label>
               </div>
             </div>
 
             <div class="field">
               <label class="label">Title</label>
               <div class="control">
-                <input class="input" type="text" name="title" value="<%= opportunity.exterior.title %>">
+                <input class="input" type="text" name="title" value="<%= opportunity.exterior.opp.title %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Description</label>
               <div class="control">
-                <textarea id="description" type="text" name="description"><%= opportunity.exterior.description %></textarea>
+                <textarea id="description" type="text" name="description"><%= opportunity.exterior.opp.description %></textarea>
               </div>
             </div>
 
             <div class="field">
               <label class="label">Short Description (elevator pitch)</label>
               <div class="control">
-                <input class="input" type="text" name="short_desc" value="<%= opportunity.exterior.short_desc %>">
+                <input class="input" type="text" name="short_desc" value="<%= opportunity.exterior.opp.short_desc %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Image URL</label>
               <div class="control">
-                <input class="input" type="text" name="image_url" value="<%= opportunity.exterior.image_url %>">
+                <input class="input" type="text" name="image_url" value="<%= opportunity.exterior.opp.image_url %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Image Credit</label>
               <div class="control">
-                <input class="input" type="text" name="image_credit" value="<%= opportunity.exterior.image_credit %>">
+                <input class="input" type="text" name="image_credit" value="<%= opportunity.exterior.opp.image_credit %>">
               </div>
             </div>
 
@@ -444,7 +436,7 @@
                 <div class="select">
                   <select class="input" name="cost">
                     <% for opt in common::model::opportunity::Cost::all_options() { %>
-                      <option value="<%= opt.0 %>"<% if opt.2 == opportunity.exterior.cost { %> selected<% } %>><%= opt.1 %></option>
+                      <option value="<%= opt.0 %>"<% if opt.2 == opportunity.exterior.opp.cost { %> selected<% } %>><%= opt.1 %></option>
                     <% } %>
                   </select>
                 </div>
@@ -468,7 +460,7 @@
             <div class="field">
               <label class="label">Opportunity Is Online</label>
               <div class="control">
-                <label class="checkbox"><input type="checkbox" name="is_online" value="true"<% if opportunity.exterior.is_online { %> checked<% } %>>Is the opportunity available online?</label>
+                <label class="checkbox"><input type="checkbox" name="is_online" value="true"<% if opportunity.exterior.opp.is_online { %> checked<% } %>>Is the opportunity available online?</label>
               </div>
             </div>
 
@@ -478,7 +470,7 @@
                 <div class="select">
                   <select class="input" name="location_type">
                     <% for opt in common::model::opportunity::LocationType::all_options() { %>
-                      <option value="<%= opt.0 %>"<% if opt.2 == opportunity.exterior.location_type { %> selected<% } %>><%= opt.1 %></option>
+                      <option value="<%= opt.0 %>"<% if opt.2 == opportunity.exterior.opp.location_type { %> selected<% } %>><%= opt.1 %></option>
                     <% } %>
                   </select>
                 </div>
@@ -488,14 +480,10 @@
             <div class="field">
               <label class="label">Opportunity Point</label>
               <div class="control">
-                <% if let Some(geom) =  opportunity.exterior.location_point { %>
-                  <% if !geom.is_object() || geom.as_object().unwrap().is_empty() { %>
-                    <em>No data entered</em>
-                  <% } else { %>
-                    <strong><em>Available</em></strong>
-                  <% } %>
+                <% if let Some(geom) =  opportunity.exterior.opp.location_point.0 { %>
+                <strong><em>Available</em></strong>
                 <% } else { %>
-                  <em>No data entered</em>
+                <em>No data entered</em>
                 <% } %>
               </div>
             </div>
@@ -503,14 +491,10 @@
             <div class="field">
               <label class="label">Opportunity Geometry</label>
               <div class="control">
-                <% if let Some(geom) = opportunity.exterior.location_polygon { %>
-                  <% if !geom.is_object() || geom.as_object().unwrap().is_empty() { %>
-                    <em>No data entered</em>
-                  <% } else { %>
-                    <strong><em>Available</em></strong>
-                  <% } %>
+                <% if let Some(geom) = opportunity.exterior.opp.location_polygon.0 { %>
+                <strong><em>Available</em></strong>
                 <% } else { %>
-                  <em>No data entered</em>
+                <em>No data entered</em>
                 <% } %>
               </div>
             </div>
@@ -518,35 +502,35 @@
             <div class="field">
               <label class="label">Street</label>
               <div class="control">
-                <input class="input" type="text" name="address_street" value="<%= opportunity.exterior.address_street %>">
+                <input class="input" type="text" name="address_street" value="<%= opportunity.exterior.opp.address_street %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">City</label>
               <div class="control">
-                <input class="input" type="text" name="address_city" value="<%= opportunity.exterior.address_city %>">
+                <input class="input" type="text" name="address_city" value="<%= opportunity.exterior.opp.address_city %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">State/Province</label>
               <div class="control">
-                <input class="input" type="text" name="address_state" value="<%= opportunity.exterior.address_state %>">
+                <input class="input" type="text" name="address_state" value="<%= opportunity.exterior.opp.address_state %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Country</label>
               <div class="control">
-                <input class="input" type="text" name="address_country" value="<%= opportunity.exterior.address_country %>">
+                <input class="input" type="text" name="address_country" value="<%= opportunity.exterior.opp.address_country %>">
               </div>
             </div>
 
             <div class="field">
               <label class="label">Zip</label>
               <div class="control">
-                <input class="input" type="text" name="address_zip" value="<%= opportunity.exterior.address_zip %>">
+                <input class="input" type="text" name="address_zip" value="<%= opportunity.exterior.opp.address_zip %>">
               </div>
             </div>
 

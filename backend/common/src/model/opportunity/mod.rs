@@ -7,11 +7,12 @@ use crate::{gis, Database, ToFixedOffset};
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use geo::Geometry;
-use geozero::{wkb, ToJson};
+use geozero::{geojson, wkb, ToJson};
 //use deunicode::deunicode;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sqlx::postgres::{PgArguments, PgHasArrayType, PgTypeInfo};
 use sqlx::query::Query;
 use sqlx::{prelude::*, Postgres};
@@ -199,6 +200,18 @@ pub enum EntityType {
     #[serde(other)]
     #[default]
     Opportunity,
+}
+
+impl EntityType {
+    pub fn is_page(&self) -> bool {
+        match self {
+            EntityType::Unspecified => false,
+            EntityType::Attraction => false,
+            EntityType::PageJustContent => true,
+            EntityType::PageAddOpportunities => true,
+            EntityType::Opportunity => false,
+        }
+    }
 }
 
 impl PgHasArrayType for EntityType {
@@ -751,6 +764,7 @@ impl TryFromWithDB<Opportunity> for OpportunityForCsv {
         Ok(OpportunityForCsv {
             uid: opp.uid,
             slug: opp.slug.clone(),
+            gpt_record: opp.gpt_record,
             partner_name: opp.partner_name.clone(),
             partner_website: opp.partner_website.clone(),
             partner_logo_url: opp.partner_logo_url.clone(),
@@ -762,17 +776,16 @@ impl TryFromWithDB<Opportunity> for OpportunityForCsv {
             organization_website: opp.organization_website.clone(),
             organization_logo_url: opp.organization_logo_url.clone(),
             entity_type: opp.entity_type,
-            opp_venue: opp
-                .venues(db)
-                .await?
-                .into_iter()
-                .fold(String::new(), |mut accum, add| {
+            opp_venue: opp.venue_types(db).await?.into_iter().fold(
+                String::new(),
+                |mut accum, add| {
                     if !accum.is_empty() {
                         accum.push_str(", ");
                     }
                     accum.push_str(add.as_ref());
                     accum
-                }),
+                },
+            ),
             opp_descriptor: opp.descriptors(db).await?.into_iter().fold(
                 String::new(),
                 |mut accum, add| {
@@ -939,11 +952,11 @@ type FromWKB = Option<wkb::Decode<Geometry<f64>>>;
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 #[serde(transparent)]
-pub struct Point(Option<geo::Point>);
+pub struct Point(pub Option<geo::Point>);
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 #[serde(transparent)]
-pub struct MultiPolygon(Option<geo::MultiPolygon>);
+pub struct MultiPolygon(pub Option<geo::MultiPolygon>);
 
 impl Into<IntoWKB> for Point {
     fn into(self) -> IntoWKB {
@@ -988,6 +1001,80 @@ impl From<FromWKB> for MultiPolygon {
         } else {
             MultiPolygon(None)
         }
+    }
+}
+
+impl TryInto<Value> for Point {
+    type Error = serde_json::Error;
+
+    fn try_into(self) -> Result<Value, Self::Error> {
+        if let Some(p) = self.0 {
+            serde_json::to_value(p)
+        } else {
+            Ok(Value::Null)
+        }
+    }
+}
+
+impl TryInto<Value> for MultiPolygon {
+    type Error = serde_json::Error;
+
+    fn try_into(self) -> Result<Value, Self::Error> {
+        if let Some(p) = self.0 {
+            serde_json::to_value(p)
+        } else {
+            Ok(Value::Null)
+        }
+    }
+}
+
+impl Into<Option<Value>> for Point {
+    fn into(self) -> Option<Value> {
+        if let Some(p) = self.0 {
+            match serde_json::to_value(p) {
+                Ok(val) => Some(val),
+                Err(_) => None,
+            }
+        } else {
+            None
+        }
+    }
+}
+
+impl Into<Option<Value>> for MultiPolygon {
+    fn into(self) -> Option<Value> {
+        if let Some(p) = self.0 {
+            match serde_json::to_value(p) {
+                Ok(val) => Some(val),
+                Err(_) => None,
+            }
+        } else {
+            None
+        }
+    }
+}
+
+impl TryFrom<Value> for Point {
+    type Error = serde_json::Error;
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        if value.is_null() {
+            return Ok(Point(None));
+        }
+
+        Ok(Point(Some(serde_json::from_value(value)?)))
+    }
+}
+
+impl TryFrom<Value> for MultiPolygon {
+    type Error = serde_json::Error;
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        if value.is_null() {
+            return Ok(MultiPolygon(None));
+        }
+
+        Ok(MultiPolygon(Some(serde_json::from_value(value)?)))
     }
 }
 
@@ -1151,9 +1238,10 @@ macro_rules! select_opportunity_with_overlay {
 #[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Opportunity {
-    id: Option<i32>,
+    pub id: Option<i32>,
     pub uid: Uuid,
     pub slug: String,
+    pub gpt_record: bool,
     pub partner_name: String,
     pub partner_website: Option<String>,
     pub partner_logo_url: Option<String>,
@@ -1735,6 +1823,23 @@ pub struct OpportunityWithRelated {
 }
 
 impl OpportunityWithRelated {
+    pub async fn load_matching(
+        db: &Database,
+        query: OpportunityQuery,
+        ordering: OpportunityQueryOrdering,
+        pagination: Pagination,
+    ) -> Result<Vec<OpportunityWithRelated>, Error> {
+        let ext_matches = Opportunity::load_matching(db, query, ordering, pagination).await?;
+
+        let mut matches = Vec::with_capacity(ext_matches.len());
+
+        for opp in ext_matches.into_iter() {
+            matches.push(OpportunityWithRelated::try_from_with_db(db, opp).await?);
+        }
+
+        Ok(matches)
+    }
+
     pub async fn load_by_id(db: &Database, id: i32) -> Result<OpportunityWithRelated, Error> {
         todo!()
     }
@@ -1746,13 +1851,13 @@ impl OpportunityWithRelated {
         todo!()
     }
 
-    pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<OpportunityWithRelated, Error> {
+    pub async fn load_by_uid(db: &Database, uid: Uuid) -> Result<OpportunityWithRelated, Error> {
         todo!()
     }
 
     pub async fn load_by_uid_with_overlay(
         db: &Database,
-        uid: &Uuid,
+        uid: Uuid,
     ) -> Result<OpportunityWithRelated, Error> {
         todo!()
     }
@@ -1768,7 +1873,7 @@ impl TryFromWithDB<Opportunity> for OpportunityWithRelated {
         let instances = source.instances(db).await?;
 
         Ok(OpportunityWithRelated {
-            opp_venue: source.venues(db).await?,
+            opp_venue: source.venue_types(db).await?,
             opp_descriptor: source.descriptors(db).await?,
             tags: source.tags(db).await?,
             opp_topics: source.topics(db).await?,
@@ -1802,6 +1907,23 @@ impl TryFromWithDB<Opportunity> for OpportunityAll {
 }
 
 impl OpportunityAll {
+    pub async fn load_matching(
+        db: &Database,
+        query: OpportunityQuery,
+        ordering: OpportunityQueryOrdering,
+        pagination: Pagination,
+    ) -> Result<Vec<OpportunityAll>, Error> {
+        let ext_matches = Opportunity::load_matching(db, query, ordering, pagination).await?;
+
+        let mut matches = Vec::with_capacity(ext_matches.len());
+
+        for opp in ext_matches.into_iter() {
+            matches.push(OpportunityAll::try_from_with_db(db, opp).await?);
+        }
+
+        Ok(matches)
+    }
+
     pub async fn load_by_id(db: &Database, id: i32) -> Result<OpportunityAll, Error> {
         let exterior = OpportunityWithRelated::load_by_id(db, id).await?;
         let interior = OpportunityInterior::load_by_id(db, id).await?;
@@ -1816,7 +1938,7 @@ impl OpportunityAll {
         Ok(OpportunityAll { exterior, interior })
     }
 
-    pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<OpportunityAll, Error> {
+    pub async fn load_by_uid(db: &Database, uid: Uuid) -> Result<OpportunityAll, Error> {
         let exterior = OpportunityWithRelated::load_by_uid(db, uid).await?;
         let interior = OpportunityInterior::load_by_id(
             db,
@@ -1832,7 +1954,7 @@ impl OpportunityAll {
 
     pub async fn load_by_uid_with_overlay(
         db: &Database,
-        uid: &Uuid,
+        uid: Uuid,
     ) -> Result<OpportunityAll, Error> {
         let exterior = OpportunityWithRelated::load_by_uid_with_overlay(db, uid).await?;
         let interior = OpportunityInterior::load_by_id(
@@ -1863,6 +1985,22 @@ pub struct OpportunityReference {
     pub title: String,
     pub image_url: String,
     pub short_desc: String,
+}
+
+impl OpportunityReference {
+    pub async fn load_by_id(db: &Database, id: i32) -> Result<OpportunityReference, Error> {
+        let q = OpportunityQuery::default().with_id(id);
+        Ok(select_opportunity_ref!("", q as OpportunityQuery)
+            .fetch_one(db)
+            .await?)
+    }
+
+    pub async fn load_by_uid(db: &Database, uid: Uuid) -> Result<OpportunityReference, Error> {
+        let q = OpportunityQuery::default().with_uid(uid);
+        Ok(select_opportunity_ref!("", q as OpportunityQuery)
+            .fetch_one(db)
+            .await?)
+    }
 }
 
 impl std::fmt::Display for OpportunityReference {

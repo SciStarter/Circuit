@@ -1,5 +1,6 @@
 use common::model::opportunity::{
-    EntityType, Opportunity, OpportunityImportRecord, OpportunityQuery, OpportunityQueryOrdering,
+    EntityType, Opportunity, OpportunityAll, OpportunityImportRecord, OpportunityQuery,
+    OpportunityQueryOrdering,
 };
 use common::model::partner::LoggedErrorLevel;
 use common::model::{Pagination, Partner};
@@ -35,7 +36,7 @@ async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
     let partner = Partner::load_by_uid(req.state(), &auth).await?;
     let body = req.body_bytes().await?;
 
-    let mut opp: Opportunity = match serde_json::from_slice(&body) {
+    let mut opp: OpportunityAll = match serde_json::from_slice(&body) {
         Ok(data) => data,
         Err(err) => {
             println!(
@@ -56,17 +57,17 @@ async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
         }
     };
 
-    if let EntityType::Page(_) = opp.exterior.entity_type {
+    if opp.exterior.opp.entity_type.is_page() {
         return Ok(error(
             StatusCode::BadRequest,
             "Page entities can not be created via the API".to_string(),
         ));
     }
 
-    opp.exterior.partner = auth;
+    opp.exterior.opp.partner = auth;
     opp.interior.accepted = Some(true); // Policy now to trust partners by default
 
-    if let Err(err) = opp.validate().await {
+    if let Err(err) = opp.exterior.opp.validate().await {
         println!(
             "Logged error {}: {}",
             partner
@@ -74,7 +75,7 @@ async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
                     req.state(),
                     LoggedErrorLevel::Error,
                     err.to_string(),
-                    Some(&opp.exterior.title),
+                    Some(&opp.exterior.opp.title),
                     Option::<&str>::None,
                 )
                 .await?,
@@ -86,7 +87,7 @@ async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
 
     let db = req.state();
 
-    if Opportunity::exists_by_uid(db, &opp.exterior.uid).await? {
+    if Opportunity::exists_by_uid(db, opp.exterior.opp.uid).await? {
         return Ok(error(
             StatusCode::Conflict,
             "An opportunity with that uid (or partner_name and title) already exists.",
@@ -97,8 +98,14 @@ async fn opportunity_new(mut req: tide::Request<Database>) -> tide::Result {
         return Ok(error(StatusCode::BadRequest, err.to_string()));
     }
 
-    OpportunityImportRecord::store(db, &opp.exterior.partner, &opp.exterior.uid, true, false)
-        .await?;
+    OpportunityImportRecord::store(
+        db,
+        &opp.exterior.opp.partner,
+        &opp.exterior.opp.uid,
+        true,
+        false,
+    )
+    .await?;
 
     let res = Response::builder(StatusCode::Created)
         .content_type(mime::JSON)
@@ -128,18 +135,7 @@ async fn opportunity_search(req: tide::Request<Database>) -> tide::Result {
     // Filter out EntityType::Page entries, even if they were
     // requested. They are not meant to be addressed via the API.
     if let Some(requested) = query.entity_type {
-        query.entity_type = Some(
-            requested
-                .into_iter()
-                .filter(|t| {
-                    if let EntityType::Page(_) = t {
-                        false
-                    } else {
-                        true
-                    }
-                })
-                .collect(),
-        );
+        query.entity_type = Some(requested.into_iter().filter(|t| !t.is_page()).collect());
     } else {
         query.entity_type = Some(vec![EntityType::Opportunity, EntityType::Attraction])
     }
@@ -148,7 +144,7 @@ async fn opportunity_search(req: tide::Request<Database>) -> tide::Result {
 
     let matches = Opportunity::load_matching_refs(
         db,
-        &query,
+        query,
         OpportunityQueryOrdering::Alphabetical,
         Pagination::All,
     )
@@ -203,7 +199,7 @@ async fn opportunity_get(req: tide::Request<Database>) -> tide::Result {
 
     let db = req.state();
 
-    let opp = match Opportunity::load_by_uid(db, &uid).await {
+    let opp = match OpportunityAll::load_by_uid(db, uid).await {
         Ok(opp) => opp,
         Err(_) => {
             return Ok(error(
@@ -214,7 +210,7 @@ async fn opportunity_get(req: tide::Request<Database>) -> tide::Result {
     };
 
     match (auth, opp.interior.withdrawn) {
-        (Some(auth), _) if auth == opp.exterior.partner => success(&opp),
+        (Some(auth), _) if auth == opp.exterior.opp.partner => success(&opp),
         (_, false) => success(&opp.exterior),
         _ => Ok(error(
             StatusCode::NotFound,
@@ -242,7 +238,7 @@ async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
         }
     };
 
-    let old_opp = match Opportunity::load_by_uid(req.state(), &uid).await {
+    let old_opp = match OpportunityAll::load_by_uid(req.state(), uid).await {
         Ok(opp) => opp,
         Err(_) => {
             return Ok(error(
@@ -252,21 +248,21 @@ async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
         }
     };
 
-    if auth != old_opp.exterior.partner {
+    if auth != old_opp.exterior.opp.partner {
         return Ok(error(
             StatusCode::Forbidden,
             "Not authorized to edit that opportunity",
         ));
     }
 
-    if uid != old_opp.exterior.uid {
+    if uid != old_opp.exterior.opp.uid {
         return Ok(error(StatusCode::Conflict, "uid mismatch"));
     }
 
     let partner = Partner::load_by_uid(req.state(), &auth).await?;
     let body = req.body_bytes().await?;
 
-    let mut new_opp: Opportunity = match serde_json::from_slice(&body) {
+    let mut new_opp: OpportunityAll = match serde_json::from_slice(&body) {
         Ok(data) => data,
         Err(err) => {
             println!(
@@ -276,7 +272,7 @@ async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
                         req.state(),
                         LoggedErrorLevel::Error,
                         err.to_string(),
-                        Some(&old_opp.exterior.title),
+                        Some(&old_opp.exterior.opp.title),
                         Some(String::from_utf8_lossy(&body))
                     )
                     .await?,
@@ -287,7 +283,7 @@ async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
         }
     };
 
-    if let EntityType::Page(_) = new_opp.exterior.entity_type {
+    if new_opp.exterior.opp.entity_type.is_page() {
         return Ok(error(
             StatusCode::BadRequest,
             "Page entities can not be created via the API".to_string(),
@@ -296,10 +292,10 @@ async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
 
     let db = req.state();
 
-    new_opp.id = old_opp.id;
+    new_opp.exterior.opp.id = old_opp.exterior.opp.id;
     new_opp.interior.accepted = old_opp.interior.accepted;
-    new_opp.exterior.partner = auth;
-    new_opp.exterior.uid = uid;
+    new_opp.exterior.opp.partner = auth;
+    new_opp.exterior.opp.uid = uid;
 
     if let Err(err) = new_opp.store(db).await {
         println!(
@@ -309,7 +305,7 @@ async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
                     req.state(),
                     LoggedErrorLevel::Error,
                     err.to_string(),
-                    Some(&new_opp.exterior.title),
+                    Some(&new_opp.exterior.opp.title),
                     Some(String::from_utf8_lossy(&body)),
                 )
                 .await?,
@@ -321,8 +317,8 @@ async fn opportunity_put(mut req: tide::Request<Database>) -> tide::Result {
 
     OpportunityImportRecord::store(
         db,
-        &new_opp.exterior.partner,
-        &new_opp.exterior.uid,
+        &new_opp.exterior.opp.partner,
+        &new_opp.exterior.opp.uid,
         false,
         false,
     )

@@ -4,8 +4,8 @@ use common::{
     model::{
         opportunity::{
             Cost, Descriptor, Domain, EntityType, LocationType, OpenDays, OpenHours,
-            OpportunityQuery, OpportunityQueryOrdering, OrganizationType, PageLayout, PageOptions,
-            Topic, VenueType,
+            OpportunityAll, OpportunityQuery, OpportunityQueryOrdering, OpportunityReference,
+            OrganizationType, PageLayout, PageOptions, Topic, TryFromWithDB, VenueType,
         },
         partner::PartnerReference,
         person::Permission,
@@ -42,7 +42,7 @@ struct OpportunitiesPage {
     pub title: String,
     pub partner: Uuid,
     pub partners: Vec<PartnerReference>,
-    pub matches: Vec<Opportunity>,
+    pub matches: Vec<OpportunityAll>,
     pub num_matches: usize,
 }
 
@@ -64,9 +64,9 @@ async fn search(req: tide::Request<Database>) -> tide::Result {
     let form: OpportunitiesForm = req.query()?;
     let db = req.state();
 
-    let matches = Opportunity::load_matching(
+    let matches = OpportunityAll::load_matching(
         db,
-        &OpportunityQuery {
+        OpportunityQuery {
             title_contains: form.title.clone(),
             partner: form.partner.clone(),
             accepted: form.accepted,
@@ -112,7 +112,7 @@ mod filters {
 #[template(path = "manage/opportunity.stpl.html")]
 struct OpportunityPage {
     message: String,
-    opportunity: Opportunity,
+    opportunity: OpportunityAll,
     all_partners: Vec<PartnerReference>,
 }
 
@@ -177,21 +177,17 @@ struct OpportunityForm {
 }
 
 impl OpportunityForm {
-    fn apply(self, opportunity: &mut Opportunity) -> Result<(), tide::Error> {
+    fn apply(self, opportunity: &mut OpportunityAll) -> Result<(), tide::Error> {
         opportunity.interior.accepted = Some(self.accepted.is_some());
         opportunity.interior.withdrawn = self.withdrawn.is_some();
 
-        opportunity.exterior.partner = self.partner.unwrap_or_else(|| INTERNAL_UID.clone());
+        opportunity.exterior.opp.partner = self.partner.unwrap_or_else(|| INTERNAL_UID.clone());
 
-        opportunity.exterior.entity_type = match self.entity_type.as_ref() {
+        opportunity.exterior.opp.entity_type = match self.entity_type.as_ref() {
             "attraction" => EntityType::Attraction,
             "opportunity" => EntityType::Opportunity,
-            "page__just_content" => EntityType::Page(PageOptions {
-                layout: PageLayout::JustContent,
-            }),
-            "page__add_opportunities" => EntityType::Page(PageOptions {
-                layout: PageLayout::AddOpportunities,
-            }),
+            "page__just_content" => EntityType::PageJustContent,
+            "page__add_opportunities" => EntityType::PageAddOpportunities,
             _ => EntityType::Opportunity,
         };
 
@@ -223,100 +219,100 @@ impl OpportunityForm {
             .flatten()
             .collect();
 
-        opportunity.exterior.title = self.title;
-        opportunity.exterior.slug = self.slug;
-        opportunity.exterior.partner_name = self.partner_name;
-        opportunity.exterior.partner_opp_url = self.partner_opp_url;
-        opportunity.exterior.partner_website = self.partner_website;
-        opportunity.exterior.partner_logo_url = self.partner_logo_url;
-        opportunity.exterior.organization_name = self.organization_name.unwrap_or_default();
-        opportunity.exterior.organization_type = self.organization_type.unwrap_or_default();
-        opportunity.exterior.organization_website = self.organization_website;
-        opportunity.exterior.organization_logo_url = self.organization_logo_url;
+        opportunity.exterior.opp.title = self.title;
+        opportunity.exterior.opp.slug = self.slug;
+        opportunity.exterior.opp.partner_name = self.partner_name;
+        opportunity.exterior.opp.partner_opp_url = self.partner_opp_url;
+        opportunity.exterior.opp.partner_website = self.partner_website;
+        opportunity.exterior.opp.partner_logo_url = self.partner_logo_url;
+        opportunity.exterior.opp.organization_name = self.organization_name.unwrap_or_default();
+        opportunity.exterior.opp.organization_type = self.organization_type.unwrap_or_default();
+        opportunity.exterior.opp.organization_website = self.organization_website;
+        opportunity.exterior.opp.organization_logo_url = self.organization_logo_url;
         opportunity.exterior.opp_venue = self.opp_venue.unwrap_or_default();
         opportunity.exterior.opp_descriptor = self.opp_descriptor.unwrap_or_default();
-        opportunity.exterior.min_age = self.min_age.unwrap_or(0);
-        opportunity.exterior.max_age = self.max_age.unwrap_or(999);
-        opportunity.exterior.pes_domain = self.pes_domain.unwrap_or_default();
+        opportunity.exterior.opp.min_age = self.min_age.unwrap_or(0);
+        opportunity.exterior.opp.max_age = self.max_age.unwrap_or(999);
+        opportunity.exterior.opp.pes_domain = self.pes_domain.unwrap_or_default();
         opportunity.exterior.tags = self.tags.split(',').map(|s| s.trim().to_string()).collect();
         opportunity.exterior.opp_topics = self.opp_topics.unwrap_or_default();
-        opportunity.exterior.ticket_required = self.ticket_required.unwrap_or(false);
-        opportunity.exterior.description = self.description.unwrap_or_default();
-        opportunity.exterior.short_desc = self.short_desc.unwrap_or_default();
-        opportunity.exterior.image_url = self.image_url.unwrap_or_default();
-        opportunity.exterior.image_credit = self.image_credit.unwrap_or_default();
-        opportunity.exterior.cost = self.cost.unwrap_or_default();
-        opportunity.exterior.is_online = self.is_online.unwrap_or(false);
-        opportunity.exterior.location_type = self.location_type.unwrap_or_default();
-        opportunity.exterior.address_street = self.address_street.unwrap_or_default();
-        opportunity.exterior.address_city = self.address_city.unwrap_or_default();
-        opportunity.exterior.address_state = self.address_state.unwrap_or_default();
-        opportunity.exterior.address_country = self.address_country.unwrap_or_default();
-        opportunity.exterior.address_zip = self.address_zip.unwrap_or_default();
+        opportunity.exterior.opp.ticket_required = self.ticket_required.unwrap_or(false);
+        opportunity.exterior.opp.description = self.description.unwrap_or_default();
+        opportunity.exterior.opp.short_desc = self.short_desc.unwrap_or_default();
+        opportunity.exterior.opp.image_url = self.image_url.unwrap_or_default();
+        opportunity.exterior.opp.image_credit = self.image_credit.unwrap_or_default();
+        opportunity.exterior.opp.cost = self.cost.unwrap_or_default();
+        opportunity.exterior.opp.is_online = self.is_online.unwrap_or(false);
+        opportunity.exterior.opp.location_type = self.location_type.unwrap_or_default();
+        opportunity.exterior.opp.address_street = self.address_street.unwrap_or_default();
+        opportunity.exterior.opp.address_city = self.address_city.unwrap_or_default();
+        opportunity.exterior.opp.address_state = self.address_state.unwrap_or_default();
+        opportunity.exterior.opp.address_country = self.address_country.unwrap_or_default();
+        opportunity.exterior.opp.address_zip = self.address_zip.unwrap_or_default();
 
         opportunity.interior.contact_name = self.contact_name.unwrap_or_default();
         opportunity.interior.contact_email = self.contact_email.unwrap_or_default();
         opportunity.interior.contact_phone = self.contact_phone.unwrap_or_default();
 
-        opportunity.exterior.attraction_hours = if self.monday_opens.is_some()
-            || self.tuesday_opens.is_some()
-            || self.wednesday_opens.is_some()
-            || self.thursday_opens.is_some()
-            || self.friday_opens.is_some()
-            || self.saturday_opens.is_some()
-            || self.sunday_opens.is_some()
-        {
-            Some(OpenDays {
-                monday: if let (Some(opens), Some(closes)) = (self.monday_opens, self.monday_closes)
-                {
-                    Some(OpenHours { opens, closes })
-                } else {
-                    None
-                },
-                tuesday: if let (Some(opens), Some(closes)) =
-                    (self.tuesday_opens, self.tuesday_closes)
-                {
-                    Some(OpenHours { opens, closes })
-                } else {
-                    None
-                },
-                wednesday: if let (Some(opens), Some(closes)) =
-                    (self.wednesday_opens, self.wednesday_closes)
-                {
-                    Some(OpenHours { opens, closes })
-                } else {
-                    None
-                },
-                thursday: if let (Some(opens), Some(closes)) =
-                    (self.thursday_opens, self.thursday_closes)
-                {
-                    Some(OpenHours { opens, closes })
-                } else {
-                    None
-                },
-                friday: if let (Some(opens), Some(closes)) = (self.friday_opens, self.friday_closes)
-                {
-                    Some(OpenHours { opens, closes })
-                } else {
-                    None
-                },
-                saturday: if let (Some(opens), Some(closes)) =
-                    (self.saturday_opens, self.saturday_closes)
-                {
-                    Some(OpenHours { opens, closes })
-                } else {
-                    None
-                },
-                sunday: if let (Some(opens), Some(closes)) = (self.sunday_opens, self.sunday_closes)
-                {
-                    Some(OpenHours { opens, closes })
-                } else {
-                    None
-                },
-            })
-        } else {
-            None
-        };
+        // opportunity.exterior.opp.attraction_hours = if self.monday_opens.is_some()
+        //     || self.tuesday_opens.is_some()
+        //     || self.wednesday_opens.is_some()
+        //     || self.thursday_opens.is_some()
+        //     || self.friday_opens.is_some()
+        //     || self.saturday_opens.is_some()
+        //     || self.sunday_opens.is_some()
+        // {
+        //     Some(OpenDays {
+        //         monday: if let (Some(opens), Some(closes)) = (self.monday_opens, self.monday_closes)
+        //         {
+        //             Some(OpenHours { opens, closes })
+        //         } else {
+        //             None
+        //         },
+        //         tuesday: if let (Some(opens), Some(closes)) =
+        //             (self.tuesday_opens, self.tuesday_closes)
+        //         {
+        //             Some(OpenHours { opens, closes })
+        //         } else {
+        //             None
+        //         },
+        //         wednesday: if let (Some(opens), Some(closes)) =
+        //             (self.wednesday_opens, self.wednesday_closes)
+        //         {
+        //             Some(OpenHours { opens, closes })
+        //         } else {
+        //             None
+        //         },
+        //         thursday: if let (Some(opens), Some(closes)) =
+        //             (self.thursday_opens, self.thursday_closes)
+        //         {
+        //             Some(OpenHours { opens, closes })
+        //         } else {
+        //             None
+        //         },
+        //         friday: if let (Some(opens), Some(closes)) = (self.friday_opens, self.friday_closes)
+        //         {
+        //             Some(OpenHours { opens, closes })
+        //         } else {
+        //             None
+        //         },
+        //         saturday: if let (Some(opens), Some(closes)) =
+        //             (self.saturday_opens, self.saturday_closes)
+        //         {
+        //             Some(OpenHours { opens, closes })
+        //         } else {
+        //             None
+        //         },
+        //         sunday: if let (Some(opens), Some(closes)) = (self.sunday_opens, self.sunday_closes)
+        //         {
+        //             Some(OpenHours { opens, closes })
+        //         } else {
+        //             None
+        //         },
+        //     })
+        // } else {
+        //     None
+        // };
 
         Ok(())
     }
@@ -331,7 +327,7 @@ async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
     let mut opportunity = {
         let uid: Uuid = req.param("uid")?.parse()?;
         let db = req.state();
-        Opportunity::load_by_uid(db, &uid).await?
+        OpportunityAll::load_by_uid(db, uid).await?
     };
 
     if let Method::Post = req.method() {
@@ -379,7 +375,7 @@ async fn add_opportunity(mut req: tide::Request<Database>) -> tide::Result {
         return Ok(redirect(req.url().path()));
     }
 
-    let mut opportunity = Opportunity::default();
+    let mut opportunity = OpportunityAll::default();
 
     form.apply(&mut opportunity)?;
 
@@ -388,7 +384,7 @@ async fn add_opportunity(mut req: tide::Request<Database>) -> tide::Result {
     Ok(redirect(&format!(
         "{}{}",
         req.url().path(),
-        opportunity.exterior.uid
+        opportunity.exterior.opp.uid
     )))
 }
 
@@ -397,8 +393,7 @@ async fn add_opportunity(mut req: tide::Request<Database>) -> tide::Result {
 struct OverlayPage {
     message: String,
     opportunity: Opportunity,
-    exterior: Value,
-    _interior: Value,
+    form: OverlayForm,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -421,122 +416,6 @@ struct OverlayForm {
     address_zip: Option<String>,
 }
 
-impl OverlayForm {
-    pub fn apply(self, exterior: &mut Value, _interior: &mut Value) {
-        fn delete(obj: &mut Value, key: &str) {
-            obj.as_object_mut().map(|obj| obj.remove(key));
-        }
-
-        if let Some(domain) = self.pes_domain {
-            exterior["pes_domain"] = domain.to_option().0.into();
-        } else {
-            delete(exterior, "pes_domain");
-        }
-
-        if !self.opp_descriptor.is_empty() {
-            exterior["opp_descriptor"] = self
-                .opp_descriptor
-                .into_iter()
-                .map(|x| x.to_option().0)
-                .collect::<Vec<_>>()
-                .into();
-        } else {
-            delete(exterior, "opp_descriptor");
-        }
-
-        if !self.opp_topics.is_empty() {
-            exterior["opp_topics"] = self
-                .opp_topics
-                .into_iter()
-                .map(|x| x.to_option().0)
-                .collect::<Vec<_>>()
-                .into();
-        } else {
-            delete(exterior, "opp_topics");
-        }
-
-        if !self.tags.is_empty() {
-            exterior["tags"] = self.tags.clone().into();
-        } else {
-            delete(exterior, "tags");
-        }
-
-        if let Some(min_age) = self.min_age {
-            if min_age != -1 {
-                exterior["min_age"] = min_age.into();
-            } else {
-                delete(exterior, "min_age");
-            }
-        } else {
-            delete(exterior, "min_age");
-        }
-
-        if let Some(max_age) = self.max_age {
-            if max_age != -1 {
-                exterior["max_age"] = max_age.into();
-            } else {
-                delete(exterior, "max_age");
-            }
-        } else {
-            delete(exterior, "max_age");
-        }
-
-        if let Some(cost) = self.cost {
-            exterior["cost"] = cost.to_option().0.into();
-        } else {
-            delete(exterior, "cost");
-        }
-
-        if let Some(online) = self.is_online {
-            exterior["is_online"] = online.into();
-        } else {
-            delete(exterior, "is_online");
-        }
-
-        if let Some(loc) = self.location_type {
-            exterior["location_type"] = loc.to_option().0.into();
-        } else {
-            delete(exterior, "location_type");
-        }
-
-        if let Some(location_name) = self.location_name {
-            exterior["location_name"] = location_name.into();
-        } else {
-            delete(exterior, "location_name");
-        }
-
-        if let Some(address_street) = self.address_street {
-            exterior["address_street"] = address_street.into();
-        } else {
-            delete(exterior, "address_street");
-        }
-
-        if let Some(address_city) = self.address_city {
-            exterior["address_city"] = address_city.into();
-        } else {
-            delete(exterior, "address_city");
-        }
-
-        if let Some(address_state) = self.address_state {
-            exterior["address_state"] = address_state.into();
-        } else {
-            delete(exterior, "address_state");
-        }
-
-        if let Some(address_country) = self.address_country {
-            exterior["address_country"] = address_country.into();
-        } else {
-            delete(exterior, "address_country");
-        }
-
-        if let Some(address_zip) = self.address_zip {
-            exterior["address_zip"] = address_zip.into();
-        } else {
-            delete(exterior, "address_zip");
-        }
-    }
-}
-
 async fn overlay(mut req: tide::Request<Database>) -> tide::Result {
     let _admin = match super::authorized_admin(&req, &Permission::ManageOpportunities).await {
         Ok(person) => person,
@@ -545,47 +424,130 @@ async fn overlay(mut req: tide::Request<Database>) -> tide::Result {
 
     let opportunity = {
         let uid: Uuid = req.param("uid")?.parse()?;
-        Opportunity::load_by_uid(req.state(), &uid).await?
-    };
-
-    let (mut exterior, mut interior) = {
-        sqlx::query!(r#"SELECT exterior as "exterior!", interior as "interior!" FROM c_opportunity_overlay WHERE opportunity_id = $1"#, opportunity.id)
-            .fetch_optional(req.state())
-            .await?.map(|r| (r.exterior, r.interior)).unwrap_or_else(|| (json!({}), json!({})))
+        Opportunity::load_by_uid(req.state(), uid).await?
     };
 
     if let Method::Post = req.method() {
         let qs = serde_qs::Config::new(5, false);
         let form: OverlayForm = qs.deserialize_str(&req.body_string().await?)?;
+        let db = req.state();
 
-        form.apply(&mut exterior, &mut interior);
+        // array(SELECT "descriptor" FROM c_opportunity_descriptor WHERE opportunity_id = $1 AND overlay = true) AS "opp_descriptor!: _",
+        // array(SELECT "topic" FROM c_opportunity_topic WHERE opportunity_id = $1 AND overlay = true) AS "opp_topics!: _",
+        // array(SELECT "tag" FROM c_opportunity_tag WHERE opportunity_id = $1 AND overlay = true) AS "tags!: _",
+
+        for item in form.opp_descriptor.iter() {
+            sqlx::query!(
+                r#"
+                INSERT INTO c_opportunity_descriptor ("opportunity_id", "overlay", "descriptor")
+                VALUES ($1, true, $2)
+                ON CONFLICT DO NOTHING
+                "#,
+                opportunity.id,
+                item as &Descriptor,
+            )
+            .execute(db)
+            .await?;
+        }
+
+        for item in form.opp_topics.iter() {
+            sqlx::query!(
+                r#"
+            INSERT INTO c_opportunity_topic ("opportunity_id", "overlay", "topic")
+            VALUES ($1, true, $2)
+            ON CONFLICT DO NOTHING
+            "#,
+                opportunity.id,
+                item as &Topic,
+            )
+            .execute(db)
+            .await?;
+        }
+
+        for item in form.tags.iter() {
+            sqlx::query!(
+                r#"
+            INSERT INTO c_opportunity_tag ("opportunity_id", "overlay", "tag")
+            VALUES ($1, true, $2)
+            ON CONFLICT DO NOTHING
+            "#,
+                opportunity.id,
+                item,
+            )
+            .execute(db)
+            .await?;
+        }
 
         if let Err(err) = sqlx::query!(
             r#"
-INSERT INTO
-  c_opportunity_overlay (opportunity_id, exterior, interior)
-VALUES
-  ($1, $2, $3)
-ON CONFLICT
-  (opportunity_id)
-DO UPDATE SET
-  exterior = EXCLUDED.exterior,
-  interior = EXCLUDED.interior
-WHERE
-  c_opportunity_overlay.opportunity_id = $1
-"#,
+            INSERT INTO c_opportunity_overlay (
+              opportunity_id,
+              "pes_domain",
+              "min_age",
+              "max_age",
+              "cost",
+              "is_online",
+              "location_type",
+              "location_name",
+              "address_street",
+              "address_city",
+              "address_state",
+              "address_country",
+              "address_zip"
+            )
+            VALUES (
+              $1,
+              $2,
+              $3,
+              $4,
+              $5,
+              $6,
+              $7,
+              $8,
+              $9,
+              $10,
+              $11,
+              $12,
+              $13
+            )
+            ON CONFLICT (opportunity_id) DO UPDATE
+            SET
+              "pes_domain" = EXCLUDED."pes_domain",
+              "min_age" = EXCLUDED."min_age",
+              "max_age" = EXCLUDED."max_age",
+              "cost" = EXCLUDED."cost",
+              "is_online" = EXCLUDED."is_online",
+              "location_type" = EXCLUDED."location_type",
+              "location_name" = EXCLUDED."location_name",
+              "address_street" = EXCLUDED."address_street",
+              "address_city" = EXCLUDED."address_city",
+              "address_state" = EXCLUDED."address_state",
+              "address_country" = EXCLUDED."address_country",
+              "address_zip" = EXCLUDED."address_zip"
+            WHERE
+              c_opportunity_overlay.opportunity_id = $1
+            "#,
             opportunity.id,
-            exterior,
-            interior
+            form.pes_domain as Option<Domain>,
+            form.min_age,
+            form.max_age,
+            form.cost as Option<Cost>,
+            form.is_online,
+            form.location_type as Option<LocationType>,
+            form.location_name,
+            form.address_street,
+            form.address_city,
+            form.address_state,
+            form.address_country,
+            form.address_zip,
         )
-        .execute(req.state())
+        .execute(db)
         .await
         {
             return Ok(OverlayPage {
                 message: err.to_string(),
                 opportunity,
-                exterior,
-                _interior: interior,
+                form,
             }
             .into_response(StatusCode::Ok)?);
         }
@@ -593,12 +555,41 @@ WHERE
         return Ok(redirect(req.url().path()));
     }
 
-    let form = OverlayPage {
-        message: String::new(),
-        opportunity,
-        exterior,
-        _interior: interior,
+    let form = {
+        sqlx::query_as!(
+            OverlayForm,
+            r#"
+            SELECT
+              "pes_domain" AS "pes_domain: _",
+              array(SELECT "descriptor" FROM c_opportunity_descriptor WHERE opportunity_id = $1 AND overlay = true) AS "opp_descriptor!: _",
+              array(SELECT "topic" FROM c_opportunity_topic WHERE opportunity_id = $1 AND overlay = true) AS "opp_topics!: _",
+              array(SELECT "tag" FROM c_opportunity_tag WHERE opportunity_id = $1 AND overlay = true) AS "tags!: _",
+              "min_age" AS "min_age: _",
+              "max_age" AS "max_age: _",
+              "cost" AS "cost: _",
+              "is_online" AS "is_online: _",
+              "location_type" AS "location_type: _",
+              "location_name" AS "location_name: _",
+              "address_street" AS "address_street: _",
+              "address_city" AS "address_city: _",
+              "address_state" AS "address_state: _",
+              "address_country" AS "address_country: _",
+              "address_zip" AS "address_zip: _"
+            FROM c_opportunity_overlay
+            WHERE opportunity_id = $1
+            "#,
+            opportunity.id
+        )
+        .fetch_optional(req.state())
+        .await?
+        .unwrap_or_else(|| OverlayForm::default())
     };
 
-    Ok(form.into_response(StatusCode::Ok)?)
+    let page = OverlayPage {
+        message: String::new(),
+        opportunity,
+        form,
+    };
+
+    Ok(page.into_response(StatusCode::Ok)?)
 }

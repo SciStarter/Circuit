@@ -3,7 +3,7 @@ use chrono::{FixedOffset, Utc};
 use common::{
     model::{
         involvement::{Involvement, Mode},
-        opportunity::{EntityType, OpportunityForCsv, OpportunityQuery},
+        opportunity::{EntityType, OpportunityForCsv, OpportunityQuery, TryFromWithDB},
         person::{Gender, Goal, GoalStatus, Permission},
         Opportunity, Pagination, Partner, Person,
     },
@@ -184,9 +184,9 @@ pub async fn delete_old_saved(mut req: tide::Request<Database>) -> tide::Result 
 
     while let Some(result) = stream.next().await {
         if let Ok(mut inv) = result {
-            let opp = Opportunity::load_by_uid(req.state(), &inv.exterior.opportunity).await?;
+            let opp = Opportunity::load_by_uid(req.state(), inv.exterior.opportunity).await?;
 
-            if opp.expired_as_of(&now) {
+            if opp.expired_as_of(req.state(), &now).await? {
                 inv.exterior.mode = Mode::Deleted;
                 inv.store(req.state()).await?;
             }
@@ -287,10 +287,10 @@ pub async fn get_involved(mut req: tide::Request<Database>) -> tide::Result {
         if let Ok(inv) = result {
             if query.opp.unwrap_or(false) {
                 if let Ok(opp) =
-                    Opportunity::load_by_uid(req.state(), &inv.exterior.opportunity).await
+                    Opportunity::load_by_uid(req.state(), inv.exterior.opportunity).await
                 {
                     let mut obj = serde_json::to_value(inv)?;
-                    obj["opportunity"] = serde_json::to_value(opp.exterior)?;
+                    obj["opportunity"] = serde_json::to_value(opp)?;
                     involved.push(obj);
                 }
             } else {
@@ -402,7 +402,7 @@ pub async fn get_opportunities_csv(mut req: tide::Request<Database>) -> tide::Re
 
     let matches = Opportunity::load_matching(
         req.state(),
-        &query,
+        query,
         common::model::opportunity::OpportunityQueryOrdering::Alphabetical,
         Pagination::All,
     )
@@ -411,7 +411,7 @@ pub async fn get_opportunities_csv(mut req: tide::Request<Database>) -> tide::Re
     let mut out = csv::Writer::from_writer(Vec::new());
 
     for opp in matches.into_iter() {
-        out.serialize(OpportunityForCsv::from(opp))?;
+        out.serialize(OpportunityForCsv::try_from_with_db(req.state(), opp).await?)?;
     }
 
     out.flush()?;

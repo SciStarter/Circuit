@@ -47,10 +47,10 @@
           <% for opp in matches { %>
             <tr>
               <td>
-                <a href="<%= opp.exterior.uid | disp %>"><%= opp.exterior.title %></a>
+                <a href="<%= opp.exterior.opp.uid | disp %>"><%= opp.exterior.opp.title %></a>
               </td>
               <td>
-                <%= opp.exterior.partner_name %></a>
+                <%= opp.exterior.opp.partner_name %></a>
               </td>
               <td>
                 <% if let Some(true) = opp.interior.accepted { %><span style="color: #007C03">✓</span><% } %>

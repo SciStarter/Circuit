@@ -1,6 +1,6 @@
 use common::{
     model::{
-        opportunity::ReviewStatus,
+        opportunity::{OpportunityAll, ReviewStatus},
         person::{LogEvent, LogIdentifier, Permission, PermitAction},
         Opportunity, Partner, Person,
     },
@@ -32,8 +32,8 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
 }
 
 pub async fn blank_opp(_: tide::Request<Database>) -> tide::Result {
-    let mut opp = Opportunity::default();
-    opp.exterior.max_age = 999;
+    let mut opp = OpportunityAll::default();
+    opp.exterior.opp.max_age = 999;
     opp.interior.withdrawn = true;
     okay(&opp)
 }
@@ -54,11 +54,11 @@ async fn notify_pending_approval(
         ).await;
 
     let msg = template.materialize(vec![
-        ("title", &opp.exterior.title),
+        ("title", &opp.title),
         ("partner_name", &partner.exterior.name),
         ("partner_uid", &partner.exterior.uid.to_string()),
-        ("org_name", &opp.exterior.organization_name),
-        ("opp_slug", &opp.exterior.slug),
+        ("org_name", &opp.organization_name),
+        ("opp_slug", &opp.slug),
     ]);
 
     if STAFF_REVIEWS.iter().any(|x| *x == partner.exterior.uid) {
@@ -88,13 +88,13 @@ async fn notify_pending_approval(
 pub async fn add_opp(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req).await?;
 
-    let mut opp: Opportunity = req.body_json().await?;
+    let mut opp: OpportunityAll = req.body_json().await?;
 
-    let partner = Partner::load_by_uid(req.state(), &opp.exterior.partner).await?;
+    let partner = Partner::load_by_uid(req.state(), &opp.exterior.opp.partner).await?;
 
     let authorized = if let Some(p) = person.as_ref() {
         p.check_permission(&Permission::ManageOpportunities)
-            || p.check_authorization(req.state(), &opp, PermitAction::Add)
+            || p.check_authorization(req.state(), &opp.exterior.opp, PermitAction::Add)
                 .await?
     } else {
         false
@@ -107,9 +107,9 @@ pub async fn add_opp(mut req: tide::Request<Database>) -> tide::Result {
         ));
     }
 
-    opp.id = None;
-    opp.exterior.uid = Uuid::nil();
-    opp.exterior.slug = String::new();
+    opp.exterior.opp.id = None;
+    opp.exterior.opp.uid = Uuid::nil();
+    opp.exterior.opp.slug = String::new();
     opp.interior.accepted = Some(true);
 
     opp.interior.submitted_by = person.as_ref().map(|x| x.exterior.uid);
@@ -128,20 +128,20 @@ pub async fn add_opp(mut req: tide::Request<Database>) -> tide::Result {
         person.as_ref().map(|p| &p.exterior.uid),
         "add-opportunity",
         &json!({
-            "opp": opp.exterior.uid}),
+            "opp": opp.exterior.opp.uid}),
     );
 
     if let Some(person) = person {
         person
             .log(
                 req.state(),
-                LogEvent::EditOpportunity(LogIdentifier::Uid(opp.exterior.uid)),
+                LogEvent::EditOpportunity(LogIdentifier::Uid(opp.exterior.opp.uid)),
             )
             .await?;
     }
 
     if let ReviewStatus::Pending = opp.interior.review_status {
-        notify_pending_approval(&req, &partner, &opp).await?;
+        notify_pending_approval(&req, &partner, &opp.exterior.opp).await?;
     }
 
     okay(&opp)
@@ -153,7 +153,7 @@ pub async fn add_opp(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn load_opp(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req).await?;
 
-    let opp = Opportunity::load_by_uid(req.state(), &Uuid::parse_str(req.param("uid")?)?)
+    let opp = Opportunity::load_by_uid(req.state(), Uuid::parse_str(req.param("uid")?)?)
         .await
         .with_status(|| StatusCode::NotFound)?;
 
@@ -179,7 +179,7 @@ pub async fn save_opp(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req).await?;
 
     let original =
-        Opportunity::load_by_uid(req.state(), &Uuid::parse_str(req.param("uid")?)?).await?;
+        Opportunity::load_by_uid(req.state(), Uuid::parse_str(req.param("uid")?)?).await?;
 
     save_opportunity(person, original, req).await
 }

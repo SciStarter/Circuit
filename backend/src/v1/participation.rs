@@ -28,7 +28,7 @@ async fn participation_new(mut req: tide::Request<Database>) -> tide::Result {
 
     let db = req.state();
 
-    let opp = match Opportunity::load_by_uid(db, &part.exterior.opportunity).await {
+    let opp = match Opportunity::load_by_uid(db, part.exterior.opportunity).await {
         Ok(o) => o,
         Err(_) => {
             return Ok(error(
@@ -38,7 +38,7 @@ async fn participation_new(mut req: tide::Request<Database>) -> tide::Result {
         }
     };
 
-    if opp.exterior.partner != auth {
+    if opp.partner != auth {
         return Ok(error(StatusCode::Forbidden, req.param("hash")?));
     }
 
