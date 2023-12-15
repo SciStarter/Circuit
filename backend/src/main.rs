@@ -57,6 +57,7 @@ async fn initialize(db: &Database) -> tide::Result {
             exterior: model::partner::PartnerExterior {
                 uid: INTERNAL_UID.clone(),
                 name: "Internal".to_string(),
+                gpt_record: false,
                 organization_type: model::opportunity::OrganizationType::Unspecified,
                 pes_domain: model::opportunity::Domain::Unspecified,
                 url: None,

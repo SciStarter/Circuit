@@ -2,7 +2,10 @@ use chrono::Utc;
 use common::{
     model::{
         involvement::{Involvement, Mode},
-        opportunity::{Opportunity, OpportunityQuery, OpportunityQueryOrdering, ReviewStatus},
+        opportunity::{
+            Opportunity, OpportunityAll, OpportunityQuery, OpportunityQueryOrdering,
+            OpportunityReference, ReviewStatus,
+        },
         person::{LogEvent, LogIdentifier, Permission, PermitAction},
         Pagination, Partner, Person,
     },
@@ -70,26 +73,24 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
         PermitAction::Nothing
     };
 
-    if authorized != PermitAction::Nothing
-        || (opp.interior.accepted.unwrap_or(false) && !opp.interior.withdrawn)
-    {
+    if authorized != PermitAction::Nothing || opp.is_published(db).await? {
         common::log(
             person.as_ref().map(|p| &p.exterior.uid),
             "viewed",
             &json!({
-                "opportunity": opp.exterior.uid}),
+                "opportunity": opp.uid}),
         );
         if let Some(person) = person {
             person
-                .log(db, LogEvent::View(LogIdentifier::Uid(opp.exterior.uid)))
+                .log(db, LogEvent::View(LogIdentifier::Uid(opp.uid)))
                 .await?;
         } else if let Some(anonymous) = common::model::person::ANONYMOUS.get() {
             anonymous
-                .log(db, LogEvent::View(LogIdentifier::Uid(opp.exterior.uid)))
+                .log(db, LogEvent::View(LogIdentifier::Uid(opp.uid)))
                 .await?;
         }
 
-        okay(&opp.into_annotated_exterior(authorized))
+        okay(&opp.into_annotated_exterior(db, authorized).await?)
     } else {
         Err(tide::Error::from_str(StatusCode::NotFound, "not found"))
     }
@@ -98,7 +99,7 @@ pub async fn entity(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn save_entity(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req).await?;
 
-    let original = Opportunity::load_by_slug(req.state(), req.param("slug")?).await?;
+    let original = OpportunityAll::load_by_slug(req.state(), req.param("slug")?).await?;
 
     opportunity::save_opportunity(person, original, req).await
 }
@@ -332,15 +333,8 @@ pub async fn recommended(req: tide::Request<Database>) -> tide::Result {
         .await
         .with_status(|| StatusCode::NotFound)?;
 
-    let point = if let Some(json) = opp.exterior.location_point {
-        let lon: Option<f64> = json["coordinates"][0].as_f64();
-        let lat: Option<f64> = json["coordinates"][1].as_f64();
-
-        if let (Some(lon), Some(lat)) = (lon, lat) {
-            Some((lon as f32, lat as f32, 32186.9)) // 32186.9 is 20 miles in meters
-        } else {
-            None
-        }
+    let point = if let Some(p) = opp.location_point.0 {
+        Some((p.x(), p.y(), 32186.9)) // 32186.9 is 20 miles in meters
     } else {
         None
     };
@@ -352,42 +346,47 @@ pub async fn recommended(req: tide::Request<Database>) -> tide::Result {
     query.accepted = Some(true);
     query.withdrawn = Some(false);
     query.beginning = Some(Utc::now().to_fixed_offset());
-    query.exclude = Some(vec![opp.exterior.uid.clone()]);
+    query.exclude = Some(vec![opp.uid]);
 
-    if point.is_some() {
-        query.near = point;
+    if let Some((lon, lat, dist)) = point {
+        query.near_longitude = Some(lon);
+        query.near_latitude = Some(lat);
+        query.near_distance = Some(dist);
         ordering = OpportunityQueryOrdering::Closest;
-    } else if !opp.exterior.opp_topics.is_empty() {
-        // Look for opportunities with mostly the same topics.
-        // "Mostly" here means that each topic of the current
-        // opportunity after the first has a 25% chance to be dropped,
-        // and then we look for opportunities with a superset of the
-        // non-dropped topics.
-        let mut has_one = false;
-        query.topics = Some(
-            opp.exterior
-                .opp_topics
-                .into_iter()
-                .filter(move |_| {
-                    if has_one {
-                        rand::random::<f32>() > 0.25
-                    } else {
-                        has_one = true;
-                        true
-                    }
-                })
-                .collect(),
-        );
-        ordering = OpportunityQueryOrdering::Soonest;
     } else {
-        // Sample all published upportunities, since this opportunity
-        // doesn't seem have a location or topics. Random
-        // opportunities are better than no opportunities.
-        query.sample = Some(0.5);
-        ordering = OpportunityQueryOrdering::Soonest;
+        let topics = opp.topics(db).await?;
+
+        if !topics.is_empty() {
+            // Look for opportunities with mostly the same topics.
+            // "Mostly" here means that each topic of the current
+            // opportunity after the first has a 25% chance to be dropped,
+            // and then we look for opportunities with a superset of the
+            // non-dropped topics.
+            let mut has_one = false;
+            query.topics = Some(
+                topics
+                    .into_iter()
+                    .filter(move |_| {
+                        if has_one {
+                            rand::random::<f32>() > 0.25
+                        } else {
+                            has_one = true;
+                            true
+                        }
+                    })
+                    .collect(),
+            );
+            ordering = OpportunityQueryOrdering::Soonest;
+        } else {
+            // Sample all published upportunities, since this opportunity
+            // doesn't seem have a location or topics. Random
+            // opportunities are better than no opportunities.
+            query.sample = Some(0.5);
+            ordering = OpportunityQueryOrdering::Soonest;
+        }
     }
 
-    let matches = Opportunity::load_matching(db, &query, ordering, pagination).await?;
+    let matches = Opportunity::load_matching_refs(db, query, ordering, pagination).await?;
 
     okay(&matches)
 }
@@ -441,7 +440,7 @@ struct SharedForm {
 }
 
 pub async fn shared(mut req: tide::Request<Database>) -> tide::Result {
-    let opp = Opportunity::load_by_slug(req.state(), req.param("slug")?).await?;
+    let opp = OpportunityReference::load_by_slug(req.state(), req.param("slug")?).await?;
     let person = request_person(&mut req).await?;
     let form: SharedForm = req.body_json().await?;
 
@@ -449,7 +448,7 @@ pub async fn shared(mut req: tide::Request<Database>) -> tide::Result {
         r#"INSERT INTO c_log ("action", "subject", "object") VALUES ($1, $2, $3)"#,
         format!("shared:{}", form.network),
         person.map(|p| p.exterior.uid),
-        opp.exterior.uid
+        opp.uid
     )
     .execute(req.state())
     .await?;
@@ -458,7 +457,7 @@ pub async fn shared(mut req: tide::Request<Database>) -> tide::Result {
 }
 
 pub async fn calendar(mut req: tide::Request<Database>) -> tide::Result {
-    let opp = Opportunity::load_by_slug(req.state(), req.param("slug")?).await?;
+    let opp = OpportunityReference::load_by_slug(req.state(), req.param("slug")?).await?;
     let person = request_person(&mut req).await?;
     let form: SharedForm = req.body_json().await?;
 
@@ -466,7 +465,7 @@ pub async fn calendar(mut req: tide::Request<Database>) -> tide::Result {
         r#"INSERT INTO c_log ("action", "subject", "object") VALUES ($1, $2, $3)"#,
         format!("calendar:{}", form.network),
         person.map(|p| p.exterior.uid),
-        opp.exterior.uid
+        opp.uid
     )
     .execute(req.state())
     .await?;
@@ -515,12 +514,12 @@ pub async fn set_review_status(mut req: tide::Request<Database>) -> tide::Result
         }
     };
 
-    let mut opp = Opportunity::load_by_slug(req.state(), req.param("slug")?).await?;
+    let mut opp = OpportunityAll::load_by_slug(req.state(), req.param("slug")?).await?;
     let form: StatusForm = req.body_json().await?;
 
     if person.check_permission(&Permission::ManageOpportunities)
         || person
-            .check_authorization(req.state(), &opp, PermitAction::Manage)
+            .check_authorization(req.state(), &opp.exterior.opp, PermitAction::Manage)
             .await?
     {
         opp.interior.review_status = form.status;
@@ -529,7 +528,7 @@ pub async fn set_review_status(mut req: tide::Request<Database>) -> tide::Result
         if let ReviewStatus::Publish = opp.interior.review_status {
             if let Some(person_uid) = opp.interior.submitted_by {
                 let submitted_by = Person::load_by_uid(req.state(), &person_uid).await?;
-                let partner = Partner::load_by_uid(req.state(), &opp.exterior.partner).await?;
+                let partner = Partner::load_by_uid(req.state(), &opp.exterior.opp.partner).await?;
 
                 let template = common::emails::EmailMessage::load_or_default(
                     req.state(),
@@ -542,9 +541,9 @@ pub async fn set_review_status(mut req: tide::Request<Database>) -> tide::Result
                 ).await;
 
                 let msg = template.materialize(vec![
-                    ("title", &opp.exterior.title),
+                    ("title", &opp.exterior.opp.title),
                     ("partner_name", &partner.exterior.name),
-                    ("opp_slug", &opp.exterior.slug),
+                    ("opp_slug", &opp.exterior.opp.slug),
                 ]);
 
                 common::emails::send_message(submitted_by.interior.email, &msg).await
@@ -562,7 +561,7 @@ pub async fn set_review_status(mut req: tide::Request<Database>) -> tide::Result
 "#,
                 ).await;
 
-                let msg = template.materialize(vec![("title", &opp.exterior.title)]);
+                let msg = template.materialize(vec![("title", &opp.exterior.opp.title)]);
 
                 common::emails::send_message(submitted_by.interior.email, &msg).await
             }
@@ -580,7 +579,7 @@ pub async fn set_review_status(mut req: tide::Request<Database>) -> tide::Result
                 )
                 .await;
 
-                let msg = template.materialize(vec![("title", &opp.exterior.title)]);
+                let msg = template.materialize(vec![("title", &opp.exterior.opp.title)]);
 
                 common::emails::send_message(submitted_by.interior.email, &msg).await
             }

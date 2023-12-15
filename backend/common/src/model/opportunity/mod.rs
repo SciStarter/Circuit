@@ -1862,6 +1862,20 @@ impl OpportunityWithRelated {
         todo!()
     }
 
+    pub async fn load_by_slug(
+        db: &Database,
+        slug: impl AsRef<str>,
+    ) -> Result<OpportunityWithRelated, Error> {
+        todo!()
+    }
+
+    pub async fn load_by_slug_with_overlay(
+        db: &Database,
+        slug: impl AsRef<str>,
+    ) -> Result<OpportunityWithRelated, Error> {
+        todo!()
+    }
+
     pub async fn store(&mut self, db: &Database) -> Result<i32, Error> {
         todo!()
     }
@@ -1969,6 +1983,40 @@ impl OpportunityAll {
         Ok(OpportunityAll { exterior, interior })
     }
 
+    pub async fn load_by_slug(
+        db: &Database,
+        slug: impl AsRef<str>,
+    ) -> Result<OpportunityAll, Error> {
+        let exterior = OpportunityWithRelated::load_by_slug(db, slug).await?;
+        let interior = OpportunityInterior::load_by_id(
+            db,
+            exterior
+                .opp
+                .id
+                .expect("records loaded from the database should always have a primary key"),
+        )
+        .await?;
+
+        Ok(OpportunityAll { exterior, interior })
+    }
+
+    pub async fn load_by_slug_with_overlay(
+        db: &Database,
+        slug: impl AsRef<str>,
+    ) -> Result<OpportunityAll, Error> {
+        let exterior = OpportunityWithRelated::load_by_slug_with_overlay(db, slug).await?;
+        let interior = OpportunityInterior::load_by_id(
+            db,
+            exterior
+                .opp
+                .id
+                .expect("records loaded from the database should always have a primary key"),
+        )
+        .await?;
+
+        Ok(OpportunityAll { exterior, interior })
+    }
+
     pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
         self.interior.opportunity_id = Some(self.exterior.store(db).await?);
         self.interior.store(db).await?;
@@ -1997,6 +2045,16 @@ impl OpportunityReference {
 
     pub async fn load_by_uid(db: &Database, uid: Uuid) -> Result<OpportunityReference, Error> {
         let q = OpportunityQuery::default().with_uid(uid);
+        Ok(select_opportunity_ref!("", q as OpportunityQuery)
+            .fetch_one(db)
+            .await?)
+    }
+
+    pub async fn load_by_slug(
+        db: &Database,
+        slug: impl AsRef<str>,
+    ) -> Result<OpportunityReference, Error> {
+        let q = OpportunityQuery::default().with_slug(slug);
         Ok(select_opportunity_ref!("", q as OpportunityQuery)
             .fetch_one(db)
             .await?)
@@ -2050,7 +2108,7 @@ pub enum OpportunityQueryOrdering {
 /// ```
 /// Opportunity::load_matching(db.acquire().await?, OpportunityQuery { title_contains: "hello".to_string(), ..Default::default() })
 /// ```
-#[derive(Default, Serialize, Deserialize, Debug, sqlx::Type)]
+#[derive(Default, Clone, Serialize, Deserialize, Debug, sqlx::Type)]
 #[sqlx(type_name = "T_OpportunityQuery")]
 pub struct OpportunityQuery {
     pub id: Option<i32>,
@@ -2812,7 +2870,7 @@ impl Opportunity {
         Ok(!self.current(db).await?)
     }
 
-    pub async fn count_matching(db: &Database, query: OpportunityQuery) -> Result<i32, Error> {
+    pub async fn count_matching(db: &Database, query: OpportunityQuery) -> Result<u32, Error> {
         Ok(sqlx::query_scalar!(
             r#"
             SELECT coalesce(count(*), 0) AS "matches!: i32"
@@ -2821,7 +2879,8 @@ impl Opportunity {
             query as OpportunityQuery
         )
         .fetch_one(db)
-        .await?)
+        .await?
+        .try_into()?)
     }
 
     pub async fn load_matching_refs(
@@ -3224,6 +3283,21 @@ impl Opportunity {
         }
 
         Ok(())
+    }
+
+    pub async fn is_published(&self, db: &Database) -> Result<bool, Error> {
+        //(opp.interior.accepted.unwrap_or(false) && !opp.interior.withdrawn)
+        Ok(sqlx::query_scalar!(
+            r#"
+            SELECT ("accepted" AND NOT "withdrawn") AS "published!: bool"
+            FROM c_opportunity_interior
+            WHERE opportunity_id = $1
+            "#,
+            self.id
+        )
+        .fetch_optional(db)
+        .await?
+        .unwrap_or(false))
     }
 
     pub async fn store(&mut self, db: &Database) -> Result<i32, Error> {

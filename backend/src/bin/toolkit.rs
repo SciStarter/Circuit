@@ -1,7 +1,7 @@
 use async_std::prelude::{Stream, StreamExt};
 use clap::Parser;
 use common::{
-    geo::{opps_regional_overview_calc, GeomQuery},
+    gis::{opps_regional_overview_calc, GeomQuery},
     model::Partner,
 };
 use counter::Counter;
@@ -323,7 +323,7 @@ fn narrow_opportunity(
 async fn first_opportunity(state: &mut State) -> Result<(), DynError> {
     let opp = Opportunity::load_matching(
         &state.db,
-        &state.opportunity_query,
+        state.opportunity_query.clone(),
         OpportunityQueryOrdering::Any,
         Pagination::One,
     )
@@ -353,7 +353,7 @@ async fn update_opportunities<F: Fn(&mut Opportunity) -> Result<(), DynError>>(
     loop {
         let opps = Opportunity::load_matching(
             &state.db,
-            &state.opportunity_query,
+            state.opportunity_query.clone(),
             OpportunityQueryOrdering::Native,
             pagination,
         )
@@ -388,22 +388,6 @@ async fn revalidate_opportunities(state: &mut State) -> Result<(), DynError> {
     update_opportunities(state, |_| Ok(())).await
 }
 
-async fn accept_opportunities(state: &mut State, accepted: bool) -> Result<(), DynError> {
-    update_opportunities(state, |opp: &mut _| {
-        opp.interior.accepted = Some(accepted);
-        Ok(())
-    })
-    .await
-}
-
-async fn withdraw_opportunities(state: &mut State, withdrawn: bool) -> Result<(), DynError> {
-    update_opportunities(state, |opp: &mut _| {
-        opp.interior.withdrawn = withdrawn;
-        Ok(())
-    })
-    .await
-}
-
 async fn get_geo_opportunities(state: &mut State, _args: Vec<String>) -> Result<(), DynError> {
     if state.table != Table::Opportunity {
         println!("Invalid table type");
@@ -413,7 +397,7 @@ async fn get_geo_opportunities(state: &mut State, _args: Vec<String>) -> Result<
     update_opportunities(state, |opp: &mut _| {
         println!(
             "{}\n{:?}\n{:?}\n",
-            opp.exterior.title, opp.exterior.location_point, opp.exterior.location_polygon
+            opp.title, opp.location_point, opp.location_polygon
         );
         Ok(())
     })
@@ -434,7 +418,7 @@ async fn refresh_geo_opportunities(state: &mut State, _args: Vec<String>) -> Res
     loop {
         let opps = Opportunity::load_matching(
             &state.db,
-            &state.opportunity_query,
+            state.opportunity_query.clone(),
             OpportunityQueryOrdering::Native,
             pagination,
         )
@@ -447,10 +431,7 @@ async fn refresh_geo_opportunities(state: &mut State, _args: Vec<String>) -> Res
         for mut opp in opps {
             let addr = format!(
                 "{} {} {} {}",
-                opp.exterior.address_street,
-                opp.exterior.address_city,
-                opp.exterior.address_state,
-                opp.exterior.address_zip
+                opp.address_street, opp.address_city, opp.address_state, opp.address_zip
             )
             .trim()
             .to_string();
@@ -460,7 +441,7 @@ async fn refresh_geo_opportunities(state: &mut State, _args: Vec<String>) -> Res
                 continue;
             }
 
-            println!("Looking for {} using geo::GeomQuery", &addr);
+            println!("Looking for {} using gis::GeomQuery", &addr);
 
             let q = GeomQuery::new(addr.clone(), 0.5);
 
@@ -470,11 +451,13 @@ async fn refresh_geo_opportunities(state: &mut State, _args: Vec<String>) -> Res
                 if !geo.lon.is_empty() && !geo.lat.is_empty() {
                     let lon: f64 = geo.lon.parse()?;
                     let lat: f64 = geo.lat.parse()?;
-                    opp.exterior.location_point = Some(json!({
+                    opp.location_point = common::model::opportunity::Point::try_from(json!({
                         "type": "Point",
                         "coordinates": [lon, lat]
-                    }));
-                    opp.exterior.location_polygon = geo.geojson;
+                    }))?;
+                    if let Some(val) = geo.geojson {
+                        opp.location_polygon = serde_json::from_value(val)?;
+                    }
                     opp.store(&state.db).await?;
                     success = true;
                 }
@@ -484,15 +467,15 @@ async fn refresh_geo_opportunities(state: &mut State, _args: Vec<String>) -> Res
                 continue;
             }
 
-            println!("Looking for {} using geo::Query", &addr);
+            println!("Looking for {} using gis::Query", &addr);
 
-            let q = common::geo::Query::new(addr, true);
+            let q = common::gis::Query::new(addr, true);
 
             if let Some(geo) = q.lookup_one().await {
-                opp.exterior.location_point = Some(json!({
+                opp.location_point = common::model::opportunity::Point::try_from(json!({
                     "type": "Point",
                     "coordinates": [geo.geometry.longitude, geo.geometry.latitude]
-                }));
+                }))?;
                 opp.store(&state.db).await?;
             }
         }
@@ -519,7 +502,7 @@ async fn geoquery(_state: &mut State, args: Vec<String>) -> Result<(), DynError>
 
     println!(
         "{:?}",
-        common::geo::Query::new(query, false,).lookup_one().await
+        common::gis::Query::new(query, false,).lookup_one().await
     );
 
     Ok(())
@@ -530,7 +513,7 @@ async fn _geomquery(state: &mut State, args: Vec<String>) -> Result<(), DynError
 
     println!(
         "{:?}",
-        common::geo::GeomQuery::new(query, 0.5)
+        common::gis::GeomQuery::new(query, 0.5)
             .lookup(&state.db)
             .await
     );
@@ -604,42 +587,6 @@ async fn revalidate(state: &mut State, _args: Vec<String>) -> Result<(), DynErro
         Table::Opportunity => revalidate_opportunities(state).await?,
         Table::Person => revalidate_persons(state).await?,
         Table::Partner => revalidate_partners(state).await?,
-        Table::Ambiguous => {
-            return Err("select a table before trying this".into());
-        }
-    };
-
-    Ok(())
-}
-
-async fn accept(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
-    let mut args = args.into_iter().skip(1);
-
-    let accepted = args.next().map(|s| s != "false").unwrap_or(true);
-
-    match state.table {
-        Table::Opportunity => accept_opportunities(state, accepted).await?,
-        Table::Person | Table::Partner => {
-            return Err("not a meaningful operation".into());
-        }
-        Table::Ambiguous => {
-            return Err("select a table before trying this".into());
-        }
-    };
-
-    Ok(())
-}
-
-async fn withdraw(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
-    let mut args = args.into_iter().skip(1);
-
-    let withdrawn = args.next().map(|s| s != "false").unwrap_or(true);
-
-    match state.table {
-        Table::Opportunity => withdraw_opportunities(state, withdrawn).await?,
-        Table::Person | Table::Partner => {
-            return Err("not a meaningful operation".into());
-        }
         Table::Ambiguous => {
             return Err("select a table before trying this".into());
         }
@@ -1015,22 +962,6 @@ async fn run_shell(state: State) -> Result<(), DynError> {
         Command::new_async(
             "load, validate, and save rows matching the query".into(),
             async_fn!(State, revalidate),
-        ),
-    );
-
-    shell.commands.insert(
-        "accept".into(),
-        Command::new_async(
-            "mark matching rows accepted, or not accepted with `accept false`".into(),
-            async_fn!(State, accept),
-        ),
-    );
-
-    shell.commands.insert(
-        "withdraw".into(),
-        Command::new_async(
-            "mark matching rows withdrawn, or not withdrawn with `withdraw false`".into(),
-            async_fn!(State, withdraw),
         ),
     );
 

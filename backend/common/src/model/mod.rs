@@ -42,6 +42,8 @@ pub enum Error {
     GeoZero(#[from] geozero::error::GeozeroError),
     #[error("No such item exists")]
     NoSuch(&'static str),
+    #[error("Integer domain error: {0}")]
+    IntegerDomain(#[from] std::num::TryFromIntError),
 }
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]

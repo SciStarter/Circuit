@@ -153,13 +153,13 @@ pub async fn add_opp(mut req: tide::Request<Database>) -> tide::Result {
 pub async fn load_opp(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req).await?;
 
-    let opp = Opportunity::load_by_uid(req.state(), Uuid::parse_str(req.param("uid")?)?)
+    let opp = OpportunityAll::load_by_uid(req.state(), Uuid::parse_str(req.param("uid")?)?)
         .await
         .with_status(|| StatusCode::NotFound)?;
 
     let authorized = if let Some(p) = person.as_ref() {
         p.check_permission(&Permission::ManageOpportunities)
-            || p.check_authorization(req.state(), &opp, PermitAction::Edit)
+            || p.check_authorization(req.state(), &opp.exterior.opp, PermitAction::Edit)
                 .await?
     } else {
         false
@@ -179,7 +179,7 @@ pub async fn save_opp(mut req: tide::Request<Database>) -> tide::Result {
     let person = request_person(&mut req).await?;
 
     let original =
-        Opportunity::load_by_uid(req.state(), Uuid::parse_str(req.param("uid")?)?).await?;
+        OpportunityAll::load_by_uid(req.state(), Uuid::parse_str(req.param("uid")?)?).await?;
 
     save_opportunity(person, original, req).await
 }
@@ -187,12 +187,12 @@ pub async fn save_opp(mut req: tide::Request<Database>) -> tide::Result {
 /// Called by multiple endpoints to save an opportunity.
 pub async fn save_opportunity(
     person: Option<Person>,
-    original: Opportunity,
+    original: OpportunityAll,
     mut req: tide::Request<Database>,
 ) -> tide::Result {
     let authorized = if let Some(p) = person.as_ref() {
         p.check_permission(&Permission::ManageOpportunities)
-            || p.check_authorization(req.state(), &original, PermitAction::Edit)
+            || p.check_authorization(req.state(), &original.exterior.opp, PermitAction::Edit)
                 .await?
     } else {
         false
@@ -205,13 +205,13 @@ pub async fn save_opportunity(
         ));
     }
 
-    let mut opp: Opportunity = req.body_json().await?;
-    let partner = Partner::load_by_uid(req.state(), &opp.exterior.partner).await?;
+    let mut opp: OpportunityAll = req.body_json().await?;
+    let partner = Partner::load_by_uid(req.state(), &opp.exterior.opp.partner).await?;
 
-    opp.id = original.id;
-    opp.exterior.uid = original.exterior.uid;
-    opp.exterior.slug = original.exterior.slug;
-    opp.exterior.partner = original.exterior.partner;
+    opp.exterior.opp.id = original.exterior.opp.id;
+    opp.exterior.opp.uid = original.exterior.opp.uid;
+    opp.exterior.opp.slug = original.exterior.opp.slug;
+    opp.exterior.opp.partner = original.exterior.opp.partner;
     opp.interior.submitted_by = original.interior.submitted_by;
 
     opp.interior.review_status = if opp.interior.review_status.requires_manager() {
@@ -239,21 +239,21 @@ pub async fn save_opportunity(
         person.as_ref().map(|p| &p.exterior.uid),
         "save-opportunity",
         &json!({
-            "opportunity": opp.exterior.uid}),
+            "opportunity": opp.exterior.opp.uid}),
     );
 
     if let Some(person) = person {
         person
             .log(
                 req.state(),
-                LogEvent::EditOpportunity(LogIdentifier::Uid(opp.exterior.uid)),
+                LogEvent::EditOpportunity(LogIdentifier::Uid(opp.exterior.opp.uid)),
             )
             .await?;
     }
 
     if let ReviewStatus::Draft = original.interior.review_status {
         if let ReviewStatus::Pending = opp.interior.review_status {
-            notify_pending_approval(&req, &partner, &opp).await?;
+            notify_pending_approval(&req, &partner, &opp.exterior.opp).await?;
         }
     }
 

@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use chrono::{DateTime, FixedOffset};
 use common::{
     cached_json,
-    geo::opp_regional_detailed_counts,
+    gis::opp_regional_detailed_counts,
     model::{
         analytics::{RelativeTimePeriod, Status as AnayticsStatus},
         invitation::{Invitation, InvitationMode},
@@ -465,37 +465,37 @@ pub async fn opps_overview(req: tide::Request<Database>) -> tide::Result {
         .await?;
 
     let active = sqlx::query_scalar!(
-        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE c_opportunity_is_current(interior, exterior)"#
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity o WHERE c_opportunity_is_current(o)"#
     )
     .fetch_one(req.state())
     .await?;
 
     let online = sqlx::query_scalar!(
-        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE exterior->>'is_online' = 'true'"#
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE is_online = true"#
     )
     .fetch_one(req.state())
     .await?;
 
     let regional = sqlx::query_scalar!(
-        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE exterior->>'location_type' = 'near'"#
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE location_type = 'near'"#
     )
     .fetch_one(req.state())
     .await?;
 
     let at_point = sqlx::query_scalar!(
-        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE exterior->>'location_type' = 'at'"#
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE location_type = 'at'"#
     )
     .fetch_one(req.state())
     .await?;
 
     let domain_all = sqlx::query!(
         r#"
-SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
-FROM c_opportunity
-WHERE exterior->>'pes_domain' != 'unspecified'
-GROUP BY exterior->>'pes_domain'
-ORDER BY "total!" DESC
-"#
+        SELECT pes_domain::text AS "domain!", COUNT(*) AS "total!"
+        FROM c_opportunity
+        WHERE pes_domain != 'unspecified'
+        GROUP BY pes_domain
+        ORDER BY "total!" DESC
+        "#
     )
     .map(|row| (row.domain.to_owned(), row.total))
     .fetch_all(req.state())
@@ -504,12 +504,12 @@ ORDER BY "total!" DESC
 
     let domain_current = sqlx::query!(
         r#"
-SELECT exterior->>'pes_domain' AS "domain!", COUNT(*) AS "total!"
-FROM c_opportunity
-WHERE c_opportunity_is_current(interior, exterior) AND exterior->>'pes_domain' != 'unspecified'
-GROUP BY exterior->>'pes_domain'
-ORDER BY "total!" DESC
-"#
+        SELECT pes_domain::text AS "domain!", COUNT(*) AS "total!"
+        FROM c_opportunity o
+        WHERE c_opportunity_is_current(o) AND pes_domain != 'unspecified'
+        GROUP BY pes_domain
+        ORDER BY "total!" DESC
+        "#
     )
     .map(|row| (row.domain.to_owned(), row.total))
     .fetch_all(req.state())
@@ -520,11 +520,11 @@ ORDER BY "total!" DESC
 
     let activity_all = sqlx::query!(
         r#"
-SELECT v.descriptor AS "descriptor!", count(*) AS "total!"
-FROM c_opportunity o JOIN jsonb_array_elements_text(exterior->'opp_descriptor') v(descriptor) ON true
-GROUP BY v.descriptor
-ORDER BY "total!" DESC
-"#
+        SELECT v.descriptor::text AS "descriptor!", count(*) AS "total!"
+        FROM c_opportunity o JOIN c_opportunity_descriptor v ON o.id = v.opportunity_id
+        GROUP BY v.descriptor
+        ORDER BY "total!" DESC
+        "#
     )
     .map(|row| (row.descriptor.to_owned(), row.total))
     .fetch_all(req.state())
@@ -533,11 +533,11 @@ ORDER BY "total!" DESC
 
     let activity_current = sqlx::query!(
         r#"
-SELECT v.descriptor AS "descriptor!", count(*) AS "total!"
-FROM c_opportunity o JOIN jsonb_array_elements_text(exterior->'opp_descriptor') v(descriptor) ON true
-WHERE c_opportunity_is_current(interior, exterior)
-GROUP BY v.descriptor;
-"#
+        SELECT v.descriptor::text AS "descriptor!", count(*) AS "total!"
+        FROM c_opportunity o JOIN c_opportunity_descriptor v ON o.id = v.opportunity_id
+        WHERE c_opportunity_is_current(o)
+        GROUP BY v.descriptor;
+        "#
     )
     .map(|row| (row.descriptor.to_owned(), row.total))
     .fetch_all(req.state())
@@ -546,14 +546,18 @@ GROUP BY v.descriptor;
 
     let activity_current: BTreeMap<String, i64> = activity_current.into_iter().collect();
 
-    let indoor_all = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE exterior->'opp_venue' @> '"indoors"'::jsonb"#).fetch_one(req.state()).await?;
-    let outdoor_all = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE exterior->'opp_venue' @> '"outdoors"'::jsonb"#).fetch_one(req.state()).await?;
-    let indoor_current = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE c_opportunity_is_current(interior, exterior) AND exterior->'opp_venue' @> '"indoors"'::jsonb"#).fetch_one(req.state()).await?;
-    let outdoor_current = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE c_opportunity_is_current(interior, exterior) AND exterior->'opp_venue' @> '"outdoors"'::jsonb"#).fetch_one(req.state()).await?;
+    let indoor_all = sqlx::query_scalar!(
+        r#"SELECT count(*) AS "total!" FROM c_opportunity o JOIN c_opportunity_venue_type v ON o.id = v.opportunity_id WHERE venue_type = 'indoors'"#
+    )
+    .fetch_one(req.state())
+    .await?;
+    let outdoor_all = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity o JOIN c_opportunity_venue_type v ON o.id = v.opportunity_id WHERE venue_type = 'outdoors'"#).fetch_one(req.state()).await?;
+    let indoor_current = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity o JOIN c_opportunity_venue_type v ON o.id = v.opportunity_id WHERE c_opportunity_is_current(o) AND venue_type = 'indoors'"#).fetch_one(req.state()).await?;
+    let outdoor_current = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity o JOIN c_opportunity_venue_type v ON o.id = v.opportunity_id WHERE c_opportunity_is_current(o) AND venue_type = 'outdoors'"#).fetch_one(req.state()).await?;
 
-    let keywords = sqlx::query!(r#"SELECT lower(trim(v.tag)) AS "text!", count(*) as "total!" FROM c_opportunity o JOIN jsonb_array_elements_text(exterior->'tags') v(tag) ON true GROUP BY lower(trim(v.tag)) ORDER BY "total!" DESC LIMIT 30"#).map(|row| (row.text.to_owned(), row.total)).fetch_all(req.state()).await?;
+    let keywords = sqlx::query!(r#"SELECT lower(trim(tag)) AS "text!", count(*) as "total!" FROM c_opportunity o JOIN c_opportunity_tag t ON o.id = t.opportunity_id GROUP BY lower(trim(tag)) ORDER BY "total!" DESC LIMIT 30"#).map(|row| (row.text.to_owned(), row.total)).fetch_all(req.state()).await?;
 
-    let providers = sqlx::query!(r#"SELECT p.exterior->>'name' AS "name!", count(*) AS "total!" FROM c_opportunity o JOIN c_partner p ON p.exterior->'uid' = o.exterior->'partner' GROUP BY p.exterior->>'name' ORDER BY "total!" DESC"#)
+    let providers = sqlx::query!(r#"SELECT p.exterior->>'name' AS "name!", count(*) AS "total!" FROM c_opportunity o JOIN c_partner p ON (p.exterior->>'uid')::uuid = o."partner" GROUP BY p.exterior->>'name' ORDER BY "total!" DESC"#)
         .map(|row| LabeledValue {
             label: row.name.to_owned(),
             value: row.total,
@@ -595,13 +599,13 @@ pub async fn opps_regional_overview(req: tide::Request<Database>) -> tide::Resul
     match cached_json(req.state(), "geoexp-regional-overview", 7).await? {
         CachedJson::Current(json) => okay(&json),
         CachedJson::Expired(json) => {
-            async_std::task::spawn(common::geo::opps_regional_overview_calc(
+            async_std::task::spawn(common::gis::opps_regional_overview_calc(
                 req.state().clone(),
             ));
             okay(&json)
         }
         CachedJson::Missing => {
-            async_std::task::spawn(common::geo::opps_regional_overview_calc(
+            async_std::task::spawn(common::gis::opps_regional_overview_calc(
                 req.state().clone(),
             ));
             okay(

@@ -29,7 +29,7 @@
                 <select class="input" name="pes_domain">
                   <option value="">Not Set</option>
                   <% for opt in common::model::opportunity::Domain::all_options() { %>
-                     <option value="<%= opt.0 %>"<% if opt.0 == exterior["pes_domain"].as_str().unwrap_or("") { %> selected<% } %>><%= opt.1 %></option>
+                     <option value="<%= opt.0 %>"<% if Some(opt.2) == form.pes_domain { %> selected<% } %>><%= opt.1 %></option>
                   <% } %>
                 </select>
               </div>
@@ -49,7 +49,7 @@
               <div class="select is-multiple">
                 <select multiple class="input" name="opp_descriptor[]">
                   <% for opt in common::model::opportunity::Descriptor::all_options() { %>
-                     <option value="<%= &opt.0 %>"<% if exterior["opp_descriptor"].as_array().map(|vec| vec.contains(&opt.0.into())).unwrap_or(false) { %> selected<% } %>><%= opt.1 %></option>
+                     <option value="<%= &opt.0 %>"<% if form.opp_descriptor.contains(&opt.2) { %> selected<% } %>><%= opt.1 %></option>
                   <% } %>
                 </select>
               </div>
@@ -69,7 +69,7 @@
               <div class="select is-multiple">
                 <select multiple class="input" name="opp_topics[]">
                   <% for opt in common::model::opportunity::Topic::all_options() { %>
-                  <option value="<%= &opt.0 %>"<% if exterior["opp_topics"].as_array().map(|arr| arr.contains(&opt.0.into())).unwrap_or(false) { %> selected<% } %>><%= &opt.1 %></option>
+                  <option value="<%= &opt.0 %>"<% if form.opp_topics.contains(&opt.2) { %> selected<% } %>><%= &opt.1 %></option>
                   <% } %>
                 </select>
               </div>
@@ -85,7 +85,7 @@
                 <span title="hold down contol or command to select multiple items" class="tag is-info">multiple select</span>
               </div>
             </div>
-            <div class="control" x-data="{ tags: <%= exterior["tags"].to_string() %> || [], add(val) { if(val && (this.tags.indexOf(val) < 0)) { this.tags.push(val) } }, remove(val) { this.tags = this.tags.filter(t => t !== val); } }">
+            <div class="control" x-data="{ tags: <%= serde_json::to_string(&form.tags).expect("Vec<String> always has JSON representation") %> , add(val) { if(val && (this.tags.indexOf(val) < 0)) { this.tags.push(val) } }, remove(val) { this.tags = this.tags.filter(t => t !== val); } }">
               <div class="tags">
                 <template x-for="tag in tags">
                   <span class="tag is-primary">
@@ -107,14 +107,14 @@
           <div class="field">
             <label class="label">Opportunity Minimum Age</label>
             <div class="control">
-              <input class="input" type="number" name="min_age" value="<%= exterior["min_age"].as_i64().unwrap_or(-1) %>">
+              <input class="input" type="number" name="min_age" value="<%= form.min_age.unwrap_or(-1) %>">
             </div>
           </div>
 
           <div class="field">
             <label class="label">Opportunity Maximum Age</label>
             <div class="control">
-              <input class="input" type="number" name="max_age" value="<%= exterior["max_age"].as_i64().unwrap_or(-1) %>">
+              <input class="input" type="number" name="max_age" value="<%= form.max_age.unwrap_or(-1) %>">
             </div>
           </div>
 
@@ -125,7 +125,7 @@
                 <select class="input" name="cost">
                   <option value="">Not Set</option>
                   <% for opt in common::model::opportunity::Cost::all_options() { %>
-                     <option value="<%= &opt.0 %>"<% if Some(opt.0.as_ref()) == exterior["cost"].as_str() { %> selected<% } %>><%= opt.1 %></option>
+                     <option value="<%= &opt.0 %>"<% if Some(opt.2) == form.cost { %> selected<% } %>><%= opt.1 %></option>
                   <% } %>
                 </select>
               </div>
@@ -138,8 +138,8 @@
               <div class="select">
                 <select class="input" name="is_online">
                   <option value="">Not Set</option>
-                  <option value="true"<% if exterior["is_online"].as_bool().unwrap_or(false) { %> selected<% } %>>Yes</option>
-                  <option value="false"<% if !exterior["is_online"].as_bool().unwrap_or(true) { %> selected<% } %>>No</option>
+                  <option value="true"<% if form.is_online.unwrap_or(false) { %> selected<% } %>>Yes</option>
+                  <option value="false"<% if !form.is_online.unwrap_or(true) { %> selected<% } %>>No</option>
                 </select>
               </div>
             </div>
@@ -152,7 +152,7 @@
                 <select class="input" name="location_type">
                   <option value="">Not Set</option>
                   <% for opt in common::model::opportunity::LocationType::all_options() { %>
-                     <option value="<%= opt.0 %>"<% if opt.0 == exterior["location_type"].as_str().unwrap_or("") { %> selected<% } %>><%= opt.1 %></option>
+                     <option value="<%= opt.0 %>"<% if Some(opt.2) == form.location_type { %> selected<% } %>><%= opt.1 %></option>
                   <% } %>
                 </select>
               </div>
@@ -162,42 +162,42 @@
           <div class="field">
             <label class="label">Opportunity Location Name</label>
             <div class="control">
-              <input type="text" name="location_name" value="<%= exterior["location_name"].as_str().unwrap_or("") %>">
+              <input type="text" name="location_name" value="<%= form.location_name.as_deref().unwrap_or("") %>">
             </div>
           </div>
 
           <div class="field">
             <label class="label">Opportunity Address: Street (For Location type "At")</label>
             <div class="control">
-              <input type="text" name="address_street" value="<%= exterior["address_street"].as_str().unwrap_or("") %>">
+              <input type="text" name="address_street" value="<%= form.address_street.as_deref().unwrap_or("") %>">
             </div>
           </div>
 
           <div class="field">
             <label class="label">Opportunity Address: City (For Location type "At")</label>
             <div class="control">
-              <input type="text" name="address_city" value="<%= exterior["address_city"].as_str().unwrap_or("") %>">
+              <input type="text" name="address_city" value="<%= form.address_city.as_deref().unwrap_or("") %>">
             </div>
           </div>
 
           <div class="field">
             <label class="label">Opportunity Address: State (For Location type "At")</label>
             <div class="control">
-              <input type="text" name="address_state" value="<%= exterior["address_state"].as_str().unwrap_or("") %>">
+              <input type="text" name="address_state" value="<%= form.address_state.as_deref().unwrap_or("") %>">
             </div>
           </div>
 
           <div class="field">
             <label class="label">Opportunity Address: Country (For Location type "At")</label>
             <div class="control">
-              <input type="text" name="address_country" value="<%= exterior["address_country"].as_str().unwrap_or("") %>">
+              <input type="text" name="address_country" value="<%= form.address_country.as_deref().unwrap_or("") %>">
             </div>
           </div>
 
           <div class="field">
             <label class="label">Opportunity Address: Zip (For Location type "At")</label>
             <div class="control">
-              <input type="text" name="address_zip" value="<%= exterior["address_zip"].as_str().unwrap_or("") %>">
+              <input type="text" name="address_zip" value="<%= form.address_zip.as_deref().unwrap_or("") %>">
             </div>
           </div>
 

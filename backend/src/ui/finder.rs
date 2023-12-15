@@ -1,13 +1,13 @@
 use chrono::{DateTime, FixedOffset};
 use common::{
-    geo,
+    gis,
     model::{
         opportunity::{
             Cost, Descriptor, EntityType, OpportunityQuery, OpportunityQueryOrdering,
             OpportunityQueryPhysical, OpportunityQueryTemporal, Topic, VenueType,
         },
         person::Permission,
-        Opportunity, OpportunityExterior, Pagination, Person, SelectOption,
+        Opportunity, Pagination, Person, SelectOption,
     },
     Database,
 };
@@ -133,7 +133,7 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
 
     let proximity = search.place.proximity;
 
-    let query = geo::Query::new(
+    let query = gis::Query::new(
         match search.lookup {
             GeoLookup::Coords => search.place.near,
             GeoLookup::Near => format!("{} {}", search.place.latitude, search.place.longitude),
@@ -202,7 +202,7 @@ enum End {
 
 pub async fn geom(mut req: tide::Request<Database>) -> tide::Result {
     let search: GeomQuery = req.body_json().await?;
-    let mut query = geo::GeomQuery::new(search.q, 0.5);
+    let mut query = gis::GeomQuery::new(search.q, 0.5);
 
     let mut end = End::Back;
 
@@ -347,10 +347,10 @@ RETURNING coalesce(pre."home_location" != post."home_location", true) as "change
     query.current = Some(search.current.unwrap_or(true));
     query.temporal = search.temporal;
 
-    query.calendar = match (search.year, search.month) {
-        (Some(y), Some(m)) => Some((y, m)),
-        _ => None,
-    };
+    if let (Some(y), Some(m)) = (search.year, search.month) {
+        query.calendar_year = Some(y.try_into()?);
+        query.calendar_month = Some(m.try_into()?);
+    }
 
     query.sample = if search.sample.unwrap_or(false) {
         Some(0.25)
@@ -421,7 +421,9 @@ RETURNING coalesce(pre."home_location" != post."home_location", true) as "change
 
     if search.proximity != Some(0.0) {
         if let (Some(longitude), Some(latitude)) = (search.longitude, search.latitude) {
-            query.near = Some((longitude, latitude, search.proximity.unwrap_or(FIFTY_MILES)));
+            query.near_longitude = Some(longitude.into());
+            query.near_latitude = Some(latitude.into());
+            query.near_distance = Some(search.proximity.unwrap_or(FIFTY_MILES).into());
         }
     }
 
@@ -458,14 +460,17 @@ RETURNING coalesce(pre."home_location" != post."home_location", true) as "change
         }
     };
 
-    let matches: Vec<OpportunityExterior> =
-        Opportunity::load_matching(db, &query, search.sort.unwrap_or_default(), pagination)
-            .await?
-            .into_iter()
-            .map(|m| m.exterior)
-            .collect();
+    let matches: Vec<Opportunity> = Opportunity::load_matching(
+        db,
+        query.clone(),
+        search.sort.unwrap_or_default(),
+        pagination,
+    )
+    .await?
+    .into_iter()
+    .collect();
 
-    let total = Opportunity::count_matching(db, &query).await?;
+    let total = Opportunity::count_matching(db, query).await?;
 
     let (page_index, last_page, per_page) = pagination.expand(total);
 
