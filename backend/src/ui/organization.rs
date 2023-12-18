@@ -8,11 +8,11 @@ use common::{
         analytics::{RelativeTimePeriod, Status as AnayticsStatus},
         invitation::{Invitation, InvitationMode},
         opportunity::{
-            EntityType, LocationType, OpportunityAll, OpportunityQuery, OpportunityQueryOrdering,
+            EntityType, LocationType, OpportunityQuery, OpportunityQueryOrdering,
             OpportunityWithRelated,
         },
         person::PersonPrivilegedReference,
-        Opportunity, Pagination, Partner, Person, SelectOption,
+        Pagination, Partner, Person, SelectOption,
     },
     CachedJson, Database,
 };

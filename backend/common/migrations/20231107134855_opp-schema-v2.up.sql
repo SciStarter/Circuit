@@ -339,6 +339,16 @@ CREATE TABLE c_opportunity_hashtag (
 CREATE INDEX c_opportunity_hashtag_via_opportunity_id ON c_opportunity_hashtag ("opportunity_id");
 CREATE INDEX c_opportunity_hashtag_via_hashtag ON c_opportunity_hashtag ("hashtag");
 
+CREATE TABLE c_opportunity_social_handle (
+    "id" serial PRIMARY KEY,
+    "opportunity_id" integer NOT NULL REFERENCES "c_opportunity" ON DELETE CASCADE,
+    "network" text NOT NULL,
+    "handle" text NOT NULL,
+    UNIQUE ("opportunity_id", "network")
+);
+
+CREATE INDEX c_opportunity_social_handle_via_opportunity_id ON c_opportunity_social_handle ("opportunity_id");
+
 CREATE TABLE c_opportunity_language (
     "id" serial PRIMARY KEY,
     "opportunity_id" integer NOT NULL REFERENCES "c_opportunity" ON DELETE CASCADE,

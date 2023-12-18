@@ -7,15 +7,14 @@ use crate::{gis, Database, ToFixedOffset};
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use geo::Geometry;
-use geozero::{geojson, wkb, ToJson};
+use geozero::{wkb, ToJson};
 //use deunicode::deunicode;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use sqlx::postgres::{PgArguments, PgHasArrayType, PgTypeInfo};
-use sqlx::query::Query;
-use sqlx::{prelude::*, Postgres};
+use sqlx::postgres::{PgHasArrayType, PgTypeInfo};
+use sqlx::prelude::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::convert::AsRef;
 use strum::IntoEnumIterator;
@@ -897,55 +896,55 @@ impl OpportunityInstance {
     }
 }
 
-#[derive(Debug)]
-pub struct OpportunityVenue {
-    pub id: Option<i32>,
-    pub opportunity_id: i32,
-    pub venue_type: VenueType,
-}
+// #[derive(Debug)]
+// pub struct OpportunityVenue {
+//     pub id: Option<i32>,
+//     pub opportunity_id: i32,
+//     pub venue_type: VenueType,
+// }
 
-#[derive(Debug)]
-pub struct OpportunityDescriptor {
-    pub id: Option<i32>,
-    pub opportunity_id: i32,
-    pub descriptor: Descriptor,
-}
+// #[derive(Debug)]
+// pub struct OpportunityDescriptor {
+//     pub id: Option<i32>,
+//     pub opportunity_id: i32,
+//     pub descriptor: Descriptor,
+// }
 
-#[derive(Debug)]
-pub struct OpportunityTag {
-    pub id: Option<i32>,
-    pub opportunity_id: i32,
-    pub tag: String,
-}
+// #[derive(Debug)]
+// pub struct OpportunityTag {
+//     pub id: Option<i32>,
+//     pub opportunity_id: i32,
+//     pub tag: String,
+// }
 
-#[derive(Debug)]
-pub struct OpportunityTopic {
-    pub id: Option<i32>,
-    pub opportunity_id: i32,
-    pub topic: Topic,
-}
+// #[derive(Debug)]
+// pub struct OpportunityTopic {
+//     pub id: Option<i32>,
+//     pub opportunity_id: i32,
+//     pub topic: Topic,
+// }
 
-#[derive(Debug)]
-pub struct OpportunityHashtag {
-    pub id: Option<i32>,
-    pub opportunity_id: i32,
-    pub hashtag: String,
-}
+// #[derive(Debug)]
+// pub struct OpportunityHashtag {
+//     pub id: Option<i32>,
+//     pub opportunity_id: i32,
+//     pub hashtag: String,
+// }
 
-#[derive(Debug)]
-pub struct OpportunityLanguage {
-    pub id: Option<i32>,
-    pub opportunity_id: i32,
-    pub language: String,
-}
+// #[derive(Debug)]
+// pub struct OpportunityLanguage {
+//     pub id: Option<i32>,
+//     pub opportunity_id: i32,
+//     pub language: String,
+// }
 
-#[derive(Debug)]
-pub struct OpportunitySocialHandle {
-    pub id: Option<i32>,
-    pub opportunity_id: i32,
-    pub network: String,
-    pub handle: String,
-}
+// #[derive(Debug)]
+// pub struct OpportunitySocialHandle {
+//     pub id: Option<i32>,
+//     pub opportunity_id: i32,
+//     pub network: String,
+//     pub handle: String,
+// }
 
 type IntoWKB = Option<wkb::Encode<Geometry<f64>>>;
 type FromWKB = Option<wkb::Decode<Geometry<f64>>>;
@@ -1608,54 +1607,136 @@ impl Opportunity {
         Ok(())
     }
 
-    pub async fn hashtags(&self, _db: &Database) -> Result<Vec<String>, Error> {
-        todo!()
+    pub async fn hashtags(&self, db: &Database) -> Result<Vec<String>, Error> {
+        Ok(sqlx::query!(
+            r#"
+            SELECT "hashtag" AS "value!" FROM c_opportunity_hashtag WHERE "opportunity_id" = $1
+            "#,
+            self.id,
+        )
+        .map(|row| row.value)
+        .fetch_all(db)
+        .await?)
     }
 
-    pub async fn hashtags_with_overlay(&self, _db: &Database) -> Result<Vec<String>, Error> {
-        todo!()
-    }
-
-    pub async fn set_hashtags<Tag>(&self, _db: &Database, _vals: Vec<Tag>) -> Result<(), Error>
+    pub async fn set_hashtags<Tag>(&self, db: &Database, vals: Vec<Tag>) -> Result<(), Error>
     where
         Tag: AsRef<str>,
     {
-        todo!()
+        sqlx::query!(
+            "DELETE FROM c_opportunity_hashtag WHERE opportunity_id = $1",
+            self.id
+        )
+        .execute(db)
+        .await?;
+
+        for val in vals {
+            sqlx::query!(
+                r#"
+                INSERT INTO c_opportunity_hashtag ("opportunity_id", "hashtag")
+                VALUES ($1, $2)
+                ON CONFLICT DO NOTHING
+                "#,
+                self.id,
+                val.as_ref()
+            )
+            .execute(db)
+            .await?;
+        }
+
+        Ok(())
     }
 
-    pub async fn social_handles(&self, _db: &Database) -> Result<Vec<(String, String)>, Error> {
-        todo!()
-    }
-
-    pub async fn social_handles_with_overlay(
-        &self,
-        _db: &Database,
-    ) -> Result<Vec<(String, String)>, Error> {
-        todo!()
+    pub async fn social_handles(&self, db: &Database) -> Result<Vec<(String, String)>, Error> {
+        Ok(sqlx::query!(
+            r#"
+            SELECT "network" AS "network!", "handle" AS "handle!" FROM c_opportunity_social_handle WHERE "opportunity_id" = $1
+            "#,
+            self.id,
+        )
+        .map(|row| (row.network, row.handle))
+        .fetch_all(db)
+        .await?)
     }
 
     pub async fn set_social_handles<Network, Handle>(
         &self,
-        _db: &Database,
-        _vals: Vec<(Network, Handle)>,
+        db: &Database,
+        vals: Vec<(Network, Handle)>,
     ) -> Result<(), Error>
     where
         Network: AsRef<str>,
         Handle: AsRef<str>,
     {
-        todo!()
+        sqlx::query!(
+            "DELETE FROM c_opportunity_social_handle WHERE opportunity_id = $1",
+            self.id
+        )
+        .execute(db)
+        .await?;
+
+        for val in vals {
+            sqlx::query!(
+                r#"
+                INSERT INTO c_opportunity_social_handle ("opportunity_id", "network", "handle")
+                VALUES ($1, $2, $3)
+                ON CONFLICT DO NOTHING
+                "#,
+                self.id,
+                val.0.as_ref(),
+                val.1.as_ref(),
+            )
+            .execute(db)
+            .await?;
+        }
+
+        Ok(())
     }
 
-    pub async fn languages(&self, _db: &Database) -> Result<Vec<String>, Error> {
-        // default to vec!['en-US'] if empty
-        todo!()
+    pub async fn languages(&self, db: &Database) -> Result<Vec<String>, Error> {
+        let ret = sqlx::query!(
+            r#"
+            SELECT "language" AS "language!" FROM c_opportunity_language WHERE "opportunity_id" = $1
+            "#,
+            self.id,
+        )
+        .map(|row| row.language)
+        .fetch_all(db)
+        .await?;
+
+        if ret.is_empty() {
+            Ok(vec![String::from("en-US")])
+        } else {
+            Ok(ret)
+        }
     }
 
-    pub async fn set_languages<Lang>(&self, _db: &Database, _vals: Vec<Lang>) -> Result<(), Error>
+    pub async fn set_languages<Lang>(&self, db: &Database, vals: Vec<Lang>) -> Result<(), Error>
     where
         Lang: AsRef<str>,
     {
-        todo!()
+        sqlx::query!(
+            "DELETE FROM c_opportunity_language WHERE opportunity_id = $1",
+            self.id
+        )
+        .execute(db)
+        .await?;
+
+        for val in vals {
+            sqlx::query!(
+                r#"
+                INSERT INTO c_opportunity_language ("opportunity_id", "language")
+                VALUES ($1, $2)
+                ON CONFLICT DO NOTHING
+                "#,
+                self.id,
+                val.as_ref()
+            )
+            .execute(db)
+            .await?;
+        }
+
+        Ok(())
     }
 }
 
@@ -1822,6 +1903,8 @@ pub struct OpportunityWithRelated {
     pub opp_social_handles: HashMap<String, String>,
 }
 
+struct OpportunityWithOverlay(pub Opportunity);
+
 impl OpportunityWithRelated {
     pub async fn load_matching(
         db: &Database,
@@ -1841,43 +1924,117 @@ impl OpportunityWithRelated {
     }
 
     pub async fn load_by_id(db: &Database, id: i32) -> Result<OpportunityWithRelated, Error> {
-        todo!()
+        OpportunityWithRelated::try_from_with_db(db, Opportunity::load_by_id(db, id).await?).await
     }
 
     pub async fn load_by_id_with_overlay(
         db: &Database,
         id: i32,
     ) -> Result<OpportunityWithRelated, Error> {
-        todo!()
+        OpportunityWithRelated::try_from_with_db(
+            db,
+            OpportunityWithOverlay(Opportunity::load_by_id(db, id).await?),
+        )
+        .await
     }
 
     pub async fn load_by_uid(db: &Database, uid: Uuid) -> Result<OpportunityWithRelated, Error> {
-        todo!()
+        OpportunityWithRelated::try_from_with_db(db, Opportunity::load_by_uid(db, uid).await?).await
     }
 
     pub async fn load_by_uid_with_overlay(
         db: &Database,
         uid: Uuid,
     ) -> Result<OpportunityWithRelated, Error> {
-        todo!()
+        OpportunityWithRelated::try_from_with_db(
+            db,
+            OpportunityWithOverlay(Opportunity::load_by_uid(db, uid).await?),
+        )
+        .await
     }
 
     pub async fn load_by_slug(
         db: &Database,
         slug: impl AsRef<str>,
     ) -> Result<OpportunityWithRelated, Error> {
-        todo!()
+        OpportunityWithRelated::try_from_with_db(db, Opportunity::load_by_slug(db, slug).await?)
+            .await
     }
 
     pub async fn load_by_slug_with_overlay(
         db: &Database,
         slug: impl AsRef<str>,
     ) -> Result<OpportunityWithRelated, Error> {
-        todo!()
+        OpportunityWithRelated::try_from_with_db(
+            db,
+            OpportunityWithOverlay(Opportunity::load_by_slug(db, slug).await?),
+        )
+        .await
     }
 
     pub async fn store(&mut self, db: &Database) -> Result<i32, Error> {
-        todo!()
+        if !(self.end_datetimes.is_empty()
+            || self.start_datetimes.len() == self.end_datetimes.len())
+        {
+            return Err(Error::OutOfBounds(format!("Start and end datetime lists must be the same length, or the end list must be empty. Start: {:?} End: {:?}", &self.start_datetimes, &self.end_datetimes)));
+        }
+
+        let id = self.opp.store(db).await?;
+        self.opp
+            .set_venue_types(db, self.opp_venue.clone(), false)
+            .await?;
+        self.opp
+            .set_descriptors(db, self.opp_descriptor.clone(), false)
+            .await?;
+        self.opp.set_tags(db, self.tags.clone(), false).await?;
+        self.opp
+            .set_topics(db, self.opp_topics.clone(), false)
+            .await?;
+        self.opp.set_languages(db, self.languages.clone()).await?;
+        self.opp.set_hashtags(db, self.opp_hashtags.clone()).await?;
+        self.opp
+            .set_social_handles(
+                db,
+                self.opp_social_handles
+                    .iter()
+                    .map(|(n, h)| (n.clone(), h.clone()))
+                    .collect(),
+            )
+            .await?;
+
+        if self.end_datetimes.is_empty() {
+            for start in self.start_datetimes.iter() {
+                self.opp
+                    .ensure_instance(
+                        db,
+                        OpportunityInstance {
+                            id: None,
+                            opportunity_id: Some(id),
+                            start: start.clone(),
+                            end: None,
+                        },
+                    )
+                    .await?;
+            }
+        } else if self.start_datetimes.len() == self.end_datetimes.len() {
+            for (start, end) in self.start_datetimes.iter().zip(self.end_datetimes.iter()) {
+                self.opp
+                    .ensure_instance(
+                        db,
+                        OpportunityInstance {
+                            id: None,
+                            opportunity_id: Some(id),
+                            start: start.clone(),
+                            end: Some(end.clone()),
+                        },
+                    )
+                    .await?;
+            }
+        } else {
+            unreachable!();
+        }
+
+        Ok(id)
     }
 }
 
@@ -1898,6 +2055,30 @@ impl TryFromWithDB<Opportunity> for OpportunityWithRelated {
             opp_hashtags: source.hashtags(db).await?,
             opp_social_handles: source.social_handles(db).await?.into_iter().collect(),
             opp: source,
+        })
+    }
+}
+
+#[async_trait::async_trait]
+impl TryFromWithDB<OpportunityWithOverlay> for OpportunityWithRelated {
+    async fn try_from_with_db(
+        db: &Database,
+        source: OpportunityWithOverlay,
+    ) -> Result<Self, Error> {
+        let instances = source.0.instances(db).await?;
+
+        Ok(OpportunityWithRelated {
+            opp_venue: source.0.venue_types_with_overlay(db).await?,
+            opp_descriptor: source.0.descriptors_with_overlay(db).await?,
+            tags: source.0.tags_with_overlay(db).await?,
+            opp_topics: source.0.topics_with_overlay(db).await?,
+            start_datetimes: instances.iter().map(|i| i.start).collect(),
+            has_end: instances.iter().any(|i| i.end.is_some()),
+            end_datetimes: instances.iter().flat_map(|i| i.end).collect(),
+            languages: source.0.languages(db).await?,
+            opp_hashtags: source.0.hashtags(db).await?,
+            opp_social_handles: source.0.social_handles(db).await?.into_iter().collect(),
+            opp: source.0,
         })
     }
 }
@@ -2883,6 +3064,9 @@ impl Opportunity {
         .try_into()?)
     }
 
+    // Remember to update load_matching_refs_with_overlay in
+    // parallel. Necessary since const &str are not interchangable
+    // with str literals in macro invocations.
     pub async fn load_matching_refs(
         db: &Database,
         query: OpportunityQuery,
@@ -3015,13 +3199,139 @@ impl Opportunity {
         })
     }
 
+    // Remember to update load_matching_refs in
+    // parallel. Necessary since const &str are not interchangable
+    // with str literals in macro invocations.
     pub async fn load_matching_refs_with_overlay(
         db: &Database,
-        query: &OpportunityQuery,
-        ordering: OpportunityQueryOrdering,
+        query: OpportunityQuery,
+        mut ordering: OpportunityQueryOrdering,
         pagination: Pagination,
     ) -> Result<Vec<OpportunityReference>, Error> {
-        todo!()
+        let (limit, offset) = limit_offset(pagination)?;
+
+        let beginning = match query.beginning {
+            Some(time) => time,
+            None => Utc::now().fixed_offset(),
+        };
+
+        if ordering == OpportunityQueryOrdering::Closest
+            && query
+                .near_longitude
+                .and(query.near_latitude)
+                .and(query.near_distance)
+                .is_none()
+        {
+            ordering = OpportunityQueryOrdering::Alphabetical;
+        }
+
+        Ok(match ordering {
+            OpportunityQueryOrdering::Alphabetical => {
+                select_opportunity_ref_with_overlay!(
+                    r#"
+                ORDER BY
+                  ("match"."opp")."partner" = $1."prefer_partner" DESC,
+                  ("match"."opp")."title" ASC
+                LIMIT $2
+                OFFSET $3
+                "#,
+                    query as OpportunityQuery,
+                    limit,
+                    offset,
+                )
+                .fetch_all(db)
+                .await?
+            }
+            OpportunityQueryOrdering::Closest => {
+                select_opportunity_ref_with_overlay!(
+                    r#"
+                    ORDER BY
+                      ("match"."opp")."partner" = $1."prefer_partner" DESC,
+                      CASE WHEN ("match"."opp")."location_type" = 'any' OR ("match"."opp")."is_online" = true THEN 2 ELSE 1 END ASC,
+                      c_opportunity_locality(("match"."opp"), ST_SetSRID(ST_Point($1."near_longitude", $1."near_latitude"), 4326)) ASC
+                    LIMIT $2
+                    OFFSET $3
+                    "#,
+                    query as OpportunityQuery,
+                    limit,
+                    offset,
+                )
+                .fetch_all(db)
+                .await?
+            }
+            OpportunityQueryOrdering::Soonest => {
+                select_opportunity_ref_with_overlay!(
+                    r#"
+                    ORDER BY
+                      ("match"."opp")."partner" = $1."prefer_partner" DESC,
+                      c_opportunity_until(("match"."opp"), $4) ASC
+                    LIMIT $2
+                    OFFSET $3
+                    "#,
+                    query as OpportunityQuery,
+                    limit,
+                    offset,
+                    beginning
+                )
+                .fetch_all(db)
+                .await?
+            }
+            OpportunityQueryOrdering::Any => {
+                select_opportunity_ref_with_overlay!(
+                    r#"
+                LIMIT $2
+                OFFSET $3
+                "#,
+                    query as OpportunityQuery,
+                    limit,
+                    offset
+                )
+                .fetch_all(db)
+                .await?
+            }
+            OpportunityQueryOrdering::Native => {
+                select_opportunity_ref_with_overlay!(
+                    r#"
+                ORDER BY ("match"."opp")."id"
+                LIMIT $2
+                OFFSET $3
+                "#,
+                    query as OpportunityQuery,
+                    limit,
+                    offset
+                )
+                .fetch_all(db)
+                .await?
+            }
+            OpportunityQueryOrdering::Unique => {
+                select_opportunity_ref_with_overlay!(
+                    r#"
+                ORDER BY ("match"."opp")."partner", ("match"."opp")."title"
+                LIMIT $2
+                OFFSET $3
+                "#,
+                    query as OpportunityQuery,
+                    limit,
+                    offset
+                )
+                .fetch_all(db)
+                .await?
+            }
+            OpportunityQueryOrdering::PartnerName => {
+                select_opportunity_ref_with_overlay!(
+                    r#"
+                ORDER BY ("match"."opp")."partner_name"
+                LIMIT $2
+                OFFSET $3
+                "#,
+                    query as OpportunityQuery,
+                    limit,
+                    offset
+                )
+                .fetch_all(db)
+                .await?
+            }
+        })
     }
 
     pub async fn load_matching(

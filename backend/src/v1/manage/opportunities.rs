@@ -3,9 +3,8 @@ use chrono::{DateTime, FixedOffset};
 use common::{
     model::{
         opportunity::{
-            Cost, Descriptor, Domain, EntityType, LocationType, OpenDays, OpenHours,
-            OpportunityAll, OpportunityQuery, OpportunityQueryOrdering, OpportunityReference,
-            OrganizationType, PageLayout, PageOptions, Topic, TryFromWithDB, VenueType,
+            Cost, Descriptor, Domain, EntityType, LocationType, OpportunityAll, OpportunityQuery,
+            OpportunityQueryOrdering, OrganizationType, Topic, VenueType,
         },
         partner::PartnerReference,
         person::Permission,
@@ -16,7 +15,7 @@ use common::{
 use http_types::{Method, StatusCode};
 use sailfish::TemplateOnce;
 use serde::Deserialize;
-use serde_json::{json, Value};
+
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
