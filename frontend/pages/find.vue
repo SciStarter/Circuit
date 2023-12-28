@@ -1,6 +1,6 @@
 <template>
 <div id="find" :class="{filtering: filtering}">
-  <div v-if="filtering == false" class="mobile-search-recap mobile-only">
+  <!-- <div v-if="filtering == false" class="mobile-search-recap mobile-only">
     <div>
       <div v-if="query.text != ''" class="bold">{{query.text}}</div>
       <div><span class="bold" v-if="city">{{city}}</span> <span v-if="place.proximity"> within {{within_display}} miles</span><span v-else> within 25 miles</span></div>
@@ -10,7 +10,7 @@
     <action-button id="filter-trigger" text @click="filtering = true">
       Refine search
     </action-button>
-  </div>
+  </div> -->
 
   <general-filters
     id="filters-general"
@@ -25,11 +25,14 @@
     @ending="set_query_interactive('ending', $event)"
     @valid="location_valid=$event"
     />
+
   <div class="snm-container">
+    <additional-filters @togglefilters="(e)=>showFilters=e"  @clearfilters="()=>clearFilters"/>
+
     <div id="filters-ordering">
 
       <div class="fo">
-        <span class="pag-total">{{ pagination.total }} opportunities found! <small>use fewer search filter criteria to find more opportunities</small></span>
+        <span class="pag-total">{{ pagination.total }} opportunities found! <!--<small>use fewer search filter criteria to find more opportunities</small>--></span>
       </div>
      
 
@@ -42,7 +45,9 @@
               Soonest
             </option>
           </mini-select>
-          <div class="qf-button-group">
+
+
+          <!-- <div class="qf-button-group">
               <button type="button" :class="{'active':quickfilter_location=='In Person'}" @click="quickFilterLocation('In Person')">In Person</button>
               <button type="button" :class="{'active':quickfilter_location=='Online'}" @click="quickFilterLocation('Online')">Online</button>
           </div>
@@ -52,7 +57,8 @@
           </div>
 
           <button type="button" class="no-mobile" @click="showFilters=true"><filter-icon /> More Filters</button>
-          <button type="button" v-if="filter_num > 0" @click="clearFilters"><span>&times;</span> Clear Filters</button>
+          <button type="button" v-if="filter_num > 0" @click="clearFilters"><span>&times;</span> Clear Filters</button> -->
+          
           <!-- <button type="button"><link-icon /> Copy Link</button> -->
 
         
@@ -93,7 +99,7 @@
 
 
     <div id="filters-refine" :class="{'shown':showFilters}">
-      <div class="no-mobile flex" id="filter-header">
+      <div class="flex" id="filter-header">
             <h2>Filters</h2>
             <button title="close filters" class="close" @click="showFilters=false">&times;</button>
         </div>
@@ -269,12 +275,55 @@
   </div>
   <section id="results">
     <template v-if="matches.length > 0">
+
+      <!-- these need to integrate within the results-->
+      <div class="format-promo">
+        <h3>Take part in science activities and projects</h3>
+        <p>Science Near Me features hundreds of citizen science activities you can do near you or online!</p>
+        <div class="fp-buttons">
+          <action-button primary>See science activities in your area &raquo;</action-button>
+          <action-button primary>See on-demand science activities &raquo;</action-button>
+        </div>
+        <img src="~/assets/img/astronomy-and-space.svg" alt="telescope icon" class="icon telescope" />
+      </div>
+
+      <div class="format-promo">
+        <h3>Join in on a virtual event</h3>
+        <p>Want to get involved in science from the comfort of your own home? Try a virtual event!</p>
+        <div class="fp-buttons">
+          <action-button primary>See virtual events &raquo;</action-button>
+        </div>
+        <img src="~/assets/img/virtual-event.svg" alt="computer icon" class="icon computer" />
+      </div>
+      <!---->
+
       <opportunity-card v-for="opp in matches" :key="opp.uid" :opportunity="opp" previous-page="find" />
     </template>
     <template v-else>
-      <div class="alert no-results">
-        <p>No results.</p>
+      <div class="no-results">
+        <h3>No <span>{{ selected_format }}</span> near you.</h3>
+        <p>You can try to change your search terms or expand your radius. </p>
       </div>
+
+      <div class="format-promo">
+        <h3>Take part in science activities and projects</h3>
+        <p>Science Near Me features hundreds of citizen science activities you can do near you or online!</p>
+        <div class="fp-buttons">
+          <action-button primary>See science activities in your area &raquo;</action-button>
+          <action-button primary>See on-demand science activities &raquo;</action-button>
+        </div>
+        <img src="~/assets/img/astronomy-and-space.svg" alt="telescope icon" class="icon telescope" />
+      </div>
+
+      <div class="format-promo">
+        <h3>Join in on a virtual event</h3>
+        <p>Want to get involved in science from the comfort of your own home? Try a virtual event!</p>
+        <div class="fp-buttons">
+          <action-button primary>See virtual events &raquo;</action-button>
+        </div>
+        <img src="~/assets/img/virtual-event.svg" alt="computer icon" class="icon computer" />
+      </div>
+
     </template>
   </section>
   <section id="pagination">
@@ -285,7 +334,7 @@
       <a :href="query_link" @click.prevent="copy_query"><link-icon />Copy Link</a>
     </div>
   </section>
-  <div id="filters-submit">
+  <!-- <div id="filters-submit">
     <button title="close filters" class="close" @click="filtering = false">
       &times;
     </button>
@@ -295,7 +344,7 @@
     <action-button primary @click="apply" :disabled="!location_valid">
       Apply
     </action-button>
-  </div>
+  </div> -->
 </div>
 </div>
 </template>
@@ -447,7 +496,8 @@ export default {
             loading: false,
             location_valid: true,
             query: Object.assign(empty_query(), this.$route.query),
-            showFilters: false
+            showFilters: false,
+            selected_format: "live, in-person events"
         };
     },
 
@@ -864,9 +914,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#filters-general {
-    display: none;
-}
+// #filters-general {
+//     display: none;
+// }
 
 .filtering #filters-general {
     display: block;
@@ -949,6 +999,22 @@ export default {
     display: block;
 }
 
+#filters-refine {
+    position: fixed;
+    top: 0;
+    right: -350px;
+    width:340px;
+    display: block;
+    z-index: 9999;
+    overflow: auto;
+    height: 100%;
+    box-shadow: 0 0 8px rgba(0,0,0,.5);
+    transition: right .4s ease-in;
+    &.shown {
+      right:0;
+    }
+  }
+
 #filters-header {
   position: sticky;
   top:0;
@@ -976,7 +1042,6 @@ export default {
         flex-grow: 0;
     }
 }
-@media (min-width:960px) {
   #filters-refine > #filters-submit2 {
     display: flex;
     justify-content: center;
@@ -988,7 +1053,7 @@ export default {
     z-index: 10;
 
   }
-}
+
 
 .filtering #filters-submit {
     display: flex;
@@ -1119,7 +1184,7 @@ export default {
 @media (min-width: $fullsize-screen) {
 
     #find .general-filters {
-      padding-bottom: 2rem;
+      padding-bottom: 1rem;
       padding-left:1rem;
       padding-right: 1rem;
     }
@@ -1286,9 +1351,57 @@ export default {
     background-color: transparent;
   }
 }
-.no-results {
-  padding:1rem;
+.no-results, .format-promo {
+  text-align: left;
+  border: 1px solid #D9D9D9;
+  width: 100%;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  h3 {
+    font-weight: bold;
+    span {
+      color: $snm-color-background-meddark;
+    }
+  }
+  p {
+    font-size: 14px;
+  }
 }
+
+.format-promo {
+  background-color: $snm-color-background-medlight;
+  border-color: #95ceda;
+  position: relative;
+  padding-right: 80px;
+  h3 {
+    color: $snm-color-background-meddark;
+  }
+  .fp-buttons {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap:1rem;
+    button {
+      margin:0!important;
+    }
+  }
+  .icon {
+    position:absolute;
+    right:10px;
+    bottom:0;
+    &.telescope {
+      width: 100px;
+      height: 80px;
+      transform: rotateY(180deg);
+    }
+    &.computer {
+      width: 100px;
+      height: 80px;
+    }
+  }
+}
+
 #filter-physical label {
   padding-left:10px!important;
   padding-right:10px!important;
@@ -1343,6 +1456,10 @@ export default {
 }
 
 
+
+#filter-header h2 {
+  font-weight: bold;
+}
 
 @media (max-width:959px){
   .quickfilter {
@@ -1406,6 +1523,12 @@ export default {
     > .qf-button-group, :deep(.mini-select) {
       margin-bottom: .5rem;
     }
+  }
+}
+
+@media (max-width:959px){
+  #find #filters-general {
+    margin-bottom: 1rem;
   }
 }
 </style>

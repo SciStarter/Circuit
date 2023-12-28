@@ -211,9 +211,9 @@ export default {
     width: 350px;
     text-align:left;
 }
-.lookup-place {
-  margin-top: 1.2rem;
-}
+// .lookup-place {
+//   margin-top: 1.2rem;
+// }
 .location-input {
   width: 100%!important;
   input {

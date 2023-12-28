@@ -9,6 +9,7 @@
         <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, festival" icon="magnify" />
       </b-field>
       <lookup-place v-model="place_proxy" @valid="set_valid" label-position="inside" data-context="find-lookup-place" />
+      <!--
       <div class="centered-row">
         <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
           <b-datepicker
@@ -26,6 +27,7 @@
             />
         </b-field>
       </div>
+      -->
       <action-button v-if="searchButton" id="quick-search-btn" :disabled="!enableInvalidLocation && !location_valid" principal large arrow type="submit">
         <search-icon />
       </action-button>
@@ -349,11 +351,16 @@ export default {
 
 <style lang="scss" scoped>
 
-
+#filters-general {
+  .snm-container {
+    max-width: 1220px;
+    overflow: auto;
+  }
+}
 
 .general-filters {
     display: block;
-    background-color: $snm-color-background-medium;
+    background-color: var(--secondary-color, $snm-color-element-med);
     overflow: visible;
     // padding: 0.75rem 0.75rem 0px;
 
@@ -374,6 +381,8 @@ export default {
   width: 40px;
   padding: .2rem;
   height: 48px;
+  margin: 0;
+  margin-right: 1rem;
   svg {
     left:0;
   }
@@ -407,58 +416,28 @@ export default {
           max-width: 140px;
           min-width: 140px;
         }
-
+        
         .basic-filter-backdrop form {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--secondary-color, $snm-color-element-med);
-            border-radius: 10px;
-            padding: 1rem 2rem 1rem 1rem;
-            width: 100%;
+          background-color: var(--secondary-color, $snm-color-element-med);
+          border-radius: 8px;
+          padding: 1rem;
 
+          .gf-fields {
+            display: flex;
+            gap: 1rem;
 
-
-             > div {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 100%;
-
-                div:first-child, div:nth-child(2) {
-                  flex-grow: 1;
-                }
-
-                >* {
-                    margin-top: 1rem;
-                    color: $snm-color-element-light;
-                }
-
-
-
-                &:first-child>* {
-                    position: relative;
-                    top: -0.1rem;
-                    margin: 0px 0.5rem;
-                    height: 3rem;
-                }
-
-                .centered-row {
-                    display: flex;
-                    margin: 0px;
-
-                    >* {
-                        margin: 0px 0.5rem;
-                    }
-                }
-
-                >.action-button {
-                    position: relative;
-                    top: 1px;
-                }
+            :first-child{
+              flex-grow: 3;
             }
+            > div {
+              margin-bottom: 0!important;
+              flex-grow: 1;
+            }
+
+          }
         }
+
+    
 
         .quick-links {
             display: flex;
@@ -475,7 +454,7 @@ export default {
         }
     }
     #find .general-filters .basic-filter-backdrop form {
-      margin-top: 3rem;
+      margin-top: 5rem;
     }
 }
 
