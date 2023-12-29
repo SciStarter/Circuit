@@ -162,12 +162,14 @@
         <th colspan="2">Total Opportunities</th>
       </tr>
     </thead>
-    <tbody>
-      <tr v-for="row in opps.providers.rows">
-        <td class="narrow-column">{{row.label}}</td>
-        <td class="table-num">{{row.value}}</td>
-        <td class="table-bar"><comparison-bar :value="row.value" :max="opps.providers.max" color="#165E6F" width="100%" height="1rem" /></td>
-      </tr>
+      <tbody>
+        <template v-for="row in opps.providers.rows">
+          <tr v-if="['test', 'Daniel', 'Jolene', 'internal'].indexOf(row.label) < 0">
+            <td class="narrow-column">{{row.label}}</td>
+            <td class="table-num">{{row.value}}</td>
+            <td class="table-bar"><comparison-bar :value="row.value" :max="opps.providers.max" color="#165E6F" width="100%" height="1rem" /></td>
+          </tr>
+        </template>
     </tbody>
     </table>
   </div>

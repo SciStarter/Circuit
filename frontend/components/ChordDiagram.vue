@@ -7,7 +7,7 @@
     </div>
 </template>
     
-    <script>
+<script>
     import * as d3 from 'd3'
     
     export default {
@@ -115,8 +115,8 @@
                     const outerRadius = Math.min(width, height) * 0.5 -55
                     const innerRadius = outerRadius - 10
 
-                    const Names = ['citizen_science','formal_education','live_science','maker','museum_or_science_center','out_of_school_time_program','policy','science_communications'];
-                    const displayNames = ['Citizen Science','Formal Education','Live Science','Maker','Museum or Science Center','Out of School Time Program','Policy','Science Communications'];
+                    const Names = ['citizen_science','formal_education','live_science','policy','maker','museum_or_science_center','out_of_school_time_program','science_communications'];
+                    const displayNames = ['Citizen Science','Formal Education','Live Science','Policy','Maker','Science Centers','Out of School Time Program','Science Communications'];
                     const colors = ["#51addf", "#c582aa", "#005b9d", "#35a993", "#cc373c", "#f7d783","#ff7f00", "#f781bf"];
 
                     const nameByIndex = {
@@ -288,9 +288,9 @@
         },
 
 }
-    </script>
+</script>
     
-    <style lang="scss" scoped>
+<style lang="scss" scoped>
     div {
         width: 100%;
         height: 100%;
@@ -335,5 +335,5 @@
         }
 
     }
-    </style>
+</style>
     
