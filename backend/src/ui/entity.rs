@@ -4,7 +4,7 @@ use common::{
         involvement::{Involvement, Mode},
         opportunity::{
             Opportunity, OpportunityAll, OpportunityQuery, OpportunityQueryOrdering,
-            OpportunityReference, ReviewStatus,
+            OpportunityReference, OpportunityWithRelated, ReviewStatus,
         },
         person::{LogEvent, LogIdentifier, Permission, PermitAction},
         Pagination, Partner, Person,

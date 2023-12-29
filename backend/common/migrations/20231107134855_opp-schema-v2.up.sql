@@ -379,13 +379,16 @@ $func$;
 
 CREATE FUNCTION c_opportunity_is_current_as_of("opp" c_opportunity, stamp timestamptz) returns boolean AS
 $func$
+DECLARE
+ "interior" c_opportunity_interior;
 BEGIN
+ SELECT * INTO "interior" FROM c_opportunity_interior WHERE "opportunity_id" = "opp"."id";
  RETURN (
-   COALESCE(NULLIF(opp."review_status", ''), 'not_required') IN ('publish', 'not_required')
+   "interior"."review_status" IN ('publish', 'not_required')
    AND
-   opp."accepted" = true
+   "interior"."accepted" = true
    AND
-   opp."withdrawn" = false
+   "interior"."withdrawn" = false
    AND
    (
        (

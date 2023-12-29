@@ -689,7 +689,7 @@ fn en_us() -> Vec<String> {
 #[serde(default)]
 pub struct AnnotatedOpportunityExterior {
     #[serde(flatten)]
-    pub exterior: Opportunity,
+    pub exterior: OpportunityWithRelated,
     pub accepted: bool,
     pub withdrawn: bool,
     pub current: bool,
@@ -1906,6 +1906,10 @@ pub struct OpportunityWithRelated {
 struct OpportunityWithOverlay(pub Opportunity);
 
 impl OpportunityWithRelated {
+    pub fn into_reference(self) -> OpportunityReference {
+        self.opp.into_reference()
+    }
+
     pub async fn load_matching(
         db: &Database,
         query: OpportunityQuery,
@@ -2322,7 +2326,7 @@ pub struct OpportunityQuery {
     pub host: Option<String>,
     pub sort: Option<OpportunityQueryOrdering>,
     pub page: Option<i32>,
-    pub per_page: Option<i8>,
+    pub per_page: Option<i16>,
     pub involved: Option<Uuid>,
     pub saved: Option<Uuid>,
     pub participated: Option<Uuid>,
@@ -2996,9 +3000,10 @@ impl Opportunity {
             .interior(db)
             .await
             .expect("opportunity should always have an interior record");
+        let exterior = OpportunityWithRelated::try_from_with_db(db, self).await?;
 
         Ok(AnnotatedOpportunityExterior {
-            exterior: self,
+            exterior,
             accepted: interior.accepted.unwrap_or(false),
             withdrawn: interior.withdrawn,
             review_status: interior.review_status,
@@ -3054,7 +3059,7 @@ impl Opportunity {
     pub async fn count_matching(db: &Database, query: OpportunityQuery) -> Result<u32, Error> {
         Ok(sqlx::query_scalar!(
             r#"
-            SELECT coalesce(count(*), 0) AS "matches!: i32"
+            SELECT coalesce(count(*), 0)::int4 AS "matches!: i32"
             FROM c_opportunities_matching($1)
             "#,
             query as OpportunityQuery

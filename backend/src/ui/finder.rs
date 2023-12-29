@@ -4,7 +4,8 @@ use common::{
     model::{
         opportunity::{
             Cost, Descriptor, EntityType, OpportunityQuery, OpportunityQueryOrdering,
-            OpportunityQueryPhysical, OpportunityQueryTemporal, Topic, VenueType,
+            OpportunityQueryPhysical, OpportunityQueryTemporal, OpportunityWithRelated, Topic,
+            VenueType,
         },
         person::Permission,
         Opportunity, Pagination, Person, SelectOption,
@@ -460,7 +461,7 @@ RETURNING coalesce(pre."home_location" != post."home_location", true) as "change
         }
     };
 
-    let matches: Vec<Opportunity> = Opportunity::load_matching(
+    let matches: Vec<OpportunityWithRelated> = OpportunityWithRelated::load_matching(
         db,
         query.clone(),
         search.sort.unwrap_or_default(),
