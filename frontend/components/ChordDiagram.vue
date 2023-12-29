@@ -53,7 +53,7 @@
                 let metric = this.metric;
                 let arr = [];
 
-                let fields = ['citizen_science','formal_education','live_science','maker','museum_or_science_center','out_of_school_time_program','policy','science_communications'];
+                let fields = ['citizen_science','formal_education','live_science','policy','maker','museum_or_science_center','out_of_school_time_program','science_communications'];
 
                 fields.forEach(d=>{
                     let a = [];
