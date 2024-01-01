@@ -38,7 +38,7 @@
               <b-input ref="search_keywords" v-model="search_text" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
             </b-field>
             <lookup-place v-model="search_place" label-position="inside" data-context="find-lookup-place" />
-            <div class="centered-row">
+            <!-- <div class="centered-row">
               <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
                 <b-datepicker
                   v-model="beginning_proxy"
@@ -54,7 +54,7 @@
                   icon="calendar-today"
                   />
               </b-field>
-            </div>
+            </div> -->
             <action-button
               id="quick-search-btn"
               principal
@@ -75,7 +75,7 @@
                       near: search_place.near,
                       page: 0
                       })">
-              <search-icon />
+              <search-icon /> <span class="mobile-only">search</span>
             </action-button>
           </div>
         </form>
@@ -86,26 +86,53 @@
 
     <div class="exchange-filters">
 
+      <transition name="slide">
         <div class="quickfilter">
-          <div class="qf-button-group">
+          <!-- <div class="qf-button-group">
               <button type="button" :class="{'active':quickfilter_location=='In Person'||quickfilter_location=='in-person'}" @click="quickFilterLocation('In Person')">In Person</button>
               <button type="button" :class="{'active':quickfilter_location=='Online'||quickfilter_location=='online'}" @click="quickFilterLocation('Online')">Online</button>
           </div>
           <div class="qf-button-group">
               <button type="button" :class="{'active':quickfilter_time=='Scheduled'||quickfilter_time=='scheduled'}" @click="quickFilterTime('Scheduled')">Scheduled</button>
               <button type="button" :class="{'active':quickfilter_time=='On Demand'||quickfilter_time=='on-demand'}" @click="quickFilterTime('On Demand')">On Demand</button>
-          </div>
+          </div> -->
 
-          <button v-if="filter==false" type="button" class="no-mobile" @click="filter = true"><filter-icon /> More Filters</button>
-          <button v-else type="button" class="no-mobile" @click="filter = false"><filter-icon /> Hide Filters</button>
+          <button v-if="filter==false" type="button" @click="filter = true"><filter-icon /> More Filters</button>
+          <button v-else type="button" @click="filter = false"><filter-icon /> Hide Filters</button>
 
         </div>
+      </transition>
 
 
-
+      <transition name="slide">
       <div v-if="filter==true">
         <div class="filters">
           <fieldset>
+
+            <label class="b">Format</label>
+            <b-field>
+                <b-select placeholder="Format" v-model="selected_format">
+                    <option
+                        v-for="option in formats"
+                        :value="option.format"
+                        :key="option.format">
+                        {{ option.title }}
+                    </option>
+                </b-select>
+            </b-field>
+
+            <label class="b">Date</label>
+            <b-field>
+                <b-select v-model="selected_date" @input="handleDate" placeholder="Date">
+                    <option
+                        v-for="option in periods"
+                        :value="option.period"
+                        :key="option.period">
+                        {{ option.title }}
+                    </option>
+                </b-select>
+            </b-field>
+
             <label class="b">Age</label>
             <p>
               <b-checkbox v-model="kids_only" :native-value="true" :disabled="loading">
@@ -164,7 +191,7 @@
               <input v-model="max_age" type="text" class="slider-direct" :disabled="!max_age_active">
             </b-field>
           </fieldset>
-          <fieldset data-context="find-physical">
+          <!-- <fieldset data-context="find-physical">
             <label>
               <span  class="b">Format</span>
               <b-tooltip multilined>
@@ -186,11 +213,12 @@
                 <span class="radio-label">On-Demand</span>
               </b-radio-button>
             </b-field>
-          </fieldset>
+          </fieldset> -->
         </div>
 
 
       </div>
+      </transition>
     </div>
 
 
@@ -225,6 +253,39 @@
   </div>
 
   <div class="exchange-power"><div>powered by <a href="http://sciencenearme.org" target="_blank">Science Near Me</a></div></div>
+
+  <b-modal v-model="show_datepicker" aria-role="dialog" aria-label="Select a custom date range" aria-modal>
+            <div class="card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Select a date range</p>
+                    <button
+                        type="button"
+                        class="delete"
+                        @click="$emit('close')"/>
+                </header>
+                <section class="modal-card-body">
+                    <b-field>
+                        <b-datepicker
+                            inline
+                            placeholder="Click to select..."
+                            :min-date="minDate"
+                            :max-date="maxDate">
+                        </b-datepicker>
+                    </b-field>
+                </section>
+                 <footer class="modal-card-foot">
+                    <b-button
+                        label="Close"
+                        @click="$emit('close')" />
+                    <b-button
+                        label="Apply Dates"
+                        type="is-primary" />
+                </footer>
+            </div>
+        </b-modal>
+
+
+
 </div>
 </template>
 
@@ -334,6 +395,7 @@ export default {
     },
     
     data() {
+      const today = new Date()
         return {
             toggle_mobile_nav: false,
             alert: false,
@@ -341,6 +403,63 @@ export default {
             filter: false,
             loading: false,
             num_reloads: 0,
+            selected_date: null,
+            selected_format: null,
+            show_datepicker: false,
+            minDate: new Date(today.getFullYear() - 80, today.getMonth(), today.getDate()),
+            maxDate: new Date(today.getFullYear() + 18, today.getMonth(), today.getDate()),
+            formats: [
+                {
+                    format: "event_in_person",
+                    title: "Live, In-Person Event"
+                },
+                {
+                    format: "virtual",
+                    title: "Virtual Events"
+                },
+                {
+                    format: "region_citsci",
+                    title: "Science Activity in My Area"
+                },
+                {
+                    format: "on_demand",
+                    title: "On Demand Science Activities"
+                },
+                {
+                    format: "alll",
+                    title: "All Science Opportunities"
+                },
+            ],
+            periods: [
+                {
+                    period: "today",
+                    title: "Today"
+                },
+                {
+                    period: "tomorrow",
+                    title: "Tomorrow"
+                },
+                {
+                    period: "this_week",
+                    title: "This Week"
+                },
+                {
+                    period: "next_week",
+                    title: "Next Week"
+                },
+                {
+                    period: "this_month",
+                    title: "This Month"
+                },
+                {
+                    period: "next_month",
+                    title: "Next Month"
+                },
+                {
+                    period: "custom",
+                    title: "Custom"
+                }
+            ],
         };
     },
     
@@ -494,6 +613,11 @@ export default {
                 this.search({'temporal': 'on-demand-or-scheduled', 'page': 0});
             }
         },
+        handleDate(v) {
+            if (v == 'custom') {
+                this.show_datepicker = true;
+            }
+        }
     },
 }
 </script>
@@ -568,6 +692,7 @@ export default {
   margin:0 auto;
   padding: 0 16px;
   margin-bottom: 10px;
+  position: relative;
 
   .filter-btn {
     display:flex;
@@ -585,6 +710,7 @@ export default {
     padding:24px;
     background-color:#efefef;
     border-radius:6px;
+    
 
     p {
       margin-bottom:16px;
@@ -732,11 +858,17 @@ export default {
 }
 
 #quick-search-btn {
-  width: 50px;
-  padding: .2rem;
-  height: 48px;
+  width: auto;
+  padding: .5rem;
+  height: 36px;
   svg {
     left:0;
+    width: 25px;
+    height: 20px;
+    margin-right: 0.5rem;
+  }
+  span {
+    margin-right: 1rem;
   }
 }
 
@@ -744,14 +876,15 @@ export default {
 
 @media (min-width: 768px) {
 
+
     .general-filters {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        grid-row: 1;
-        grid-column: 1 / -1;
-        text-align: center;
+        // grid-row: 1;
+        // grid-column: 1 / -1;
+        // text-align: center;
         max-width:900px;
         margin:20px auto;
 
@@ -760,12 +893,26 @@ export default {
           min-width: 140px;
         }
 
+        #quick-search-btn {
+          width: 50px;
+          padding: .2rem;
+          height: 48px;
+          svg {
+            left:0;
+            height: 25px;
+            margin-right: 0;
+          }
+          span {
+            display: none;
+          }
+        }
+
         .basic-filter-backdrop form {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
+            // display: inline-flex;
+            // flex-direction: column;
+            // align-items: center;
+            // justify-content: center;
+            // border-radius: 10px;
             width: 100%;
 
 
@@ -830,6 +977,13 @@ export default {
       padding: 0 20px;
     }
 
+    .quickfilter {
+      position: relative!important;
+      top: auto!important;
+      right: auto!important;
+      margin: 0 0 1rem;
+    }
+
 }
 
 @media (max-width: 1099px) {
@@ -879,7 +1033,9 @@ export default {
   }
 
   #quick-search-btn {
-    margin:auto;
+    margin-right:auto;
+    margin-left: 0;
+    margin-top: 0;
   }
   .field.lookup-place {
     margin-top:0;
@@ -931,8 +1087,11 @@ export default {
 
 .quickfilter {
   display: flex;
-  margin:.75rem .3rem;
+  // margin:.75rem .3rem;
   align-items: center;
+  position: absolute;
+    top: -60px;
+    right: 10px;
 
   button, :deep(.mini-select) {
     font-size: .75rem;
@@ -973,11 +1132,23 @@ export default {
   }
 }
 
-@media (max-width:959px){
-  .quickfilter {
-    margin: 1rem 0 0;
-  }
+// @media (max-width:959px){
+//   .quickfilter {
+//     margin: 1rem 0 0;
+//   }
+// }
+
+:deep(.modal .modal-content){
+    width: auto;
+    overflow: auto;
 }
 
-
+@media (max-width: 768px){
+    :deep(.modal .modal-content){
+        max-width: 960px;
+        padding: 0;
+        max-height: 100vh;
+        margin: 0;
+    }
+}
 </style>
