@@ -608,20 +608,18 @@ INSERT
         "extra_data"
     )
     SELECT
-        first("id" ORDER BY updated DESC) AS "opportunity_id",
-        first(interior->'accepted' ORDER BY updated DESC)::boolean AS "accepted",
-        first(interior->'withdrawn' ORDER BY updated DESC)::boolean AS "withdrawn",
-        first(interior->>'submitted_by' ORDER BY updated DESC)::uuid AS "submitted_by",
-        first(interior->>'review_status' ORDER BY updated DESC)::T_ReviewStatus AS "review_status",
-        first(interior->>'contact_name' ORDER BY updated DESC)::text AS "contact_name",
-        first(interior->>'contact_email' ORDER BY updated DESC)::text AS "contact_email",
-        first(interior->>'contact_phone' ORDER BY updated DESC) AS "contact_phone",
-        first(interior->'extra_data' ORDER BY updated DESC) AS "extra_data"
+        v2."id" AS "opportunity_id",
+        (v1.interior->'accepted')::boolean AS "accepted",
+        (v1.interior->'withdrawn')::boolean AS "withdrawn",
+        (v1.interior->>'submitted_by')::uuid AS "submitted_by",
+        (v1.interior->>'review_status')::T_ReviewStatus AS "review_status",
+        v1.interior->>'contact_name' AS "contact_name",
+        v1.interior->>'contact_email' AS "contact_email",
+        v1.interior->>'contact_phone' AS "contact_phone",
+        v1.interior->'extra_data' AS "extra_data"
     FROM
-        c_opportunity_v1
-    GROUP BY
-        exterior->>'partner',
-        exterior->>'title'
+        c_opportunity v2
+        JOIN c_opportunity_v1 v1 ON v1."id" = v2."id"
 ;
 
 WITH old_instances AS (
