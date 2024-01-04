@@ -1,0 +1,256 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n              \"pes_domain\" AS \"pes_domain: _\",\n              array(SELECT \"descriptor\" FROM c_opportunity_descriptor WHERE opportunity_id = $1 AND overlay = true) AS \"opp_descriptor!: _\",\n              array(SELECT \"topic\" FROM c_opportunity_topic WHERE opportunity_id = $1 AND overlay = true) AS \"opp_topics!: _\",\n              array(SELECT \"tag\" FROM c_opportunity_tag WHERE opportunity_id = $1 AND overlay = true) AS \"tags!: _\",\n              \"min_age\" AS \"min_age: _\",\n              \"max_age\" AS \"max_age: _\",\n              \"cost\" AS \"cost: _\",\n              \"is_online\" AS \"is_online: _\",\n              \"location_type\" AS \"location_type: _\",\n              \"location_name\" AS \"location_name: _\",\n              \"address_street\" AS \"address_street: _\",\n              \"address_city\" AS \"address_city: _\",\n              \"address_state\" AS \"address_state: _\",\n              \"address_country\" AS \"address_country: _\",\n              \"address_zip\" AS \"address_zip: _\"\n            FROM c_opportunity_overlay\n            WHERE opportunity_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pes_domain: _",
+        "type_info": {
+          "Custom": {
+            "name": "t_pesdomain",
+            "kind": {
+              "Enum": [
+                "citizen_science",
+                "live_science",
+                "museum_or_science_center",
+                "maker",
+                "policy",
+                "out_of_school_time_program",
+                "formal_education",
+                "science_communications",
+                "unspecified"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "opp_descriptor!: _",
+        "type_info": {
+          "Custom": {
+            "name": "_t_descriptor",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "t_descriptor",
+                  "kind": {
+                    "Enum": [
+                      "advocacy_days",
+                      "bioblitz",
+                      "camp",
+                      "citizen_science",
+                      "clean_up",
+                      "club",
+                      "community",
+                      "competition",
+                      "concert",
+                      "conference",
+                      "create-a-thon",
+                      "dance",
+                      "exhibition",
+                      "expo_style",
+                      "festival",
+                      "forum",
+                      "fundraising",
+                      "hack-a-thon",
+                      "lecture",
+                      "live_science",
+                      "make-a-thon",
+                      "maker",
+                      "maker_faire",
+                      "media",
+                      "outreach",
+                      "overnight",
+                      "panel",
+                      "policy",
+                      "professional_development",
+                      "research",
+                      "science_blogging",
+                      "science_cafe_or_pub",
+                      "science_on_tap",
+                      "science_poetry_slam",
+                      "science_slam",
+                      "service",
+                      "star_party",
+                      "story_collider",
+                      "tinker",
+                      "tinker_faire",
+                      "training",
+                      "volunteering",
+                      "workshop"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "opp_topics!: _",
+        "type_info": {
+          "Custom": {
+            "name": "_t_topic",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "t_topic",
+                  "kind": {
+                    "Enum": [
+                      "agriculture",
+                      "alcohol",
+                      "animals",
+                      "archaeology_and_cultural",
+                      "art",
+                      "astronomy_and_space",
+                      "awards",
+                      "biology",
+                      "birds",
+                      "chemistry",
+                      "climate_and_weather",
+                      "computers_and_technology",
+                      "crowd_funding",
+                      "design",
+                      "disaster_response",
+                      "ecology_and_environment",
+                      "education",
+                      "engineering",
+                      "food",
+                      "general_science",
+                      "geography",
+                      "geology_and_earth_science",
+                      "health_and_medicine",
+                      "insects_and_pollinators",
+                      "mathematics",
+                      "nature_and_outdoors",
+                      "ocean_water_marine",
+                      "paleontology",
+                      "physics",
+                      "policy",
+                      "psychology",
+                      "religion",
+                      "robotics",
+                      "social_science",
+                      "sound",
+                      "technology",
+                      "transportation"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "tags!: _",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 4,
+        "name": "min_age: _",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 5,
+        "name": "max_age: _",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 6,
+        "name": "cost: _",
+        "type_info": {
+          "Custom": {
+            "name": "t_cost",
+            "kind": {
+              "Enum": [
+                "free",
+                "cost",
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "is_online: _",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "location_type: _",
+        "type_info": {
+          "Custom": {
+            "name": "t_locationtype",
+            "kind": {
+              "Enum": [
+                "any",
+                "at",
+                "near",
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "location_name: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "address_street: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "address_city: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "address_state: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "address_country: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "address_zip: _",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      null,
+      null,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "13e80912017307b2fdc2a349ba915437c4f8a9619c44957ae5713010f43df91d"
+}

@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n              INSERT\n                INTO c_opportunity_interior (\n                  \"opportunity_id\",\n                  \"updated\",\n                  \"accepted\",\n                  \"withdrawn\",\n                  \"submitted_by\",\n                  \"review_status\",\n                  \"contact_name\",\n                  \"contact_email\",\n                  \"contact_phone\",\n                  \"extra_data\"\n                )\n                VALUES (\n                  $1,\n                  NOW(),\n                  $2,\n                  $3,\n                  $4,\n                  $5,\n                  $6,\n                  $7,\n                  $8,\n                  $9\n                )\n              ON CONFLICT (\"opportunity_id\") DO UPDATE\n                SET\n                  \"updated\" = excluded.\"updated\",\n                  \"accepted\" = excluded.\"accepted\",\n                  \"withdrawn\" = excluded.\"withdrawn\",\n                  \"submitted_by\" = excluded.\"submitted_by\",\n                  \"review_status\" = excluded.\"review_status\",\n                  \"contact_name\" = excluded.\"contact_name\",\n                  \"contact_email\" = excluded.\"contact_email\",\n                  \"contact_phone\" = excluded.\"contact_phone\",\n                  \"extra_data\" = excluded.\"extra_data\"\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Bool",
+        "Uuid",
+        {
+          "Custom": {
+            "name": "t_reviewstatus",
+            "kind": {
+              "Enum": [
+                "draft",
+                "pending",
+                "reject",
+                "publish",
+                "not_required"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bf7751771f9a3a61a2b2ba8e97f802cbc257f51a4b45064ce4d751fa339292f5"
+}

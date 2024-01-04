@@ -1,0 +1,73 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT descriptor AS \"value!: Descriptor\" FROM c_opportunity_descriptor WHERE opportunity_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "value!: Descriptor",
+        "type_info": {
+          "Custom": {
+            "name": "t_descriptor",
+            "kind": {
+              "Enum": [
+                "advocacy_days",
+                "bioblitz",
+                "camp",
+                "citizen_science",
+                "clean_up",
+                "club",
+                "community",
+                "competition",
+                "concert",
+                "conference",
+                "create-a-thon",
+                "dance",
+                "exhibition",
+                "expo_style",
+                "festival",
+                "forum",
+                "fundraising",
+                "hack-a-thon",
+                "lecture",
+                "live_science",
+                "make-a-thon",
+                "maker",
+                "maker_faire",
+                "media",
+                "outreach",
+                "overnight",
+                "panel",
+                "policy",
+                "professional_development",
+                "research",
+                "science_blogging",
+                "science_cafe_or_pub",
+                "science_on_tap",
+                "science_poetry_slam",
+                "science_slam",
+                "service",
+                "star_party",
+                "story_collider",
+                "tinker",
+                "tinker_faire",
+                "training",
+                "volunteering",
+                "workshop"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9686d4e195c8a9bbf52343cce55d7fd1bbecd4d022fb261796cf3901783cf71f"
+}

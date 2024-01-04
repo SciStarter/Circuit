@@ -1,0 +1,67 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO c_opportunity_descriptor (\"opportunity_id\", \"descriptor\", \"overlay\")\n                VALUES ($1, $2, $3)\n                ON CONFLICT (\"opportunity_id\", \"descriptor\") DO UPDATE\n                SET \"overlay\" = EXCLUDED.\"overlay\"\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        {
+          "Custom": {
+            "name": "t_descriptor",
+            "kind": {
+              "Enum": [
+                "advocacy_days",
+                "bioblitz",
+                "camp",
+                "citizen_science",
+                "clean_up",
+                "club",
+                "community",
+                "competition",
+                "concert",
+                "conference",
+                "create-a-thon",
+                "dance",
+                "exhibition",
+                "expo_style",
+                "festival",
+                "forum",
+                "fundraising",
+                "hack-a-thon",
+                "lecture",
+                "live_science",
+                "make-a-thon",
+                "maker",
+                "maker_faire",
+                "media",
+                "outreach",
+                "overnight",
+                "panel",
+                "policy",
+                "professional_development",
+                "research",
+                "science_blogging",
+                "science_cafe_or_pub",
+                "science_on_tap",
+                "science_poetry_slam",
+                "science_slam",
+                "service",
+                "star_party",
+                "story_collider",
+                "tinker",
+                "tinker_faire",
+                "training",
+                "volunteering",
+                "workshop"
+              ]
+            }
+          }
+        },
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "460337effcbf494c5c9214cd19b4cecb2808840ce42c7d4af6b9e52c20fee433"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT COUNT(x.*) AS \"result!\"\nFROM (\n  SELECT DISTINCT ON (o.\"title\", o.\"partner\") 1\n  FROM c_opportunity o JOIN c_region r ON r.\"name\" = $1\n  WHERE\n    o.\"location_type\" = 'near' AND\n    c_opportunity_is_current(o) AND\n    ST_Intersects(o.location_polygon, r.geometry)\n  ORDER BY o.\"title\", o.\"partner\"\n) x\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "result!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "25fae2e8caf08739890d067dec651e4fafb75b63fe8e2c6ed9e89069f62d12bb"
+}

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT v.descriptor::text AS \"descriptor!\", count(*) AS \"total!\"\n        FROM c_opportunity o JOIN c_opportunity_descriptor v ON o.id = v.opportunity_id\n        GROUP BY v.descriptor\n        ORDER BY \"total!\" DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "descriptor!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "129c46d01a03c02d9a3603e765c04dfcddf6fdf639df9ab5a4f9667060b4b5a5"
+}

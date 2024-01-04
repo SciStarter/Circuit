@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) AS \"total!\" FROM c_opportunity o JOIN c_opportunity_venue_type v ON o.id = v.opportunity_id WHERE venue_type = 'outdoors'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "2d24b410adcafaeea5751865c7299e55dd19a8fa7f53cdd9f46fd704f2de8092"
+}

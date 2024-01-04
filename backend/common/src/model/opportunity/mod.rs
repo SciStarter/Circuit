@@ -3514,6 +3514,21 @@ impl Opportunity {
         Ok(rec.map(|row| row.id))
     }
 
+    pub async fn id_by_partner_and_title(
+        db: &Database,
+        partner: Uuid,
+        title: &str,
+    ) -> Result<Option<i32>, Error> {
+        let rec = sqlx::query!(
+            r#"SELECT "id" FROM c_opportunity WHERE "partner" = $1 AND "title" = $2"#,
+            partner,
+            title
+        )
+        .fetch_optional(db)
+        .await?;
+        Ok(rec.map(|row| row.id))
+    }
+
     pub async fn exists_by_uid(db: &Database, uid: Uuid) -> Result<bool, Error> {
         let rec = sqlx::query!(
             r#"SELECT exists(SELECT 1 FROM c_opportunity WHERE "uid" = $1)"#,
@@ -3528,6 +3543,10 @@ impl Opportunity {
     pub async fn set_id_if_necessary(&mut self, db: &Database) -> Result<(), Error> {
         if let None = self.id {
             self.id = Opportunity::id_by_uid(db, self.uid).await?;
+        }
+
+        if let None = self.id {
+            self.id = Opportunity::id_by_partner_and_title(db, self.partner, &self.title).await?;
         }
 
         Ok(())

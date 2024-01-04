@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO c_opportunity_venue_type (\"opportunity_id\", \"venue_type\", \"overlay\")\n                VALUES ($1, $2, $3)\n                ON CONFLICT (\"opportunity_id\", \"venue_type\") DO UPDATE\n                SET \"overlay\" = EXCLUDED.\"overlay\"\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        {
+          "Custom": {
+            "name": "t_venuetype",
+            "kind": {
+              "Enum": [
+                "indoors",
+                "outdoors",
+                "museum_or_science_center",
+                "library",
+                "pk12schoolcommunity_organization",
+                "bar",
+                "college_university",
+                "unspecified"
+              ]
+            }
+          }
+        },
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "78d5c497eee8dbe488db3e595a922cf025db693426eaf1e818eb7ddb2d69c336"
+}

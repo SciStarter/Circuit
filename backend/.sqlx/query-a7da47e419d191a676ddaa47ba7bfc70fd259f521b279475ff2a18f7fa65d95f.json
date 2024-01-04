@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM c_opportunity_hashtag WHERE opportunity_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a7da47e419d191a676ddaa47ba7bfc70fd259f521b279475ff2a18f7fa65d95f"
+}

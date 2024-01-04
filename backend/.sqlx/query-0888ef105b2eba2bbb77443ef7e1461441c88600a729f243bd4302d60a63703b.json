@@ -1,0 +1,416 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n              (\"match\".\"opp\").\"id\" AS \"id!: _\",\n              (\"match\".\"opp\").\"uid\" AS \"uid!: _\",\n              (\"match\".\"opp\").\"slug\" AS \"slug!: _\",\n              coalesce(\"ov\".\"title\", (\"match\".\"opp\").\"title\") AS \"title!: _\",\n              coalesce(\"ov\".\"image_url\", (\"match\".\"opp\").\"image_url\") AS \"image_url!: _\",\n              coalesce(\"ov\".\"short_desc\", (\"match\".\"opp\").\"short_desc\") AS \"short_desc!: _\"\n            FROM\n              c_opportunities_matching($1) AS \"match\"\n              LEFT JOIN c_opportunity_overlay AS \"ov\" ON (\"match\".\"opp\").\"id\" = \"ov\".\"opportunity_id\"\n            \n                ORDER BY (\"match\".\"opp\").\"id\"\n                LIMIT $2\n                OFFSET $3\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: _",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "uid!: _",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "title!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "image_url!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "short_desc!: _",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "t_opportunityquery",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Int4"
+                ],
+                [
+                  "uid",
+                  "Uuid"
+                ],
+                [
+                  "slug",
+                  "Text"
+                ],
+                [
+                  "accepted",
+                  "Bool"
+                ],
+                [
+                  "withdrawn",
+                  "Bool"
+                ],
+                [
+                  "entity_type",
+                  {
+                    "Custom": {
+                      "name": "_t_entitytype",
+                      "kind": {
+                        "Array": {
+                          "Custom": {
+                            "name": "t_entitytype",
+                            "kind": {
+                              "Enum": [
+                                "unspecified",
+                                "attraction",
+                                "page_just_content",
+                                "page_add_opportunities",
+                                "opportunity"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ],
+                [
+                  "title_contains",
+                  "Text"
+                ],
+                [
+                  "tags",
+                  "TextArray"
+                ],
+                [
+                  "topics",
+                  {
+                    "Custom": {
+                      "name": "_t_topic",
+                      "kind": {
+                        "Array": {
+                          "Custom": {
+                            "name": "t_topic",
+                            "kind": {
+                              "Enum": [
+                                "agriculture",
+                                "alcohol",
+                                "animals",
+                                "archaeology_and_cultural",
+                                "art",
+                                "astronomy_and_space",
+                                "awards",
+                                "biology",
+                                "birds",
+                                "chemistry",
+                                "climate_and_weather",
+                                "computers_and_technology",
+                                "crowd_funding",
+                                "design",
+                                "disaster_response",
+                                "ecology_and_environment",
+                                "education",
+                                "engineering",
+                                "food",
+                                "general_science",
+                                "geography",
+                                "geology_and_earth_science",
+                                "health_and_medicine",
+                                "insects_and_pollinators",
+                                "mathematics",
+                                "nature_and_outdoors",
+                                "ocean_water_marine",
+                                "paleontology",
+                                "physics",
+                                "policy",
+                                "psychology",
+                                "religion",
+                                "robotics",
+                                "social_science",
+                                "sound",
+                                "technology",
+                                "transportation"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ],
+                [
+                  "partner",
+                  "Uuid"
+                ],
+                [
+                  "partner_member",
+                  "Uuid"
+                ],
+                [
+                  "prefer_partner",
+                  "Uuid"
+                ],
+                [
+                  "near_longitude",
+                  "Float8"
+                ],
+                [
+                  "near_latitude",
+                  "Float8"
+                ],
+                [
+                  "near_distance",
+                  "Float8"
+                ],
+                [
+                  "physical",
+                  {
+                    "Custom": {
+                      "name": "t_opportunityqueryphysical",
+                      "kind": {
+                        "Enum": [
+                          "in-person-or-online",
+                          "in-person",
+                          "online"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "temporal",
+                  {
+                    "Custom": {
+                      "name": "t_opportunityquerytemporal",
+                      "kind": {
+                        "Enum": [
+                          "on-demand-or-scheduled",
+                          "scheduled",
+                          "on-demand"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "text",
+                  "Text"
+                ],
+                [
+                  "beginning",
+                  "Timestamptz"
+                ],
+                [
+                  "ending",
+                  "Timestamptz"
+                ],
+                [
+                  "min_age",
+                  "Int2"
+                ],
+                [
+                  "max_age",
+                  "Int2"
+                ],
+                [
+                  "kids_only",
+                  "Bool"
+                ],
+                [
+                  "adults_only",
+                  "Bool"
+                ],
+                [
+                  "descriptors",
+                  {
+                    "Custom": {
+                      "name": "_t_descriptor",
+                      "kind": {
+                        "Array": {
+                          "Custom": {
+                            "name": "t_descriptor",
+                            "kind": {
+                              "Enum": [
+                                "advocacy_days",
+                                "bioblitz",
+                                "camp",
+                                "citizen_science",
+                                "clean_up",
+                                "club",
+                                "community",
+                                "competition",
+                                "concert",
+                                "conference",
+                                "create-a-thon",
+                                "dance",
+                                "exhibition",
+                                "expo_style",
+                                "festival",
+                                "forum",
+                                "fundraising",
+                                "hack-a-thon",
+                                "lecture",
+                                "live_science",
+                                "make-a-thon",
+                                "maker",
+                                "maker_faire",
+                                "media",
+                                "outreach",
+                                "overnight",
+                                "panel",
+                                "policy",
+                                "professional_development",
+                                "research",
+                                "science_blogging",
+                                "science_cafe_or_pub",
+                                "science_on_tap",
+                                "science_poetry_slam",
+                                "science_slam",
+                                "service",
+                                "star_party",
+                                "story_collider",
+                                "tinker",
+                                "tinker_faire",
+                                "training",
+                                "volunteering",
+                                "workshop"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ],
+                [
+                  "cost",
+                  {
+                    "Custom": {
+                      "name": "t_cost",
+                      "kind": {
+                        "Enum": [
+                          "free",
+                          "cost",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "venue_type",
+                  {
+                    "Custom": {
+                      "name": "t_venuetype",
+                      "kind": {
+                        "Enum": [
+                          "indoors",
+                          "outdoors",
+                          "museum_or_science_center",
+                          "library",
+                          "pk12schoolcommunity_organization",
+                          "bar",
+                          "college_university",
+                          "unspecified"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "host",
+                  "Text"
+                ],
+                [
+                  "sort",
+                  {
+                    "Custom": {
+                      "name": "t_opportunityqueryordering",
+                      "kind": {
+                        "Enum": [
+                          "alphabetical",
+                          "closest",
+                          "soonest",
+                          "any",
+                          "native",
+                          "unique",
+                          "partner-name"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "page",
+                  "Int4"
+                ],
+                [
+                  "per_page",
+                  "Int2"
+                ],
+                [
+                  "involved",
+                  "Uuid"
+                ],
+                [
+                  "saved",
+                  "Uuid"
+                ],
+                [
+                  "participated",
+                  "Uuid"
+                ],
+                [
+                  "sample",
+                  "Float4"
+                ],
+                [
+                  "exclude",
+                  "UuidArray"
+                ],
+                [
+                  "current",
+                  "Bool"
+                ],
+                [
+                  "calendar_year",
+                  "Int4"
+                ],
+                [
+                  "calendar_month",
+                  "Int4"
+                ],
+                [
+                  "region",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        },
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "0888ef105b2eba2bbb77443ef7e1461441c88600a729f243bd4302d60a63703b"
+}

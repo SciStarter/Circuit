@@ -1,0 +1,702 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n              (\"match\".\"opp\").\"id\" AS \"id!: _\",\n              (\"match\".\"opp\").\"uid\" AS \"uid!: _\",\n              (\"match\".\"opp\").\"slug\" AS \"slug!: _\",\n              (\"match\".\"opp\").\"gpt_record\" AS \"gpt_record!: _\",\n              (\"match\".\"opp\").\"partner_name\" AS \"partner_name!: _\",\n              (\"match\".\"opp\").\"partner_website\" AS \"partner_website: _\",\n              (\"match\".\"opp\").\"partner_logo_url\" AS \"partner_logo_url: _\",\n              (\"match\".\"opp\").\"partner_created\" AS \"partner_created: _\",\n              (\"match\".\"opp\").\"partner_updated\" AS \"partner_updated: _\",\n              (\"match\".\"opp\").\"partner_opp_url\" AS \"partner_opp_url: _\",\n              (\"match\".\"opp\").\"organization_name\" AS \"organization_name!: _\",\n              (\"match\".\"opp\").\"organization_type\" AS \"organization_type!: _\",\n              (\"match\".\"opp\").\"organization_website\" AS \"organization_website: _\",\n              (\"match\".\"opp\").\"organization_logo_url\" AS \"organization_logo_url: _\",\n              (\"match\".\"opp\").\"entity_type\" AS \"entity_type!: _\",\n              (\"match\".\"opp\").\"min_age\" AS \"min_age!: _\",\n              (\"match\".\"opp\").\"max_age\" AS \"max_age!: _\",\n              (\"match\".\"opp\").\"pes_domain\" AS \"pes_domain!: _\",\n              (\"match\".\"opp\").\"ticket_required\" AS \"ticket_required!: _\",\n              (\"match\".\"opp\").\"title\" AS \"title!: _\",\n              (\"match\".\"opp\").\"description\" AS \"description!: _\",\n              (\"match\".\"opp\").\"short_desc\" AS \"short_desc!: _\",\n              (\"match\".\"opp\").\"image_url\" AS \"image_url!: _\",\n              (\"match\".\"opp\").\"image_credit\" AS \"image_credit!: _\",\n              (\"match\".\"opp\").\"recurrence\" AS \"recurrence!: _\",\n              (\"match\".\"opp\").\"end_recurrence\" AS \"end_recurrence: _\",\n              (\"match\".\"opp\").\"timezone\" AS \"timezone: _\",\n              (\"match\".\"opp\").\"cost\" AS \"cost!: _\",\n              (\"match\".\"opp\").\"is_online\" AS \"is_online!: _\",\n              (\"match\".\"opp\").\"location_type\" AS \"location_type!: _\",\n              (\"match\".\"opp\").\"location_name\" AS \"location_name!: _\",\n              ST_AsBinary((\"match\".\"opp\").\"location_point\") AS \"location_point: geozero::wkb::Decode<geo::Geometry<f64>>\",\n              ST_AsBinary((\"match\".\"opp\").\"location_polygon\") AS \"location_polygon: geozero::wkb::Decode<geo::Geometry<f64>>\",\n              (\"match\".\"opp\").\"address_street\" AS \"address_street!: _\",\n              (\"match\".\"opp\").\"address_city\" AS \"address_city!: _\",\n              (\"match\".\"opp\").\"address_state\" AS \"address_state!: _\",\n              (\"match\".\"opp\").\"address_country\" AS \"address_country!: _\",\n              (\"match\".\"opp\").\"address_zip\" AS \"address_zip!: _\",\n              (\"match\".\"opp\").\"partner\" AS \"partner!: _\"\n            FROM\n              c_opportunities_matching($1) AS \"match\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: _",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "uid!: _",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "gpt_record!: _",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "partner_name!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "partner_website: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "partner_logo_url: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "partner_created: _",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "partner_updated: _",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "partner_opp_url: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "organization_name!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "organization_type!: _",
+        "type_info": {
+          "Custom": {
+            "name": "t_organizationtype",
+            "kind": {
+              "Enum": [
+                "museum_or_science_center",
+                "festival",
+                "library",
+                "college_university",
+                "pk12school",
+                "community_organization",
+                "club",
+                "zoo",
+                "aquarium",
+                "planetarium",
+                "botanical_garden",
+                "parks_and_rec",
+                "historical_site",
+                "maker_organization",
+                "company",
+                "govt_agency",
+                "maker_space",
+                "unspecified"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "organization_website: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "organization_logo_url: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "entity_type!: _",
+        "type_info": {
+          "Custom": {
+            "name": "t_entitytype",
+            "kind": {
+              "Enum": [
+                "unspecified",
+                "attraction",
+                "page_just_content",
+                "page_add_opportunities",
+                "opportunity"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "min_age!: _",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 16,
+        "name": "max_age!: _",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 17,
+        "name": "pes_domain!: _",
+        "type_info": {
+          "Custom": {
+            "name": "t_pesdomain",
+            "kind": {
+              "Enum": [
+                "citizen_science",
+                "live_science",
+                "museum_or_science_center",
+                "maker",
+                "policy",
+                "out_of_school_time_program",
+                "formal_education",
+                "science_communications",
+                "unspecified"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "ticket_required!: _",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 19,
+        "name": "title!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 20,
+        "name": "description!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "short_desc!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 22,
+        "name": "image_url!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 23,
+        "name": "image_credit!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 24,
+        "name": "recurrence!: _",
+        "type_info": {
+          "Custom": {
+            "name": "t_recurrence",
+            "kind": {
+              "Enum": [
+                "once",
+                "daily",
+                "weekly"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 25,
+        "name": "end_recurrence: _",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 26,
+        "name": "timezone: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 27,
+        "name": "cost!: _",
+        "type_info": {
+          "Custom": {
+            "name": "t_cost",
+            "kind": {
+              "Enum": [
+                "free",
+                "cost",
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 28,
+        "name": "is_online!: _",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 29,
+        "name": "location_type!: _",
+        "type_info": {
+          "Custom": {
+            "name": "t_locationtype",
+            "kind": {
+              "Enum": [
+                "any",
+                "at",
+                "near",
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 30,
+        "name": "location_name!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 31,
+        "name": "location_point: geozero::wkb::Decode<geo::Geometry<f64>>",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 32,
+        "name": "location_polygon: geozero::wkb::Decode<geo::Geometry<f64>>",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 33,
+        "name": "address_street!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 34,
+        "name": "address_city!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 35,
+        "name": "address_state!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 36,
+        "name": "address_country!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 37,
+        "name": "address_zip!: _",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 38,
+        "name": "partner!: _",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "t_opportunityquery",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Int4"
+                ],
+                [
+                  "uid",
+                  "Uuid"
+                ],
+                [
+                  "slug",
+                  "Text"
+                ],
+                [
+                  "accepted",
+                  "Bool"
+                ],
+                [
+                  "withdrawn",
+                  "Bool"
+                ],
+                [
+                  "entity_type",
+                  {
+                    "Custom": {
+                      "name": "_t_entitytype",
+                      "kind": {
+                        "Array": {
+                          "Custom": {
+                            "name": "t_entitytype",
+                            "kind": {
+                              "Enum": [
+                                "unspecified",
+                                "attraction",
+                                "page_just_content",
+                                "page_add_opportunities",
+                                "opportunity"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ],
+                [
+                  "title_contains",
+                  "Text"
+                ],
+                [
+                  "tags",
+                  "TextArray"
+                ],
+                [
+                  "topics",
+                  {
+                    "Custom": {
+                      "name": "_t_topic",
+                      "kind": {
+                        "Array": {
+                          "Custom": {
+                            "name": "t_topic",
+                            "kind": {
+                              "Enum": [
+                                "agriculture",
+                                "alcohol",
+                                "animals",
+                                "archaeology_and_cultural",
+                                "art",
+                                "astronomy_and_space",
+                                "awards",
+                                "biology",
+                                "birds",
+                                "chemistry",
+                                "climate_and_weather",
+                                "computers_and_technology",
+                                "crowd_funding",
+                                "design",
+                                "disaster_response",
+                                "ecology_and_environment",
+                                "education",
+                                "engineering",
+                                "food",
+                                "general_science",
+                                "geography",
+                                "geology_and_earth_science",
+                                "health_and_medicine",
+                                "insects_and_pollinators",
+                                "mathematics",
+                                "nature_and_outdoors",
+                                "ocean_water_marine",
+                                "paleontology",
+                                "physics",
+                                "policy",
+                                "psychology",
+                                "religion",
+                                "robotics",
+                                "social_science",
+                                "sound",
+                                "technology",
+                                "transportation"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ],
+                [
+                  "partner",
+                  "Uuid"
+                ],
+                [
+                  "partner_member",
+                  "Uuid"
+                ],
+                [
+                  "prefer_partner",
+                  "Uuid"
+                ],
+                [
+                  "near_longitude",
+                  "Float8"
+                ],
+                [
+                  "near_latitude",
+                  "Float8"
+                ],
+                [
+                  "near_distance",
+                  "Float8"
+                ],
+                [
+                  "physical",
+                  {
+                    "Custom": {
+                      "name": "t_opportunityqueryphysical",
+                      "kind": {
+                        "Enum": [
+                          "in-person-or-online",
+                          "in-person",
+                          "online"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "temporal",
+                  {
+                    "Custom": {
+                      "name": "t_opportunityquerytemporal",
+                      "kind": {
+                        "Enum": [
+                          "on-demand-or-scheduled",
+                          "scheduled",
+                          "on-demand"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "text",
+                  "Text"
+                ],
+                [
+                  "beginning",
+                  "Timestamptz"
+                ],
+                [
+                  "ending",
+                  "Timestamptz"
+                ],
+                [
+                  "min_age",
+                  "Int2"
+                ],
+                [
+                  "max_age",
+                  "Int2"
+                ],
+                [
+                  "kids_only",
+                  "Bool"
+                ],
+                [
+                  "adults_only",
+                  "Bool"
+                ],
+                [
+                  "descriptors",
+                  {
+                    "Custom": {
+                      "name": "_t_descriptor",
+                      "kind": {
+                        "Array": {
+                          "Custom": {
+                            "name": "t_descriptor",
+                            "kind": {
+                              "Enum": [
+                                "advocacy_days",
+                                "bioblitz",
+                                "camp",
+                                "citizen_science",
+                                "clean_up",
+                                "club",
+                                "community",
+                                "competition",
+                                "concert",
+                                "conference",
+                                "create-a-thon",
+                                "dance",
+                                "exhibition",
+                                "expo_style",
+                                "festival",
+                                "forum",
+                                "fundraising",
+                                "hack-a-thon",
+                                "lecture",
+                                "live_science",
+                                "make-a-thon",
+                                "maker",
+                                "maker_faire",
+                                "media",
+                                "outreach",
+                                "overnight",
+                                "panel",
+                                "policy",
+                                "professional_development",
+                                "research",
+                                "science_blogging",
+                                "science_cafe_or_pub",
+                                "science_on_tap",
+                                "science_poetry_slam",
+                                "science_slam",
+                                "service",
+                                "star_party",
+                                "story_collider",
+                                "tinker",
+                                "tinker_faire",
+                                "training",
+                                "volunteering",
+                                "workshop"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ],
+                [
+                  "cost",
+                  {
+                    "Custom": {
+                      "name": "t_cost",
+                      "kind": {
+                        "Enum": [
+                          "free",
+                          "cost",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "venue_type",
+                  {
+                    "Custom": {
+                      "name": "t_venuetype",
+                      "kind": {
+                        "Enum": [
+                          "indoors",
+                          "outdoors",
+                          "museum_or_science_center",
+                          "library",
+                          "pk12schoolcommunity_organization",
+                          "bar",
+                          "college_university",
+                          "unspecified"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "host",
+                  "Text"
+                ],
+                [
+                  "sort",
+                  {
+                    "Custom": {
+                      "name": "t_opportunityqueryordering",
+                      "kind": {
+                        "Enum": [
+                          "alphabetical",
+                          "closest",
+                          "soonest",
+                          "any",
+                          "native",
+                          "unique",
+                          "partner-name"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "page",
+                  "Int4"
+                ],
+                [
+                  "per_page",
+                  "Int2"
+                ],
+                [
+                  "involved",
+                  "Uuid"
+                ],
+                [
+                  "saved",
+                  "Uuid"
+                ],
+                [
+                  "participated",
+                  "Uuid"
+                ],
+                [
+                  "sample",
+                  "Float4"
+                ],
+                [
+                  "exclude",
+                  "UuidArray"
+                ],
+                [
+                  "current",
+                  "Bool"
+                ],
+                [
+                  "calendar_year",
+                  "Int4"
+                ],
+                [
+                  "calendar_month",
+                  "Int4"
+                ],
+                [
+                  "region",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "a5d4ee5be832670a7b0697b51e4994bdf37a1c4278f5e1fa5d85a102574e71cc"
+}

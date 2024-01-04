@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO c_opportunity_language (\"opportunity_id\", \"language\")\n                VALUES ($1, $2)\n                ON CONFLICT DO NOTHING\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8b8025a53542b4ab101bdc048a30dedfcc0321840b4ef98e3c96e7512a846af5"
+}

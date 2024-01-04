@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \"hashtag\" AS \"value!\" FROM c_opportunity_hashtag WHERE \"opportunity_id\" = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "value!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "87b801b8d6c58b4545ede99c64592c4fc0f3b0ea5a2bb294b2c26d459bdf8f1c"
+}

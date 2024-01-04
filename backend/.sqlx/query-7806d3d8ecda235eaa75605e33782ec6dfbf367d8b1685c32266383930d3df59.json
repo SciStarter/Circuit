@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.exterior->>'name' AS \"name!\", count(*) AS \"total!\" FROM c_opportunity o JOIN c_partner p ON (p.exterior->>'uid')::uuid = o.\"partner\" GROUP BY p.exterior->>'name' ORDER BY \"total!\" DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "7806d3d8ecda235eaa75605e33782ec6dfbf367d8b1685c32266383930d3df59"
+}

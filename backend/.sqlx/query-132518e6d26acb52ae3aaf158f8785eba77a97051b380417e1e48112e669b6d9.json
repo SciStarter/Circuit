@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT exists(SELECT 1 FROM c_opportunity WHERE \"slug\" = lower($1))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "132518e6d26acb52ae3aaf158f8785eba77a97051b380417e1e48112e669b6d9"
+}

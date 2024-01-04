@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nupdate c_involvement set exterior = $2, interior = $3 where id = $1;\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bda114845d1e106d0ecaf24858a8e5581531e629a3ce523d72070c7ca8804fdb"
+}

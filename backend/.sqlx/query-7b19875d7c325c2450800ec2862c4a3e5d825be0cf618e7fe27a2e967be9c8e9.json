@@ -1,0 +1,149 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE c_opportunity\n                SET\n                   \"partner_name\" = $2,\n                   \"partner_website\" = $3,\n                   \"partner_logo_url\" = $4,\n                   \"partner_created\" = $5,\n                   \"partner_updated\" = $6,\n                   \"partner_opp_url\" = $7,\n                   \"organization_name\" = $8,\n                   \"organization_type\" = $9,\n                   \"organization_website\" = $10,\n                   \"organization_logo_url\" = $11,\n                   \"entity_type\" = $12,\n                   \"min_age\" = $13,\n                   \"max_age\" = $14,\n                   \"pes_domain\" = $15,\n                   \"ticket_required\" = $16,\n                   \"title\" = $17,\n                   \"description\" = $18,\n                   \"short_desc\" = $19,\n                   \"image_url\" = $20,\n                   \"image_credit\" = $21,\n                   \"recurrence\" = $22,\n                   \"end_recurrence\" = $23,\n                   \"timezone\" = $24,\n                   \"cost\" = $25,\n                   \"is_online\" = $26,\n                   \"location_type\" = $27,\n                   \"location_name\" = $28,\n                   \"location_point\" = $29,\n                   \"location_polygon\" = $30,\n                   \"address_street\" = $31,\n                   \"address_city\" = $32,\n                   \"address_state\" = $33,\n                   \"address_country\" = $34,\n                   \"address_zip\" = $35,\n                   \"partner\" = $36\n                WHERE \"id\" = $1\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "t_organizationtype",
+            "kind": {
+              "Enum": [
+                "museum_or_science_center",
+                "festival",
+                "library",
+                "college_university",
+                "pk12school",
+                "community_organization",
+                "club",
+                "zoo",
+                "aquarium",
+                "planetarium",
+                "botanical_garden",
+                "parks_and_rec",
+                "historical_site",
+                "maker_organization",
+                "company",
+                "govt_agency",
+                "maker_space",
+                "unspecified"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "t_entitytype",
+            "kind": {
+              "Enum": [
+                "unspecified",
+                "attraction",
+                "page_just_content",
+                "page_add_opportunities",
+                "opportunity"
+              ]
+            }
+          }
+        },
+        "Int2",
+        "Int2",
+        {
+          "Custom": {
+            "name": "t_pesdomain",
+            "kind": {
+              "Enum": [
+                "citizen_science",
+                "live_science",
+                "museum_or_science_center",
+                "maker",
+                "policy",
+                "out_of_school_time_program",
+                "formal_education",
+                "science_communications",
+                "unspecified"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "t_recurrence",
+            "kind": {
+              "Enum": [
+                "once",
+                "daily",
+                "weekly"
+              ]
+            }
+          }
+        },
+        "Timestamptz",
+        "Text",
+        {
+          "Custom": {
+            "name": "t_cost",
+            "kind": {
+              "Enum": [
+                "free",
+                "cost",
+                "unknown"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "t_locationtype",
+            "kind": {
+              "Enum": [
+                "any",
+                "at",
+                "near",
+                "unknown"
+              ]
+            }
+          }
+        },
+        "Text",
+        {
+          "Custom": {
+            "name": "geography",
+            "kind": "Simple"
+          }
+        },
+        {
+          "Custom": {
+            "name": "geography",
+            "kind": "Simple"
+          }
+        },
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7b19875d7c325c2450800ec2862c4a3e5d825be0cf618e7fe27a2e967be9c8e9"
+}

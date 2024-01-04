@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM c_opportunity_social_handle WHERE opportunity_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "79ea3325778bcd780941bb756f95b2012ba0b0120f5a8b779a54966a56097179"
+}

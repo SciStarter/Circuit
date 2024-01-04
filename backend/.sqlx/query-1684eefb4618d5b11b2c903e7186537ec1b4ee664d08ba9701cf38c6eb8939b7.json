@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) AS \"likes\" FROM c_opportunity_like AS \"l\" INNER JOIN c_opportunity AS \"o\" ON \"l\".\"opportunity_id\" = \"o\".\"id\" WHERE \"o\".\"slug\" = lower($1) AND \"l\".\"person\" = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "likes",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1684eefb4618d5b11b2c903e7186537ec1b4ee664d08ba9701cf38c6eb8939b7"
+}

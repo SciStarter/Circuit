@@ -1,0 +1,61 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO c_opportunity_topic (\"opportunity_id\", \"topic\", \"overlay\")\n                VALUES ($1, $2, $3)\n                ON CONFLICT (\"opportunity_id\", \"topic\") DO UPDATE\n                SET \"overlay\" = EXCLUDED.\"overlay\"\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        {
+          "Custom": {
+            "name": "t_topic",
+            "kind": {
+              "Enum": [
+                "agriculture",
+                "alcohol",
+                "animals",
+                "archaeology_and_cultural",
+                "art",
+                "astronomy_and_space",
+                "awards",
+                "biology",
+                "birds",
+                "chemistry",
+                "climate_and_weather",
+                "computers_and_technology",
+                "crowd_funding",
+                "design",
+                "disaster_response",
+                "ecology_and_environment",
+                "education",
+                "engineering",
+                "food",
+                "general_science",
+                "geography",
+                "geology_and_earth_science",
+                "health_and_medicine",
+                "insects_and_pollinators",
+                "mathematics",
+                "nature_and_outdoors",
+                "ocean_water_marine",
+                "paleontology",
+                "physics",
+                "policy",
+                "psychology",
+                "religion",
+                "robotics",
+                "social_science",
+                "sound",
+                "technology",
+                "transportation"
+              ]
+            }
+          }
+        },
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c286efcab8c806d016604289d1ba9667ee01bd143b8aec0adcb166801e619ac2"
+}

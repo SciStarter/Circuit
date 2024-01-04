@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \"language\" AS \"language!\" FROM c_opportunity_language WHERE \"opportunity_id\" = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "language!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "55e27a845268948359c13e305609deef9dd9cc5cddf1b2431a847af5792dac89"
+}

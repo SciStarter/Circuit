@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM c_opportunity_venue_type WHERE \"opportunity_id\" = $1 AND \"overlay\" = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e161da8f2e2757900055f3652f60d0e14e9b96065178dc4ed8fc4e8c48feb085"
+}

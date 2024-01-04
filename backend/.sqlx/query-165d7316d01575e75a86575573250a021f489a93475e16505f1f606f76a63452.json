@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT venue_type AS \"value!: VenueType\" FROM c_opportunity_venue_type WHERE opportunity_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "value!: VenueType",
+        "type_info": {
+          "Custom": {
+            "name": "t_venuetype",
+            "kind": {
+              "Enum": [
+                "indoors",
+                "outdoors",
+                "museum_or_science_center",
+                "library",
+                "pk12schoolcommunity_organization",
+                "bar",
+                "college_university",
+                "unspecified"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "165d7316d01575e75a86575573250a021f489a93475e16505f1f606f76a63452"
+}

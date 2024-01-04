@@ -3,7 +3,7 @@ use super::{
     OneOrMany::{self, Many},
     PartnerInfo, Structure,
 };
-use common::model::{partner::LoggedError, Opportunity, Partner};
+use common::model::{opportunity::OpportunityAll, partner::LoggedError, Partner};
 use serde::de::{Deserialize, Unexpected};
 use serde_json::{from_value, Value};
 use sqlx::{Pool, Postgres};
@@ -122,20 +122,20 @@ fn interpret_one<Tz: chrono::TimeZone + std::fmt::Debug>(
     partner: &PartnerInfo<Tz>,
     _tz: &Tz,
     entry: Value,
-) -> Result<Opportunity, LoggedError> {
+) -> Result<OpportunityAll, LoggedError> {
     let data: NeonStandardFields = from_value(entry)?;
 
-    let mut opp = Opportunity::default();
+    let mut opp = OpportunityAll::default();
 
-    opp.exterior.partner = partner.partner.clone();
+    opp.exterior.opp.partner = partner.partner.clone();
 
-    opp.exterior.partner_name = partner.partner_name.clone();
+    opp.exterior.opp.partner_name = partner.partner_name.clone();
 
-    opp.exterior.partner_website = partner.partner_website.clone();
+    opp.exterior.opp.partner_website = partner.partner_website.clone();
 
-    opp.exterior.partner_logo_url = partner.partner_logo_url.clone();
+    opp.exterior.opp.partner_logo_url = partner.partner_logo_url.clone();
 
-    opp.exterior.uid = uuid::Uuid::new_v5(&partner.partner, data.event_id.as_bytes());
+    opp.exterior.opp.uid = uuid::Uuid::new_v5(&partner.partner, data.event_id.as_bytes());
 
     // !!! TODO
 
@@ -152,7 +152,7 @@ fn interpret_page<Tz: chrono::TimeZone + std::fmt::Debug>(
     partner: &PartnerInfo<Tz>,
     tz: &Tz,
     entries: Value,
-) -> Vec<Result<Opportunity, LoggedError>> {
+) -> Vec<Result<OpportunityAll, LoggedError>> {
     if let Ok(page) = from_value::<NeonPage>(entries) {
         page.search_results
             .into_iter()
@@ -168,7 +168,7 @@ fn interpret_page<Tz: chrono::TimeZone + std::fmt::Debug>(
 
 #[async_trait::async_trait]
 impl<TZ: chrono::TimeZone + std::fmt::Debug + Sync + Send> Structure for NeonGeneric<TZ> {
-    type Data = Opportunity;
+    type Data = OpportunityAll;
 
     fn interpret(&self, parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         if let Value::Array(pages) = parsed {

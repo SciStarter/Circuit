@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \"network\" AS \"network!\", \"handle\" AS \"handle!\" FROM c_opportunity_social_handle WHERE \"opportunity_id\" = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "network!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "handle!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "f83354a8ecdfb0fafec8384b738628d01f21ae6b6f78cb4f06150a14a471920a"
+}

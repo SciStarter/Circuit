@@ -1,6 +1,7 @@
 use super::{Error, OneOrMany, PartnerInfo, Structure};
 use chrono::{DateTime, TimeZone};
-use common::model::{opportunity::EntityType, partner::LoggedError, Opportunity, Partner};
+use common::model::opportunity::OpportunityAll;
+use common::model::{opportunity::EntityType, partner::LoggedError, Partner};
 use common::ToFixedOffset;
 use htmlentity::entity::ICodedDataTrait;
 use serde_json::Value;
@@ -82,7 +83,7 @@ impl<Tz> Structure for ModernEventsCalendar<Tz>
 where
     Tz: TimeZone + std::fmt::Debug + Sync + Send,
 {
-    type Data = Opportunity;
+    type Data = OpportunityAll;
 
     fn interpret(&self, parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         if let Some(days) = parsed["content_json"].as_object() {
@@ -101,22 +102,22 @@ where
                 {
                     opps.push(
                         if let Ok(entry) = serde_json::from_value::<Entry>(opp.clone()) {
-                            let mut opp = Opportunity::default();
+                            let mut opp = OpportunityAll::default();
 
-                            opp.exterior.uid = uuid::Uuid::new_v5(
+                            opp.exterior.opp.uid = uuid::Uuid::new_v5(
                                 &self.0.partner,
                                 entry.data.permalink.as_bytes(),
                             );
 
-                            opp.exterior.partner = self.0.partner.clone();
+                            opp.exterior.opp.partner = self.0.partner.clone();
 
-                            opp.exterior.partner_name = self.0.partner_name.clone();
+                            opp.exterior.opp.partner_name = self.0.partner_name.clone();
 
-                            opp.exterior.partner_website = self.0.partner_website.clone();
+                            opp.exterior.opp.partner_website = self.0.partner_website.clone();
 
-                            opp.exterior.partner_logo_url = self.0.partner_logo_url.clone();
+                            opp.exterior.opp.partner_logo_url = self.0.partner_logo_url.clone();
 
-                            opp.exterior.partner_created =
+                            opp.exterior.opp.partner_created =
                                 match entry.data.post.post_date_gmt.split_once(' ') {
                                     Some(pair) => match DateTime::parse_from_rfc3339(&format!(
                                         "{}T{}Z",
@@ -128,7 +129,7 @@ where
                                     None => None,
                                 };
 
-                            opp.exterior.partner_updated =
+                            opp.exterior.opp.partner_updated =
                                 match entry.data.post.post_modified_gmt.split_once(' ') {
                                     Some(pair) => match DateTime::parse_from_rfc3339(&format!(
                                         "{}T{}Z",
@@ -140,19 +141,15 @@ where
                                     None => None,
                                 };
 
-                            opp.exterior.partner_opp_url = Some(entry.data.permalink);
+                            opp.exterior.opp.partner_opp_url = Some(entry.data.permalink);
 
-                            opp.exterior.organization_name = self.0.partner_name.clone();
+                            opp.exterior.opp.organization_name = self.0.partner_name.clone();
 
-                            opp.exterior.organization_website = self.0.partner_website.clone();
+                            opp.exterior.opp.organization_website = self.0.partner_website.clone();
 
-                            opp.interior.contact_email = String::new();
+                            opp.exterior.opp.entity_type = EntityType::Opportunity;
 
-                            opp.interior.contact_phone = String::new();
-
-                            opp.exterior.entity_type = EntityType::Opportunity;
-
-                            opp.exterior.pes_domain = self.0.domain.clone();
+                            opp.exterior.opp.pes_domain = self.0.domain.clone();
 
                             opp.exterior.tags = entry
                                 .data
@@ -165,17 +162,17 @@ where
                                 .filter(|x| !x.is_empty())
                                 .collect();
 
-                            opp.exterior.title =
+                            opp.exterior.opp.title =
                                 htmlentity::entity::decode(entry.data.title.as_bytes())
                                     .to_string()
                                     .unwrap_or_default();
 
-                            opp.exterior.description =
+                            opp.exterior.opp.description =
                                 htmlentity::entity::decode(entry.data.content.as_bytes())
                                     .to_string()
                                     .unwrap_or_default();
 
-                            opp.exterior.image_url = entry.data.featured_image.large;
+                            opp.exterior.opp.image_url = entry.data.featured_image.large;
 
                             if let Some(tz) = &self.0.timezone {
                                 // add 7 hours (25200 seconds) to the
@@ -197,9 +194,7 @@ where
                                 opp.exterior.has_end = true;
                             }
 
-                            opp.exterior.attraction_hours = None;
-
-                            opp.exterior.cost = match (
+                            opp.exterior.opp.cost = match (
                                 self.0.flags.contains(&crate::structure::PartnerFlag::Cost),
                                 entry.data.meta.mec_cost.as_ref(),
                             ) {
@@ -213,18 +208,18 @@ where
 
                             opp.exterior.opp_descriptor = self.0.descriptor.clone();
 
-                            opp.exterior.min_age = 0;
+                            opp.exterior.opp.min_age = 0;
 
-                            opp.exterior.max_age = 999;
+                            opp.exterior.opp.max_age = 999;
 
-                            opp.exterior.ticket_required = self
+                            opp.exterior.opp.ticket_required = self
                                 .0
                                 .flags
                                 .contains(&crate::structure::PartnerFlag::Ticketed);
 
-                            opp.exterior.languages = vec!["en".to_string()];
+                            opp.exterior.languages = vec!["en-US".to_string()];
 
-                            opp.exterior.is_online = false;
+                            opp.exterior.opp.is_online = false;
 
                             if let Some(addr) = entry
                                 .data
@@ -237,11 +232,11 @@ where
                                 let street = &addr["address"];
 
                                 if name.is_string() || street.is_string() {
-                                    opp.exterior.location_type =
+                                    opp.exterior.opp.location_type =
                                         common::model::opportunity::LocationType::At;
-                                    opp.exterior.location_name =
+                                    opp.exterior.opp.location_name =
                                         name.as_str().unwrap_or("").to_string();
-                                    opp.exterior.address_street =
+                                    opp.exterior.opp.address_street =
                                         street.as_str().unwrap_or("").to_string();
                                 }
                             }

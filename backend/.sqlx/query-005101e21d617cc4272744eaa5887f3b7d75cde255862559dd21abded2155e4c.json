@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT \"id\", \"opportunity_id\", \"start\", \"end\" FROM c_opportunity_instance WHERE opportunity_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "opportunity_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "start",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "end",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "005101e21d617cc4272744eaa5887f3b7d75cde255862559dd21abded2155e4c"
+}

@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nselect id, exterior, interior from c_involvement where ($1::jsonb) @> (interior -> 'participant') and ($2::jsonb) @> (exterior -> 'opportunity') limit 1;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "exterior",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "interior",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ad1c4cad664a49fad5005faf3cff97857cec7cdd30ec408f70c429c7a0fb718c"
+}

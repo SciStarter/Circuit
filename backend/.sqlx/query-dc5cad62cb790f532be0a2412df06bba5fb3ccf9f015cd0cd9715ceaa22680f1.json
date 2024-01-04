@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE c_opportunity_review SET flags = flags + 1 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dc5cad62cb790f532be0a2412df06bba5fb3ccf9f015cd0cd9715ceaa22680f1"
+}

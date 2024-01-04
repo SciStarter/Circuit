@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT pes_domain::text AS \"domain!\", COUNT(*) AS \"total!\"\n        FROM c_opportunity\n        WHERE pes_domain != 'unspecified'\n        GROUP BY pes_domain\n        ORDER BY \"total!\" DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "domain!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "084bf953c2b2281d11cc4f9d5cd4de005de7aceb24e3e01089f9529c18279b45"
+}

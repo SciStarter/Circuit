@@ -8,7 +8,11 @@ use super::{
     PartnerInfo, Structure,
 };
 use chrono::{DateTime, TimeZone, Utc};
-use common::model::{opportunity::EntityType, partner::LoggedError, Opportunity, Partner};
+use common::model::{
+    opportunity::{EntityType, OpportunityAll},
+    partner::LoggedError,
+    Partner,
+};
 use common::ToFixedOffset;
 use serde_json::Value;
 
@@ -132,42 +136,42 @@ struct Data {
 fn interpret_one<Tz: TimeZone>(
     partner: &PartnerInfo<Tz>,
     entry: Value,
-) -> Result<Opportunity, LoggedError> {
+) -> Result<OpportunityAll, LoggedError> {
     //let dump = serde_json::to_string_pretty(&entry)?;
 
     let data: Data = serde_json::from_value(entry)?;
 
-    let mut opp = Opportunity::default();
+    let mut opp = OpportunityAll::default();
 
     if let Some(node) = data.node {
-        opp.exterior.uid = uuid::Uuid::new_v5(&partner.partner, node.guid.as_bytes());
+        opp.exterior.opp.uid = uuid::Uuid::new_v5(&partner.partner, node.guid.as_bytes());
 
-        opp.exterior.partner = partner.partner.clone();
+        opp.exterior.opp.partner = partner.partner.clone();
 
-        opp.exterior.partner_name = partner.partner_name.clone();
+        opp.exterior.opp.partner_name = partner.partner_name.clone();
 
-        opp.exterior.partner_website = partner.partner_website.clone();
+        opp.exterior.opp.partner_website = partner.partner_website.clone();
 
-        opp.exterior.partner_logo_url = partner.partner_logo_url.clone();
+        opp.exterior.opp.partner_logo_url = partner.partner_logo_url.clone();
 
-        opp.exterior.partner_created =
+        opp.exterior.opp.partner_created =
             match DateTime::parse_from_rfc3339(&format!("{}Z", &node.date_gmt)) {
                 Ok(dt) => Some(dt),
                 Err(_) => None,
             };
 
-        opp.exterior.partner_updated =
+        opp.exterior.opp.partner_updated =
             match DateTime::parse_from_rfc3339(&format!("{}Z", &node.modified_gmt)) {
                 Ok(dt) => Some(dt),
                 Err(_) => None,
             };
 
-        opp.exterior.partner_opp_url = Some(node.link);
+        opp.exterior.opp.partner_opp_url = Some(node.link);
 
         if let Some(org) = node.linked_data.organizer {
-            opp.exterior.organization_name = org.name;
+            opp.exterior.opp.organization_name = org.name;
 
-            opp.exterior.organization_website = org.url;
+            opp.exterior.opp.organization_website = org.url;
 
             opp.interior.contact_email =
                 htmlentity::entity::decode(org.email.unwrap_or_default().as_bytes())
@@ -177,24 +181,24 @@ fn interpret_one<Tz: TimeZone>(
             opp.interior.contact_phone = org.telephone.unwrap_or_default();
         }
 
-        opp.exterior.entity_type = EntityType::Opportunity;
+        opp.exterior.opp.entity_type = EntityType::Opportunity;
 
-        opp.exterior.pes_domain = partner.domain.clone();
+        opp.exterior.opp.pes_domain = partner.domain.clone();
 
         opp.exterior.tags = node.tags.edges.into_iter().map(|x| x.node.name).collect();
 
-        opp.exterior.title = node.title.unwrap_or_else(|| node.slug.to_title_case());
+        opp.exterior.opp.title = node.title.unwrap_or_else(|| node.slug.to_title_case());
 
-        opp.exterior.short_desc = node.excerpt.unwrap_or_default();
-        opp.exterior.description = node.linked_data.description;
+        opp.exterior.opp.short_desc = node.excerpt.unwrap_or_default();
+        opp.exterior.opp.description = node.linked_data.description;
 
-        opp.exterior.image_url = if let Some(img) = node.featured_image {
+        opp.exterior.opp.image_url = if let Some(img) = node.featured_image {
             img.node.source_url
         } else {
             String::new()
         };
 
-        opp.exterior.image_credit = String::new();
+        opp.exterior.opp.image_credit = String::new();
 
         if let Some(start_dates) = node.start_dates {
             opp.exterior.start_datetimes = start_dates
@@ -267,9 +271,7 @@ fn interpret_one<Tz: TimeZone>(
             opp.exterior.has_end = false;
         }
 
-        opp.exterior.attraction_hours = None;
-
-        opp.exterior.cost = if node.cost.is_some() {
+        opp.exterior.opp.cost = if node.cost.is_some() {
             common::model::opportunity::Cost::Cost
         } else {
             common::model::opportunity::Cost::Free
@@ -277,34 +279,34 @@ fn interpret_one<Tz: TimeZone>(
 
         if let Some(loc) = node.linked_data.location {
             if let Some(addr) = loc.address {
-                opp.exterior.location_type = common::model::opportunity::LocationType::At;
-                opp.exterior.location_name = loc.name.unwrap_or_default();
-                opp.exterior.address_street = addr.street_address.unwrap_or_default();
-                opp.exterior.address_city = addr.address_locality.unwrap_or_default();
-                opp.exterior.address_state = addr.address_region.unwrap_or_default();
-                opp.exterior.address_zip = addr.postal_code.unwrap_or_default();
-                opp.exterior.address_country = addr.address_country.unwrap_or_default();
+                opp.exterior.opp.location_type = common::model::opportunity::LocationType::At;
+                opp.exterior.opp.location_name = loc.name.unwrap_or_default();
+                opp.exterior.opp.address_street = addr.street_address.unwrap_or_default();
+                opp.exterior.opp.address_city = addr.address_locality.unwrap_or_default();
+                opp.exterior.opp.address_state = addr.address_region.unwrap_or_default();
+                opp.exterior.opp.address_zip = addr.postal_code.unwrap_or_default();
+                opp.exterior.opp.address_country = addr.address_country.unwrap_or_default();
             } else if let Some(addr) = &partner.address {
-                opp.exterior.location_type = common::model::opportunity::LocationType::At;
-                opp.exterior.location_name = addr.name.clone();
-                opp.exterior.address_street = addr.street.clone();
-                opp.exterior.address_city = addr.city.clone();
-                opp.exterior.address_state = addr.state.clone();
-                opp.exterior.address_zip = addr.zip.clone();
-                opp.exterior.address_country = addr.country.clone();
+                opp.exterior.opp.location_type = common::model::opportunity::LocationType::At;
+                opp.exterior.opp.location_name = addr.name.clone();
+                opp.exterior.opp.address_street = addr.street.clone();
+                opp.exterior.opp.address_city = addr.city.clone();
+                opp.exterior.opp.address_state = addr.state.clone();
+                opp.exterior.opp.address_zip = addr.zip.clone();
+                opp.exterior.opp.address_country = addr.country.clone();
             } else {
-                opp.exterior.location_type = common::model::opportunity::LocationType::Any;
+                opp.exterior.opp.location_type = common::model::opportunity::LocationType::Any;
             }
         } else if let Some(addr) = &partner.address {
-            opp.exterior.location_type = common::model::opportunity::LocationType::At;
-            opp.exterior.location_name = addr.name.clone();
-            opp.exterior.address_street = addr.street.clone();
-            opp.exterior.address_city = addr.city.clone();
-            opp.exterior.address_state = addr.state.clone();
-            opp.exterior.address_zip = addr.zip.clone();
-            opp.exterior.address_country = addr.country.clone();
+            opp.exterior.opp.location_type = common::model::opportunity::LocationType::At;
+            opp.exterior.opp.location_name = addr.name.clone();
+            opp.exterior.opp.address_street = addr.street.clone();
+            opp.exterior.opp.address_city = addr.city.clone();
+            opp.exterior.opp.address_state = addr.state.clone();
+            opp.exterior.opp.address_zip = addr.zip.clone();
+            opp.exterior.opp.address_country = addr.country.clone();
         } else {
-            opp.exterior.location_type = common::model::opportunity::LocationType::Any;
+            opp.exterior.opp.location_type = common::model::opportunity::LocationType::Any;
         }
 
         if let Some(custom) = node.custom {
@@ -312,21 +314,23 @@ fn interpret_one<Tz: TimeZone>(
 
             opp.exterior.opp_descriptor = custom.descriptor.into_iter().collect();
 
-            opp.exterior.min_age = custom.min_age.unwrap_or(0);
+            opp.exterior.opp.min_age = custom.min_age.unwrap_or(0);
 
-            opp.exterior.max_age = custom.max_age.unwrap_or(999);
+            opp.exterior.opp.max_age = custom.max_age.unwrap_or(999);
 
             opp.exterior.opp_topics = custom.topic;
 
-            opp.exterior.ticket_required = custom
+            opp.exterior.opp.ticket_required = custom
                 .ticket_required
                 .unwrap_or_else(|| "no".to_string())
                 .as_str()
                 == "yes";
 
-            opp.exterior.short_desc = custom.short_description.unwrap_or(opp.exterior.short_desc);
+            opp.exterior.opp.short_desc = custom
+                .short_description
+                .unwrap_or(opp.exterior.opp.short_desc);
 
-            opp.exterior.organization_type = custom.organization_type.unwrap_or_default();
+            opp.exterior.opp.organization_type = custom.organization_type.unwrap_or_default();
 
             opp.exterior.languages = custom
                 .language
@@ -341,7 +345,7 @@ fn interpret_one<Tz: TimeZone>(
                 })
                 .collect();
 
-            opp.exterior.is_online = custom.online.unwrap_or(false);
+            opp.exterior.opp.is_online = custom.online.unwrap_or(false);
 
             let separators: &[_] = &[' ', ',', '#'];
 
@@ -383,7 +387,7 @@ impl<Tz> Structure for EventsQL<Tz>
 where
     Tz: TimeZone + std::fmt::Debug + Sync + Send,
 {
-    type Data = Opportunity;
+    type Data = OpportunityAll;
 
     fn interpret(&self, mut parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         if let Some(entries) = parsed["data"]["events"]["edges"].as_array_mut() {

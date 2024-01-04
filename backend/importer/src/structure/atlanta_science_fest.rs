@@ -1,8 +1,8 @@
 use chrono::DateTime;
 use common::model::{
-    opportunity::{Descriptor, Domain, EntityType, LocationType, VenueType},
+    opportunity::{Descriptor, Domain, EntityType, LocationType, OpportunityAll, VenueType},
     partner::LoggedError,
-    Opportunity, Partner,
+    Partner,
 };
 use serde_json::Value;
 use sqlx::{Pool, Postgres};
@@ -18,34 +18,34 @@ const ATLANTA_SCIENCE_FEST: Uuid = Uuid::from_bytes([
 pub struct AtlantaScienceFest<const YEAR: u32>;
 
 impl AtlantaScienceFest<2022> {
-    fn import_one(event: &Value) -> Result<Opportunity, Error> {
-        let mut opp = Opportunity::default();
-        opp.exterior.uid = Uuid::new_v5(
+    fn import_one(event: &Value) -> Result<OpportunityAll, Error> {
+        let mut opp = OpportunityAll::default();
+        opp.exterior.opp.uid = Uuid::new_v5(
             &ATLANTA_SCIENCE_FEST,
             event["id"]
                 .as_str()
                 .ok_or_else(|| Error::Data("Event missing id".into()))?
                 .as_bytes(),
         );
-        opp.exterior.partner_name = "Atlanta Science Festival".to_string();
-        opp.exterior.partner_website = Some("https://atlantasciencefestival.org/".to_string());
-        opp.exterior.partner_created = Some(
+        opp.exterior.opp.partner_name = "Atlanta Science Festival".to_string();
+        opp.exterior.opp.partner_website = Some("https://atlantasciencefestival.org/".to_string());
+        opp.exterior.opp.partner_created = Some(
             DateTime::parse_from_rfc3339(event["createdTime"].as_str().ok_or_else(|| {
                 Error::Data("Event record is missing created time field".to_string())
             })?)
             .map_err(|_| Error::Misc("Unable to parse created time field".to_string()))?,
         );
-        opp.exterior.partner_opp_url = Some(
+        opp.exterior.opp.partner_opp_url = Some(
             event["fields"]["URL"]
                 .as_str()
                 .ok_or_else(|| Error::Data("Event record is missing URL".to_string()))?
                 .to_string(),
         );
-        opp.exterior.organization_name = event["fields"]["Presenting Partner(s)"]
+        opp.exterior.opp.organization_name = event["fields"]["Presenting Partner(s)"]
             .as_str()
             .unwrap_or_default()
             .to_string();
-        opp.exterior.entity_type = EntityType::Opportunity;
+        opp.exterior.opp.entity_type = EntityType::Opportunity;
         opp.exterior.opp_venue =
             vec![event["fields"]["Venue type"]
                 .as_str()
@@ -57,16 +57,16 @@ impl AtlantaScienceFest<2022> {
                     }
                 })];
         opp.exterior.opp_descriptor = vec![Descriptor::Festival];
-        opp.exterior.pes_domain = Domain::LiveScience;
-        opp.exterior.title = event["fields"]["Event Name"]
+        opp.exterior.opp.pes_domain = Domain::LiveScience;
+        opp.exterior.opp.title = event["fields"]["Event Name"]
             .as_str()
             .unwrap_or_default()
             .to_string();
-        opp.exterior.description = event["fields"]["Teaser"]
+        opp.exterior.opp.description = event["fields"]["Teaser"]
             .as_str()
             .unwrap_or_default()
             .to_string();
-        opp.exterior.image_url = event["fields"]["Photo"][0]["url"]
+        opp.exterior.opp.image_url = event["fields"]["Photo"][0]["url"]
             .as_str()
             .unwrap_or_default()
             .to_string();
@@ -82,9 +82,9 @@ impl AtlantaScienceFest<2022> {
                 .into_iter()
                 .collect();
         opp.exterior.has_end = true;
-        opp.exterior.is_online = false;
-        opp.exterior.location_type = LocationType::At;
-        opp.exterior.location_point = Some(serde_json::json!(
+        opp.exterior.opp.is_online = false;
+        opp.exterior.opp.location_type = LocationType::At;
+        opp.exterior.opp.location_point = serde_json::json!(
             {
                 "type": "Point",
                 "coordinates": [
@@ -92,8 +92,8 @@ impl AtlantaScienceFest<2022> {
                     event["fields"]["Lat"][0].as_f64().ok_or_else(|| Error::Data("Error parsing latitude".to_string()))?
                 ]
             }
-        ));
-        opp.exterior.partner = ATLANTA_SCIENCE_FEST.clone();
+        ).try_into()?;
+        opp.exterior.opp.partner = ATLANTA_SCIENCE_FEST.clone();
         opp.interior.accepted = Some(true);
         opp.interior.withdrawn = false;
 
@@ -103,7 +103,7 @@ impl AtlantaScienceFest<2022> {
 
 #[async_trait::async_trait]
 impl Structure for AtlantaScienceFest<2022> {
-    type Data = Opportunity;
+    type Data = OpportunityAll;
 
     fn interpret(&self, parsed: serde_json::Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         let mut opps = Vec::new();

@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT x.\"pes_domain\" AS \"domain!: Domain\", COUNT(x.*) AS \"total!\"\nFROM (\n  SELECT DISTINCT ON (o.\"title\", o.\"partner\") *\n  FROM c_opportunity o JOIN c_region r ON r.\"name\" = $1\n  WHERE\n    c_opportunity_is_current(o) AND\n    o.\"pes_domain\" != 'unspecified' AND\n    o.\"location_type\" = 'at' AND\n    ST_Intersects(o.location_point, r.geometry)\n  ORDER BY o.\"title\", o.\"partner\"\n) x\nGROUP BY x.\"pes_domain\"\nORDER BY \"total!\" DESC\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "domain!: Domain",
+        "type_info": {
+          "Custom": {
+            "name": "t_pesdomain",
+            "kind": {
+              "Enum": [
+                "citizen_science",
+                "live_science",
+                "museum_or_science_center",
+                "maker",
+                "policy",
+                "out_of_school_time_program",
+                "formal_education",
+                "science_communications",
+                "unspecified"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "51259b3408f381030b1f777bbaf9a0803dbd329eed015057b44d9a8f8254569f"
+}

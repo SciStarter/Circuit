@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO c_opportunity_tag (\"opportunity_id\", \"tag\", \"overlay\")\n                VALUES ($1, lower($2), $3)\n                ON CONFLICT (\"opportunity_id\", \"tag\") DO UPDATE\n                SET \"overlay\" = EXCLUDED.\"overlay\"\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "60b1dec4a42f70035ae363e05aa59793cd1bdeb6476bb35fec71cb2e839c2189"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT tag AS \"value!\" FROM c_opportunity_tag WHERE opportunity_id = $1 AND overlay = false",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "value!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a7ff2effa2e4a62f980f6e53110009c4a39da2e8607725c90453784c25155f16"
+}

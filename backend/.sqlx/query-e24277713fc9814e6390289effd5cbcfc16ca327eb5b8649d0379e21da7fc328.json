@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n              SELECT\n                \"opportunity_id\",\n                \"updated\" AS \"updated!\",\n                \"accepted\",\n                \"withdrawn\" AS \"withdrawn!\",\n                \"submitted_by\",\n                \"review_status\" AS \"review_status: ReviewStatus\",\n                \"contact_name\" AS \"contact_name!\",\n                \"contact_email\" AS \"contact_email!\",\n                \"contact_phone\" AS \"contact_phone!\",\n                \"extra_data\" AS \"extra_data!\"\n              FROM\n                c_opportunity_interior\n              WHERE\n                opportunity_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "opportunity_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "updated!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "accepted",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "withdrawn!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "submitted_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "review_status: ReviewStatus",
+        "type_info": {
+          "Custom": {
+            "name": "t_reviewstatus",
+            "kind": {
+              "Enum": [
+                "draft",
+                "pending",
+                "reject",
+                "publish",
+                "not_required"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "contact_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "contact_email!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "contact_phone!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "extra_data!",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e24277713fc9814e6390289effd5cbcfc16ca327eb5b8649d0379e21da7fc328"
+}

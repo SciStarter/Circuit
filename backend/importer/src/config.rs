@@ -264,7 +264,7 @@ impl<Src, Fmt, Struct> Importer for Import<Src, Fmt, Struct>
 where
     Src: Source + Sync + Send,
     Fmt: Format + Sync + Send,
-    Struct: Structure<Data = common::model::Opportunity> + Sync + Send,
+    Struct: Structure<Data = common::model::opportunity::OpportunityAll> + Sync + Send,
 {
     async fn import(
         &self,
@@ -310,14 +310,14 @@ where
             OneOrMany::One(result) => {
                 match result {
                     Ok(mut item) => {
-                        item.set_id_if_necessary(&db).await?;
-                        let created = item.id.is_none();
+                        item.exterior.opp.set_id_if_necessary(&db).await?;
+                        let created = item.exterior.opp.id.is_none();
                         item.interior.accepted = if created { Some(true) } else { None };
                         item.store(&db).await?;
                         OpportunityImportRecord::store(
                             &db,
-                            &item.exterior.partner,
-                            &item.exterior.uid,
+                            &item.exterior.opp.partner,
+                            &item.exterior.opp.uid,
                             created,
                             false, // Ignored is for a hypothetical case, where we may skip importing a record because the current version is authoritative. In that case, it should be set to true.
                         )
@@ -325,7 +325,7 @@ where
                         println!(
                             "{} {}",
                             if created { "Added" } else { "Updated" },
-                            &item.exterior.title
+                            &item.exterior.opp.title
                         );
                     }
                     Err(mut le) => {
@@ -341,14 +341,14 @@ where
                 for result in vec {
                     match result {
                         Ok(mut item) => {
-                            item.set_id_if_necessary(&db).await?;
-                            let created = item.id.is_none();
+                            item.exterior.opp.set_id_if_necessary(&db).await?;
+                            let created = item.exterior.opp.id.is_none();
                             item.interior.accepted = if created { Some(true) } else { None };
                             item.store(&db).await?;
                             OpportunityImportRecord::store(
                                 &db,
-                                &item.exterior.partner,
-                                &item.exterior.uid,
+                                &item.exterior.opp.partner,
+                                &item.exterior.opp.uid,
                                 created,
                                 false,
                             )
@@ -356,7 +356,7 @@ where
                             println!(
                                 "{} {}",
                                 if created { "Added" } else { "Updated" },
-                                &item.exterior.title
+                                &item.exterior.opp.title
                             );
                         }
                         Err(mut le) => {

@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO c_opportunity_topic (\"opportunity_id\", \"overlay\", \"topic\")\n            VALUES ($1, true, $2)\n            ON CONFLICT DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        {
+          "Custom": {
+            "name": "t_topic",
+            "kind": {
+              "Enum": [
+                "agriculture",
+                "alcohol",
+                "animals",
+                "archaeology_and_cultural",
+                "art",
+                "astronomy_and_space",
+                "awards",
+                "biology",
+                "birds",
+                "chemistry",
+                "climate_and_weather",
+                "computers_and_technology",
+                "crowd_funding",
+                "design",
+                "disaster_response",
+                "ecology_and_environment",
+                "education",
+                "engineering",
+                "food",
+                "general_science",
+                "geography",
+                "geology_and_earth_science",
+                "health_and_medicine",
+                "insects_and_pollinators",
+                "mathematics",
+                "nature_and_outdoors",
+                "ocean_water_marine",
+                "paleontology",
+                "physics",
+                "policy",
+                "psychology",
+                "religion",
+                "robotics",
+                "social_science",
+                "sound",
+                "technology",
+                "transportation"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cbb77a81367846c0ed44c6d4511356d0ef92a9ac605dd71ab1ee1395581cb8d7"
+}

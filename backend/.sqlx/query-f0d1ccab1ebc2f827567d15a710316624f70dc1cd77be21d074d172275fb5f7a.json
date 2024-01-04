@@ -1,0 +1,158 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO c_opportunity (\n                   \"uid\",\n                   \"slug\",\n                   \"partner_name\",\n                   \"partner_website\",\n                   \"partner_logo_url\",\n                   \"partner_created\",\n                   \"partner_updated\",\n                   \"partner_opp_url\",\n                   \"organization_name\",\n                   \"organization_type\",\n                   \"organization_website\",\n                   \"organization_logo_url\",\n                   \"entity_type\",\n                   \"min_age\",\n                   \"max_age\",\n                   \"pes_domain\",\n                   \"ticket_required\",\n                   \"title\",\n                   \"description\",\n                   \"short_desc\",\n                   \"image_url\",\n                   \"image_credit\",\n                   \"recurrence\",\n                   \"end_recurrence\",\n                   \"timezone\",\n                   \"cost\",\n                   \"is_online\",\n                   \"location_type\",\n                   \"location_name\",\n                   \"location_point\",\n                   \"location_polygon\",\n                   \"address_street\",\n                   \"address_city\",\n                   \"address_state\",\n                   \"address_country\",\n                   \"address_zip\",\n                   \"partner\"\n                )\n                VALUES (\n                  $1,\n                  $2,\n                  $3,\n                  $4,\n                  $5,\n                  $6,\n                  $7,\n                  $8,\n                  $9,\n                  $10,\n                  $11,\n                  $12,\n                  $13,\n                  $14,\n                  $15,\n                  $16,\n                  $17,\n                  $18,\n                  $19,\n                  $20,\n                  $21,\n                  $22,\n                  $23,\n                  $24,\n                  $25,\n                  $26,\n                  $27,\n                  $28,\n                  $29,\n                  ST_SetSRID($30::geometry, 4326)::geography,\n                  ST_SetSRID($31::geometry, 4326)::geography,\n                  $32,\n                  $33,\n                  $34,\n                  $35,\n                  $36,\n                  $37\n                )\n                ON CONFLICT (\"partner\", \"title\") DO\n                UPDATE SET\n                   \"partner_name\" = excluded.\"partner_name\",\n                   \"partner_website\" = excluded.\"partner_website\",\n                   \"partner_logo_url\" = excluded.\"partner_logo_url\",\n                   \"partner_created\" = excluded.\"partner_created\",\n                   \"partner_updated\" = excluded.\"partner_updated\",\n                   \"partner_opp_url\" = excluded.\"partner_opp_url\",\n                   \"organization_name\" = excluded.\"organization_name\",\n                   \"organization_type\" = excluded.\"organization_type\",\n                   \"organization_website\" = excluded.\"organization_website\",\n                   \"organization_logo_url\" = excluded.\"organization_logo_url\",\n                   \"entity_type\" = excluded.\"entity_type\",\n                   \"min_age\" = excluded.\"min_age\",\n                   \"max_age\" = excluded.\"max_age\",\n                   \"pes_domain\" = excluded.\"pes_domain\",\n                   \"ticket_required\" = excluded.\"ticket_required\",\n                   \"title\" = excluded.\"title\",\n                   \"description\" = excluded.\"description\",\n                   \"short_desc\" = excluded.\"short_desc\",\n                   \"image_url\" = excluded.\"image_url\",\n                   \"image_credit\" = excluded.\"image_credit\",\n                   \"recurrence\" = excluded.\"recurrence\",\n                   \"end_recurrence\" = excluded.\"end_recurrence\",\n                   \"timezone\" = excluded.\"timezone\",\n                   \"cost\" = excluded.\"cost\",\n                   \"is_online\" = excluded.\"is_online\",\n                   \"location_type\" = excluded.\"location_type\",\n                   \"location_name\" = excluded.\"location_name\",\n                   \"location_point\" = excluded.\"location_point\",\n                   \"location_polygon\" = excluded.\"location_polygon\",\n                   \"address_street\" = excluded.\"address_street\",\n                   \"address_city\" = excluded.\"address_city\",\n                   \"address_state\" = excluded.\"address_state\",\n                   \"address_country\" = excluded.\"address_country\",\n                   \"address_zip\" = excluded.\"address_zip\",\n                   \"partner\" = excluded.\"partner\"\n                RETURNING \"id\"\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "t_organizationtype",
+            "kind": {
+              "Enum": [
+                "museum_or_science_center",
+                "festival",
+                "library",
+                "college_university",
+                "pk12school",
+                "community_organization",
+                "club",
+                "zoo",
+                "aquarium",
+                "planetarium",
+                "botanical_garden",
+                "parks_and_rec",
+                "historical_site",
+                "maker_organization",
+                "company",
+                "govt_agency",
+                "maker_space",
+                "unspecified"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "t_entitytype",
+            "kind": {
+              "Enum": [
+                "unspecified",
+                "attraction",
+                "page_just_content",
+                "page_add_opportunities",
+                "opportunity"
+              ]
+            }
+          }
+        },
+        "Int2",
+        "Int2",
+        {
+          "Custom": {
+            "name": "t_pesdomain",
+            "kind": {
+              "Enum": [
+                "citizen_science",
+                "live_science",
+                "museum_or_science_center",
+                "maker",
+                "policy",
+                "out_of_school_time_program",
+                "formal_education",
+                "science_communications",
+                "unspecified"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "t_recurrence",
+            "kind": {
+              "Enum": [
+                "once",
+                "daily",
+                "weekly"
+              ]
+            }
+          }
+        },
+        "Timestamptz",
+        "Text",
+        {
+          "Custom": {
+            "name": "t_cost",
+            "kind": {
+              "Enum": [
+                "free",
+                "cost",
+                "unknown"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "t_locationtype",
+            "kind": {
+              "Enum": [
+                "any",
+                "at",
+                "near",
+                "unknown"
+              ]
+            }
+          }
+        },
+        "Text",
+        {
+          "Custom": {
+            "name": "geometry",
+            "kind": "Simple"
+          }
+        },
+        {
+          "Custom": {
+            "name": "geometry",
+            "kind": "Simple"
+          }
+        },
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f0d1ccab1ebc2f827567d15a710316624f70dc1cd77be21d074d172275fb5f7a"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) AS \"result!\" FROM c_opportunity WHERE location_type = 'near'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "result!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "bf4ab3d7f822bf362fecfd39a083f882ff082394580aeddad48cec8e901a7f21"
+}

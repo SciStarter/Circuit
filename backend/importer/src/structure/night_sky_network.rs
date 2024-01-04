@@ -5,7 +5,7 @@ use super::{
 };
 use chrono::{DateTime, NaiveDateTime, TimeZone};
 use chrono_tz::Tz;
-use common::model::{partner::LoggedError, Opportunity, Partner};
+use common::model::{opportunity::OpportunityAll, partner::LoggedError, Partner};
 use once_cell::sync::Lazy;
 use serde_json::{from_value, Value};
 use sqlx::{Pool, Postgres};
@@ -61,7 +61,7 @@ fn normalize_datetime(datetime: &str, zone: Option<Tz>) -> Option<String> {
 
 #[async_trait::async_trait]
 impl Structure for NightSkyNetwork {
-    type Data = Opportunity;
+    type Data = OpportunityAll;
 
     fn interpret(&self, mut parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         if let Some(events) = parsed.get_mut("events") {
@@ -201,7 +201,7 @@ impl Structure for NightSkyNetwork {
                     //let event_id = obj["event_id"].as_str().map(|x| x.to_owned());
                     let event_title = obj["title"].as_str().map(|x| x.to_owned());
 
-                    let mut input: Opportunity = match from_value(obj) {
+                    let mut input: OpportunityAll = match from_value(obj) {
                         Ok(opp) => opp,
                         Err(err) => {
                             let mut le: LoggedError = err.into();
@@ -213,9 +213,10 @@ impl Structure for NightSkyNetwork {
                         }
                     };
 
-                    input.exterior.partner = UID.clone();
+                    input.exterior.opp.partner = UID.clone();
 
-                    input.exterior.pes_domain = common::model::opportunity::Domain::CitizenScience;
+                    input.exterior.opp.pes_domain =
+                        common::model::opportunity::Domain::CitizenScience;
 
                     if event_title.is_some_and(|s| s.to_ascii_lowercase().contains("star party")) {
                         input
@@ -234,7 +235,7 @@ impl Structure for NightSkyNetwork {
                         .opp_topics
                         .push(common::model::opportunity::Topic::AstronomyAndSpace);
 
-                    if let Err(x) = async_std::task::block_on(input.validate()) {
+                    if let Err(x) = async_std::task::block_on(input.exterior.opp.validate()) {
                         opps.push(Err(x.into()));
                     } else {
                         opps.push(Ok(input));

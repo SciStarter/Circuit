@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO c_opportunity_social_handle (\"opportunity_id\", \"network\", \"handle\")\n                VALUES ($1, $2, $3)\n                ON CONFLICT DO NOTHING\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "456a11b9b6c91ba6f4af3f45e5f28cee1247aa32f3fb5cf4300e3996fe6a5a41"
+}

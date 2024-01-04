@@ -2,10 +2,11 @@ use std::collections::HashMap;
 
 use chrono::TimeZone;
 use common::{
-    geo::Match,
+    gis::Match,
     model::{
+        opportunity::OpportunityAll,
         partner::{LoggedError, LoggedErrorLevel},
-        Opportunity, Partner,
+        Partner,
     },
     ToFixedOffset,
 };
@@ -154,60 +155,61 @@ where
         &self,
         json: Value,
         cache: &mut HashMap<String, Option<Match>>,
-    ) -> Result<Opportunity, LoggedError> {
+    ) -> Result<OpportunityAll, LoggedError> {
         let data: SchemaOrgEvent = serde_json::from_value(json)?;
 
-        let mut opp = Opportunity::default();
+        let mut opp = OpportunityAll::default();
 
-        opp.exterior.uid = Uuid::new_v5(&self.1.partner, data.url.as_bytes());
+        opp.exterior.opp.uid = Uuid::new_v5(&self.1.partner, data.url.as_bytes());
 
-        opp.exterior.title = htmlentity::entity::decode(data.name.as_bytes())
+        opp.exterior.opp.title = htmlentity::entity::decode(data.name.as_bytes())
             .to_string()
             .unwrap_or_default();
 
-        opp.exterior.description = htmlentity::entity::decode(data.description.as_bytes())
+        opp.exterior.opp.description = htmlentity::entity::decode(data.description.as_bytes())
             .to_string()
             .unwrap_or_default();
 
-        opp.exterior.partner_opp_url = if !data.url.is_empty() {
+        opp.exterior.opp.partner_opp_url = if !data.url.is_empty() {
             Some(data.url)
         } else {
             None
         };
 
-        opp.exterior.image_url = data.image;
+        opp.exterior.opp.image_url = data.image;
 
-        opp.exterior.cost = match data.offers.price.as_ref() {
+        opp.exterior.opp.cost = match data.offers.price.as_ref() {
             "Free" | "free" => common::model::opportunity::Cost::Free,
             "$0" | "$0.00" => common::model::opportunity::Cost::Free,
             _ => common::model::opportunity::Cost::Cost,
         };
 
-        opp.exterior.organization_name = htmlentity::entity::decode(data.organizer.name.as_bytes())
-            .to_string()
-            .unwrap_or_default();
+        opp.exterior.opp.organization_name =
+            htmlentity::entity::decode(data.organizer.name.as_bytes())
+                .to_string()
+                .unwrap_or_default();
 
-        opp.exterior.organization_website = if !data.organizer.url.is_empty() {
+        opp.exterior.opp.organization_website = if !data.organizer.url.is_empty() {
             Some(data.organizer.url)
         } else {
             None
         };
 
-        opp.exterior.min_age = 0;
-        opp.exterior.max_age = 999;
+        opp.exterior.opp.min_age = 0;
+        opp.exterior.opp.max_age = 999;
 
         opp.exterior.opp_venue = vec![common::model::opportunity::VenueType::Indoors];
 
         match data.location.schema_type {
             SchemaOrgLocationType::Place => {
-                opp.exterior.location_type = common::model::opportunity::LocationType::At;
-                opp.exterior.location_name = data.location.name;
+                opp.exterior.opp.location_type = common::model::opportunity::LocationType::At;
+                opp.exterior.opp.location_name = data.location.name;
 
                 println!("Looking up: {}", &data.location.address);
                 if let Some(loc) = match cache.get(&data.location.address) {
                     Some(val) => val.as_deref(),
                     None => {
-                        let query = common::geo::Query::new(data.location.address.clone(), true);
+                        let query = common::gis::Query::new(data.location.address.clone(), true);
                         cache.insert(
                             data.location.address.clone(),
                             async_std::task::block_on(query.lookup_one()),
@@ -222,36 +224,36 @@ where
                         "Location: {}, {}",
                         loc.geometry.longitude, loc.geometry.latitude
                     );
-                    opp.exterior.location_point = Some(
-                        json!({"type": "Point", "coordinates": [loc.geometry.longitude, loc.geometry.latitude]}),
-                    );
-                    opp.exterior.address_street = loc
+                    opp.exterior.opp.location_point = json!({"type": "Point", "coordinates": [loc.geometry.longitude, loc.geometry.latitude]}).try_into()?;
+                    opp.exterior.opp.address_street = loc
                         .formatted
                         .split_once(',')
                         .unwrap_or(("", ""))
                         .0
                         .to_owned();
-                    opp.exterior.address_city = loc
+                    opp.exterior.opp.address_city = loc
                         .components
                         .city
                         .clone()
                         .or_else(|| loc.components.town.clone())
                         .unwrap_or_default();
-                    opp.exterior.address_state = loc.components.state.clone().unwrap_or_default();
-                    opp.exterior.address_country = loc.components.country_code.clone();
-                    opp.exterior.address_zip = loc.components.postcode.clone().unwrap_or_default();
+                    opp.exterior.opp.address_state =
+                        loc.components.state.clone().unwrap_or_default();
+                    opp.exterior.opp.address_country = loc.components.country_code.clone();
+                    opp.exterior.opp.address_zip =
+                        loc.components.postcode.clone().unwrap_or_default();
                 }
             }
         };
 
         match data.event_attendance_mode {
             SchemaOrgEventAttendanceMode::Online => {
-                opp.exterior.is_online = true;
-                opp.exterior.location_type = common::model::opportunity::LocationType::Any;
+                opp.exterior.opp.is_online = true;
+                opp.exterior.opp.location_type = common::model::opportunity::LocationType::Any;
             }
-            SchemaOrgEventAttendanceMode::Offline => opp.exterior.is_online = false,
+            SchemaOrgEventAttendanceMode::Offline => opp.exterior.opp.is_online = false,
             SchemaOrgEventAttendanceMode::Mixed => {
-                opp.exterior.is_online = true;
+                opp.exterior.opp.is_online = true;
             }
         }
 
@@ -289,15 +291,15 @@ where
             ));
         }
 
-        opp.exterior.partner = self.1.partner;
+        opp.exterior.opp.partner = self.1.partner;
 
-        opp.exterior.partner_name = self.1.partner_name.clone();
+        opp.exterior.opp.partner_name = self.1.partner_name.clone();
 
-        opp.exterior.partner_website = self.1.partner_website.clone();
+        opp.exterior.opp.partner_website = self.1.partner_website.clone();
 
-        opp.exterior.partner_logo_url = self.1.partner_logo_url.clone();
+        opp.exterior.opp.partner_logo_url = self.1.partner_logo_url.clone();
 
-        opp.exterior.pes_domain = self.1.domain;
+        opp.exterior.opp.pes_domain = self.1.domain;
 
         opp.exterior.opp_descriptor = self.1.descriptor.clone();
 
@@ -320,7 +322,7 @@ impl<Tz> Structure for LdJson<Tz>
 where
     Tz: TimeZone + std::fmt::Debug + Sync + Send,
 {
-    type Data = Opportunity;
+    type Data = OpportunityAll;
 
     fn interpret(&self, parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         let mut cache = HashMap::new();

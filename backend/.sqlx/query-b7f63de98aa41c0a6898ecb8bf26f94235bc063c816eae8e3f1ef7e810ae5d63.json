@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT count(*) AS \"saves\"\n        FROM\n          c_involvement AS \"i\"\n          INNER JOIN c_opportunity AS \"o\" ON (\"i\".\"exterior\"->>'opportunity')::uuid = \"o\".\"uid\"\n        WHERE\n          (\"i\".\"exterior\"->'mode')::integer = 20\n          AND \"o\".\"slug\" = lower($1)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "saves",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b7f63de98aa41c0a6898ecb8bf26f94235bc063c816eae8e3f1ef7e810ae5d63"
+}
