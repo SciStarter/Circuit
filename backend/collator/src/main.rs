@@ -1,4 +1,4 @@
-use std::{str::FromStr, sync::Arc};
+use std::str::FromStr;
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 use common::{

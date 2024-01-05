@@ -15,6 +15,7 @@ use crate::reportiter::ReportIterator;
 const HOURLY_SECONDS_PER_TOKEN: f32 = (60.0 * 60.0) / 5000.0;
 const DAILY_SECONDS_PER_TOKEN: f32 = (60.0 * 60.0 * 24.0) / 25000.0;
 
+#[allow(dead_code)]
 pub async fn run_report(
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
@@ -47,7 +48,9 @@ pub async fn run_report(
     );
 
     let begin = begin.date_naive();
-    let Some(end) = end.date_naive().checked_sub_days(Days::new(1)) else { return Err(anyhow!("End date out of range")) };
+    let Some(end) = end.date_naive().checked_sub_days(Days::new(1)) else {
+        return Err(anyhow!("End date out of range"));
+    };
 
     let limit = 100000;
     let mut offset = 0;
@@ -70,8 +73,8 @@ pub async fn run_report(
             None
         },
         return_property_quota: Some(true),
-        limit: Some(limit.to_string()),
-        offset: Some(offset.to_string()),
+        limit: Some(limit),
+        offset: Some(offset),
         ..Default::default()
     };
 
@@ -139,7 +142,7 @@ pub async fn run_report(
 
         if has_more {
             offset += limit;
-            req.offset = Some(offset.to_string());
+            req.offset = Some(offset);
         }
     }
 
@@ -150,6 +153,7 @@ pub async fn run_report(
     }
 }
 
+#[allow(dead_code)]
 pub async fn cache_report(
     db: &Database,
     begin: DateTime<FixedOffset>,
@@ -235,9 +239,18 @@ pub async fn cache_report(
             return;
         }
     } {
-        let Ok(date) = row.get_date("date") else { println!("Unable to parse date in GA4 response: {:?}", row); continue; };
-        let Ok(partner) = row.get_uuid("customEvent:partner_uid") else { println!("Unable to parse partner uid: {:?}", row); continue };
-        let Ok(opportunity) = row.get_uuid("customEvent:entity_uid") else { println!("Unable to parse entity uid: {:?}", row); continue };
+        let Ok(date) = row.get_date("date") else {
+            println!("Unable to parse date in GA4 response: {:?}", row);
+            continue;
+        };
+        let Ok(partner) = row.get_uuid("customEvent:partner_uid") else {
+            println!("Unable to parse partner uid: {:?}", row);
+            continue;
+        };
+        let Ok(opportunity) = row.get_uuid("customEvent:entity_uid") else {
+            println!("Unable to parse entity uid: {:?}", row);
+            continue;
+        };
         let city = row.get_string("city");
         let device_category = row.get_string("deviceCategory");
         let first_session_date = row

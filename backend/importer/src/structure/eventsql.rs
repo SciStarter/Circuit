@@ -204,8 +204,8 @@ fn interpret_one<Tz: TimeZone>(
             opp.exterior.start_datetimes = start_dates
                 .into_iter()
                 .flat_map(|s| {
-                    if let Some(tz) = &partner.timezone {
-                        match tz.datetime_from_str(&s, "%F %T") {
+                    if let Some(_tz) = &partner.timezone {
+                        match DateTime::parse_from_str(&s, "%F %T") {
                             Ok(dt) => Some(dt.to_fixed_offset()),
                             Err(_) => None,
                         }
@@ -222,12 +222,12 @@ fn interpret_one<Tz: TimeZone>(
                 .collect();
         } else {
             if let Some(start_date) = &node.start_date {
-                if let Some(tz) = &partner.timezone {
-                    opp.exterior.start_datetimes = match tz.datetime_from_str(&start_date, "%F %T")
-                    {
-                        Ok(dt) => vec![dt.to_fixed_offset()],
-                        Err(_) => vec![],
-                    }
+                if let Some(_tz) = &partner.timezone {
+                    opp.exterior.start_datetimes =
+                        match DateTime::parse_from_str(&start_date, "%F %T") {
+                            Ok(dt) => vec![dt.to_fixed_offset()],
+                            Err(_) => vec![],
+                        }
                 } else {
                     if let Some(pair) = start_date.split_once(' ') {
                         opp.exterior.start_datetimes =
@@ -240,8 +240,9 @@ fn interpret_one<Tz: TimeZone>(
             }
 
             if let Some(end_date) = &node.end_date {
-                if let Some(tz) = &partner.timezone {
-                    opp.exterior.end_datetimes = match tz.datetime_from_str(&end_date, "%F %T") {
+                if let Some(_tz) = &partner.timezone {
+                    opp.exterior.end_datetimes = match DateTime::parse_from_str(&end_date, "%F %T")
+                    {
                         Ok(dt) => vec![dt.to_fixed_offset()],
                         Err(_) => vec![],
                     }

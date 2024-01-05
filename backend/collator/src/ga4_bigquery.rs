@@ -1,21 +1,16 @@
 use std::collections::BTreeMap;
 use std::env;
-use std::time::Duration;
 
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Days, FixedOffset, Utc};
 use common::{Database, ToFixedOffset};
-use google_analyticsdata1_beta::api::{
-    DateRange, Dimension, Filter, FilterExpression, Metric, RunReportRequest, RunReportResponse,
-    StringFilter,
-};
+use google_analyticsdata1_beta::api::{Dimension, Filter, FilterExpression, Metric, StringFilter};
 use google_analyticsdata1_beta::{hyper, hyper_rustls};
 use google_bigquery2::api::{
     QueryParameter, QueryParameterType, QueryParameterValue, QueryRequest,
 };
 use google_bigquery2::oauth2;
 use once_cell::sync::Lazy;
-use uuid::Uuid;
 
 use crate::reportiter::BQReportIterator;
 
@@ -46,9 +41,7 @@ static FIELD_SUBSTITUTIONS: Lazy<BTreeMap<String, String>> = Lazy::new(|| {
     .collect()
 });
 
-pub use crate::ga4::{
-    clear_cached_temporary, is_cached, is_overview_cached, is_search_terms_cached,
-};
+pub use crate::ga4::{is_cached, is_overview_cached, is_search_terms_cached};
 
 static BQ_SIMULTANEOUS: Lazy<tokio::sync::Semaphore> = Lazy::new(|| tokio::sync::Semaphore::new(8));
 
@@ -59,7 +52,7 @@ pub async fn run_report(
     dimensions: Vec<Dimension>,
     metrics: Vec<Metric>,
 ) -> Result<BQReportIterator, Error> {
-    let permit = BQ_SIMULTANEOUS.acquire().await?;
+    let _permit = BQ_SIMULTANEOUS.acquire().await?;
 
     let secret = oauth2::read_service_account_key(
         env::var("SNM_ANALYTICS_SECRET")
@@ -85,10 +78,12 @@ pub async fn run_report(
         auth,
     );
 
-    let begin = begin.date_naive();
-    let Some(end) = end.date_naive().checked_sub_days(Days::new(1)) else { return Err(anyhow!("End date out of range")) };
+    let _begin = begin.date_naive();
+    let Some(end) = end.date_naive().checked_sub_days(Days::new(1)) else {
+        return Err(anyhow!("End date out of range"));
+    };
 
-    let mut ident_issuer = std::iter::successors(Some(1u32), |n| n.checked_add(1));
+    let _ident_issuer = std::iter::successors(Some(1u32), |n| n.checked_add(1));
 
     let mut group_clauses = vec!["event_date".to_string()];
     let mut select_clauses = vec!["event_date".to_string()];
@@ -97,7 +92,7 @@ pub async fn run_report(
         r#"event_date <= @end"#.to_string(),
     ];
 
-    let mut params = vec![
+    let params = vec![
         QueryParameter {
             name: Some("begin".into()),
             parameter_type: Some(QueryParameterType {
@@ -224,7 +219,7 @@ pub async fn run_report(
         None => {}
     }
 
-    let (response, results) = hub
+    let (_response, results) = hub
         .jobs()
         .query(
             QueryRequest {
@@ -364,9 +359,18 @@ pub async fn cache_report(
             return;
         }
     } {
-        let Ok(date) = row.get_date("date") else { println!("Unable to parse date in GA4 response: {:?}", row); continue; };
-        let Ok(partner) = row.get_uuid("customEvent:partner_uid") else { println!("Unable to parse partner uid: {:?}", row); continue };
-        let Ok(opportunity) = row.get_uuid("customEvent:entity_uid") else { println!("Unable to parse entity uid: {:?}", row); continue };
+        let Ok(date) = row.get_date("date") else {
+            println!("Unable to parse date in GA4 response: {:?}", row);
+            continue;
+        };
+        let Ok(partner) = row.get_uuid("customEvent:partner_uid") else {
+            println!("Unable to parse partner uid: {:?}", row);
+            continue;
+        };
+        let Ok(opportunity) = row.get_uuid("customEvent:entity_uid") else {
+            println!("Unable to parse entity uid: {:?}", row);
+            continue;
+        };
         let city = row.get_string("city");
         let device_category = row.get_string("deviceCategory");
         let first_session_date = row
