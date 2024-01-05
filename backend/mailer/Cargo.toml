@@ -12,7 +12,7 @@ container = []
 async-std = { version = "1.12.0", features = ["attributes"] }
 chrono = "0.4.31"
 form_urlencoded = "1.2.1"
-html2text = "0.4.5"
+html2text = "0.10.1"
 serde = { version = "1.0.194", features = ["derive"] }
 surf = { version = "2.3.2", features = ["h1-client-rustls"], default-features = false }
 tide = "0.16.0"

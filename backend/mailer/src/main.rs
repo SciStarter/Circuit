@@ -1,4 +1,4 @@
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 use async_std::{
     channel::{unbounded, Receiver, Sender},

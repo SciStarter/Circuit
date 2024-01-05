@@ -113,7 +113,8 @@ UPDATE SET subject = $2, body = $3, notes = $4",
             .map(|(k, v)| (format!("{{{k}}}"), v.to_string()))
             .unzip();
 
-        let ac = AhoCorasick::new(patterns);
+        let ac =
+            AhoCorasick::new(patterns).expect("generated replacement patterns should be valid");
 
         EmailMessage {
             slug: None,
