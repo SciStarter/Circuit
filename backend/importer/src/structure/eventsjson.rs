@@ -204,7 +204,7 @@ struct Data {
     cost: Option<String>,
     description: String,
     title: String,
-    venue: Option<Venue>,
+    venue: Vec<Venue>,
 }
 
 fn interpret_one<Tz: TimeZone>(
@@ -300,7 +300,8 @@ fn interpret_one<Tz: TimeZone>(
         }
     };
 
-    if let Some(venue) = data.venue {
+    if !data.venue.is_empty() {
+        let venue = &data.venue[0];
         opp.exterior.location_type = common::model::opportunity::LocationType::At;
         opp.exterior.location_name = venue.name.clone();
         opp.exterior.address_street = venue.address.clone();
