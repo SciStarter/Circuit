@@ -9,3 +9,24 @@ spec:
     requests:
       storage: 10Gi
   storageClassName: linode-block-storage-retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlite-storage-beta
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: linode-block-storage-retain
+
+# In the yaml that will mount the storage (only one can), do:
+      #   volumeMounts:
+      #   - name: persistent-data-sqlite
+      #     mountPath: "/var/lib/sqlite"
+      # volumes:
+      # - name: persistent-data-sqlite
+      #   persistentVolumeClaim:
+      #     claimName: sqlite-storage-beta

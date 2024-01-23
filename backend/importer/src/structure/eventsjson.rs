@@ -143,6 +143,62 @@ where
     }
 }
 
+#[derive(Debug, Default)]
+pub enum ListOption<Value> {
+    #[default]
+    Empty,
+    Value(Value),
+}
+
+impl<'de, T> serde::de::Deserialize<'de> for ListOption<T>
+where
+    T: serde::de::Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct VisitListOption<V>(PhantomData<fn() -> V>);
+
+        impl<'de, V: serde::de::Deserialize<'de>> serde::de::Visitor<'de> for VisitListOption<V> {
+            type Value = ListOption<V>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(formatter, "null, list, or {}", std::any::type_name::<V>())
+            }
+
+            fn visit_none<E>(self) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(ListOption::Empty)
+            }
+
+            fn visit_map<M>(self, map: M) -> Result<ListOption<V>, M::Error>
+            where
+                M: serde::de::MapAccess<'de>,
+            {
+                Ok(ListOption::Value(Deserialize::deserialize(
+                    serde::de::value::MapAccessDeserializer::new(map),
+                )?))
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<ListOption<V>, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                if let Some(el) = seq.next_element::<V>()? {
+                    Ok(ListOption::Value(el))
+                } else {
+                    Ok(ListOption::Empty)
+                }
+            }
+        }
+
+        deserializer.deserialize_any(VisitListOption(PhantomData))
+    }
+}
+
 #[derive(serde::Deserialize, Debug, Default)]
 #[serde(default)]
 struct Image {
@@ -204,7 +260,7 @@ struct Data {
     cost: Option<String>,
     description: String,
     title: String,
-    venue: Vec<Venue>,
+    venue: ListOption<Venue>,
 }
 
 fn interpret_one<Tz: TimeZone>(
@@ -300,8 +356,7 @@ fn interpret_one<Tz: TimeZone>(
         }
     };
 
-    if !data.venue.is_empty() {
-        let venue = &data.venue[0];
+    if let ListOption::Value(venue) = data.venue {
         opp.exterior.location_type = common::model::opportunity::LocationType::At;
         opp.exterior.location_name = venue.name.clone();
         opp.exterior.address_street = venue.address.clone();
