@@ -5,7 +5,7 @@ metadata:
   labels:
     app: circuit-collator
 spec:
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app: circuit-collator
@@ -16,13 +16,15 @@ spec:
     spec:
       containers:
       - name: circuit-collator
-        image: scistarter/circuit-collator:0.1.25
+        image: scistarter/circuit-collator:0.1.27
         ports:
         - containerPort: 9000
         volumeMounts:
         - name: ga4-access
           mountPath: "/etc/ga4"
           readOnly: true
+        # - name: persistent-data-sqlite
+        #   mountPath: "/var/lib/sqlite"
         env:
         - name: OPENCAGE_API_KEY
           valueFrom:
@@ -38,6 +40,9 @@ spec:
       - name: ga4-access
         secret:
           secretName: ga4
+      # - name: persistent-data-sqlite
+      #   persistentVolumeClaim:
+      #     claimName: sqlite-storage-beta
 ---
 apiVersion: v1
 kind: Service

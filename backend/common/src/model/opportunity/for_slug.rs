@@ -2,7 +2,7 @@ use crate::model::involvement::Involvement;
 use crate::model::{involvement, Error};
 use crate::Database;
 use async_std::prelude::*;
-use sqlx::prelude::*;
+use sqlx::{prelude::*, Postgres};
 use uuid::Uuid;
 
 use super::{Opportunity, Review, Reviews};
@@ -51,7 +51,7 @@ pub async fn add_review_for_slug(
     .bind(person)
     .bind(rating)
     .bind(comment)
-    .map(|row| row.get::<i32, _>(0))
+    .map(|row: <Postgres as sqlx::Database>::Row| row.get::<i32, _>(0))
     .fetch_one(db)
     .await?;
 
