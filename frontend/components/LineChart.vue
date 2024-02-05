@@ -112,6 +112,11 @@ export default {
 
             let maxy = this.maxy;
 
+            function dbg(v) {
+                console.log(v);
+                return v;
+            }
+
             let chart = Plot.plot({
                 width: this.windowWidth,
                 height: 225,
@@ -120,7 +125,7 @@ export default {
                 },
                 marks: yaxes.map((ya, i) => Plot.line(this.sorted_rows, {
                     x: xaxis,
-                    y: (maxy > ya) ? ya : maxy,
+                    y: ya,
                     stroke: colors[i],
                     curve: "catmull-rom",
                 })),
@@ -132,11 +137,23 @@ export default {
         },
 
         getter(x) {
-            if(typeof(x) === 'function') {
-                return x;
+            var maxy = this.maxy;
+
+            if(maxy < 0 || this.yaxes.indexOf(x) < 0) {
+                if(typeof(x) === 'function') {
+                    return x;
+                }
+                else {
+                    return d => d[x];
+                }
             }
             else {
-                return d => d[x];
+                if(typeof(x) === 'function') {
+                    return d => { return Math.min(x(d), maxy); };
+                }
+                else {
+                    return d => Math.min(d[x], maxy);
+                }
             }
         },
 
