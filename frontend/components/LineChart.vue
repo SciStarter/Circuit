@@ -39,7 +39,12 @@ export default {
             required: false,
             default: [],
         },
-        
+
+        maxy: {
+            type: Number,
+            required: false,
+            default: -1,
+        }
     },
 
     data() {
@@ -75,7 +80,7 @@ export default {
         if(this.rows.length > 0){
             this.set_chart();
         }
-        
+
     },
 
     methods: {
@@ -105,6 +110,8 @@ export default {
                 colors = yaxes.map(f => `rgb(${128 + Math.random() * 64}, ${128 + Math.random() * 64}, ${128 + Math.random() * 64})`);
             }
 
+            let maxy = this.maxy;
+
             let chart = Plot.plot({
                 width: this.windowWidth,
                 height: 225,
@@ -113,7 +120,7 @@ export default {
                 },
                 marks: yaxes.map((ya, i) => Plot.line(this.sorted_rows, {
                     x: xaxis,
-                    y: ya,
+                    y: (maxy > ya) ? ya : maxy,
                     stroke: colors[i],
                     curve: "catmull-rom",
                 })),

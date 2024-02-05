@@ -599,6 +599,7 @@
           :rows="report.traffic.data.chart"
           :xaxis="d => new Date(d.date)"
           :yaxes="['Unique', 'New', 'Returning']"
+          :maxy="2000"
           :colors="['#268699', '#868686', '#BFDCE2']"
           />
       </client-only>
