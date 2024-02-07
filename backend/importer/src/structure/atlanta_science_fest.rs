@@ -8,6 +8,8 @@ use serde_json::Value;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
+use crate::cache_file;
+
 use super::{Error, OneOrMany, Structure};
 
 const ATLANTA_SCIENCE_FEST: Uuid = Uuid::from_bytes([
@@ -66,10 +68,11 @@ impl AtlantaScienceFest<2022> {
             .as_str()
             .unwrap_or_default()
             .to_string();
-        opp.exterior.image_url = event["fields"]["Photo"][0]["url"]
-            .as_str()
-            .unwrap_or_default()
-            .to_string();
+        opp.exterior.image_url = cache_file(
+            event["fields"]["Photo"][0]["url"]
+                .as_str()
+                .unwrap_or_default(),
+        );
         opp.exterior.start_datetimes = DateTime::parse_from_rfc3339(
             event["fields"]["Start time"].as_str().unwrap_or_default(),
         )

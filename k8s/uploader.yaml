@@ -16,10 +16,12 @@ spec:
     spec:
       containers:
       - name: circuit-uploader
-        image: scistarter/circuit-uploader:0.1.18
+        image: scistarter/circuit-uploader:0.1.21
         ports:
         - containerPort: 9001
         env:
+        - name: INTERNAL_UID
+          value: "258c5ec3-d656-43d4-a621-e67b55702ce4"
         - name: UPLOADER_ENDPOINT
           value: "https://snm-uploads.us-east-1.linodeobjects.com/"
         - name: UPLOADER_ACCESS_KEY
@@ -37,6 +39,11 @@ spec:
             secretKeyRef:
               name: jwt-signing-beta
               key: JWT_SIGNING_KEY
+        - name: UPLOADER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uploader-auth
+              key: UPLOADER_AUTH_SECRET
 ---
 apiVersion: v1
 kind: Service

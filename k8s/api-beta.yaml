@@ -64,6 +64,11 @@ spec:
             secretKeyRef:
               name: evolveme
               key: EVOLVEME_KEY
+        - name: UPLOADER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uploader-auth
+              key: UPLOADER_AUTH_SECRET
 ---
 apiVersion: v1
 kind: Service

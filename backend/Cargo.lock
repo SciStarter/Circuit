@@ -2207,6 +2207,7 @@ dependencies = [
  "htmlentity",
  "http-auth-basic",
  "ical",
+ "multipart",
  "once_cell",
  "regex",
  "serde",
@@ -2586,6 +2587,19 @@ dependencies = [
  "mime",
  "spin 0.9.8",
  "version_check",
+]
+
+[[package]]
+name = "multipart"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00dec633863867f29cb39df64a397cdf4a6354708ddd7759f70c7fb51c5f9182"
+dependencies = [
+ "log",
+ "mime",
+ "mime_guess",
+ "rand 0.8.5",
+ "tempfile",
 ]
 
 [[package]]

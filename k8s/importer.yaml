@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-importer-beta
-        image: scistarter/circuit-importer:0.1.66
+        image: scistarter/circuit-importer:0.1.68
         env:
         - name: DATABASE_URL
           valueFrom:
@@ -43,3 +43,8 @@ spec:
             secretKeyRef:
               name: airtable-beta
               key: AIRTABLE_TOKEN
+        - name: UPLOADER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uploader-auth
+              key: UPLOADER_AUTH_SECRET

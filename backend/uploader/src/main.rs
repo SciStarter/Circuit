@@ -17,6 +17,13 @@ use warp::{
 static UI_AUDIENCE: Lazy<uuid::Uuid> =
     Lazy::new(|| uuid::Uuid::parse_str("0be35cad-2b1f-4a45-a6da-b1051643c6f6").unwrap());
 
+static INTERNAL_UID: Lazy<uuid::Uuid> = Lazy::new(|| {
+    uuid::Uuid::parse_str(
+        &std::env::var("INTERNAL_UID").expect("INTERNAL_UID should be set in the environmnet"),
+    )
+    .expect("INTERNAL_UID environment variable should contain a UUID")
+});
+
 const MIB: usize = 1024 * 1024;
 
 const MAX_SIZE: usize = 10 * MIB;
@@ -121,9 +128,16 @@ where
     let endpoint =
         std::env::var("UPLOADER_ENDPOINT").expect("UPLOADER_ENDPOINT env variable should be set");
 
-    let uid = match common::jwt::check_jwt(&token, &UI_AUDIENCE) {
-        Ok(uid) => uid,
-        Err(_) => return Err(reject::custom(InvalidToken)),
+    let secret = std::env::var("UPLOADER_AUTH_SECRET")
+        .expect("UPLOADER_AUTH_SECRET env variable should be set");
+
+    let uid = if token == secret {
+        INTERNAL_UID.clone()
+    } else {
+        match common::jwt::check_jwt(&token, &UI_AUDIENCE) {
+            Ok(uid) => uid,
+            Err(_) => return Err(reject::custom(InvalidToken)),
+        }
     };
 
     let mut urls = Vec::new();
@@ -223,9 +237,11 @@ fn extract_token(authorization: String) -> Result<String, Rejection> {
             ))))
         }
     } else {
-        Err(reject::custom(RejectAuthError(String::from(
-            "Improperly formatted authorization header",
-        ))))
+        Ok(authorization) // Assume it's a secret-based authorization
+
+        // Err(reject::custom(RejectAuthError(String::from(
+        //     "Improperly formatted authorization header",
+        // ))))
     }
 }
 

@@ -66,6 +66,11 @@ spec:
               key: EVOLVEME_KEY
         - name: EVOLVEME_HOST
           value: "https://evolveme-api.asa.org"
+        - name: UPLOADER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: uploader-auth
+              key: UPLOADER_AUTH_SECRET
 ---
 apiVersion: v1
 kind: Service

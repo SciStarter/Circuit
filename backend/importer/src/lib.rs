@@ -1,7 +1,10 @@
-use std::{fmt::Debug, marker::PhantomData, str::FromStr};
+use std::{fmt::Debug, io::Read, marker::PhantomData, str::FromStr};
 
 use async_trait::async_trait;
+use bytes::{Buf, BufMut, BytesMut};
 use common::model::{partner::LoggedError, Partner};
+use multipart::client::lazy::Multipart;
+use once_cell::sync::Lazy;
 use serde::{
     de::{self, MapAccess, Visitor},
     Deserialize, Deserializer,
@@ -11,6 +14,12 @@ use void::Void;
 pub mod format;
 pub mod source;
 pub mod structure;
+
+static UPLOADER_SECRET: Lazy<String> = Lazy::new(|| {
+    std::env::var("UPLOADER_AUTH_SECRET").expect("UPLOADER_AUTH_SECRET env var should be set")
+});
+
+const HOSTED_FILE_MAX_SIZE: usize = 15 * 1024 * 1024;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -97,4 +106,107 @@ where
     }
 
     deserializer.deserialize_any(StringOrStruct(PhantomData))
+}
+
+pub fn cache_file(url: impl AsRef<str>) -> String {
+    let url = url.as_ref().to_string();
+
+    if url.is_empty() {
+        return String::new();
+    }
+
+    let filename = match url.split_once('?') {
+        Some((before, _after)) => before,
+        None => &url,
+    };
+
+    let filename = match filename.rsplit_once('/') {
+        Some((_before, after)) => after,
+        None => filename,
+    };
+
+    let mut writer = BytesMut::new().limit(HOSTED_FILE_MAX_SIZE).writer();
+    let (_mime, mut reader) = match ureq::get(&url).call() {
+        Ok(resp) => (resp.content_type().to_string(), resp.into_reader()),
+        Err(e) => {
+            dbg!(e);
+            return url;
+        }
+    };
+
+    if let Err(e) = std::io::copy(&mut reader, &mut writer) {
+        dbg!(e);
+        return url;
+    }
+
+    let mut mp = Multipart::new();
+    mp.add_stream(
+        "upload",
+        writer.into_inner().into_inner().reader(),
+        Some(filename),
+        None,
+    );
+
+    let prepared = match mp.prepare() {
+        Ok(x) => x,
+        Err(e) => {
+            dbg!(e);
+            return url;
+        }
+    };
+
+    let boundary = prepared.boundary().to_string();
+
+    let encoded: Vec<u8> = match prepared.bytes().collect::<Result<_, _>>() {
+        Ok(v) => v,
+        Err(e) => {
+            dbg!(e);
+            return url;
+        }
+    };
+
+    match ureq::post("https://sciencenearme.org/api/upload")
+        .set("Authorization", &UPLOADER_SECRET)
+        .set(
+            "Content-Type",
+            &format!("multipart/form-data; boundary={boundary}"),
+        )
+        .send_bytes(&encoded)
+    {
+        Ok(resp) => {
+            if resp.status() == 200 {
+                let data: Vec<String> = match resp.into_json() {
+                    Ok(v) => v,
+                    Err(e) => {
+                        dbg!(e);
+                        return url;
+                    }
+                };
+
+                if let Some(u) = data.into_iter().next() {
+                    u
+                } else {
+                    return url;
+                }
+            } else {
+                dbg!(resp);
+                return url;
+            }
+        }
+        Err(e) => {
+            dbg!(e);
+            return url;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn cache_file_simple() {
+        assert_ne!(
+            super::cache_file("https://docs.rs/rust-logo-20210528-1.54.0-nightly-f58631b45.png"),
+            "https://docs.rs/rust-logo-20210528-1.54.0-nightly-f58631b45.png"
+        );
+    }
 }
