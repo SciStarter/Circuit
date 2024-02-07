@@ -457,6 +457,12 @@ struct LabeledValue {
 }
 
 pub async fn opps_overview(req: tide::Request<Database>) -> tide::Result {
+    let cached = sqlx::query_scalar!(r#"SELECT "data" FROM c_misc_cache WHERE "key" = 'opps-overview' AND NOW() - "when" < INTERVAL '7 days'"#).fetch_optional(req.state()).await?;
+
+    if let Some(data) = cached {
+        return okay(&serde_json::from_str::<serde_json::Value>(&data)?);
+    }
+
     let total = sqlx::query_scalar!(r#"SELECT COUNT(*) AS "result!" FROM c_opportunity"#)
         .fetch_one(req.state())
         .await?;
@@ -560,7 +566,7 @@ GROUP BY v.descriptor;
 
     let providers_max = providers.iter().map(|lv| lv.value).max();
 
-    okay(&json!({
+    let result = json!({
         "total": total,
 
         "active": active,
@@ -585,7 +591,11 @@ GROUP BY v.descriptor;
             "max": providers_max,
             "rows": providers,
         }
-    }))
+    });
+
+    sqlx::query!(r#"INSERT INTO c_misc_cache ("key", "when", "data") VALUES ('opps-overview', NOW(), $1) ON CONFLICT ("key") DO UPDATE SET "when" = EXCLUDED."when", "data" = EXCLUDED."data""#, serde_json::to_string(&result)?).execute(req.state()).await?;
+
+    okay(&result)
 }
 
 pub async fn opps_regional_overview(req: tide::Request<Database>) -> tide::Result {

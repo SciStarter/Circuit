@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO c_misc_cache (\"key\", \"when\", \"data\") VALUES ('opps-overview', NOW(), $1) ON CONFLICT (\"key\") DO UPDATE SET \"when\" = EXCLUDED.\"when\", \"data\" = EXCLUDED.\"data\"",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "95b6dcb24ec5cb8be518d274f10865a10d794c640b475a51282f1bbbeb6e9ab2"
+}
