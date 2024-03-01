@@ -14,6 +14,7 @@ use void::Void;
 pub mod format;
 pub mod source;
 pub mod structure;
+pub mod web;
 
 static UPLOADER_SECRET: Lazy<String> = Lazy::new(|| {
     std::env::var("UPLOADER_AUTH_SECRET").expect("UPLOADER_AUTH_SECRET env var should be set")

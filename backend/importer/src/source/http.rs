@@ -21,7 +21,10 @@ impl HttpGet {
 impl super::Source for HttpGet {
     fn load(&self) -> Result<Bytes, LoggedError> {
         let mut writer = BytesMut::new().limit(MAX_SIZE).writer();
-        let mut reader = ureq::get(&self.endpoint).call()?.into_reader();
+        let mut reader = ureq::get(&self.endpoint)
+            .set("User-Agent", "ScienceNearMe/1.0")
+            .call()?
+            .into_reader();
 
         std::io::copy(&mut reader, &mut writer)?;
 

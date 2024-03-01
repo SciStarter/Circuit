@@ -56,6 +56,7 @@ impl super::Source for ModernEventsCalendar {
 
             loop {
                 let raw = ureq::post(&self.endpoint)
+                    .set("User-Agent", "ScienceNearMe/1.0")
                     .send_form(&[
                         ("action", "mec_list_load_more"),
                         ("mec_start_date", date.to_string().as_str()),

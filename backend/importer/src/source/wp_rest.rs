@@ -42,7 +42,10 @@ impl super::Source for WordPressRest {
         };
 
         while let Some(url) = resp.next_rest_url.take() {
-            resp = ureq::get(dbg!(&url)).call()?.into_json()?;
+            resp = ureq::get(dbg!(&url))
+                .set("User-Agent", "ScienceNearMe/1.0")
+                .call()?
+                .into_json()?;
             records.append(&mut resp.events);
         }
 

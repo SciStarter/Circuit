@@ -182,6 +182,7 @@ impl super::Source for EventsQL {
     fn load(&self) -> Result<Bytes, LoggedError> {
         let mut writer = BytesMut::new().limit(MAX_SIZE).writer();
         let mut reader = ureq::post(&self.endpoint)
+            .set("User-Agent", "ScienceNearMe/1.0")
             .set("Content-Type", "application/json")
             .send_json(ureq::json!({"variables": {}, "query": QUERY}))?
             .into_reader();

@@ -35,6 +35,7 @@ fn get_table(base: &str, table: &str) -> Result<Vec<Value>, Error> {
         };
 
         let mut result: Value = ureq::get(&url)
+            .set("User-Agent", "ScienceNearMe/1.0")
             .set("Authorization", &format!("Bearer {token}"))
             .call()?
             .into_json()?;

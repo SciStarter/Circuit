@@ -86,6 +86,7 @@ impl NeonCRM {
     pub fn search_fields(&self) -> Result<SearchFields, Error> {
         Ok(
             ureq::get(&format!("{}/events/search/searchFields", API_BASE))
+                .set("User-Agent", "ScienceNearMe/1.0")
                 .set("Authorization", &self.auth.as_http_header())
                 .call()?
                 .into_json()?,
@@ -95,6 +96,7 @@ impl NeonCRM {
     pub fn output_fields(&self) -> Result<OutputFields, Error> {
         Ok(
             ureq::get(&format!("{}/events/search/outputFields", API_BASE))
+                .set("User-Agent", "ScienceNearMe/1.0")
                 .set("Authorization", &self.auth.as_http_header())
                 .call()?
                 .into_json()?,
@@ -114,6 +116,7 @@ impl super::Source for NeonCRM {
             println!("Fetching page {}", page);
 
             let mut reader = ureq::post(&format!("{}/events/search", API_BASE))
+                .set("User-Agent", "ScienceNearMe/1.0")
                 .set("Authorization", &self.auth.as_http_header())
                 .send_json(serde_json::json!({
                     "pagination": {
