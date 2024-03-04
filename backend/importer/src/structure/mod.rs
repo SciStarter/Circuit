@@ -39,6 +39,7 @@ pub struct PartnerAddress {
 pub enum PartnerFlag {
     Ticketed,
     Cost,
+    OnlineOpportunities,
 }
 
 #[derive(Clone, Debug)]

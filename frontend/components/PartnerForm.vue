@@ -300,7 +300,7 @@ export default {
             }
         },
 
-        async save() {
+        async save(event) {
             await this.$axios.$put('/api/ui/organization/' + this.partner.uid, this.partner, this.$store.state.auth);
         },
     }

@@ -28,7 +28,7 @@
         </b-radio>
       </div>
       <div v-else-if="color">
-        <b-colorpicker :value="model" @input="model = $event.toString('hex')" :color-formatter="(color) => color.toString('hex')"/>
+        <b-colorpicker ref="cpicker" v-model="color_model"/>
       </div>
       <b-input v-else v-model="model" type="text" />
       <b-button @click="save">
@@ -148,9 +148,6 @@ export default {
                 if(this.overlay !== NoValue) {
                     return this.overlay;
                 }
-                else if(this.color && !this.value) {
-                    return "#ff00ff";
-                }
                 else {
                     return this.value;
                 }
@@ -159,6 +156,20 @@ export default {
             set(val) {
                 this.overlay = val;
             }
+        },
+
+        color_model: {
+            get() {
+                if(!this.model) {
+                    return "#ccddee";
+                }
+
+                return this.model;
+            },
+
+            set(val) {
+                this.model = val.toString('hex');
+            },
         },
 
         value_type() {
@@ -196,6 +207,10 @@ export default {
 
         save() {
             this.editing = false;
+
+            if(this.color) {
+                this.model = this.$refs.cpicker.colorSelected.toString('hex');
+            }
 
             this.$emit('input', this.model);
 

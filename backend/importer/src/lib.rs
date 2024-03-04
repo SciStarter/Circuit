@@ -40,6 +40,8 @@ pub enum Error {
     Logged(LoggedError),
     #[error("Model error")]
     Model(#[from] common::model::Error),
+    #[error("Time parsing error: {0}")]
+    ChronoParse(#[from] chrono::ParseError),
     #[error("Data error: {0}")]
     Data(String),
     #[error("Unable to comprehend data")]
