@@ -379,26 +379,39 @@ impl<Tz: TimeZone + Debug + Sync> Importer for Page<Tz> {
         }
 
         for pad in pads.into_iter() {
-            let mut opp = Opportunity::default();
+            let opp_uid = uuid::Uuid::new_v5(&self.info.partner, pad.title.as_bytes());
 
-            opp.exterior.uid = uuid::Uuid::new_v5(&self.info.partner, pad.title.as_bytes());
-            opp.exterior.partner = self.info.partner;
-            opp.exterior.partner_name = self.info.partner_name.clone();
-            opp.exterior.partner_website = self.info.partner_website.clone();
-            opp.exterior.partner_logo_url = self.info.partner_logo_url.clone();
+            let mut opp = Opportunity::load_by_uid(&db, &opp_uid)
+                .await
+                .unwrap_or_else(|_| Opportunity::default());
+
+            let created = opp.id.is_none();
+
+            if created {
+                opp.exterior.uid = opp_uid;
+                opp.exterior.partner = self.info.partner;
+                opp.exterior.partner_name = self.info.partner_name.clone();
+                opp.exterior.partner_website = self.info.partner_website.clone();
+                opp.exterior.partner_logo_url = self.info.partner_logo_url.clone();
+                opp.exterior.organization_name = self.info.partner_name.clone();
+                opp.exterior.organization_website = self.info.partner_website.clone();
+                opp.exterior.entity_type = EntityType::Opportunity;
+                opp.exterior.pes_domain = self.info.domain.clone();
+                opp.exterior.opp_descriptor = self.info.descriptor.clone();
+                opp.exterior.cost = Cost::Unknown;
+                opp.exterior.organization_type = Default::default();
+                opp.exterior.languages = vec!["en".to_string()];
+                opp.exterior.is_online = false;
+
+                if self.info.flags.contains(&PartnerFlag::Ticketed) {
+                    opp.exterior.ticket_required = true;
+                }
+            }
+
             opp.exterior.partner_opp_url = Some(pad.url);
-            opp.exterior.organization_name = self.info.partner_name.clone();
-            opp.exterior.organization_website = self.info.partner_website.clone();
-            opp.exterior.entity_type = EntityType::Opportunity;
-            opp.exterior.pes_domain = self.info.domain.clone();
-            opp.exterior.opp_descriptor = self.info.descriptor.clone();
             opp.exterior.title = pad.title;
             opp.exterior.description = pad.description;
             opp.exterior.image_url = pad.image;
-            opp.exterior.cost = Cost::Unknown;
-            opp.exterior.organization_type = Default::default();
-            opp.exterior.languages = vec!["en".to_string()];
-            opp.exterior.is_online = false;
 
             if let Some(tz) = &self.info.timezone {
                 opp.exterior.start_datetimes =
@@ -456,7 +469,6 @@ impl<Tz: TimeZone + Debug + Sync> Importer for Page<Tz> {
             }
 
             opp.set_id_if_necessary(&db).await?;
-            let created = opp.id.is_none();
             opp.interior.accepted = if created { Some(true) } else { None };
             opp.store(&db).await?;
             OpportunityImportRecord::store(

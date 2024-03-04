@@ -28,7 +28,7 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
                 domain: Domain::MuseumOrScienceCenter,
                 descriptor: vec![Descriptor::Maker],
                 topics: vec![],
-                flags: vec![],
+                flags: vec![PartnerFlag::Ticketed],
                 address: Some(PartnerAddress {
                     name: "Rockville Science Center".into(),
                     street: "33-F Maryland Avenue".into(),
