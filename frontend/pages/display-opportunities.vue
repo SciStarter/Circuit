@@ -276,16 +276,16 @@
         requirements which guarantee nice-looking records on Science
         Near Me.
       </p>
-      <p>
-        If you have many existing opportunities you'd like to display
-        on SNM and your Exchange, please select one of the options to
-        share your opportunities on
-        our <a href="/add-opportunities">add opportuities page</a>.
-        That way all those opportunities will appear on SNM and on
-        your Exchange, in addition to any others available to your
-        community from SNM! You'll still have the option to use the
-        Add Opportunity Form on your site to add future opportunities.
-      </p>
+      <!-- <p> -->
+      <!--   If you have many existing opportunities you'd like to display -->
+      <!--   on SNM and your Exchange, please select one of the options to -->
+      <!--   share your opportunities on -->
+      <!--   our <a href="/add-opportunities">add opportuities page</a>. -->
+      <!--   That way all those opportunities will appear on SNM and on -->
+      <!--   your Exchange, in addition to any others available to your -->
+      <!--   community from SNM! You'll still have the option to use the -->
+      <!--   Add Opportunity Form on your site to add future opportunities. -->
+      <!-- </p> -->
       <h2 class="h3" style="margin-top:20px">Request an Exchange</h2>
       <ol>
         <li>Create a Science Near Me account, if you haven't done so already</li>
