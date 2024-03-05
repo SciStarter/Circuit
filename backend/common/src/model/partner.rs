@@ -110,7 +110,12 @@ impl<E: std::error::Error> From<E> for LoggedError {
 
 impl Display for LoggedError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
+        write!(
+            f,
+            "{} ({})",
+            self.message,
+            self.title.as_deref().unwrap_or("")
+        )
     }
 }
 
@@ -242,7 +247,9 @@ impl Partner {
         title: Option<impl AsRef<str>>,
         raw: Option<impl AsRef<str>>,
     ) -> Result<i64, Error> {
-        let Some(partner_id) = self.id else { return Err(Error::Missing("id".into())); };
+        let Some(partner_id) = self.id else {
+            return Err(Error::Missing("id".into()));
+        };
 
         let title = if let Some(val) = &title {
             Some(val.as_ref())

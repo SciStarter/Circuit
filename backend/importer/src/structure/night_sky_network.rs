@@ -5,7 +5,10 @@ use super::{
 };
 use chrono::{DateTime, NaiveDateTime, TimeZone};
 use chrono_tz::Tz;
-use common::model::{partner::LoggedError, Opportunity, Partner};
+use common::model::{
+    partner::{LoggedError, LoggedErrorLevel},
+    Opportunity, Partner,
+};
 use once_cell::sync::Lazy;
 use serde_json::{from_value, Value};
 use sqlx::{Pool, Postgres};
@@ -174,6 +177,11 @@ impl Structure for NightSkyNetwork {
 
                     if obj["end_dates"].is_array() {
                         obj["end_datetimes"] = obj["end_dates"].take();
+                    }
+
+                    if let Some(obj_map) = obj.as_object_mut() {
+                        obj_map.remove("start_dates");
+                        obj_map.remove("end_dates");
                     }
 
                     // They send an empty end_datetimes array often
