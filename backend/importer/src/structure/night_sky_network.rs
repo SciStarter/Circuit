@@ -171,28 +171,28 @@ impl Structure for NightSkyNetwork {
                         Value::Null
                     };
 
-                    if obj["start_dates"].is_array() {
-                        obj["start_datetimes"] = obj["start_dates"].take();
-                    }
+                    // if obj["start_dates"].is_array() {
+                    //     obj["start_datetimes"] = obj["start_dates"].take();
+                    // }
 
-                    if obj["end_dates"].is_array() {
-                        obj["end_datetimes"] = obj["end_dates"].take();
-                    }
+                    // if obj["end_dates"].is_array() {
+                    //     obj["end_datetimes"] = obj["end_dates"].take();
+                    // }
 
-                    if let Some(obj_map) = obj.as_object_mut() {
-                        obj_map.remove("start_dates");
-                        obj_map.remove("end_dates");
-                    }
+                    // if let Some(obj_map) = obj.as_object_mut() {
+                    //     obj_map.remove("start_dates");
+                    //     obj_map.remove("end_dates");
+                    // }
 
-                    // They send an empty end_datetimes array often
-                    // for events where only the start time is set, so
-                    // we need to guess an end time for them.
+                    // They send an empty end_dates array often for
+                    // events where only the start time is set, so we
+                    // need to guess an end time for them.
                     {
-                        let mut starts = obj["start_datetimes"]
+                        let mut starts = obj["start_dates"]
                             .as_array()
                             .cloned()
                             .unwrap_or_else(Vec::new);
-                        let ends = obj["end_datetimes"].as_array_mut();
+                        let ends = obj["end_dates"].as_array_mut();
                         if let (Some(ends), Some(start)) = (
                             ends,
                             starts.pop().and_then(|v| v.as_str().map(|s| s.to_string())),
@@ -208,6 +208,8 @@ impl Structure for NightSkyNetwork {
 
                     //let event_id = obj["event_id"].as_str().map(|x| x.to_owned());
                     let event_title = obj["title"].as_str().map(|x| x.to_owned());
+
+                    println!("Attempting import from JSON: {:?}", event_title);
 
                     let mut input: Opportunity = match from_value(obj) {
                         Ok(opp) => opp,

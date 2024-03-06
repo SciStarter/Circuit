@@ -601,11 +601,9 @@ pub struct OpportunityExterior {
     pub short_desc: String,
     pub image_url: String,
     pub image_credit: String,
-    // 2021-09-07 bug prevents alias from working here https://github.com/serde-rs/serde/issues/1504
     #[serde(alias = "start_dates")]
     pub start_datetimes: Vec<DateTime<FixedOffset>>,
     pub has_end: bool,
-    // 2021-09-07 bug prevents alias from working here https://github.com/serde-rs/serde/issues/1504
     #[serde(alias = "end_dates")]
     pub end_datetimes: Vec<DateTime<FixedOffset>>,
     pub recurrence: Recurrence,
