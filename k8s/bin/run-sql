@@ -1,0 +1,5 @@
+#!/bin/bash
+BIN_DIR=`dirname $BASH_SOURCE`
+source ${BIN_DIR}/../secrets/database.env
+(kubectl exec --stdin --tty `kubectl get pod -l app=postgres-beta -o name` -- /usr/bin/psql ${DATABASE_URL}) < "$1"
+
