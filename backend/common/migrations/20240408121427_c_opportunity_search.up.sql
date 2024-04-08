@@ -162,6 +162,7 @@ select
   ),
   id
 from c_opportunity
+on conflict do nothing
 ;
 
 create index c_opportunity_search_via_fulltext_english on c_opportunity_search using gin(fulltext_english);
