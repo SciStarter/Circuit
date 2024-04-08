@@ -108,7 +108,11 @@ select
   (interior->>'withdrawn') = 'true',
   (select coalesce(array_agg(i_starts)::timestamptz[], '{}'::timestamptz[]) from jsonb_array_elements_text(exterior->'start_datetimes') i_starts),
   (select coalesce(array_agg(i_ends)::timestamptz[], '{}'::timestamptz[]) from jsonb_array_elements_text(exterior->'end_datetimes') i_ends),
-  case when starts_with(exterior->>'entity_type', '{"page":') then 'page'::t_entity_type else (exterior->>'entity_type')::t_entity_type end,
+  case
+    when starts_with(exterior->>'entity_type', '{"page":') then 'page'::t_entity_type
+    when starts_with(exterior->>'entity_type', 'page_') then 'page'::t_entity_type
+    else (exterior->>'entity_type')::t_entity_type
+  end,
   (exterior->>'title'),
   (select coalesce(array_agg(i_tags), '{}'::text[]) from jsonb_array_elements_text(exterior->'tags') i_tags),
   (select coalesce(array_agg(i_topics), '{}'::text[]) from jsonb_array_elements_text(exterior->'topics') i_topics),
@@ -207,7 +211,11 @@ begin
     (new.interior->>'withdrawn') = 'true',
     (select coalesce(array_agg(i_starts)::timestamptz[], '{}'::timestamptz[]) from jsonb_array_elements_text(new.exterior->'start_datetimes') i_starts),
     (select coalesce(array_agg(i_ends)::timestamptz[], '{}'::timestamptz[]) from jsonb_array_elements_text(new.exterior->'end_datetimes') i_ends),
-    case when starts_with(new.exterior->>'entity_type', '{"page":') then 'page'::t_entity_type else (new.exterior->>'entity_type')::t_entity_type end,
+    case
+      when starts_with(exterior->>'entity_type', '{"page":') then 'page'::t_entity_type
+      when starts_with(exterior->>'entity_type', 'page_') then 'page'::t_entity_type
+      else (exterior->>'entity_type')::t_entity_type
+    end,
     (new.exterior->>'title'),
     (select coalesce(array_agg(i_tags), '{}'::text[]) from jsonb_array_elements_text(new.exterior->'tags') i_tags),
     (select coalesce(array_agg(i_topics), '{}'::text[]) from jsonb_array_elements_text(new.exterior->'topics') i_topics),
