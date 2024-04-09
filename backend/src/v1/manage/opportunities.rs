@@ -344,7 +344,7 @@ async fn opportunity(mut req: tide::Request<Database>) -> tide::Result {
 
         if let Err(err) = opportunity.store(db).await {
             return Ok(OpportunityPage {
-                message: err.to_string(),
+                message: dbg!(err).to_string(),
                 all_partners: Partner::catalog(db).await?,
                 opportunity,
             }
