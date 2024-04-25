@@ -17,7 +17,7 @@
   <template v-else-if="widget">
     <div :class="widgetlayout">
       <a :href="'https://sciencenearme.org/' + opportunity.slug" class="primary" target="_blank">
-        <img :src="image">
+        <img :src="image" width="80" height="80" loading="lazy" fetchpriority="low" decoding="async">
         <div>
           <h2>{{ subtitle }}</h2>
           <h1>{{ opportunity.title }}</h1>
