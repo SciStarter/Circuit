@@ -167,7 +167,7 @@ pub struct PageOptions {
     pub layout: PageLayout,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, AsRefStr, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum EntityType {
     Unspecified,
@@ -176,6 +176,12 @@ pub enum EntityType {
     #[serde(other)]
     #[default]
     Opportunity,
+}
+
+impl EntityType {
+    fn db_repr(&self) -> String {
+        self.as_ref().to_snake_case()
+    }
 }
 
 #[derive(sqlx::Type)]
