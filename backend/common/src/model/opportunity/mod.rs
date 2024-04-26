@@ -1276,7 +1276,7 @@ FROM c_region WHERE "name" = ${}
             clauses.push(format!(
                 r#"
                 ${} = (
-                  search.review_status in ('publish', 'not_required')
+                  coalesce(search.review_status, 'not_required') in ('publish', 'not_required')
                   and
                   search.accepted = true
                   and
