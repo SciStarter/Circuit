@@ -1254,11 +1254,11 @@ FROM c_region WHERE "name" = ${}
         clauses.push(format!(
             r#"(
                 (
-                 EXISTS (SELECT value FROM search.start_datetimes WHERE value > ${} AND value < ${})
-                 AND
-                 EXISTS (SELECT value FROM search.end_datetimes WHERE value > ${} AND value < ${})
+                 exists (select value from unnest(search.start_datetimes) where value > ${} and value < ${})
+                 and
+                 exists (select value from unnest(search.end_datetimes) where value > ${} and value < ${})
                 )
-                OR
+                or
                 (
                  coalesce(search.end_recurrence, '0001-01-01')::timestamptz > ${}::timestamptz
                 )
@@ -1273,31 +1273,31 @@ FROM c_region WHERE "name" = ${}
             // ));
             clauses.push(format!(
                 r#"
-${} = (
-  search.review_status in ('publish', 'not_required')
-  and
-  search.accepted = true
-  and
-  search.withdrawn = false
-  and
-  (
-    (
-      array_length(search.start_datetimes, 1) <= 1
-      and
-      array_length(search.end_datetimes, 1) = 0
-    )
-    or
-    exists (select value from search.start_datetimes where value > now())
-    or
-    exists (select value from search.end_datetimes where value > now())
-    or
-    (
-      (search.recurrence = 'daily' or search.recurrence = 'weekly')
-      and
-      (search.end_recurrence is null or search.end_recurrence > now())
-    )
-  )
-"#,
+                ${} = (
+                  search.review_status in ('publish', 'not_required')
+                  and
+                  search.accepted = true
+                  and
+                  search.withdrawn = false
+                  and
+                  (
+                    (
+                      array_length(search.start_datetimes, 1) <= 1
+                      and
+                      array_length(search.end_datetimes, 1) = 0
+                    )
+                    or
+                    exists (select value from unnest(search.start_datetimes) where value > now())
+                    or
+                    exists (select value from unnest(search.end_datetimes) where value > now())
+                    or
+                    (
+                      (search.recurrence = 'daily' or search.recurrence = 'weekly')
+                      and
+                      (search.end_recurrence is null or search.end_recurrence > now())
+                    )
+                  )
+                )"#,
                 ParamValue::RawBool(val).append(&mut params)
             ));
         }
@@ -1456,9 +1456,9 @@ OR
         clauses.push(format!(
             r#"
             (
-              exists(select value from search.start_datetimes where value > ${})
+              exists(select value from unnest(search.start_datetimes) where value > ${})
               or
-              exists(select value from search.end_datetimes where value > ${})
+              exists(select value from unnest(search.end_datetimes) where value > ${})
               or (
                 (search.recurrence = 'daily' or search.recurrence = 'weekly')
                 and
@@ -1485,9 +1485,9 @@ OR
         clauses.push(format!(
             r#"
             (
-              not exists (select value from search.start_datetimes where value > ${})
+              not exists (select value from unnest(search.start_datetimes) where value > ${})
               and
-              not exists (select value from search.end_datetimes where value > ${})
+              not exists (select value from unnest(search.end_datetimes) where value > ${})
             )"#,
             time_param, time_param
         ));
