@@ -1411,17 +1411,17 @@ FROM c_region WHERE "name" = ${}
         let uuid_param = ParamValue::Uuid(val.clone()).append(&mut params);
         clauses.push(format!(
             r#"
-(
-  (primary_table.interior -> 'submitted_by' @> ${}::jsonb)
-OR
-  (
-    SELECT jsonb_agg("uid") FROM (
-        SELECT (c_partner.exterior -> 'uid') AS "uid" FROM c_partner
-        WHERE (c_partner.interior -> 'authorized') @> (${}::jsonb)
-        OR (c_partner.interior -> 'prime') @> (${}::jsonb)
-    ) AS "authorized_partners"
-  ) @> (primary_table.exterior -> 'partner')
-)"#,
+            (
+              (primary_table.interior -> 'submitted_by' @> ${}::jsonb)
+              or
+              (
+                SELECT jsonb_agg("uid") FROM (
+                    SELECT (c_partner.exterior -> 'uid') AS "uid" FROM c_partner
+                    WHERE (c_partner.interior -> 'authorized') @> (${}::jsonb)
+                    OR (c_partner.interior -> 'prime') @> (${}::jsonb)
+                ) AS "authorized_partners"
+              ) @> (primary_table.exterior -> 'partner')
+            )"#,
             uuid_param, uuid_param, uuid_param
         ));
     }
@@ -1788,9 +1788,9 @@ SELECT
             CASE
               WHEN jsonb_array_length((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') = 0 AND jsonb_array_length((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') = 0
               THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
-              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              WHEN EXISTS (SELECT value FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
               THEN (SELECT MIN(value::timestamptz) FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP LIMIT 1)
-              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              WHEN EXISTS (SELECT value FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
               THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
               ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
             END AS _sort_time
