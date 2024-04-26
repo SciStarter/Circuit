@@ -1858,6 +1858,9 @@ SELECT
         }
     };
 
+    println!("Constructed query: {}", &query_string);
+    println!("Constructed params: {:?}", &params);
+
     Ok((query_string, params))
 }
 
