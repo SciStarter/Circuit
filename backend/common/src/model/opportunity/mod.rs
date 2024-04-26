@@ -1294,7 +1294,7 @@ ${} = (
     (
       (search.recurrence = 'daily' OR search.recurrence = 'weekly')
       and
-      (search.end_recurrence' is null or (search.end_recurrence > now())
+      (search.end_recurrence is null or (search.end_recurrence > now())
     )
   )
 "#,
