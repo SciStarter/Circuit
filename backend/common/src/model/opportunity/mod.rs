@@ -1254,9 +1254,9 @@ FROM c_region WHERE "name" = ${}
         clauses.push(format!(
             r#"(
                 (
-                 exists (select value from unnest(search.start_datetimes) t(value) where value > ${} and value < ${})
+                 exists (select value from unnest(search.start_datetimes) t(value) where value > ${}::timestamptz and value < ${}::timestamptz)
                  and
-                 exists (select value from unnest(search.end_datetimes) t(value) where value > ${} and value < ${})
+                 exists (select value from unnest(search.end_datetimes) t(value) where value > ${}::timestamptz and value < ${}::timestamptz)
                 )
                 or
                 (
@@ -1456,13 +1456,13 @@ FROM c_region WHERE "name" = ${}
         clauses.push(format!(
             r#"
             (
-              exists(select value from unnest(search.start_datetimes) t(value) where value > ${})
+              exists(select value from unnest(search.start_datetimes) t(value) where value > ${}::timestamptz)
               or
-              exists(select value from unnest(search.end_datetimes) t(value) where value > ${})
+              exists(select value from unnest(search.end_datetimes) t(value) where value > ${}::timestamptz)
               or (
                 (search.recurrence = 'daily' or search.recurrence = 'weekly')
                 and
-                (search.end_recurrence is null or search.end_recurrence > ${})
+                (search.end_recurrence is null or search.end_recurrence > ${}::timestamptz)
               )
               or (
                array_length(search.start_datetimes, 1) <= 1
@@ -1485,9 +1485,9 @@ FROM c_region WHERE "name" = ${}
         clauses.push(format!(
             r#"
             (
-              not exists (select value from unnest(search.start_datetimes) t(value) where value > ${})
+              not exists (select value from unnest(search.start_datetimes) t(value) where value > ${}::timestamptz)
               and
-              not exists (select value from unnest(search.end_datetimes) t(value) where value > ${})
+              not exists (select value from unnest(search.end_datetimes) t(value) where value > ${}::timestamptz)
             )"#,
             time_param, time_param
         ));
@@ -1731,16 +1731,16 @@ FROM c_region WHERE "name" = ${}
 
     query_string.push_str(
         r#" FROM c_opportunity_search search JOIN (
-SELECT
-    id,
-    created,
-    updated,
-    location_point,
-    location_polygon,
-    fulltext_english,
-    (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) AS exterior,
-    (c_opportunity.interior || COALESCE(c_opportunity_overlay.interior, '{}'::jsonb)) AS interior
-"#,
+                    SELECT
+                        id,
+                        created,
+                        updated,
+                        location_point,
+                        location_polygon,
+                        fulltext_english,
+                        (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) AS exterior,
+                        (c_opportunity.interior || COALESCE(c_opportunity_overlay.interior, '{}'::jsonb)) AS interior
+                    "#,
     );
 
     if let Some(uid) = &query.prefer_partner {
