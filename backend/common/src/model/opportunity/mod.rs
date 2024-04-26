@@ -1254,9 +1254,9 @@ FROM c_region WHERE "name" = ${}
         clauses.push(format!(
             r#"(
                 (
-                 exists (select value from unnest(search.start_datetimes) where value > ${} and value < ${})
+                 exists (select value from unnest(search.start_datetimes) t(value) where value > ${} and value < ${})
                  and
-                 exists (select value from unnest(search.end_datetimes) where value > ${} and value < ${})
+                 exists (select value from unnest(search.end_datetimes) t(value) where value > ${} and value < ${})
                 )
                 or
                 (
@@ -1287,9 +1287,9 @@ FROM c_region WHERE "name" = ${}
                       array_length(search.end_datetimes, 1) = 0
                     )
                     or
-                    exists (select value from unnest(search.start_datetimes) where value > now())
+                    exists (select value from unnest(search.start_datetimes) t(value) where value > now())
                     or
-                    exists (select value from unnest(search.end_datetimes) where value > now())
+                    exists (select value from unnest(search.end_datetimes) t(value) where value > now())
                     or
                     (
                       (search.recurrence = 'daily' or search.recurrence = 'weekly')
@@ -1456,9 +1456,9 @@ FROM c_region WHERE "name" = ${}
         clauses.push(format!(
             r#"
             (
-              exists(select value from unnest(search.start_datetimes) where value > ${})
+              exists(select value from unnest(search.start_datetimes) t(value) where value > ${})
               or
-              exists(select value from unnest(search.end_datetimes) where value > ${})
+              exists(select value from unnest(search.end_datetimes) t(value) where value > ${})
               or (
                 (search.recurrence = 'daily' or search.recurrence = 'weekly')
                 and
@@ -1485,9 +1485,9 @@ FROM c_region WHERE "name" = ${}
         clauses.push(format!(
             r#"
             (
-              not exists (select value from unnest(search.start_datetimes) where value > ${})
+              not exists (select value from unnest(search.start_datetimes) t(value) where value > ${})
               and
-              not exists (select value from unnest(search.end_datetimes) where value > ${})
+              not exists (select value from unnest(search.end_datetimes) t(value) where value > ${})
             )"#,
             time_param, time_param
         ));
@@ -1788,9 +1788,9 @@ SELECT
             CASE
               WHEN jsonb_array_length((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') = 0 AND jsonb_array_length((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') = 0
               THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
-              WHEN EXISTS (SELECT value FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
-              THEN (SELECT MIN(value::timestamptz) FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP LIMIT 1)
-              WHEN EXISTS (SELECT value FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') t(value) WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              THEN (SELECT MIN(value::timestamptz) FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') t(value) WHERE value::timestamptz > CURRENT_TIMESTAMP LIMIT 1)
+              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') t(value) WHERE value::timestamptz > CURRENT_TIMESTAMP)
               THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
               ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
             END AS _sort_time
