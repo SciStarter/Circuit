@@ -1292,9 +1292,9 @@ ${} = (
     exists (select value from search.end_datetimes where value > now())
     or
     (
-      (search.recurrence = 'daily' OR search.recurrence = 'weekly')
+      (search.recurrence = 'daily' or search.recurrence = 'weekly')
       and
-      (search.end_recurrence is null or (search.end_recurrence > now())
+      (search.end_recurrence is null or search.end_recurrence > now())
     )
   )
 "#,
