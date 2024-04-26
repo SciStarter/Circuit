@@ -1467,7 +1467,7 @@ FROM c_region WHERE "name" = ${}
               or (
                array_length(search.start_datetimes, 1) <= 1
                and
-               array_length(search.end_datetimes) = 0
+               array_length(search.end_datetimes, 1) = 0
               )
             )"#,
             time_param, time_param, time_param
