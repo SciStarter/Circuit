@@ -1195,12 +1195,12 @@ fn build_matching_query(
             // clauses.push(
             //     "(('true'::jsonb) @> (primary_table.interior -> 'withdrawn') OR coalesce(nullif(primary_table.interior ->> 'review_status', ''), 'not_required') IN ('draft', 'pending'))".to_string(),
             // );
-            clauses.push(String::from("true = search.withdrawn OR coalesce(search.review_status, 'not_required') in ('draft', 'pending')"));
+            clauses.push(String::from("(true = search.withdrawn OR coalesce(search.review_status, 'not_required') in ('draft', 'pending'))"));
         } else {
             // clauses.push(
             //     "(('false'::jsonb) @> (primary_table.interior -> 'withdrawn') AND coalesce(nullif(primary_table.interior ->> 'review_status', ''), 'not_required') NOT IN ('draft', 'pending'))".to_string(),
             // );
-            clauses.push(String::from("false = search.withdrawn AND coalesce(search.review_status, 'not_required') not in ('draft', 'pending')"));
+            clauses.push(String::from("(false = search.withdrawn AND coalesce(search.review_status, 'not_required') not in ('draft', 'pending'))"));
         }
     }
 
