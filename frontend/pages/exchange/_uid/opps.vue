@@ -41,7 +41,7 @@
         <ul class="nav-tabs">
           <li><a class="tab-link" :class="{'active':state==1}" @click="state=1">Current, Live Opportunities</a></li>
           <li><a class="tab-link" :class="{'active':state==2}" @click="state=2">Draft or Unpublished</a></li>
-          <li><a class="tab-link" :class="{'active':state==3}" @click="state=3">Expired or Trashed</a></li>
+          <li><a class="tab-link" :class="{'active':state==3}" @click="state=3">Past or Trashed</a></li>
           <li class="push-right"><action-button text2 @click="export_records">Export Records</action-button></li>
         </ul>
       </div>
@@ -130,7 +130,7 @@
 
       <div v-if="state==3">
         <div class="flex-header filter-actions">
-          <h2>Expired or Trashed Opportunities</h2>
+          <h2>Past or Trashed Opportunities</h2>
           <div class="flex header-actions">
             <b-field label="Search" label-position="inside" data-context="find-keywords">
               <b-input ref="search_keywords" v-model="expired_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />

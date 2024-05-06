@@ -37,7 +37,7 @@
               <comparison-bar :value="opps.active" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
             </div>
             <div>
-            <div class="bar-label"><span>Expired <b-tooltip label="Opportunities no longer available." position="is-top" append-to-body multilined>
+            <div class="bar-label"><span>Past <b-tooltip label="Opportunities no longer available." position="is-top" append-to-body multilined>
           <b-button label="?" /></b-tooltip></span><span><span class="legend-num">{{opps.inactive}}</span>/{{opps.total}}</span></div>
             <comparison-bar :value="opps.inactive" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
           </div>
