@@ -17,6 +17,7 @@
 </div>
 
   <aside class="data-update">Date updated: {{updated_local}}</aside>
+  <aside class="data-update">Demographics are estimates, and come from commercial sources</aside>
 
   <div v-if="state=='opps'">
     <h3>Science Opportunities</h3>
