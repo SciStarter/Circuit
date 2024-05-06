@@ -150,7 +150,7 @@
     </div>
 
     <div class="wordcloud-wrapper">
-      <h3>Top 30 Keywords  <b-tooltip label="The most used keywords to describe opportunities on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
+      <h3>Top Keywords  <b-tooltip label="The most used keywords to describe opportunities on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
       <word-cloud :words="opps.keywords"></word-cloud>
     </div>
 
@@ -260,7 +260,7 @@
     <table class="data-table">
       <thead>
       <tr>
-        <th class="narrow-column">Top 30 Searches by Keyword <b-tooltip label="Most used keyword searches on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></th>
+        <th class="narrow-column">Top Searches by Keyword <b-tooltip label="Most used keyword searches on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></th>
         <th colspan="2">Total Searches</th>
       </tr>
     </thead>
