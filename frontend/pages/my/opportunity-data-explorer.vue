@@ -1024,7 +1024,7 @@ th,td {
 aside {
     display: block;
     text-align: right;
-    color: #ccc;
+    color: #bbb;
 }
 
 .notification {
