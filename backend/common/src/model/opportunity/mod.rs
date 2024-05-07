@@ -1220,13 +1220,13 @@ fn build_matching_query(
 
         clauses.push(format!(
             r#"
-SELECT
+(SELECT
  COALESCE(
   NULLIF(ST_Intersects(c_region.geometry, search.location_point), false),
   NULLIF(ST_Intersects(c_region.geometry, search.location_polygon), false),
   false
  )
-FROM c_region WHERE "name" = ${}
+FROM c_region WHERE "name" = ${})
 "#,
             ParamValue::RawString(region.to_owned()).append(&mut params)
         ));
