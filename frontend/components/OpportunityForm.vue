@@ -1062,7 +1062,7 @@ export default {
                     this.value.has_end = false;
                 }
                 else {
-                    let repr = await this.datetime_repr(val, '23:59:59');
+                    let repr = await this.datetime_repr(val, '23:00:00');
                     if(repr != null) {
                         this.value.end_datetimes = [repr];
                         this.value.has_end = true;
@@ -1365,7 +1365,7 @@ export default {
             begin.setHours(0, 0, 0, 0)
 
             const end = new Date();
-            end.setHours(23, 59, 59, 999);
+            end.setHours(23, 0, 0, 0);
 
             this.value.start_datetimes.push(await this.datetime_repr(begin));
             this.value.end_datetimes.push(await this.datetime_repr(end));
