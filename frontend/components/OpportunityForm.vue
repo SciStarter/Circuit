@@ -318,6 +318,7 @@
                   editable
                   @input="time_periods_set(idx, 0, $event)">
                 </b-datetimepicker>
+                <span style="margin: 0.5em">to</span>
                 <b-datetimepicker
                   :value="pair[1]"
                   position="is-bottom-left"
@@ -971,7 +972,9 @@ export default {
                   .fill()
                   .map((_,i) => [starts[i], ends[i]]);
 
-            return pairs.sort();
+            //return pairs.sort();
+
+            return pairs
         },
 
         time_periods_local() {
@@ -983,7 +986,7 @@ export default {
         time_periods_display() {
             let pairs = [...this.time_periods_ISO];
 
-            pairs.sort();
+            //pairs.sort();
 
             return pairs.map(x => {
                 return [x[0] ? new Date(x[0].substring(0, 19)) : x[0], x[1] ? new Date(x[1].substring(0, 19)) : x[1]];
@@ -1222,7 +1225,7 @@ export default {
                 if(this.invalid('location_name', this.location === 'both' && !this.location_lookup)) valid = false;
                 if(this.invalid('organization_website', this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.toUpperCase().startsWith('HTTP')))) valid = false;
                 if(this.invalid('begin_datetime', this.when === 'time' && this.time_periods.length < 1)) valid = false;
-                if(this.invalid('begin_datetime', this.when === 'time' && (this.time_periods[0][0] && this.time_periods[0][1] && this.time_periods[0][0] > this.time_periods[0][1]))) valid = false;
+                if(this.invalid('begin_datetime', this.when === 'time' && (this.time_periods.length > 0) && (this.time_periods[0][0] && this.time_periods[0][1] && this.time_periods[0][0] > this.time_periods[0][1]))) valid = false;
             }
 
             if(state == 0 || state == 2) {
@@ -1361,11 +1364,11 @@ export default {
             const begin = new Date()
             begin.setHours(0, 0, 0, 0)
 
-            const end = new Date(dt);
+            const end = new Date();
             end.setHours(23, 59, 59, 999);
 
-            this.value.start_datetimes.push(begin);
-            this.value.end_datetimes.push(end);
+            this.value.start_datetimes.push(await this.datetime_repr(begin));
+            this.value.end_datetimes.push(await this.datetime_repr(end));
         },
 
         async datetime_repr(datetime, default_time, override_timezone) {
@@ -1785,7 +1788,7 @@ legend {
 
 #modal-dates {
   background-color: #fff;
-  max-width: 380px;
+  max-width: 420px;
   margin-bottom: 20px;
 
   :deep(.datepicker .dropdown-content) {
