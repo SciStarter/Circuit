@@ -297,39 +297,38 @@
       <transition name="slide">
       <div v-if="show_time_periods" class="set-info" id="modal-dates">
         <a class="action absolute-action" @click="show_time_periods=false;time_periods=[]"><close-icon /></a>
-        <b-field>
-          <template #label>
-            Select Dates<span class="required">*</span>
-          </template>
-          <b-datepicker :value="time_periods_dates" @input="time_periods_dates_set" inline multiple></b-datepicker>
-        </b-field>
+        <!-- <b-field> -->
+        <!--   <template #label> -->
+        <!--     Select Dates<span class="required">*</span> -->
+        <!--   </template> -->
+        <!--   <b-datepicker :value="time_periods_dates" @input="time_periods_dates_set" inline multiple></b-datepicker> -->
+        <!-- </b-field> -->
         <div id="time-periods">
-          <label class="label">Add times to each date<span class="required">*</span></label>
-          <small v-if="time_periods.length == 0">Select a date above.</small>
+          <label class="label">Add beginning and ending dates and times<span class="required">*</span></label>
           <div class="tp-list">
-
             <!-- date has no time set -->
             <div v-for="(pair, idx) in time_periods_local" class="tp-item">
               <div class="flex">
-                <h2>{{ pair[0] ? pair[0].toLocaleDateString() : '' }}</h2>
+                <h2>{{ pair[0] ? pair[0].toLocaleDateString() : '' }} <a @click="time_periods_delete(idx)">&times;</a></h2>
               </div>
               <div class="flex">
-                <b-timepicker
+                <b-datetimepicker
                   :value="pair[0]"
-                  placeholder="Start Time" 
+                  placeholder="Start Date and Time" 
                   editable
                   @input="time_periods_set(idx, 0, $event)">
-                </b-timepicker>
-                <b-timepicker
+                </b-datetimepicker>
+                <b-datetimepicker
                   :value="pair[1]"
                   position="is-bottom-left"
-                  placeholder="End Time" 
+                  placeholder="End Date and Time" 
                   editable
                   @input="time_periods_set(idx, 1, $event)">
-                </b-timepicker>
+                </b-datetimepicker>
               </div>
             </div>
           </div>
+          <a @click="time_periods_new">+new begin and end pair</a>
         </div><!-- #time-periods -->
       </div>
     </transition>
@@ -1169,33 +1168,33 @@ export default {
             this.time_periods_dates = this.time_periods.map(pair => pair[0]);
         },
 
-        time_periods_dates_set(val) {
-            const current = this.time_periods;
-            const updated = [];
+        // time_periods_dates_set(val) {
+        //     const current = new Map(this.time_periods);
+        //     const updated = [];
 
-            for(let pair of current) {
-                let idx = val.indexOf(pair[0]);
+        //     for(let pair of current) {
+        //         let idx = val.indexOf(pair[0]);
 
-                if(idx < 0) {
-                    continue;
-                }
-                else {
-                    val.splice(idx, 1);
-                    updated.push(pair);
-                }
-            }
+        //         if(idx < 0) {
+        //             continue;
+        //         }
+        //         else {
+        //             val.splice(idx, 1);
+        //             updated.push(pair);
+        //         }
+        //     }
 
-            for(let dt of val) {
-                const end = new Date(dt);
-                end.setHours(23);
-                end.setMinutes(59);
-                // end.setSeconds(59);
-                // end.setMilliseconds(999)
-                updated.push([dt, end]);
-            }
+        //     for(let dt of val) {
+        //         const end = new Date(dt);
+        //         end.setHours(23);
+        //         end.setMinutes(59);
+        //         // end.setSeconds(59);
+        //         // end.setMilliseconds(999)
+        //         updated.push([dt, end]);
+        //     }
 
-            this.time_periods = updated;
-        },
+        //     this.time_periods = updated;
+        // },
 
         invalid(name, invalid) {
             if(invalid) {
@@ -1351,6 +1350,22 @@ export default {
             else if(cell == 1) {
                 this.value.end_datetimes.splice(idx, 1, await this.datetime_repr(datetime));
             }
+        },
+
+        async time_periods_delete(idx) {
+            this.value.start_datetimes.splice(idx, 1);
+            this.value.end_datetimes.splice(idx, 1);
+        },
+
+        async time_periods_new() {
+            const begin = new Date()
+            begin.setHours(0, 0, 0, 0)
+
+            const end = new Date(dt);
+            end.setHours(23, 59, 59, 999);
+
+            this.value.start_datetimes.push(begin);
+            this.value.end_datetimes.push(end);
         },
 
         async datetime_repr(datetime, default_time, override_timezone) {
