@@ -3,6 +3,12 @@
   <li v-for="pair in upcoming_soonest" :key="'' + pair">
     {{ display(pair) }}
   </li>
+  <template v-if="upcoming.length > upcoming_soonest.length">
+    <li>...</li>
+    <li>
+      {{ display(upcoming[upcoming.length - 1]) }}
+    </li>
+  </template>
 </ul>
 </template>
 

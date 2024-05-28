@@ -17,6 +17,7 @@
 </div>
 
   <aside class="data-update">Date updated: {{updated_local}}</aside>
+  <aside class="data-update">Demographics are estimates, and come from commercial sources</aside>
 
   <div v-if="state=='opps'">
     <h3>Science Opportunities</h3>
@@ -37,7 +38,7 @@
               <comparison-bar :value="opps.active" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
             </div>
             <div>
-            <div class="bar-label"><span>Expired <b-tooltip label="Opportunities no longer available." position="is-top" append-to-body multilined>
+            <div class="bar-label"><span>Past <b-tooltip label="Opportunities no longer available." position="is-top" append-to-body multilined>
           <b-button label="?" /></b-tooltip></span><span><span class="legend-num">{{opps.inactive}}</span>/{{opps.total}}</span></div>
             <comparison-bar :value="opps.inactive" :max="opps.total" color="#165E6F" width="100%" height="1rem" />
           </div>
@@ -150,7 +151,7 @@
     </div>
 
     <div class="wordcloud-wrapper">
-      <h3>Top 30 Keywords  <b-tooltip label="The most used keywords to describe opportunities on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
+      <h3>Top Keywords  <b-tooltip label="The most used keywords to describe opportunities on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
       <word-cloud :words="opps.keywords"></word-cloud>
     </div>
 
@@ -260,7 +261,7 @@
     <table class="data-table">
       <thead>
       <tr>
-        <th class="narrow-column">Top 30 Searches by Keyword <b-tooltip label="Most used keyword searches on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></th>
+        <th class="narrow-column">Top Searches by Keyword <b-tooltip label="Most used keyword searches on Science Near Me." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></th>
         <th colspan="2">Total Searches</th>
       </tr>
     </thead>

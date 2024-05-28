@@ -297,39 +297,39 @@
       <transition name="slide">
       <div v-if="show_time_periods" class="set-info" id="modal-dates">
         <a class="action absolute-action" @click="show_time_periods=false;time_periods=[]"><close-icon /></a>
-        <b-field>
-          <template #label>
-            Select Dates<span class="required">*</span>
-          </template>
-          <b-datepicker :value="time_periods_dates" @input="time_periods_dates_set" inline multiple></b-datepicker>
-        </b-field>
+        <!-- <b-field> -->
+        <!--   <template #label> -->
+        <!--     Select Dates<span class="required">*</span> -->
+        <!--   </template> -->
+        <!--   <b-datepicker :value="time_periods_dates" @input="time_periods_dates_set" inline multiple></b-datepicker> -->
+        <!-- </b-field> -->
         <div id="time-periods">
-          <label class="label">Add times to each date<span class="required">*</span></label>
-          <small v-if="time_periods.length == 0">Select a date above.</small>
+          <label class="label">Add beginning and ending dates and times<span class="required">*</span></label>
           <div class="tp-list">
-
             <!-- date has no time set -->
             <div v-for="(pair, idx) in time_periods_local" class="tp-item">
               <div class="flex">
-                <h2>{{ pair[0] ? pair[0].toLocaleDateString() : '' }}</h2>
+                <h2>{{ pair[0] ? pair[0].toLocaleDateString() : '' }} <a @click="time_periods_delete(idx)">&times;</a></h2>
               </div>
               <div class="flex">
-                <b-timepicker
+                <b-datetimepicker
                   :value="pair[0]"
-                  placeholder="Start Time" 
+                  placeholder="Start Date and Time" 
                   editable
                   @input="time_periods_set(idx, 0, $event)">
-                </b-timepicker>
-                <b-timepicker
+                </b-datetimepicker>
+                <span style="margin: 0.5em">to</span>
+                <b-datetimepicker
                   :value="pair[1]"
                   position="is-bottom-left"
-                  placeholder="End Time" 
+                  placeholder="End Date and Time" 
                   editable
                   @input="time_periods_set(idx, 1, $event)">
-                </b-timepicker>
+                </b-datetimepicker>
               </div>
             </div>
           </div>
+          <a @click="time_periods_new">+new begin and end pair</a>
         </div><!-- #time-periods -->
       </div>
     </transition>
@@ -972,7 +972,9 @@ export default {
                   .fill()
                   .map((_,i) => [starts[i], ends[i]]);
 
-            return pairs.sort();
+            //return pairs.sort();
+
+            return pairs
         },
 
         time_periods_local() {
@@ -984,7 +986,7 @@ export default {
         time_periods_display() {
             let pairs = [...this.time_periods_ISO];
 
-            pairs.sort();
+            //pairs.sort();
 
             return pairs.map(x => {
                 return [x[0] ? new Date(x[0].substring(0, 19)) : x[0], x[1] ? new Date(x[1].substring(0, 19)) : x[1]];
@@ -1060,7 +1062,7 @@ export default {
                     this.value.has_end = false;
                 }
                 else {
-                    let repr = await this.datetime_repr(val, '23:59:59');
+                    let repr = await this.datetime_repr(val, '23:00:00');
                     if(repr != null) {
                         this.value.end_datetimes = [repr];
                         this.value.has_end = true;
@@ -1169,33 +1171,33 @@ export default {
             this.time_periods_dates = this.time_periods.map(pair => pair[0]);
         },
 
-        time_periods_dates_set(val) {
-            const current = this.time_periods;
-            const updated = [];
+        // time_periods_dates_set(val) {
+        //     const current = new Map(this.time_periods);
+        //     const updated = [];
 
-            for(let pair of current) {
-                let idx = val.indexOf(pair[0]);
+        //     for(let pair of current) {
+        //         let idx = val.indexOf(pair[0]);
 
-                if(idx < 0) {
-                    continue;
-                }
-                else {
-                    val.splice(idx, 1);
-                    updated.push(pair);
-                }
-            }
+        //         if(idx < 0) {
+        //             continue;
+        //         }
+        //         else {
+        //             val.splice(idx, 1);
+        //             updated.push(pair);
+        //         }
+        //     }
 
-            for(let dt of val) {
-                const end = new Date(dt);
-                end.setHours(23);
-                end.setMinutes(59);
-                // end.setSeconds(59);
-                // end.setMilliseconds(999)
-                updated.push([dt, end]);
-            }
+        //     for(let dt of val) {
+        //         const end = new Date(dt);
+        //         end.setHours(23);
+        //         end.setMinutes(59);
+        //         // end.setSeconds(59);
+        //         // end.setMilliseconds(999)
+        //         updated.push([dt, end]);
+        //     }
 
-            this.time_periods = updated;
-        },
+        //     this.time_periods = updated;
+        // },
 
         invalid(name, invalid) {
             if(invalid) {
@@ -1223,7 +1225,7 @@ export default {
                 if(this.invalid('location_name', this.location === 'both' && !this.location_lookup)) valid = false;
                 if(this.invalid('organization_website', this.learn === 'link' && (!this.value.organization_website || !this.value.organization_website.toUpperCase().startsWith('HTTP')))) valid = false;
                 if(this.invalid('begin_datetime', this.when === 'time' && this.time_periods.length < 1)) valid = false;
-                if(this.invalid('begin_datetime', this.when === 'time' && (this.time_periods[0][0] && this.time_periods[0][1] && this.time_periods[0][0] > this.time_periods[0][1]))) valid = false;
+                if(this.invalid('begin_datetime', this.when === 'time' && (this.time_periods.length > 0) && (this.time_periods[0][0] && this.time_periods[0][1] && this.time_periods[0][0] > this.time_periods[0][1]))) valid = false;
             }
 
             if(state == 0 || state == 2) {
@@ -1351,6 +1353,22 @@ export default {
             else if(cell == 1) {
                 this.value.end_datetimes.splice(idx, 1, await this.datetime_repr(datetime));
             }
+        },
+
+        async time_periods_delete(idx) {
+            this.value.start_datetimes.splice(idx, 1);
+            this.value.end_datetimes.splice(idx, 1);
+        },
+
+        async time_periods_new() {
+            const begin = new Date()
+            begin.setHours(0, 0, 0, 0)
+
+            const end = new Date();
+            end.setHours(23, 0, 0, 0);
+
+            this.value.start_datetimes.push(await this.datetime_repr(begin));
+            this.value.end_datetimes.push(await this.datetime_repr(end));
         },
 
         async datetime_repr(datetime, default_time, override_timezone) {
@@ -1770,7 +1788,7 @@ legend {
 
 #modal-dates {
   background-color: #fff;
-  max-width: 380px;
+  max-width: 420px;
   margin-bottom: 20px;
 
   :deep(.datepicker .dropdown-content) {

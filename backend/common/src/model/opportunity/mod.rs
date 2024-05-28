@@ -8,11 +8,12 @@ use crate::{geo, Database, ToFixedOffset};
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 //use deunicode::deunicode;
+use inflections::Inflect;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use sqlx::postgres::PgArguments;
+use sqlx::postgres::{PgArguments, PgHasArrayType, PgTypeInfo};
 use sqlx::query::Query;
 use sqlx::{prelude::*, Postgres};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -166,7 +167,7 @@ pub struct PageOptions {
     pub layout: PageLayout,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, AsRefStr, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum EntityType {
     Unspecified,
@@ -175,6 +176,38 @@ pub enum EntityType {
     #[serde(other)]
     #[default]
     Opportunity,
+}
+
+impl EntityType {
+    fn db_repr(&self) -> String {
+        self.as_ref().to_snake_case()
+    }
+}
+
+#[derive(sqlx::Type)]
+#[sqlx(type_name = "t_entity_type", rename_all = "snake_case")]
+enum DBEntityType {
+    Unspecified,
+    Attraction,
+    Page,
+    Opportunity,
+}
+
+impl PgHasArrayType for DBEntityType {
+    fn array_type_info() -> PgTypeInfo {
+        PgTypeInfo::with_name("_t_entity_type")
+    }
+}
+
+impl From<EntityType> for DBEntityType {
+    fn from(value: EntityType) -> Self {
+        match value {
+            EntityType::Unspecified => DBEntityType::Unspecified,
+            EntityType::Attraction => DBEntityType::Attraction,
+            EntityType::Page(_) => DBEntityType::Page,
+            EntityType::Opportunity => DBEntityType::Opportunity,
+        }
+    }
 }
 
 impl super::SelectOption for EntityType {
@@ -230,9 +263,20 @@ impl super::SelectOption for EntityType {
 }
 
 #[derive(
-    Debug, Default, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    EnumString,
+    AsRefStr,
+    Copy,
+    Clone,
+    PartialEq,
+    sqlx::Type,
 )]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "t_venue_type", rename_all = "snake_case")]
 pub enum VenueType {
     Indoors,
     Outdoors,
@@ -247,6 +291,12 @@ pub enum VenueType {
     #[serde(other)]
     #[default]
     Unspecified,
+}
+
+impl VenueType {
+    fn db_repr(&self) -> String {
+        self.as_ref().to_snake_case()
+    }
 }
 
 impl super::SelectOption for VenueType {
@@ -390,6 +440,12 @@ impl super::SelectOption for Descriptor {
     }
 }
 
+impl Descriptor {
+    fn db_repr(&self) -> String {
+        self.as_ref().to_snake_case()
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, EnumIter, EnumString, AsRefStr, Copy, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum Topic {
@@ -467,6 +523,12 @@ impl super::SelectOption for Topic {
     }
 }
 
+impl Topic {
+    fn db_repr(&self) -> String {
+        self.as_ref().to_snake_case()
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct OpenHours {
     pub opens: String,
@@ -495,6 +557,12 @@ pub enum Cost {
     Cost,
     #[serde(other)]
     Unknown,
+}
+
+impl Cost {
+    fn db_repr(&self) -> String {
+        self.as_ref().to_snake_case()
+    }
 }
 
 impl super::SelectOption for Cost {
@@ -1009,16 +1077,19 @@ enum ParamValue {
     RawFloat(f32),
     RawInt(i32),
     RawBool(bool),
-    //RawUuid(Uuid),
+    RawUuid(Uuid),
     RawVecString(Vec<String>),
-    Bool(bool),
+    RawVecEntityType(Vec<EntityType>),
+    RawVecUuid(Vec<Uuid>),
+    RawVenueType(VenueType),
+    //Bool(bool),
     Uuid(Uuid),
-    VecString(Vec<String>),
+    //VecString(Vec<String>),
     //VecTopic(Vec<Topic>),
-    VecEntityType(Vec<EntityType>),
+    //VecEntityType(Vec<EntityType>),
     //VecDescriptor(Vec<Descriptor>),
-    VecVenueType(Vec<VenueType>),
-    VecUuid(Vec<Uuid>),
+    //VecVenueType(Vec<VenueType>),
+    //VecUuid(Vec<Uuid>),
 }
 
 impl ParamValue {
@@ -1036,16 +1107,24 @@ impl ParamValue {
             ParamValue::RawFloat(val) => query.bind(val),
             ParamValue::RawInt(val) => query.bind(val),
             ParamValue::RawBool(val) => query.bind(val),
-            //ParamValue::RawUuid(val) => query.bind(val),
+            ParamValue::RawUuid(val) => query.bind(val),
             ParamValue::RawVecString(val) => query.bind(val),
-            ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
+            ParamValue::RawVecUuid(val) => query.bind(val),
+            ParamValue::RawVecEntityType(val) => query.bind(
+                val.into_iter()
+                    .map(|x| x.into())
+                    .collect::<Vec<DBEntityType>>(),
+            ),
+            ParamValue::RawVenueType(val) => query.bind(val),
+
+            //ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
             ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
+            //ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
             //ParamValue::VecTopic(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::VecEntityType(val) => query.bind(serde_json::to_value(val)?),
+            //ParamValue::VecEntityType(val) => query.bind(serde_json::to_value(val)?),
             //ParamValue::VecDescriptor(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::VecVenueType(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::VecUuid(val) => query.bind(serde_json::to_value(val)?),
+            //ParamValue::VecVenueType(val) => query.bind(serde_json::to_value(val)?),
+            //ParamValue::VecUuid(val) => query.bind(serde_json::to_value(val)?),
         })
     }
 
@@ -1061,7 +1140,6 @@ impl ParamValue {
     }
 }
 
-// !!!!
 fn build_matching_query(
     fields: &[&str],
     query: &OpportunityQuery,
@@ -1077,49 +1155,79 @@ fn build_matching_query(
     // https://postgis.net/docs/ST_Intersects.html
 
     if let Some(uid) = query.uid {
+        // clauses.push(format!(
+        //     "(${}::jsonb) @> (primary_table.exterior -> 'uid')",
+        //     ParamValue::Uuid(uid).append(&mut params)
+        // ));
+
         clauses.push(format!(
-            "(${}::jsonb) @> (primary_table.exterior -> 'uid')",
-            ParamValue::Uuid(uid).append(&mut params)
+            "${} = search.uid",
+            ParamValue::RawUuid(uid).append(&mut params)
         ));
     }
 
     if let Some(slug) = &query.slug {
+        // clauses.push(format!(
+        //     "${} = (primary_table.exterior ->> 'slug')",
+        //     ParamValue::RawString(slug.to_string()).append(&mut params)
+        // ));
+
         clauses.push(format!(
-            "${} = (primary_table.exterior ->> 'slug')",
+            "${} = search.slug",
             ParamValue::RawString(slug.to_string()).append(&mut params)
         ));
     }
 
     if let Some(val) = query.accepted {
+        // clauses.push(format!(
+        //     "(${}::jsonb) @> (primary_table.interior -> 'accepted')",
+        //     ParamValue::Bool(val).append(&mut params)
+        // ));
+
         clauses.push(format!(
-            "(${}::jsonb) @> (primary_table.interior -> 'accepted')",
-            ParamValue::Bool(val).append(&mut params)
+            "${} = search.accepted",
+            ParamValue::RawBool(val).append(&mut params)
         ));
     }
 
     if let Some(val) = query.withdrawn {
         if val {
-            clauses.push(
-                "(('true'::jsonb) @> (primary_table.interior -> 'withdrawn') OR coalesce(nullif(primary_table.interior ->> 'review_status', ''), 'not_required') IN ('draft', 'pending'))".to_string(),
-            );
+            // clauses.push(
+            //     "(('true'::jsonb) @> (primary_table.interior -> 'withdrawn') OR coalesce(nullif(primary_table.interior ->> 'review_status', ''), 'not_required') IN ('draft', 'pending'))".to_string(),
+            // );
+            clauses.push(String::from("(true = search.withdrawn OR coalesce(search.review_status, 'not_required') in ('draft', 'pending'))"));
         } else {
-            clauses.push(
-                "(('false'::jsonb) @> (primary_table.interior -> 'withdrawn') AND coalesce(nullif(primary_table.interior ->> 'review_status', ''), 'not_required') NOT IN ('draft', 'pending'))".to_string(),
-            );
+            // clauses.push(
+            //     "(('false'::jsonb) @> (primary_table.interior -> 'withdrawn') AND coalesce(nullif(primary_table.interior ->> 'review_status', ''), 'not_required') NOT IN ('draft', 'pending'))".to_string(),
+            // );
+            clauses.push(String::from("(false = search.withdrawn AND coalesce(search.review_status, 'not_required') not in ('draft', 'pending'))"));
         }
     }
 
     if let Some(region) = &query.region {
+        //         clauses.push(format!(
+        //             r#"(
+        // SELECT
+        //  COALESCE(
+        //   NULLIF(ST_Intersects(c_region.geometry, primary_table.location_point), false),
+        //   NULLIF(ST_Intersects(c_region.geometry, primary_table.location_polygon), false),
+        //   false
+        //  )
+        // FROM c_region WHERE "name" = ${}
+        // )"#,
+        //             ParamValue::RawString(region.to_owned()).append(&mut params)
+        //         ));
+
         clauses.push(format!(
-            r#"(
-SELECT
+            r#"
+(SELECT
  COALESCE(
-  NULLIF(ST_Intersects(c_region.geometry, primary_table.location_point), false),
-  NULLIF(ST_Intersects(c_region.geometry, primary_table.location_polygon), false),
+  NULLIF(ST_Intersects(c_region.geometry, search.location_point), false),
+  NULLIF(ST_Intersects(c_region.geometry, search.location_polygon), false),
   false
  )
-FROM c_region WHERE "name" = ${}
-)"#,
+FROM c_region WHERE "name" = ${})
+"#,
             ParamValue::RawString(region.to_owned()).append(&mut params)
         ));
     }
@@ -1137,23 +1245,67 @@ FROM c_region WHERE "name" = ${}
         let begin_param = ParamValue::RawString(begin).append(&mut params);
         let end_param = ParamValue::RawString(end).append(&mut params);
 
+        // clauses.push(format!(
+        //     r#"(
+        //         (
+        //          EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz AND value::timestamptz < ${}::timestamptz)
+        //          AND
+        //          EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz AND value::timestamptz < ${}::timestamptz)
+        //         )
+        //         OR
+        //         (
+        //          coalesce(nullif(primary_table.exterior ->> 'end_recurrence', ''), '0001-01-01')::timestamptz > ${}::timestamptz
+        //         )
+        //        )"#,
+        //     begin_param, end_param, begin_param, end_param, begin_param));
+
         clauses.push(format!(
             r#"(
                 (
-                 EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz AND value::timestamptz < ${}::timestamptz)
-                 AND
-                 EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz AND value::timestamptz < ${}::timestamptz)
+                 exists (select value from unnest(search.start_datetimes) t(value) where value > ${}::timestamptz and value < ${}::timestamptz)
+                 and
+                 exists (select value from unnest(search.end_datetimes) t(value) where value > ${}::timestamptz and value < ${}::timestamptz)
                 )
-                OR
+                or
                 (
-                 coalesce(nullif(primary_table.exterior ->> 'end_recurrence', ''), '0001-01-01')::timestamptz > ${}::timestamptz
+                 coalesce(search.end_recurrence, '0001-01-01')::timestamptz > ${}::timestamptz
                 )
                )"#,
-            begin_param, end_param, begin_param, end_param, begin_param));
+            begin_param, end_param, begin_param, end_param, begin_param
+        ));
     } else {
         if let Some(val) = query.current {
+            // clauses.push(format!(
+            //     r#"c_opportunity_is_current(primary_table.interior, primary_table.exterior) = ${}"#,
+            //     ParamValue::RawBool(val).append(&mut params)
+            // ));
             clauses.push(format!(
-                r#"c_opportunity_is_current(primary_table.interior, primary_table.exterior) = ${}"#,
+                r#"
+                ${} = (
+                  coalesce(search.review_status, 'not_required') in ('publish', 'not_required')
+                  and
+                  search.accepted = true
+                  and
+                  search.withdrawn = false
+                  and
+                  (
+                    (
+                      array_length(search.start_datetimes, 1) <= 1
+                      and
+                      array_length(search.end_datetimes, 1) = 0
+                    )
+                    or
+                    exists (select value from unnest(search.start_datetimes) t(value) where value > now())
+                    or
+                    exists (select value from unnest(search.end_datetimes) t(value) where value > now())
+                    or
+                    (
+                      (search.recurrence = 'daily' or search.recurrence = 'weekly')
+                      and
+                      (search.end_recurrence is null or search.end_recurrence > now())
+                    )
+                  )
+                )"#,
                 ParamValue::RawBool(val).append(&mut params)
             ));
         }
@@ -1161,10 +1313,10 @@ FROM c_region WHERE "name" = ${}
 
     if let Some(person) = query.involved {
         clauses.push(format!(
-            r"EXISTS (SELECT 1 FROM c_involvement AS inv
-              WHERE (inv.exterior -> 'opportunity') @> (primary_table.exterior -> 'uid')
+            r#"EXISTS (SELECT 1 FROM c_involvement AS inv
+              WHERE (inv.exterior -> 'opportunity') @> ('"' || search.uid::text || '"')::jsonb
               AND (inv.interior -> 'participant') @> ${}::jsonb
-              AND (inv.exterior ->> 'mode')::integer >= ${})",
+              AND (inv.exterior ->> 'mode')::integer >= ${})"#,
             ParamValue::Uuid(person).append(&mut params),
             ParamValue::RawInt(involvement::Mode::Interest as i32).append(&mut params),
         ));
@@ -1172,10 +1324,10 @@ FROM c_region WHERE "name" = ${}
 
     if let Some(person) = query.saved {
         clauses.push(format!(
-            r"EXISTS (SELECT 1 FROM c_involvement AS inv
-              WHERE (inv.exterior -> 'opportunity') @> (primary_table.exterior -> 'uid')
+            r#"EXISTS (SELECT 1 FROM c_involvement AS inv
+              WHERE (inv.exterior -> 'opportunity') @> ('"' || search.uid::text || '"')::jsonb
               AND (inv.interior -> 'participant') @> ${}::jsonb
-              AND (inv.exterior ->> 'mode')::integer = ${})",
+              AND (inv.exterior ->> 'mode')::integer = ${})"#,
             ParamValue::Uuid(person).append(&mut params),
             ParamValue::RawInt(involvement::Mode::Saved as i32).append(&mut params),
         ));
@@ -1183,56 +1335,83 @@ FROM c_region WHERE "name" = ${}
 
     if let Some(person) = query.participated {
         clauses.push(format!(
-            r"EXISTS (SELECT 1 FROM c_involvement AS inv
-              WHERE (inv.exterior -> 'opportunity') @> (primary_table.exterior -> 'uid')
+            r#"EXISTS (SELECT 1 FROM c_involvement AS inv
+              WHERE (inv.exterior -> 'opportunity') @> ('"' || search.uid::text || '"')::jsonb
               AND (inv.interior -> 'participant') @> ${}::jsonb
-              AND (inv.exterior ->> 'mode')::integer >= ${})",
+              AND (inv.exterior ->> 'mode')::integer >= ${})"#,
             ParamValue::Uuid(person).append(&mut params),
             ParamValue::RawInt(involvement::Mode::Logged as i32).append(&mut params),
         ));
     }
 
     if let Some(val) = &query.entity_type {
+        // clauses.push(format!(
+        //     r"(primary_table.exterior -> 'entity_type') <@ ${}",
+        //     ParamValue::VecEntityType(val.clone()).append(&mut params)
+        // ));
         clauses.push(format!(
-            r"(primary_table.exterior -> 'entity_type') <@ ${}",
-            ParamValue::VecEntityType(val.clone()).append(&mut params)
+            "search.entity_type = any(${})",
+            ParamValue::RawVecEntityType(val.clone()).append(&mut params)
         ));
     }
 
     if let Some(val) = &query.title_contains {
+        // clauses.push(format!(
+        //     "(primary_table.exterior ->> 'title') ILIKE ${}",
+        //     ParamValue::RawString(format!("%{}%", val)).append(&mut params)
+        // ));
         clauses.push(format!(
-            "(primary_table.exterior ->> 'title') ILIKE ${}",
+            "search.title ilike ${}",
             ParamValue::RawString(format!("%{}%", val)).append(&mut params)
         ));
     }
 
     if let Some(val) = &query.tags {
+        // clauses.push(format!(
+        //     "(primary_table.exterior -> 'tags') @> ${}",
+        //     ParamValue::VecString(val.clone()).append(&mut params)
+        // ));
+
         clauses.push(format!(
-            "(primary_table.exterior -> 'tags') @> ${}",
-            ParamValue::VecString(val.clone()).append(&mut params)
+            "search.tags && ${}", // In Postgresql when comparing arrays, && means 'is the intersection not empty?'
+            ParamValue::RawVecString(val.clone()).append(&mut params)
         ));
     }
 
     if let Some(val) = &query.topics {
+        // clauses.push(format!(
+        //     "(primary_table.exterior -> 'opp_topics') ?| ${}",
+        //     ParamValue::RawVecString(val.clone().into_iter().map(|x| x.to_string()).collect())
+        //         .append(&mut params)
+        // ));
         clauses.push(format!(
-            "(primary_table.exterior -> 'opp_topics') ?| ${}",
-            ParamValue::RawVecString(val.clone().into_iter().map(|x| x.to_string()).collect())
-                .append(&mut params)
+            "search.topics && ${}",
+            ParamValue::RawVecString(val.iter().map(|v| v.db_repr()).collect()).append(&mut params)
         ));
     }
 
     if let Some(val) = &query.descriptors {
+        // clauses.push(format!(
+        //     "(primary_table.exterior -> 'opp_descriptor') ?| ${}",
+        //     ParamValue::RawVecString(val.clone().into_iter().map(|x| x.to_string()).collect())
+        //         .append(&mut params)
+        // ))
+
         clauses.push(format!(
-            "(primary_table.exterior -> 'opp_descriptor') ?| ${}",
-            ParamValue::RawVecString(val.clone().into_iter().map(|x| x.to_string()).collect())
-                .append(&mut params)
-        ))
+            "search.descriptors && ${}",
+            ParamValue::RawVecString(val.iter().map(|v| v.db_repr()).collect()).append(&mut params)
+        ));
     }
 
     if let Some(val) = &query.partner {
+        // clauses.push(format!(
+        //     "(${}::jsonb) @> (primary_table.exterior -> 'partner')",
+        //     ParamValue::Uuid(val.clone()).append(&mut params)
+        // ));
+
         clauses.push(format!(
-            "(${}::jsonb) @> (primary_table.exterior -> 'partner')",
-            ParamValue::Uuid(val.clone()).append(&mut params)
+            "search.partner = ${}",
+            ParamValue::RawUuid(*val).append(&mut params)
         ));
     }
 
@@ -1240,51 +1419,86 @@ FROM c_region WHERE "name" = ${}
         let uuid_param = ParamValue::Uuid(val.clone()).append(&mut params);
         clauses.push(format!(
             r#"
-(
-  (primary_table.interior -> 'submitted_by' @> ${}::jsonb)
-OR
-  (
-    SELECT jsonb_agg("uid") FROM (
-        SELECT (c_partner.exterior -> 'uid') AS "uid" FROM c_partner
-        WHERE (c_partner.interior -> 'authorized') @> (${}::jsonb)
-        OR (c_partner.interior -> 'prime') @> (${}::jsonb)
-    ) AS "authorized_partners"
-  ) @> (primary_table.exterior -> 'partner')
-)"#,
+            (
+              (primary_table.interior -> 'submitted_by' @> ${}::jsonb)
+              or
+              (
+                SELECT jsonb_agg("uid") FROM (
+                    SELECT (c_partner.exterior -> 'uid') AS "uid" FROM c_partner
+                    WHERE (c_partner.interior -> 'authorized') @> (${}::jsonb)
+                    OR (c_partner.interior -> 'prime') @> (${}::jsonb)
+                ) AS "authorized_partners"
+              ) @> (primary_table.exterior -> 'partner')
+            )"#,
             uuid_param, uuid_param, uuid_param
         ));
     }
 
     if let Some(text) = &query.text {
+        // clauses.push(format!(
+        //     "primary_table.fulltext_english @@ websearch_to_tsquery(${})",
+        //     ParamValue::RawString(text.to_string()).append(&mut params)
+        // ));
+
         clauses.push(format!(
-            "primary_table.fulltext_english @@ websearch_to_tsquery(${})",
+            "search.fulltext_english @@ websearch_to_tsquery(${})",
             ParamValue::RawString(text.to_string()).append(&mut params)
         ));
     }
 
     if let Some(beginning) = &query.beginning {
         let time_param = ParamValue::RawString(beginning.to_rfc3339()).append(&mut params);
+        // clauses.push(format!(
+        //     r"(EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
+        //       OR
+        //       EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz)
+        //       OR
+        //       ((primary_table.exterior->>'recurrence' = 'daily' OR primary_table.exterior->>'recurrence' = 'weekly') AND (primary_table.exterior->>'end_recurrence' IS null OR (primary_table.exterior->>'end_recurrence')::timestamptz > ${}::timestamptz ))
+        //       OR (
+        //        jsonb_array_length(primary_table.exterior -> 'start_datetimes') <= 1
+        //        AND
+        //        jsonb_array_length(primary_table.exterior -> 'end_datetimes') = 0
+        //       ))",
+        // time_param, time_param, time_param));
+
         clauses.push(format!(
-            r"(EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
-              OR
-              EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz)
-              OR
-              ((primary_table.exterior->>'recurrence' = 'daily' OR primary_table.exterior->>'recurrence' = 'weekly') AND (primary_table.exterior->>'end_recurrence' IS null OR (primary_table.exterior->>'end_recurrence')::timestamptz > ${}::timestamptz ))
-              OR (
-               jsonb_array_length(primary_table.exterior -> 'start_datetimes') <= 1
-               AND
-               jsonb_array_length(primary_table.exterior -> 'end_datetimes') = 0
-              ))",
-        time_param, time_param, time_param));
+            r#"
+            (
+              exists(select value from unnest(search.start_datetimes) t(value) where value > ${}::timestamptz)
+              or
+              exists(select value from unnest(search.end_datetimes) t(value) where value > ${}::timestamptz)
+              or (
+                (search.recurrence = 'daily' or search.recurrence = 'weekly')
+                and
+                (search.end_recurrence is null or search.end_recurrence > ${}::timestamptz)
+              )
+              or (
+               array_length(search.start_datetimes, 1) <= 1
+               and
+               array_length(search.end_datetimes, 1) = 0
+              )
+            )"#,
+            time_param, time_param, time_param
+        ));
     }
 
     if let Some(ending) = &query.ending {
         let time_param = ParamValue::RawString(ending.to_rfc3339()).append(&mut params);
+        // clauses.push(format!(
+        //     r"(NOT EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
+        //       AND
+        //       NOT EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz))",
+        // time_param, time_param));
+
         clauses.push(format!(
-            r"(NOT EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
-              AND
-              NOT EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz))",
-        time_param, time_param));
+            r#"
+            (
+              not exists (select value from unnest(search.start_datetimes) t(value) where value > ${}::timestamptz)
+              and
+              not exists (select value from unnest(search.end_datetimes) t(value) where value > ${}::timestamptz)
+            )"#,
+            time_param, time_param
+        ));
     }
 
     // Minimum and maximum age in queries each define a contraint on
@@ -1293,46 +1507,73 @@ OR
     // queried max age checks that the opporuntity minimum is less
     // than the queried minimum
     if let Some(min_age) = &query.min_age {
+        // clauses.push(format!(
+        //     "(primary_table.exterior -> 'max_age')::integer >= ${}",
+        //     ParamValue::RawInt(*min_age as i32).append(&mut params)
+        // ))
+
         clauses.push(format!(
-            "(primary_table.exterior -> 'max_age')::integer >= ${}",
+            "search.max_age >= ${}",
             ParamValue::RawInt(*min_age as i32).append(&mut params)
-        ))
+        ));
     }
 
     if let Some(max_age) = &query.max_age {
+        // clauses.push(format!(
+        //     "(primary_table.exterior -> 'min_age')::integer <= ${}",
+        //     ParamValue::RawInt(*max_age as i32).append(&mut params)
+        // ))
+
         clauses.push(format!(
-            "(primary_table.exterior -> 'min_age')::integer <= ${}",
+            "search.min_age <= ${}",
             ParamValue::RawInt(*max_age as i32).append(&mut params)
-        ))
+        ));
     }
 
     if query.kids_only.unwrap_or(false) {
-        clauses.push("(primary_table.exterior -> 'max_age')::integer <= 18".to_string())
+        // clauses.push("(primary_table.exterior -> 'max_age')::integer <= 18".to_string())
+        clauses.push("search.max_age <= 18".to_string())
     }
 
     if query.adults_only.unwrap_or(false) {
-        clauses.push("(primary_table.exterior -> 'min_age')::integer >= 21".to_string())
+        // clauses.push("(primary_table.exterior -> 'min_age')::integer >= 21".to_string())
+        clauses.push("search.min_age >= 21".to_string())
     }
 
     if let Some(cost) = &query.cost {
+        // clauses.push(format!(
+        //     "(primary_table.exterior ->> 'cost') = ${}",
+        //     ParamValue::RawString(cost.as_ref().to_lowercase()).append(&mut params)
+        // ))
+
         clauses.push(format!(
-            "(primary_table.exterior ->> 'cost') = ${}",
-            ParamValue::RawString(cost.as_ref().to_lowercase()).append(&mut params)
-        ))
+            "search.cost = ${}",
+            ParamValue::RawString(cost.db_repr()).append(&mut params)
+        ));
     }
 
     if let Some(venue_type) = &query.venue_type {
+        // clauses.push(format!(
+        //     "(primary_table.exterior -> 'opp_venue') @> ${}",
+        //     ParamValue::VecVenueType(vec![venue_type.clone()]).append(&mut params)
+        // ))
+
         clauses.push(format!(
-            "(primary_table.exterior -> 'opp_venue') @> ${}",
-            ParamValue::VecVenueType(vec![venue_type.clone()]).append(&mut params)
-        ))
+            "any(search.venue_type) = ${}",
+            ParamValue::RawVenueType(venue_type.clone()).append(&mut params)
+        ));
     }
 
     if let Some(host) = &query.host {
+        // clauses.push(format!(
+        //     "(primary_table.exterior ->> 'organization_name') ILIKE ${}",
+        //     ParamValue::RawString(format!("%{}%", host)).append(&mut params)
+        // ))
+
         clauses.push(format!(
-            "(primary_table.exterior ->> 'organization_name') ILIKE ${}",
-            ParamValue::RawString(format!("%{}%", host)).append(&mut params)
-        ))
+            "search.organization_name ilike ${}",
+            ParamValue::RawString(host.to_string()).append(&mut params)
+        ));
     }
 
     if let Some(physical) = &query.physical {
@@ -1345,9 +1586,21 @@ OR
                 // ));
 
                 // The area constant is ten thousand square miles in square meters
-                clauses.push(format!(
-                    "(((${}::jsonb) @> (primary_table.exterior -> 'is_online')) AND (primary_table.location_polygon IS NULL OR ST_Area(primary_table.location_polygon, false) <= 25899752356) AND (primary_table.exterior ->> 'location_type' NOT IN ('any', 'unknown')))",
-                    ParamValue::Bool(false).append(&mut params)
+
+                // clauses.push(format!(
+                //     "(((${}::jsonb) @> (primary_table.exterior -> 'is_online')) AND (primary_table.location_polygon IS NULL OR ST_Area(primary_table.location_polygon, false) <= 25899752356) AND (primary_table.exterior ->> 'location_type' NOT IN ('any', 'unknown')))",
+                //     ParamValue::Bool(false).append(&mut params)
+                // ));
+
+                clauses.push(String::from(
+                    r#"
+                    (
+                      (search.is_online = false)
+                      and
+                      (search.location_polygon is null or ST_Area(search.location_polygon, false) <= 25899752356)
+                      and
+                      (search.location_type not in ('any', 'unknown'))
+                    )"#,
                 ));
             }
             OpportunityQueryPhysical::Online => {
@@ -1357,7 +1610,17 @@ OR
                 // ));
 
                 // The area constant is ten thousand square miles in square meters
-                clauses.push(format!("(((${}::jsonb) @> (primary_table.exterior -> 'is_online')) OR (primary_table.location_polygon IS NOT NULL AND ST_Area(primary_table.location_polygon, false) > 25899752356))", ParamValue::Bool(true).append(&mut params)));
+
+                // clauses.push(format!("(((${}::jsonb) @> (primary_table.exterior -> 'is_online')) OR (primary_table.location_polygon IS NOT NULL AND ST_Area(primary_table.location_polygon, false) > 25899752356))", ParamValue::Bool(true).append(&mut params)));
+
+                clauses.push(String::from(
+                    r#"
+                    (
+                      (search.is_online = true)
+                      or
+                      (search.location_polygon is not null and ST_Area(search.location_polygon, false) > 25899752356)
+                    )"#
+                ));
             }
         }
     }
@@ -1366,16 +1629,44 @@ OR
         match temporal {
             OpportunityQueryTemporal::OnDemandOrScheduled => {}
             OpportunityQueryTemporal::Scheduled => {
-                clauses.push(
-                    "c_opportunity_is_scheduled(primary_table.interior, primary_table.exterior)"
-                        .into(),
-                );
+                // clauses.push(
+                //     "c_opportunity_is_scheduled(primary_table.interior, primary_table.exterior)"
+                //         .into(),
+                // );
+
+                clauses.push(String::from(
+                    r#"
+                    array_length(search.start_datetimes, 1) > 1
+                    or
+                    array_length(search.end_datetimes, 1) > 1
+                    or (
+                      array_length(search.start_datetimes, 1) = 1
+                      and
+                      array_length(search.end_datetimes, 1) = 1
+                      and
+                      age(search.end_datetimes[0], search.start_datetimes[0]) <= interval '7 days'
+                    )"#,
+                ));
             }
             OpportunityQueryTemporal::OnDemand => {
-                clauses.push(
-                    "c_opportunity_is_ondemand(primary_table.interior, primary_table.exterior)"
-                        .into(),
-                );
+                // clauses.push(
+                //     "c_opportunity_is_ondemand(primary_table.interior, primary_table.exterior)"
+                //         .into(),
+                // );
+
+                clauses.push(String::from(
+                    r#"
+                    array_length(search.start_datetimes, 1) <= 1
+                    and
+                    array_length(search.end_datetimes, 1) <= 1
+                    and (
+                      array_length(search.start_datetimes, 1) != 1
+                      or
+                      array_length(search.end_datetimes, 1) != 1
+                      or
+                      age(search.end_datetimes[0], search.start_datetimes[0]) > interval '7 days'
+                    )"#,
+                ));
             }
         }
     }
@@ -1415,17 +1706,15 @@ OR
 
     if let Some(exclusions) = &query.exclude {
         clauses.push(format!(
-            "NOT ((primary_table.exterior -> 'uid') <@ ${})",
-            ParamValue::VecUuid(exclusions.clone()).append(&mut params)
+            "NOT (search.uid = any(${}))",
+            ParamValue::RawVecUuid(exclusions.clone()).append(&mut params)
         ));
     }
 
     let mut query_string = "SELECT ".to_string();
 
     if ordering == OpportunityQueryOrdering::Unique {
-        query_string.push_str(
-            "DISTINCT ON (primary_table.exterior->>'title', primary_table.exterior->>'partner') ",
-        );
+        query_string.push_str("DISTINCT ON (search.title, search.partner) ");
     }
 
     match fields.len() {
@@ -1434,18 +1723,32 @@ OR
         _ => query_string.push_str(fields.join(", ").as_str()),
     }
 
+    //     query_string.push_str(
+    //         r#" FROM (
+    // SELECT
+    //     id,
+    //     created,
+    //     updated,
+    //     location_point,
+    //     location_polygon,
+    //     fulltext_english,
+    //     (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) AS exterior,
+    //     (c_opportunity.interior || COALESCE(c_opportunity_overlay.interior, '{}'::jsonb)) AS interior
+    // "#,
+    //     );
+
     query_string.push_str(
-        r#" FROM (
-SELECT
-    id,
-    created,
-    updated,
-    location_point,
-    location_polygon,
-    fulltext_english,
-    (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) AS exterior,
-    (c_opportunity.interior || COALESCE(c_opportunity_overlay.interior, '{}'::jsonb)) AS interior
-"#,
+        r#" FROM c_opportunity_search search JOIN (
+                    SELECT
+                        id,
+                        created,
+                        updated,
+                        location_point,
+                        location_polygon,
+                        fulltext_english,
+                        (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) AS exterior,
+                        (c_opportunity.interior || COALESCE(c_opportunity_overlay.interior, '{}'::jsonb)) AS interior
+                    "#,
     );
 
     if let Some(uid) = &query.prefer_partner {
@@ -1493,18 +1796,22 @@ SELECT
             CASE
               WHEN jsonb_array_length((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') = 0 AND jsonb_array_length((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') = 0
               THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
-              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
-              THEN (SELECT MIN(value::timestamptz) FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP LIMIT 1)
-              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') t(value) WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              THEN (SELECT MIN(value::timestamptz) FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') t(value) WHERE value::timestamptz > CURRENT_TIMESTAMP LIMIT 1)
+              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') t(value) WHERE value::timestamptz > CURRENT_TIMESTAMP)
               THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
               ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
             END AS _sort_time
         "#);
 
-    query_string.push_str(" FROM c_opportunity LEFT JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id) AS primary_table");
+    // query_string.push_str(" FROM c_opportunity LEFT JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id) AS primary_table");
+    query_string.push_str(" FROM c_opportunity LEFT JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id) AS primary_table ON search.opp_id = primary_table.id");
 
     if ordering == OpportunityQueryOrdering::PartnerName {
-        query_string.push_str(" LEFT JOIN c_partner ON primary_table.exterior->>'partner' = c_partner.exterior->>'uid'");
+        // query_string.push_str(" LEFT JOIN c_partner ON primary_table.exterior->>'partner' = c_partner.exterior->>'uid'");
+        query_string.push_str(
+            " LEFT JOIN c_partner ON search.partner = (c_partner.exterior->>'uid')::uuid",
+        );
     }
 
     if !clauses.is_empty() {
@@ -1529,7 +1836,7 @@ SELECT
 
     match ordering {
         OpportunityQueryOrdering::Alphabetical => {
-            query_string.push_str(" ORDER BY (exterior ->> 'title') ASC");
+            query_string.push_str(" ORDER BY (search.title) ASC");
         }
         OpportunityQueryOrdering::Closest => {
             query_string.push_str(
@@ -1544,11 +1851,11 @@ SELECT
         OpportunityQueryOrdering::Native => query_string.push_str(" ORDER BY id ASC"),
         OpportunityQueryOrdering::Any => {}
         OpportunityQueryOrdering::Unique => {
-            query_string.push_str(" ORDER BY exterior->>'title', exterior->>'partner' ASC")
+            query_string.push_str(" ORDER BY search.title, search.partner ASC")
         }
-        OpportunityQueryOrdering::PartnerName => query_string.push_str(
-            " ORDER BY (c_partner.exterior->>'name') ASC, (primary_table.exterior->>'title') ASC",
-        ),
+        OpportunityQueryOrdering::PartnerName => {
+            query_string.push_str(" ORDER BY (c_partner.exterior->>'name') ASC, search.title ASC")
+        }
     }
 
     match pagination {
@@ -1558,6 +1865,9 @@ SELECT
             query_string.push_str(format!(" LIMIT {} OFFSET {};", size, index * size).as_ref())
         }
     };
+
+    println!("Constructed query: {}", &query_string);
+    println!("Constructed params: {:?}", &params);
 
     Ok((query_string, params))
 }
