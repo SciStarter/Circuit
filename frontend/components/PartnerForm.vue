@@ -2,9 +2,9 @@
 <div class="organizations snm-container">
   <div class="nav-tab-wrapper">
     <ul class="nav-tabs">
-      <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Organizational Settings</a></li>
-      <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Page Managers</a></li>
-      <li><a class="tab-link":class="{'active':state==3}" @click="state=3">Org Contact Info</a></li>
+      <li><a class="tab-link" :class="{'active':state==1}" @click="state=1">Organizational Settings</a></li>
+      <li><a class="tab-link" :class="{'active':state==2}" @click="state=2">Page Managers</a></li>
+      <li><a class="tab-link" :class="{'active':state==3}" @click="state=3">Org Contact Info</a></li>
     </ul>
   </div>
 
@@ -16,6 +16,9 @@
     <profile-item v-model="partner.image_url" label="Logo Link" @input="save" class="no-border" />
     <img v-if="partner.image_url" :src="partner.image_url" class="display-image">
     <img v-else src="~/assets/img/no-image-thumb.jpg" class="display-image">
+
+    <h3>Exchange Color Settings</h3>
+    <p>The following are only for partners using an <a href="/display-opportunities">Exchange</a>.</p>
     <profile-item v-model="partner.background_color" color label="Background Color" @input="save" class="no-border" />
     <profile-item v-model="partner.primary_color" color label="Primary Color" @input="save" class="no-border" />
     <profile-item v-model="partner.secondary_color" color label="Secondary Color" @input="save" class="no-border" />
