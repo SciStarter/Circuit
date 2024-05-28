@@ -32,8 +32,8 @@
 
     <div class="nav-tab-wrapper">
       <ul class="nav-tabs">
-        <li><a class="tab-link":class="{'active':state==2}" @click="state=2">Get the Exchange</a></li>
-        <li><a class="tab-link":class="{'active':state==1}" @click="state=1">Get the Widget</a></li>
+        <li><a class="tab-link" :class="{'active':state==2}" @click="state=2">Get the Exchange</a></li>
+        <li><a class="tab-link" :class="{'active':state==1}" @click="state=1">Get the Widget</a></li>
       </ul>
     </div>
 
@@ -301,7 +301,7 @@
       </ol>
     </div>
   </div>
-</div>
+<!-- </div> -->
 </template>
 
 <script>
@@ -541,6 +541,12 @@ export default {
     border:1px solid $snm-color-border;
     margin:10px 0;
     padding:10px;
+}
+
+.h3 {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
 }
 
 section {
