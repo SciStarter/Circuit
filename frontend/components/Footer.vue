@@ -18,6 +18,9 @@
           Contact Us
         </nuxt-link>
       </li>
+      <li>
+        <a href="https://github.com/SciStarter/Circuit/issues">Issue Tracker</a>
+      </li>
     </ul>
 
     <ul>
@@ -53,8 +56,34 @@
       </div>
     </div>
     </div>
+    <div class="snm-container">  
+      <div class="footer-social">
+        <a href="https://www.facebook.com/find.science.near.me"><facebook-icon /></a>
+        <a href="https://www.instagram.com/science_near_me/"><instagram-icon /></a>
+        <a href="https://twitter.com/science_near_me"><twitter-icon /></a>
+        <a href="https://www.linkedin.com/company/science-near-me/"><linkedin-icon /></a>
+      </div>
+    </div>
   </footer>
 </template>
+
+<script>
+import TwitterIcon from '~/assets/img/twitter-app-reverse.svg?inline'
+import FacebookIcon from '~/assets/img/facebook-reverse.svg?inline'
+import LinkedinIcon from '~/assets/img/linkedin-reverse.svg?inline'
+import InstagramIcon from '~/assets/img/instagram-reverse.svg?inline'
+
+export default {
+    name: "SocialButton",
+
+    components: {
+        TwitterIcon,
+        FacebookIcon,
+        LinkedinIcon,
+        InstagramIcon
+    }
+  }
+</script>
 
 <style lang="scss" scoped>
 
@@ -962,6 +991,15 @@ footer {
 .my-submit-opportunity, .my-edit-opportunity{
   footer, .subfooter {
     display:none;
+  }
+}
+
+.footer-social {
+  display: flex;
+  gap: 1rem;
+
+  svg {
+    width:24px;
   }
 }
 

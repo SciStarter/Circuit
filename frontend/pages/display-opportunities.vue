@@ -250,7 +250,7 @@
       <li><external-link href="https://www.wisconsinsciencefest.org/science%20near%20me/">Wisconsin Science Festival</external-link></li>
       <li><external-link href="https://mainediscovery.wixsite.com/sciencearoundme/science">Maine Discovery Museum</external-link> (beta)</li>
     </ul>
-    <h2 class="h3" style="margin-top:20px">Request an Exchange</h2>
+    <!-- <h2 class="h3" style="margin-top:20px">Request an Exchange</h2>
     <ol>
       <li>Create a Science Near Me account, if you haven't done so already</li>
       <li>Send an email request to <a href="mailto:info@sciencenearme.org">info@sciencenearme.org</a>
@@ -262,7 +262,7 @@
           <li>The URL or website on which you plan to host the exchange.</li>
         </ul>
       </li>
-    </ol>
+    </ol> -->
   </div>
 
     <div v-if="state==2" class="about-exchange">

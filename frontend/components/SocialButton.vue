@@ -75,7 +75,7 @@ export default {
                 via = encode('science_near_me');
                 handle = (!!this.opportunity?.opp_social_handles?.twitter) ? (' @' + this.opportunity.opp_social_handles.twitter) : "";
                 title = encode((this.title || this.opportunity.title) + handle);
-                return 'https://twitter.com/share?url=' + url + '&text=' + title + '&via=' + via + '&hashtags=' + hashtags;
+                return 'https://twitter.com/share?url=' + url + '&text=Check%20out%20this%20great%20science%20opportunity%3A%20' + title + '&via=' + via + '&hashtags=' + hashtags;
             case 'facebook':
                 via = encode('https://www.facebook.com/find.science.near.me');
                 handle = (!!this.opportunity?.opp_social_handles?.facebook) ? (' from ' + this.opportunity.opp_social_handles.facebook) : "";

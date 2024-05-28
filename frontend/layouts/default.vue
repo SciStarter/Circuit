@@ -2,7 +2,7 @@
 <div id="page" :style="custom_props" :class="[$route.name,{'authenticated': authenticated, 'not-authenticated': !authenticated}]">
   <div class="beta-banner snm-wrapper">
     <div class="snm-container">
-    <p><img src="~assets/img/atom.svg?data"><b>We're in beta!</b> If you find a bug or have feedback, you can email <a href="mailto:info@sciencenearme.org">info@sciencenearme.org</a>.</p>
+    <p><img src="~assets/img/atom.svg?data"><b>We're in beta!</b> If you find a bug or have feedback, let us know in our <a href="https://github.com/SciStarter/Circuit/issues">issue tracker</a>.</p>
   </div>
   </div>
   <header class="flex flex-align-center flex-justify-sb">
