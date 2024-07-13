@@ -45,7 +45,7 @@ pub const TOKEN_COOKIE: &'static str = "__Host-token";
 #[cfg(debug_assertions)]
 pub const TOKEN_COOKIE: &'static str = "token";
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct ResetForm {
     email: String,
 }

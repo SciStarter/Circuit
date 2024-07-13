@@ -135,11 +135,15 @@ pub async fn send<S0: AsRef<str>, S1: AsRef<str>, S2: AsRef<str>, S3: AsRef<str>
     subject: S2,
     body: S3,
 ) {
-    async_std::task::spawn(
+    let handle = async_std::task::spawn(
         surf::post(&*MAILER_ENDPOINT)
             .body(serde_json::json!({"to": to.as_ref(), "from": from.as_ref(), "subject": subject.as_ref(), "body": body.as_ref()}))
             .send(),
     );
+
+    if let Err(err) = handle.await {
+        eprintln!("Error sending email: {}", err);
+    }
 }
 
 pub async fn send_message<S0: AsRef<str>>(to: S0, msg: &EmailMessage) {
