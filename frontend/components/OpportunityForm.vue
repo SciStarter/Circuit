@@ -401,18 +401,18 @@
           </transition>
         </label>
 
-        <label class="button-radio" :class="{'open':learn=='none','unselected':learn=='link'}">
-          <input type="radio" v-model="learn" name="learn" value="none" />
-          <div class="icon-flex">
-            <div class="br-img">
-              <snm-icon />
-            </div>
-            <div class="br-text">
-              <h1>Only on Science Near Me</h1>
-              <p>Be sure to add clear instructions on how to find out more in your opportunity’s description.</p>
-            </div>
-          </div>
-        </label>
+        <!-- <label class="button-radio" :class="{'open':learn=='none','unselected':learn=='link'}"> -->
+        <!--   <input type="radio" v-model="learn" name="learn" value="none" /> -->
+        <!--   <div class="icon-flex"> -->
+        <!--     <div class="br-img"> -->
+        <!--       <snm-icon /> -->
+        <!--     </div> -->
+        <!--     <div class="br-text"> -->
+        <!--       <h1>Only on Science Near Me</h1> -->
+        <!--       <p>Be sure to add clear instructions on how to find out more in your opportunity’s description.</p> -->
+        <!--     </div> -->
+        <!--   </div> -->
+        <!-- </label> -->
 
 
       </div><!-- state1 -->
@@ -443,13 +443,17 @@
         <p class="help mb">
           Ideal images should reflect the activity participants will
           experience, rather than a logo. Acceptable formats: png,
-          jpeg, webp. Size limit: 10 MiB. Recommended dimensions:
-          600×400 pixels.
+          jpeg, webp. Recommended dimensions: 600×400 pixels.
           <br>
           By sharing this image, you represent that you have the
           rights to share it and grant Science Near Me and partners a
           worldwide, royalty free license as described on our Terms of
           Use.
+        </p>
+
+        <p>
+          You need to upload an image <em>or</em> provide an image URL
+          below. You do not need to do both.
         </p>
 
         <label class="label">Upload Image<span class="required"></span></label>
@@ -463,11 +467,7 @@
             <img v-else src="~/assets/img/no-image.jpg" class="display-image" />
           </div>
           <b-field :type="validation.image_url" message="Must start with http:// or https://">
-            <small>What is the optimal image size
-              <b-tooltip label="600px x 400px. Remember that when displayed as a thumbail it will be cropped to a square from the center." multilined>
-                <b-button label="?" />
-              </b-tooltip>
-            </small>
+            <small>The optimal image size is 600px x 400px</small>
             <b-input type="url" :value="value.image_url" @input="value.image_url = $event.replace(/ /g, '')" />
           </b-field>
         </div>
