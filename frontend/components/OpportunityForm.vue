@@ -452,8 +452,10 @@
         </p>
 
         <p>
-          You need to upload an image <em>or</em> provide an image URL
-          below. You do not need to do both.
+          If you input an image URL, you do not need to upload an
+          image as well. If you upload an image, the image URL field
+          will be automatically filled in for you. You do not need to
+          do both.
         </p>
 
         <label class="label">Upload Image<span class="required"></span></label>
