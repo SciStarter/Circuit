@@ -1290,9 +1290,9 @@ FROM c_region WHERE "name" = ${})
                   and
                   (
                     (
-                      array_length(search.start_datetimes, 1) <= 1
+                      coalesce(array_length(search.start_datetimes, 1), 0) <= 1
                       and
-                      array_length(search.end_datetimes, 1) = 0
+                      coalesce(array_length(search.end_datetimes, 1), 0) = 0
                     )
                     or
                     exists (select value from unnest(search.start_datetimes) t(value) where value > now())
@@ -1415,6 +1415,25 @@ FROM c_region WHERE "name" = ${})
         ));
     }
 
+    // if let Some(val) = &query.partner_member {
+    //     let uuid_param = ParamValue::Uuid(val.clone()).append(&mut params);
+    //     clauses.push(format!(
+    //         r#"
+    //         (
+    //           (primary_table.interior -> 'submitted_by' @> ${}::jsonb)
+    //           or
+    //           (
+    //             SELECT jsonb_agg("uid") FROM (
+    //                 SELECT (c_partner.exterior -> 'uid') AS "uid" FROM c_partner
+    //                 WHERE (c_partner.interior -> 'authorized') @> (${}::jsonb)
+    //                 OR (c_partner.interior -> 'prime') @> (${}::jsonb)
+    //             ) AS "authorized_partners"
+    //           ) @> (primary_table.exterior -> 'partner')
+    //         )"#,
+    //         uuid_param, uuid_param, uuid_param
+    //     ));
+    // }
+
     if let Some(val) = &query.partner_member {
         let uuid_param = ParamValue::Uuid(val.clone()).append(&mut params);
         clauses.push(format!(
@@ -1422,15 +1441,14 @@ FROM c_region WHERE "name" = ${})
             (
               (primary_table.interior -> 'submitted_by' @> ${}::jsonb)
               or
-              (
-                SELECT jsonb_agg("uid") FROM (
-                    SELECT (c_partner.exterior -> 'uid') AS "uid" FROM c_partner
-                    WHERE (c_partner.interior -> 'authorized') @> (${}::jsonb)
-                    OR (c_partner.interior -> 'prime') @> (${}::jsonb)
-                ) AS "authorized_partners"
-              ) @> (primary_table.exterior -> 'partner')
+              EXISTS (
+                SELECT 1
+                FROM c_partner
+                WHERE (c_partner.exterior->>'uid') = search."partner"::text
+                  AND (c_partner.interior->'authorized') @> (${}::jsonb)
+              )
             )"#,
-            uuid_param, uuid_param, uuid_param
+            uuid_param, uuid_param
         ));
     }
 
@@ -1473,9 +1491,9 @@ FROM c_region WHERE "name" = ${})
                 (search.end_recurrence is null or search.end_recurrence > ${}::timestamptz)
               )
               or (
-               array_length(search.start_datetimes, 1) <= 1
+               coalesce(array_length(search.start_datetimes, 1), 0) <= 1
                and
-               array_length(search.end_datetimes, 1) = 0
+               coalesce(array_length(search.end_datetimes, 1), 0) = 0
               )
             )"#,
             time_param, time_param, time_param
@@ -1636,13 +1654,13 @@ FROM c_region WHERE "name" = ${})
 
                 clauses.push(String::from(
                     r#"
-                    array_length(search.start_datetimes, 1) > 1
+                    coalesce(array_length(search.start_datetimes, 1), 0) > 1
                     or
-                    array_length(search.end_datetimes, 1) > 1
+                    coalesce(array_length(search.end_datetimes, 1), 0) > 1
                     or (
-                      array_length(search.start_datetimes, 1) = 1
+                      coalesce(array_length(search.start_datetimes, 1), 0) = 1
                       and
-                      array_length(search.end_datetimes, 1) = 1
+                      coalesce(array_length(search.end_datetimes, 1), 0) = 1
                       and
                       age(search.end_datetimes[0], search.start_datetimes[0]) <= interval '7 days'
                     )"#,
@@ -1656,13 +1674,13 @@ FROM c_region WHERE "name" = ${})
 
                 clauses.push(String::from(
                     r#"
-                    array_length(search.start_datetimes, 1) <= 1
+                    coalesce(array_length(search.start_datetimes, 1), 0) <= 1
                     and
-                    array_length(search.end_datetimes, 1) <= 1
+                    coalesce(array_length(search.end_datetimes, 1), 0) <= 1
                     and (
-                      array_length(search.start_datetimes, 1) != 1
+                      coalesce(array_length(search.start_datetimes, 1), 0) != 1
                       or
-                      array_length(search.end_datetimes, 1) != 1
+                      coalesce(array_length(search.end_datetimes, 1), 0) != 1
                       or
                       age(search.end_datetimes[0], search.start_datetimes[0]) > interval '7 days'
                     )"#,
