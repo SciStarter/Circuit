@@ -1654,15 +1654,16 @@ FROM c_region WHERE "name" = ${})
 
                 clauses.push(String::from(
                     r#"
-                    coalesce(array_length(search.start_datetimes, 1), 0) > 1
-                    or
-                    coalesce(array_length(search.end_datetimes, 1), 0) > 1
-                    or (
-                      coalesce(array_length(search.start_datetimes, 1), 0) = 1
-                      and
-                      coalesce(array_length(search.end_datetimes, 1), 0) = 1
-                      and
-                      age(search.end_datetimes[0], search.start_datetimes[0]) <= interval '7 days'
+                    (coalesce(array_length(search.start_datetimes, 1), 0) > 1
+                     or
+                     coalesce(array_length(search.end_datetimes, 1), 0) > 1
+                     or (
+                       coalesce(array_length(search.start_datetimes, 1), 0) = 1
+                       and
+                       coalesce(array_length(search.end_datetimes, 1), 0) = 1
+                       and
+                       age(search.end_datetimes[0], search.start_datetimes[0]) <= interval '7 days'
+                     )
                     )"#,
                 ));
             }
