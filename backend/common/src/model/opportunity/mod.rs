@@ -1195,12 +1195,12 @@ fn build_matching_query(
             // clauses.push(
             //     "(('true'::jsonb) @> (primary_table.interior -> 'withdrawn') OR coalesce(nullif(primary_table.interior ->> 'review_status', ''), 'not_required') IN ('draft', 'pending'))".to_string(),
             // );
-            clauses.push(String::from("(true = search.withdrawn OR coalesce(search.review_status, 'not_required') in ('draft', 'pending'))"));
+            clauses.push(String::from("(true = coalesce(search.withdrawn, false) OR coalesce(search.review_status, 'not_required') in ('draft', 'pending'))"));
         } else {
             // clauses.push(
             //     "(('false'::jsonb) @> (primary_table.interior -> 'withdrawn') AND coalesce(nullif(primary_table.interior ->> 'review_status', ''), 'not_required') NOT IN ('draft', 'pending'))".to_string(),
             // );
-            clauses.push(String::from("(false = search.withdrawn AND coalesce(search.review_status, 'not_required') not in ('draft', 'pending'))"));
+            clauses.push(String::from("(false = coalesce(search.withdrawn, false) AND coalesce(search.review_status, 'not_required') not in ('draft', 'pending'))"));
         }
     }
 
@@ -1281,7 +1281,7 @@ FROM c_region WHERE "name" = ${})
             // ));
             clauses.push(format!(
                 r#"
-                ${} = (
+                ${} = coalesce(
                   coalesce(search.review_status, 'not_required') in ('publish', 'not_required')
                   and
                   search.accepted = true
@@ -1305,7 +1305,7 @@ FROM c_region WHERE "name" = ${})
                       (search.end_recurrence is null or search.end_recurrence > now())
                     )
                   )
-                )"#,
+                , false)"#,
                 ParamValue::RawBool(val).append(&mut params)
             ));
         }
