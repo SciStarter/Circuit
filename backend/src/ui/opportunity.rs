@@ -288,7 +288,7 @@ pub async fn duplicate_opp(mut req: tide::Request<Database>) -> tide::Result {
     opp.exterior.uid = Uuid::nil();
     opp.exterior.slug = String::new();
     opp.exterior.title = format!("Copy of {}", &original.exterior.title);
-    opp.interior.accepted = Some(false);
+    opp.interior.accepted = Some(true);
     opp.interior.submitted_by = person.as_ref().map(|x| x.exterior.uid);
     opp.interior.review_status = if partner.exterior.open_submission.unwrap_or_default() {
         match opp.interior.submitted_by {
