@@ -65,7 +65,7 @@ impl ReviewStatus {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Recurrence {
     #[default]
@@ -529,13 +529,13 @@ impl Topic {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenHours {
     pub opens: String,
     pub closes: String,
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpenDays {
     pub monday: Option<OpenHours>,
@@ -638,7 +638,7 @@ fn en_us() -> Vec<String> {
     vec!["en-US".to_string()]
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityExterior {
     pub uid: Uuid,
@@ -731,7 +731,7 @@ pub struct AnnotatedOpportunityExterior {
     pub review_status: ReviewStatus,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct OpportunityInterior {
     pub accepted: Option<bool>,
@@ -947,7 +947,7 @@ impl From<Opportunity> for OpportunityForCsv {
     }
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Opportunity {
     pub id: Option<i32>,

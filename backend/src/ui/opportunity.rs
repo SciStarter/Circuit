@@ -25,10 +25,9 @@ static STAFF_REVIEWS: Lazy<[Uuid; 0]> = Lazy::new(|| {
 });
 
 pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
-    routes
-        .get(blank_opp)
-        .post(add_opp)
-        .at(":uid", |r| r.get(load_opp).put(save_opp))
+    routes.get(blank_opp).post(add_opp).at(":uid", |r| {
+        r.get(load_opp).put(save_opp).post(duplicate_opp)
+    })
 }
 
 pub async fn blank_opp(_: tide::Request<Database>) -> tide::Result {
@@ -256,6 +255,60 @@ pub async fn save_opportunity(
             notify_pending_approval(&req, &partner, &opp).await?;
         }
     }
+
+    okay(&opp)
+}
+
+pub async fn duplicate_opp(mut req: tide::Request<Database>) -> tide::Result {
+    let person = request_person(&mut req).await?;
+
+    let original =
+        Opportunity::load_by_uid(req.state(), &Uuid::parse_str(req.param("uid")?)?).await?;
+
+    let authorized = if let Some(p) = person.as_ref() {
+        p.check_permission(&Permission::ManageOpportunities)
+            || p.check_authorization(req.state(), &original, PermitAction::Add)
+                .await?
+    } else {
+        false
+    };
+
+    if !authorized {
+        return Err(tide::Error::from_str(
+            StatusCode::Forbidden,
+            "permission denied",
+        ));
+    }
+
+    let partner = original.load_partner(req.state()).await?;
+
+    let mut opp = original.clone();
+
+    opp.id = None;
+    opp.exterior.uid = Uuid::nil();
+    opp.exterior.slug = String::new();
+    opp.exterior.title = format!("Copy of {}", &original.exterior.title);
+    opp.interior.accepted = Some(false);
+    opp.interior.submitted_by = person.as_ref().map(|x| x.exterior.uid);
+    opp.interior.review_status = if partner.exterior.open_submission.unwrap_or_default() {
+        match opp.interior.submitted_by {
+            Some(uid) if partner.person_has_permission(&uid) => ReviewStatus::NotRequired,
+            _ => ReviewStatus::Draft,
+        }
+    } else {
+        ReviewStatus::NotRequired
+    };
+
+    opp.store(req.state()).await?;
+
+    common::log(
+        person.as_ref().map(|p| &p.exterior.uid),
+        "duplicate-opportunity",
+        &json!({
+            "original": original.exterior.uid,
+            "copy": opp.exterior.uid,
+        }),
+    );
 
     okay(&opp)
 }

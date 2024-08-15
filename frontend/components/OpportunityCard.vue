@@ -62,7 +62,7 @@
             </template>
             <b-dropdown-item aria-role="listitem" @click="$router.push({name: exchange !== null ? 'exchange-uid-edit-opp': 'my-opportunity-uid', params: exchange !== null ? {uid: exchange.uid, opp: opportunity.uid} : {uid: opportunity.uid}})" class="mobile-edit">Edit</b-dropdown-item>
             <b-dropdown-item aria-role="listitem" @click="view">View</b-dropdown-item>
-            <!-- <b-dropdown-item aria-role="listitem">Duplicate</b-dropdown-item> -->
+            <b-dropdown-item aria-role="listitem" @click="duplicate">Duplicate</b-dropdown-item>
             <b-dropdown-item v-if="trash" aria-role="listitem" @click="$emit('trash', opportunity)">Trash</b-dropdown-item>
         </b-dropdown>
     </div>
@@ -203,6 +203,11 @@ export default {
     methods: {
         view() {
             window.open((this.exchange !== null ? '/exchange/' + this.exchange.uid + '/' : '/') + this.opportunity.slug, '_blank');
+        },
+
+        async duplicate() {
+            let opp = await this.$axios.$post("/api/ui/opportunity/" + this.opportunity.uid, {}, this.$store.state.auth);
+            this.$router.push({name: this.exchange !== null ? 'exchange-uid-edit-opp': 'my-opportunity-uid', params: this.exchange !== null ? {uid: this.exchange.uid, opp: opp.uid} : {uid: opp.uid}});
         }
     },
 }
