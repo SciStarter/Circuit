@@ -285,7 +285,7 @@ pub async fn duplicate_opp(mut req: tide::Request<Database>) -> tide::Result {
     let mut opp = original.clone();
 
     opp.id = None;
-    opp.exterior.uid = Uuid::nil();
+    opp.exterior.uid = Uuid::new_v4(); // The deterministic UID for this has already been assigned to the original
     opp.exterior.slug = String::new();
     opp.exterior.title = format!("Copy of {}", &original.exterior.title);
     opp.interior.accepted = Some(true);
