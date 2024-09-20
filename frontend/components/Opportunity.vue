@@ -874,6 +874,11 @@ export default {
 
             let starts = this.opportunity.start_datetimes;
             let ends = this.opportunity.end_datetimes;
+
+            if(!starts || !ends || starts.length == 0 || ends.length == 0) {
+                return undefined;
+            }
+            
             let now = new Date().toISOString();
             let times = starts.map((d, i) => [d, ends[i]]);
             let upcoming = times.filter(be => be[0] > now);
