@@ -551,6 +551,7 @@
     <a @click="show_map = false">&laquo; back</a>
     <div ref="map_display" />
   </div>
+  <LDJson :data="event_ldjson"/>
 </article>
 </template>
 
@@ -570,6 +571,7 @@ import Stars from "~/components/Stars"
 import CalendarAdd from "~/components/CalendarAdd"
 import SocialButton from "~/components/SocialButton"
 import ReadMore from "~/components/ReadMore"
+import LDJson from "~/components/LDJson"
 
 import MapMarker from '~/assets/img/marker.png'
 import LocationIcon from '~/assets/img/location-marker.svg?inline'
@@ -812,6 +814,92 @@ export default {
                 'type': 'Feature',
                 'geometry': geom,
                 'properties': props,
+            };
+        },
+
+        event_ldjson() {
+            let location = {};
+            let mode = "http://schema.org/OfflineEventAttendanceMode";
+
+            switch(this.opportunity.location_type) {
+            case 'online':
+                location["@type"] = "https://schema.org/VirtualLocation";
+                location["url"] = "https://sciencenearme.org/" + this.opportunity.slug;
+                mode = "http://schema.org/OnlineEventAttendanceMode";
+                break;
+            case 'any':
+                location["@type"] = "https://schema.org/Place";
+                location["name"] = "Anywhere";
+                mode = "http://schema.org/MixedEventAttendanceMode";
+                break;
+            case 'at':
+                location["@type"] = "https://schema.org/Place";
+                location["name"] = this.opportunity.location_name;
+                location["address"] = {
+                    "@type": "https://schema.org/PostalAddress",
+                    "streetAddress": this.opportunity.address_street,
+                    "addressLocality": this.opportunity.address_city,
+                    "addressRegion": this.opportunity.address_state,
+                    "addressCountry": {
+                        "@type": "https://schema.org/Country",
+                        "name": this.opportunity.address_country
+                    }
+                };
+                break;
+            case 'near':
+                location["@type"] = "https://schema.org/Place";
+                if(!!this.opportunity.location_polygon) {
+                    location["geo"] = {
+                        "@type": "https://schema.org/GeoShape",
+                        // We store a multipolygon, but the schema.org
+                        // polygon is only a single loop, so we just
+                        // use the first loop and hope for the best.
+                        "polygon": this.opportunity.location_polygon.coordinates[0].map(p => "" + p[1] + " " + p[0]).join(",")
+                    }
+                }
+                else if(!!this.opportunity.location_polygon) {
+                    location["geo"] = {
+                        "@type": "https://schema.org/GeoCoordinates",
+                        "longitude": this.opportunity.location_point.coordinates[0],
+                        "latitude": this.opportunity.location_point.coordinates[1]
+                    }
+                }
+                else {
+                    return undefined;
+                }
+                break;
+            default:
+                return undefined;
+            }
+
+            let starts = this.opportunity.start_datetimes;
+            let ends = this.opportunity.end_datetimes;
+            let now = new Date().toISOString();
+            let times = starts.map((d, i) => [d, ends[i]]);
+            let upcoming = times.filter(be => be[0] > now);
+            let start;
+            let end;
+            
+            if(upcoming.length > 0) {
+                start = upcoming[0][0];
+                end = upcoming[0][1];
+            }
+            else {
+                start = times[0][0];
+                end = times[0][1];
+            }
+
+            return {
+                "@context": "https://schema.org",
+                "@type": "https://schema.org/Event",
+                "name": this.opportunity.title,
+                "startDate": start,
+                "endDate": end,
+                "description": this.elevator_pitch,
+                "eventAttendanceMode": mode,
+                "image": this.opportunity.image_url,
+                "url": "https://sciencenearme.org/" + this.opportunity.slug,
+                "location": location
             };
         }
     },
@@ -1570,7 +1658,7 @@ img.opportunity-image {
     }
     .partner-and-org {
       padding:0;
-      
+
       figure {
         flex-direction: column;
         padding: 1rem;
