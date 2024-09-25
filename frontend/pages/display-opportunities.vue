@@ -237,7 +237,7 @@
       If you have many existing opportunities you'd like to display on
       SNM and your Exchange, please select one of the options to share
       your opportunities on our <nuxt-link to="/add-opportunities">add
-      opportuities page</nuxt-link>. That way all those opportunities will
+      opportunities page</nuxt-link>. That way all those opportunities will
       appear on SNM and on your Exchange, in addition to any others
       available to your community from SNM! You'll still have the
       option to use the Add Opportunity Form on your site to add
@@ -280,7 +280,7 @@
       <!--   If you have many existing opportunities you'd like to display -->
       <!--   on SNM and your Exchange, please select one of the options to -->
       <!--   share your opportunities on -->
-      <!--   our <a href="/add-opportunities">add opportuities page</a>. -->
+      <!--   our <a href="/add-opportunities">add opportunities page</a>. -->
       <!--   That way all those opportunities will appear on SNM and on -->
       <!--   your Exchange, in addition to any others available to your -->
       <!--   community from SNM! You'll still have the option to use the -->
