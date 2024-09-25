@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                insert into c_import_outcomes (\n                  \"partner\",\n                  \"date\",\n                  \"added\",\n                  \"updated\",\n                  \"failed\"\n                )\n                values ($1, $2, $3, $4, $5)\n                on conflict (\"partner\", \"date\") do update\n                set \"added\" = c_import_outcomes.\"added\" + $3,\n                    \"updated\" = c_import_outcomes.\"updated\" + $4,\n                    \"failed\" = c_import_outcomes.\"failed\" + 5\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "761da1da64e6025c7b8229e2ca68261fb84f134f0a2946bfb643d81e46ffb395"
+}

@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT v.interior AS \"interior!\", v.exterior AS \"exterior!\"\nFROM c_opportunity_overlay v JOIN c_opportunity o ON v.opportunity_id = o.id\nWHERE\n  o.exterior->>'title' = $1 AND\n  o.exterior->>'partner' = $2\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "interior!",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 1,
+        "name": "exterior!",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "4021759c8666da1fa3fd2248399d0a7e38809e07c762ff62748b74d9f3495391"
+}

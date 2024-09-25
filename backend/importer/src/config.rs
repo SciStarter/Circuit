@@ -297,6 +297,14 @@ pub struct Import<Src, Fmt, Struct> {
     period: Duration,
 }
 
+struct ImportOutcome {
+    partner: String,
+    date: String,
+    added: i32,
+    updated: i32,
+    failed: i32,
+}
+
 #[async_trait]
 impl<Src, Fmt, Struct> Importer for Import<Src, Fmt, Struct>
 where
@@ -317,6 +325,43 @@ where
             self.load_partner(&db).await?
         };
 
+        let mut outcome = ImportOutcome {
+            partner: partner.exterior.name.clone(),
+            date: chrono::Local::now()
+                .date_naive()
+                .format("%Y-%m-%d")
+                .to_string(),
+            added: 0,
+            updated: 0,
+            failed: 0,
+        };
+
+        async fn store_outcome(outcome: ImportOutcome, db: &sqlx::Pool<sqlx::Postgres>) {
+            let _ = sqlx::query!(
+                r#"
+                insert into c_import_outcomes (
+                  "partner",
+                  "date",
+                  "added",
+                  "updated",
+                  "failed"
+                )
+                values ($1, $2, $3, $4, $5)
+                on conflict ("partner", "date") do update
+                set "added" = c_import_outcomes."added" + $3,
+                    "updated" = c_import_outcomes."updated" + $4,
+                    "failed" = c_import_outcomes."failed" + 5
+                "#,
+                outcome.partner,
+                outcome.date,
+                outcome.added,
+                outcome.updated,
+                outcome.failed,
+            )
+            .execute(db)
+            .await;
+        }
+
         println!("Loading...");
         let source = match self.source.load() {
             Ok(s) => s,
@@ -326,6 +371,7 @@ where
                     .expect("The id should be set after loading from the database");
                 let _ = le.store(&db).await;
                 println!("[Load] Logged error: {}", &le.message);
+                store_outcome(outcome, &db).await;
                 return Err(le.into());
             }
         };
@@ -339,6 +385,7 @@ where
                     .expect("The id should be set after loading from the database");
                 let _ = le.store(&db).await;
                 println!("[Parse] Logged error: {}", &le.message);
+                store_outcome(outcome, &db).await;
                 return Err(le.into());
             }
         };
@@ -362,11 +409,18 @@ where
                         .await?;
                         println!(
                             "{} {}",
-                            if created { "Added" } else { "Updated" },
+                            if created {
+                                outcome.added += 1;
+                                "Added"
+                            } else {
+                                outcome.updated += 1;
+                                "Updated"
+                            },
                             &item.exterior.title
                         );
                     }
                     Err(mut le) => {
+                        outcome.failed += 1;
                         le.partner_id = partner
                             .id
                             .expect("The id should be set after loading from the database");
@@ -393,11 +447,18 @@ where
                             .await?;
                             println!(
                                 "{} {}",
-                                if created { "Added" } else { "Updated" },
+                                if created {
+                                    outcome.added += 1;
+                                    "Added"
+                                } else {
+                                    outcome.updated += 1;
+                                    "Updated"
+                                },
                                 &item.exterior.title
                             );
                         }
                         Err(mut le) => {
+                            outcome.failed += 1;
                             le.partner_id = partner
                                 .id
                                 .expect("The id should be set after loading from the database");
@@ -408,6 +469,8 @@ where
                 }
             }
         }
+
+        store_outcome(outcome, &db).await;
 
         println!("Done.");
 

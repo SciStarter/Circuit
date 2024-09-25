@@ -218,6 +218,7 @@ fn deserialize_state_alternates<'d, D: serde::Deserializer<'d>>(d: D) -> Result<
     } = StateAlternates::deserialize(d)?;
     stateprovince
         .or(state)
+        .or_else(|| Some(String::new()))
         .ok_or_else(|| serde::de::Error::custom("`stateprovince` or `state` field is required"))
 }
 

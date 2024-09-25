@@ -38,7 +38,7 @@ pub async fn run_report(
     let hub = AnalyticsData::new(
         hyper::Client::builder().build(
             hyper_rustls::HttpsConnectorBuilder::new()
-                .with_native_roots()
+                .with_native_roots()?
                 .https_or_http()
                 .enable_http1()
                 .enable_http2()

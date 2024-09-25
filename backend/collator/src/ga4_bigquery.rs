@@ -69,7 +69,7 @@ pub async fn run_report(
     let hub = google_bigquery2::Bigquery::new(
         hyper::Client::builder().build(
             hyper_rustls::HttpsConnectorBuilder::new()
-                .with_native_roots()
+                .with_native_roots()?
                 .https_or_http()
                 .enable_http1()
                 .enable_http2()

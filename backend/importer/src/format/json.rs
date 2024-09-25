@@ -10,6 +10,20 @@ impl super::Format for Json {
         //let _ = std::fs::write("json.raw", &raw);
         let cleaned = String::from_utf8_lossy(&raw).replace(|c: char| c.is_control(), " ");
         //let _ = std::fs::write("json.cleaned", &cleaned);
-        Ok(serde_json::from_str(cleaned.as_str())?)
+        match serde_json::from_str(cleaned.as_str()) {
+            Ok(val) => Ok(val),
+            Err(err) => {
+                let line = err.line();
+                let column = err.column();
+                let excerpt = match cleaned.lines().skip(line - 1).next() {
+                    Some(s) => s.chars().skip(column).take(16).collect(),
+                    None => String::new(),
+                };
+                Err(LoggedError::from(err).set_title(format!(
+                    "Line: {}  Col: {}  Excerpt: `{}`",
+                    line, column, excerpt
+                )))
+            }
+        }
     }
 }

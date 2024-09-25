@@ -37,28 +37,48 @@ fn get_time_zone(lon: f64, lat: f64) -> Result<Tz, Error> {
 }
 
 fn normalize_datetime(datetime: &str, zone: Option<Tz>) -> Option<String> {
-    if let Ok(dt) = DateTime::parse_from_rfc3339(datetime) {
+    let datetime = datetime
+        .replace("-0:00", "-00:00")
+        .replace("-0:01", "-01:00")
+        .replace("-2:00", "-02:00")
+        .replace("-3:00", "-03:00")
+        .replace("-4:00", "-04:00")
+        .replace("-5:00", "-05:00")
+        .replace("-6:00", "-06:00")
+        .replace("-7:00", "-07:00")
+        .replace("-8:00", "-08:00")
+        .replace("-9:00", "-09:00");
+
+    if let Ok(dt) = DateTime::parse_from_rfc3339(&datetime) {
         Some(dt.to_rfc3339())
-    } else if let Ok(dt) = DateTime::parse_from_str(datetime, "%Y-%m-%dT%H:%M%z") {
+    } else if let Ok(dt) = DateTime::parse_from_str(&datetime, "%Y-%m-%dT%H:%M%#z") {
         Some(dt.to_rfc3339())
     } else if let Some(tz) = zone {
-        if let Ok(naive) = NaiveDateTime::parse_from_str(datetime, "%Y-%m-%dT%H:%M:%S") {
+        if let Ok(naive) = NaiveDateTime::parse_from_str(&datetime, "%Y-%m-%dT%H:%M:%S") {
             if let Some(dt) = tz.from_local_datetime(&naive).earliest() {
                 Some(dt.to_rfc3339())
             } else {
-                Some(format!("{}Z", datetime))
+                Some(naive.format("%Y-%m-%dT%H:%M:%SZ").to_string())
             }
-        } else if let Ok(naive) = NaiveDateTime::parse_from_str(datetime, "%Y-%m-%dT%H:%M") {
+        } else if let Ok(naive) = NaiveDateTime::parse_from_str(&datetime, "%Y%m%dT%H%M%S") {
             if let Some(dt) = tz.from_local_datetime(&naive).earliest() {
                 Some(dt.to_rfc3339())
             } else {
-                Some(format!("{}:00Z", datetime))
+                Some(naive.format("%Y-%m-%dT%H:%M:%SZ").to_string())
+            }
+        } else if let Ok(naive) = NaiveDateTime::parse_from_str(&datetime, "%Y-%m-%dT%H:%M") {
+            if let Some(dt) = tz.from_local_datetime(&naive).earliest() {
+                Some(dt.to_rfc3339())
+            } else {
+                Some(naive.format("%Y-%m-%dT%H:%M:%SZ").to_string())
             }
         } else {
             None
         }
+    } else if let Ok(naive) = NaiveDateTime::parse_from_str(&datetime, "%Y%m%dT%H%M%S") {
+        Some(naive.format("%Y-%m-%dT%H:%M:%SZ").to_string())
     } else {
-        Some(format!("{}Z", datetime))
+        Some(datetime)
     }
 }
 
@@ -210,6 +230,10 @@ impl Structure for NightSkyNetwork {
                     let event_title = obj["title"].as_str().map(|x| x.to_owned());
 
                     println!("Attempting import from JSON: {:?}", event_title);
+
+                    if obj["description"].is_null() {
+                        obj["description"] = Value::String(String::new());
+                    }
 
                     let mut input: Opportunity = match from_value(obj) {
                         Ok(opp) => opp,
