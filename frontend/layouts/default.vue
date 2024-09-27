@@ -29,7 +29,7 @@
               </button>
             </div>
           <b-field>
-            <b-input ref="search_keywords" v-model="query.keywords" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+            <b-input ref="search_keywords" v-model="query.keywords" placeholder="e.g. astronomy" icon="magnify" />
           </b-field>
           <lookup-place v-model="query.place" @input="store_here" />
           <div class="centered-row">

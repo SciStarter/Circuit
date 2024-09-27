@@ -35,7 +35,7 @@
         <form>
           <div class="gf-fields">
             <b-field label="Search" label-position="inside" data-context="find-keywords">
-              <b-input ref="search_keywords" v-model="search_text" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+              <b-input ref="search_keywords" v-model="search_text" :name="'new-' + Math.random()" placeholder="e.g. astronomy" icon="magnify" />
             </b-field>
             <lookup-place v-model="search_place" label-position="inside" data-context="find-lookup-place" />
             <div class="centered-row">

@@ -44,7 +44,7 @@
     <form @submit.prevent="search">
     <div class="gf-fields">
       <b-field label="Search" label-position="inside" data-context="find-keywords">
-        <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+        <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy" icon="magnify" />
       </b-field>
       <lookup-place v-model="place_proxy" @valid="set_valid" label-position="inside" data-context="find-lookup-place" widget />
       <div class="centered-row">
@@ -74,7 +74,7 @@
     <form @submit.prevent="search">
     <div class="gf-fields">
       <b-field label="Search" label-position="inside" data-context="find-keywords">
-        <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+        <b-input ref="search_keywords" v-model="text_proxy" :name="'new-' + Math.random()" placeholder="e.g. astronomy" icon="magnify" />
       </b-field>
       <lookup-place v-model="place_proxy" @valid="set_valid" label-position="inside" data-context="find-lookup-place" stacked />
         <div class="date-input">

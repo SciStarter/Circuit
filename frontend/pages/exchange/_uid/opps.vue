@@ -51,7 +51,7 @@
           <h2>Current, Live Opportunities</h2>
           <div class="flex header-actions">
             <b-field label="Search" label-position="inside" data-context="find-keywords">
-              <b-input ref="search_keywords" v-model="live_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+              <b-input ref="search_keywords" v-model="live_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy" icon="magnify" />
             </b-field>
             <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
               <b-datepicker
@@ -93,7 +93,7 @@
           <h2>Draft &amp; Unpublished Opportunities</h2>
           <div class="flex header-actions">
             <b-field label="Search" label-position="inside" data-context="find-keywords">
-              <b-input ref="search_keywords" v-model="draft_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+              <b-input ref="search_keywords" v-model="draft_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy" icon="magnify" />
             </b-field>
             <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
               <b-datepicker
@@ -133,7 +133,7 @@
           <h2>Past or Trashed Opportunities</h2>
           <div class="flex header-actions">
             <b-field label="Search" label-position="inside" data-context="find-keywords">
-              <b-input ref="search_keywords" v-model="expired_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy, bar crawl" icon="magnify" />
+              <b-input ref="search_keywords" v-model="expired_search" :name="'new-' + Math.random()" placeholder="e.g. astronomy" icon="magnify" />
             </b-field>
             <b-field label="From" label-position="inside" data-context="find-beginning" class="date">
               <b-datepicker
