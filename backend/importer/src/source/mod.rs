@@ -1,6 +1,7 @@
 use bytes::Bytes;
 
 pub mod airtable;
+pub mod embedded;
 pub mod eventsql;
 pub mod eventsql_custom;
 pub mod http;

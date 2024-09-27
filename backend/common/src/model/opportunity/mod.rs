@@ -179,7 +179,7 @@ pub enum EntityType {
 }
 
 impl EntityType {
-    fn db_repr(&self) -> String {
+    fn _db_repr(&self) -> String {
         self.as_ref().to_snake_case()
     }
 }
@@ -294,7 +294,7 @@ pub enum VenueType {
 }
 
 impl VenueType {
-    fn db_repr(&self) -> String {
+    fn _db_repr(&self) -> String {
         self.as_ref().to_snake_case()
     }
 }

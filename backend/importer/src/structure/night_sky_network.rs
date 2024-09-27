@@ -5,10 +5,7 @@ use super::{
 };
 use chrono::{DateTime, NaiveDateTime, TimeZone};
 use chrono_tz::Tz;
-use common::model::{
-    partner::{LoggedError, LoggedErrorLevel},
-    Opportunity, Partner,
-};
+use common::model::{partner::LoggedError, Opportunity, Partner};
 use once_cell::sync::Lazy;
 use serde_json::{from_value, Value};
 use sqlx::{Pool, Postgres};

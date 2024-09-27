@@ -4,8 +4,10 @@ use async_trait::async_trait;
 
 use common::model::opportunity::{Descriptor, Domain, OpportunityImportRecord, Topic};
 use common::model::Partner;
-use importer::format::{self, Format};
+use importer::format::{self, CommaSeparated, Format};
+use importer::source::embedded::Embedded;
 use importer::source::{self, Source};
+use importer::structure::pbc::PBCStemCenter;
 use importer::structure::{self, OneOrMany, PartnerAddress, PartnerFlag, PartnerInfo, Structure};
 use importer::web::{Field, Page, Process};
 use importer::{Error, Importer};
@@ -15,6 +17,13 @@ use importer::{Error, Importer};
 /// partner.
 pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     let hours = Duration::new(60 * 60, 0);
+
+    importers.push(Box::new(Import {
+        source: Embedded::new(include_bytes!("csv/pbc_stem.csv")),
+        format: CommaSeparated,
+        structure: PBCStemCenter,
+        period: 24 * hours,
+    }));
 
     importers.push(Box::new(
         Page::new(

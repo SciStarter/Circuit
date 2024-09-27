@@ -12,6 +12,7 @@ pub mod ldjson;
 pub mod mec;
 pub mod neon;
 pub mod night_sky_network;
+pub mod pbc;
 
 pub use atlanta_science_fest::AtlantaScienceFest;
 pub use eventsjson::EventsJson;
