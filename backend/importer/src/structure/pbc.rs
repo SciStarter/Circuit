@@ -123,6 +123,9 @@ impl PBCStemCenter {
         opp.exterior.partner_website = Some("https://www.coxsciencecenter.org/pbc-stem".to_owned());
         opp.exterior.partner_logo_url = Some("https://www.coxsciencecenter.org/sites/all/themes/sciencemuseum/templates/pbcstem/9e5723ac6436d6efc8b97459d4fe5430.jpg".to_owned());
         opp.exterior.entity_type = EntityType::Opportunity;
+        opp.exterior.min_age = 0;
+        opp.exterior.max_age = 999;
+        opp.exterior.tags.insert("PBC STEM Center".to_owned());
 
         Ok(opp)
     }
