@@ -2,6 +2,7 @@ use crate::ui::auth::{token_cookie, SESSION_HOURS};
 use crate::ui::UI_AUDIENCE;
 
 use super::{check_csrf, check_jwt, issue_jwt, random_string, redirect, set_csrf_cookie};
+use common::model::partner::PartnerListRow;
 use common::model::Pagination;
 use common::model::{partner::PartnerReference, person::Permission, Partner, Person};
 use common::Database;
@@ -164,7 +165,7 @@ async fn authorize(mut req: tide::Request<Database>) -> tide::Result {
 #[derive(TemplateOnce, Default)]
 #[template(path = "manage/partners.stpl.html")]
 struct PartnersPage {
-    pub partners: Vec<PartnerReference>,
+    pub partners: Vec<PartnerListRow>,
     pub suggested_secret: String,
     pub csrf: String,
 }
@@ -201,7 +202,7 @@ async fn partners(mut req: tide::Request<Database>) -> tide::Result {
             let csrf = random_string();
             let secret = random_string();
             let page = PartnersPage {
-                partners: Partner::catalog(db).await?,
+                partners: Partner::catalog_extra(db).await?,
                 suggested_secret: secret.to_string(),
                 csrf: csrf.to_string(),
             };

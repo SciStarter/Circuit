@@ -176,6 +176,17 @@ impl From<Partner> for PartnerReference {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
+pub struct PartnerListRow {
+    pub id: i32,
+    pub uid: Uuid,
+    pub name: String,
+    pub manager_name: String,
+    pub manager_email: String,
+    pub joined: DateTime<FixedOffset>,
+    pub accepted: i64,
+}
+
+#[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Partner {
     pub id: Option<i32>,
     #[serde(flatten)]
@@ -314,6 +325,34 @@ INSERT
                     name: serde_json::from_value(
                         row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
                     )?,
+                })
+            })
+            .fetch_all(db)
+            .await?
+            .into_iter()
+            .flatten()
+            .collect())
+    }
+
+    pub async fn catalog_extra(db: &Database) -> Result<Vec<PartnerListRow>, Error> {
+        Ok(sqlx::query_file!("db/partner/catalog_extra.sql")
+            .map(|row| -> Result<PartnerListRow, Error> {
+                Ok(PartnerListRow {
+                    id: row.id,
+                    uid: serde_json::from_value(
+                        row.uid.ok_or_else(|| Error::Missing("uid".to_string()))?,
+                    )?,
+                    name: row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
+                    manager_name: row
+                        .manager_name
+                        .ok_or_else(|| Error::Missing("manager_name".to_string()))?,
+                    manager_email: row
+                        .manager_email
+                        .ok_or_else(|| Error::Missing("manager_email".to_string()))?,
+                    joined: row.joined.into(),
+                    accepted: row
+                        .accepted
+                        .ok_or_else(|| Error::Missing("accepted".to_string()))?,
                 })
             })
             .fetch_all(db)
