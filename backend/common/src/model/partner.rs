@@ -183,7 +183,7 @@ pub struct PartnerListRow {
     pub manager_name: String,
     pub manager_email: String,
     pub joined: DateTime<FixedOffset>,
-    pub accepted: i64,
+    pub published: i64,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -350,9 +350,9 @@ INSERT
                         .manager_email
                         .ok_or_else(|| Error::Missing("manager_email".to_string()))?,
                     joined: row.joined.into(),
-                    accepted: row
-                        .accepted
-                        .ok_or_else(|| Error::Missing("accepted".to_string()))?,
+                    published: row
+                        .published
+                        .ok_or_else(|| Error::Missing("published".to_string()))?,
                 })
             })
             .fetch_all(db)

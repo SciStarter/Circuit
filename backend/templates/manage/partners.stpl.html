@@ -22,7 +22,7 @@
             <th>Manager</th>
             <th>Email</th>
             <th>Joined On</th>
-            <th>Accepted Opps</th>
+            <th>Published Opps</th>
             <th>UID</th>
           </tr>
           <% for partner in partners { %>
@@ -31,7 +31,7 @@
             <td><%= partner.manager_name %></td>
             <td><%= partner.manager_email %></td>
             <td><%= partner.joined.format("%Y-%m-%d") |disp %></td>
-            <td><%= partner.accepted %></td>
+            <td><%= partner.published %></td>
             <td><%= partner.uid.to_string() %><td>
           </tr>
           <% } %>

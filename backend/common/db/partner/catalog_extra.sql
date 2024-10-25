@@ -5,10 +5,11 @@ select
   (c_partner.interior -> 'manager' ->> 'name') as "manager_name",
   (c_partner.interior -> 'manager' ->> 'email') as "manager_email",
   c_partner."created" as "joined",
-  count(distinct c_opportunity.id) as "accepted"
-from c_partner join c_opportunity
+  count(distinct c_opportunity.id) as "published"
+from c_partner left join c_opportunity
   on c_partner.exterior->'uid' = c_opportunity.exterior->'partner'
- and c_opportunity.interior->>'accepted' != 'false'
+where c_opportunity.interior->>'accepted' != 'false'
+  and c_opportunity.interior->>'withdrawn' != 'true'
 group by
   c_partner.id,
   c_partner.exterior -> 'uid',
