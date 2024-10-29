@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select \"as_of\", \"total\" from c_visits_cumulative",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "as_of",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "total",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "6c169f3c7b6b20bb48d94791ff76557fbd1bc3ed29100d21d36dcea6d1394797"
+}

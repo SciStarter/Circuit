@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update c_visits_cumulative\n                 set \"as_of\" = now(),\n                 \"total\" = (select sum(\"times\") from c_visits)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "055ef3e5fcacf084cb8874926d221a18b80294e7824255910e5cc433ebb09d42"
+}

@@ -362,6 +362,13 @@ pub async fn signup(mut req: tide::Request<Database>) -> tide::Result {
 /// format. Includes the token, uid, username, and so on.
 pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
     if let Some(person) = request_person(&mut req).await? {
+        sqlx::query!(
+            r#"insert into c_visits ("user", "times") values ($1::uuid, 1)"#,
+            person.exterior.uid
+        )
+        .execute(req.state())
+        .await?;
+
         let jwt = issue_jwt(&person.exterior.uid, &UI_AUDIENCE, SESSION_HOURS as u64)?;
 
         person.log(req.state(), LogEvent::Session).await?;
@@ -403,6 +410,9 @@ pub async fn me(mut req: tide::Request<Database>) -> tide::Result {
                 .finish(),
         )
     } else {
+        sqlx::query!(r#"insert into c_visits ("user", "times") values (null, 1)"#,)
+            .execute(req.state())
+            .await?;
         okay(&json!({"authenticated": false}))
     }
 }

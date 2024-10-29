@@ -28,6 +28,7 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .post(add_organization)
         .at("analytics", |r| r.get(my_analytics))
+        .at("sitedata", |r| r.get(sitedata))
         .at("opps-regional-overview", |r| r.get(opps_regional_overview))
         .at("opps-regional-detailed", |r| r.get(opps_regional_detailed))
         .at("opps-overview", |r| r.get(opps_overview))
@@ -441,6 +442,25 @@ WHERE
 
         okay(&toplevel)
     }
+}
+
+#[derive(Serialize)]
+struct SiteData {
+    #[serde(rename = "visits_as_of")]
+    as_of: DateTime<FixedOffset>,
+    #[serde(rename = "visits_total")]
+    total: i32,
+}
+
+pub async fn sitedata(req: tide::Request<Database>) -> tide::Result {
+    let data = sqlx::query_as!(
+        SiteData,
+        r#"select "as_of", "total" from c_visits_cumulative"#
+    )
+    .fetch_one(req.state())
+    .await?;
+
+    okay(&data)
 }
 
 #[derive(Serialize)]

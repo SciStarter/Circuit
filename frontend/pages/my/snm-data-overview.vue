@@ -407,89 +407,89 @@
         </div>
       </div>
 
-    <choropleth-states v-if="selected_state === null" :value="report.states.data.states" attr="Unique Users" @state="select_state($event)"/>
-    <div v-else>
-      <a @click="selected_state = null">← Back to US Map</a>
-      <b-select v-model="selected_attr" placeholder="Select Data Type">
-        <option>Unique Users</option>
-        <option>New Users</option>
-        <option>Returning Users</option>
-        <option>Total Pageviews</option>
-        <option>Unique Pageviews</option>
-        <option>Avg. Time</option>
-      </b-select>
-      <activity-regional :state="selected_state" :data="selected_state_data" :attr="selected_attr" />
-    </div>
+  <!--   <choropleth-states v-if="selected_state === null" :value="report.states.data.states" attr="Unique Users" @state="select_state($event)"/> -->
+  <!--   <div v-else> -->
+  <!--     <a @click="selected_state = null">← Back to US Map</a> -->
+  <!--     <b-select v-model="selected_attr" placeholder="Select Data Type"> -->
+  <!--       <option>Unique Users</option> -->
+  <!--       <option>New Users</option> -->
+  <!--       <option>Returning Users</option> -->
+  <!--       <option>Total Pageviews</option> -->
+  <!--       <option>Unique Pageviews</option> -->
+  <!--       <option>Avg. Time</option> -->
+  <!--     </b-select> -->
+  <!--     <activity-regional :state="selected_state" :data="selected_state_data" :attr="selected_attr" /> -->
+  <!--   </div> -->
 
-    <div class="data-table-wrapper">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Engagement By Location</th>
-          <th colspan="2">Unique Users <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="states_top_order == 'unique_users_desc'" @click="states_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="states_top_order == 'unique_users_asc'" @click="states_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="states_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">New Users <b-tooltip label="First time visitors." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="states_top_order == 'new_users_desc'" @click="states_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="states_top_order == 'new_users_asc'" @click="states_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="states_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Returning Users <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="states_top_order == 'returning_users_desc'" @click="states_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="states_top_order == 'returning_users_asc'" @click="states_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="states_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Total Pageviews <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="states_top_order == 'total_pageviews_desc'" @click="states_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="states_top_order == 'total_pageviews_asc'" @click="states_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="states_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Unique Pageviews <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="states_top_order == 'unique_pageviews_desc'" @click="states_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="states_top_order == 'unique_pageviews_asc'" @click="states_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="states_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-          <th colspan="2">Avg. Time <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined>
-          <b-button label="?" />
-        </b-tooltip>
-            <a v-if="states_top_order == 'average_time_desc'" @click="states_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a>
-            <a v-else-if="states_top_order == 'average_time_asc'" @click="states_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a>
-            <a v-else @click="states_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in states_top_sorted">
-          <td v-if="selected_state === null"><a @click="select_state(row['name'])">{{row['name']}}</a></td>
-          <td v-else>{{row['name']}}</td>
-          <td class="table-num">{{row['Unique Users']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Unique Users']" :max="states_max['Unique Users']" color="#268699" /></td>
-          <td class="table-num">{{row['New Users']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['New Users']" :max="states_max['New Users']" color="#268699" /></td>
-          <td class="table-num">{{row['Returning Users']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Returning Users']" :max="states_max['Returning Users']" color="#268699" /></td>
-          <td class="table-num">{{row['Total Pageviews']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="states_max['Total Pageviews']" color="#268699" /></td>
-          <td class="table-num">{{row['Unique Pageviews']}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="states_max['Unique Pageviews']" color="#268699" /></td>
-          <td class="table-num">{{(row['Avg. Time'] / 1000).toFixed(2)}}</td>
-          <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="states_max['Avg. Time']" color="#268699" /></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <!--   <div class="data-table-wrapper"> -->
+  <!--   <table class="data-table"> -->
+  <!--     <thead> -->
+  <!--       <tr> -->
+  <!--         <th>Engagement By Location</th> -->
+  <!--         <th colspan="2">Unique Users <b-tooltip label="Individual users only counted once." position="is-top" append-to-body multilined> -->
+  <!--         <b-button label="?" /> -->
+  <!--       </b-tooltip> -->
+  <!--           <a v-if="states_top_order == 'unique_users_desc'" @click="states_top_order = 'unique_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+  <!--           <a v-else-if="states_top_order == 'unique_users_asc'" @click="states_top_order = 'unique_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+  <!--           <a v-else @click="states_top_order = 'unique_users_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+  <!--         </th> -->
+  <!--         <th colspan="2">New Users <b-tooltip label="First time visitors." position="is-top" append-to-body multilined> -->
+  <!--         <b-button label="?" /> -->
+  <!--       </b-tooltip> -->
+  <!--           <a v-if="states_top_order == 'new_users_desc'" @click="states_top_order = 'new_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+  <!--           <a v-else-if="states_top_order == 'new_users_asc'" @click="states_top_order = 'new_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+  <!--           <a v-else @click="states_top_order = 'new_users_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+  <!--         </th> -->
+  <!--         <th colspan="2">Returning Users <b-tooltip label="Visitors who have viewed more than once." position="is-top" append-to-body multilined> -->
+  <!--         <b-button label="?" /> -->
+  <!--       </b-tooltip> -->
+  <!--           <a v-if="states_top_order == 'returning_users_desc'" @click="states_top_order = 'returning_users_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+  <!--           <a v-else-if="states_top_order == 'returning_users_asc'" @click="states_top_order = 'returning_users_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+  <!--           <a v-else @click="states_top_order = 'returning_users_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+  <!--         </th> -->
+  <!--         <th colspan="2">Total Pageviews <b-tooltip label="The amount of times your page was viewed." position="is-top" append-to-body multilined> -->
+  <!--         <b-button label="?" /> -->
+  <!--       </b-tooltip> -->
+  <!--           <a v-if="states_top_order == 'total_pageviews_desc'" @click="states_top_order = 'total_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+  <!--           <a v-else-if="states_top_order == 'total_pageviews_asc'" @click="states_top_order = 'total_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+  <!--           <a v-else @click="states_top_order = 'total_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+  <!--         </th> -->
+  <!--         <th colspan="2">Unique Pageviews <b-tooltip label="Times the page was viewed by a unique user." position="is-top" append-to-body multilined> -->
+  <!--         <b-button label="?" /> -->
+  <!--       </b-tooltip> -->
+  <!--           <a v-if="states_top_order == 'unique_pageviews_desc'" @click="states_top_order = 'unique_pageviews_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+  <!--           <a v-else-if="states_top_order == 'unique_pageviews_asc'" @click="states_top_order = 'unique_pageviews_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+  <!--           <a v-else @click="states_top_order = 'unique_pageviews_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+  <!--         </th> -->
+  <!--         <th colspan="2">Avg. Time <b-tooltip label="The average time spent on your page by users." position="is-top" append-to-body multilined> -->
+  <!--         <b-button label="?" /> -->
+  <!--       </b-tooltip> -->
+  <!--           <a v-if="states_top_order == 'average_time_desc'" @click="states_top_order = 'average_time_asc'"><i class="sort sort-asc"><sort-icon /></i></a> -->
+  <!--           <a v-else-if="states_top_order == 'average_time_asc'" @click="states_top_order = 'average_time_desc'"><i class="sort sort-desc"><sort-icon /></i></a> -->
+  <!--           <a v-else @click="states_top_order = 'average_time_desc'"><i class="sort sortable"><sortable-icon /></i></a> -->
+  <!--         </th> -->
+  <!--       </tr> -->
+  <!--     </thead> -->
+  <!--     <tbody> -->
+  <!--       <tr v-for="row in states_top_sorted"> -->
+  <!--         <td v-if="selected_state === null"><a @click="select_state(row['name'])">{{row['name']}}</a></td> -->
+  <!--         <td v-else>{{row['name']}}</td> -->
+  <!--         <td class="table-num">{{row['Unique Users']}}</td> -->
+  <!--         <td class="table-bar"><comparison-bar :value="row['Unique Users']" :max="states_max['Unique Users']" color="#268699" /></td> -->
+  <!--         <td class="table-num">{{row['New Users']}}</td> -->
+  <!--         <td class="table-bar"><comparison-bar :value="row['New Users']" :max="states_max['New Users']" color="#268699" /></td> -->
+  <!--         <td class="table-num">{{row['Returning Users']}}</td> -->
+  <!--         <td class="table-bar"><comparison-bar :value="row['Returning Users']" :max="states_max['Returning Users']" color="#268699" /></td> -->
+  <!--         <td class="table-num">{{row['Total Pageviews']}}</td> -->
+  <!--         <td class="table-bar"><comparison-bar :value="row['Total Pageviews']" :max="states_max['Total Pageviews']" color="#268699" /></td> -->
+  <!--         <td class="table-num">{{row['Unique Pageviews']}}</td> -->
+  <!--         <td class="table-bar"><comparison-bar :value="row['Unique Pageviews']" :max="states_max['Unique Pageviews']" color="#268699" /></td> -->
+  <!--         <td class="table-num">{{(row['Avg. Time'] / 1000).toFixed(2)}}</td> -->
+  <!--         <td class="table-bar"><comparison-bar :value="row['Avg. Time']" :max="states_max['Avg. Time']" color="#268699" /></td> -->
+  <!--       </tr> -->
+  <!--     </tbody> -->
+  <!--   </table> -->
+  <!-- </div> -->
 
     <div class="data-wrapper crush">
 
@@ -579,32 +579,39 @@
 
   <div v-else-if="state=='traffic'">
 
-    <div class="data-wrapper">
-      <div class="data-header">
-        <div class="big-legend bl-blue">
-          <div class="ll-icon"><eye-icon></eye-icon></div>
-          <div>
-            <h2># (Total Unique Users during time period)</h2>
-            <h3>Users</h3>
-            
-          </div>
-        </div>
-        <div class="ll-legend">
-              <div><span class="dark-blue"></span> Unique</div>
-              <div><span class="light-blue"></span> New</div> 
-              <div><span class="light-blue"></span> Returning</div> 
-            </div>
-        </div>
-      <client-only>
-        <line-chart
-          :rows="report.traffic.data.chart"
-          :xaxis="d => new Date(d.date)"
-          :yaxes="['Unique', 'New', 'Returning']"
-          :maxy="2000"
-          :colors="['#268699', '#868686', '#BFDCE2']"
-          />
-      </client-only>
+    <div class="data-wrapper crush">
+      <div class="data-head">
+        <h3>Site visits from beta launch until {{new Date(misc.visits_as_of).toLocaleString(undefined, {year: "numeric", month: "numeric", day: "numeric"})}}</h3>
+      </div>
+      <div style="padding: 2px 1rem">{{misc.visits_total}}</div>
     </div>
+
+    <!-- <div class="data-wrapper"> -->
+    <!--   <div class="data-header"> -->
+    <!--     <div class="big-legend bl-blue"> -->
+    <!--       <div class="ll-icon"><eye-icon></eye-icon></div> -->
+    <!--       <div> -->
+    <!--         <h2># (Total Unique Users during time period)</h2> -->
+    <!--         <h3>Users</h3> -->
+            
+    <!--       </div> -->
+    <!--     </div> -->
+    <!--     <div class="ll-legend"> -->
+    <!--           <div><span class="dark-blue"></span> Unique</div> -->
+    <!--           <div><span class="light-blue"></span> New</div>  -->
+    <!--           <div><span class="light-blue"></span> Returning</div>  -->
+    <!--         </div> -->
+    <!--     </div> -->
+    <!--   <client-only> -->
+    <!--     <line-chart -->
+    <!--       :rows="report.traffic.data.chart" -->
+    <!--       :xaxis="d => new Date(d.date)" -->
+    <!--       :yaxes="['Unique', 'New', 'Returning']" -->
+    <!--       :maxy="2000" -->
+    <!--       :colors="['#268699', '#868686', '#BFDCE2']" -->
+    <!--       /> -->
+    <!--   </client-only> -->
+    <!-- </div> -->
 
     <div class="data-wrapper crush">
       <div class="data-head">
@@ -787,10 +794,13 @@ export default {
             ...context.store.state.auth
         });
 
+        const misc = await context.$axios.$get("/api/ui/organization/sitedata");
+
         const opps = await context.$axios.$get("/api/ui/organization/opps-overview", context.store.state.auth);
 
         return {
             report,
+            misc,
             opps,
         };
     },

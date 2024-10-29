@@ -375,6 +375,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut cycle = 0;
 
     loop {
+        sqlx::query!(
+            r#"update c_visits_cumulative
+                 set "as_of" = now(),
+                 "total" = (select sum("times") from c_visits)
+            "#
+        )
+        .execute(&pool)
+        .await?;
+
         let began = Utc::now();
 
         if let Err(err) = process(&pool, cycle).await {
