@@ -1037,8 +1037,10 @@ pub struct OpportunityQuery {
     pub entity_type: Option<Vec<EntityType>>,
     pub title_contains: Option<String>,
     pub tags: Option<Vec<String>>,
+    pub include_tags: Option<Vec<String>>,
     pub topics: Option<Vec<Topic>>,
     pub partner: Option<Uuid>,
+    pub include_partners: Option<Vec<Uuid>>,
     pub partner_member: Option<Uuid>,
     pub prefer_partner: Option<Uuid>,
     pub near: Option<(f32, f32, f32)>,
@@ -1409,10 +1411,28 @@ FROM c_region WHERE "name" = ${})
         //     ParamValue::Uuid(val.clone()).append(&mut params)
         // ));
 
-        clauses.push(format!(
-            "search.partner = ${}",
-            ParamValue::RawUuid(*val).append(&mut params)
-        ));
+        match (&query.include_tags, &query.include_partners) {
+            (None, None) => clauses.push(format!(
+                "search.partner = ${}",
+                ParamValue::RawUuid(*val).append(&mut params)
+            )),
+            (None, Some(partners)) => clauses.push(format!(
+                "(search.partner = ${} or search.partner = any(${}))",
+                ParamValue::RawUuid(*val).append(&mut params),
+                ParamValue::RawVecUuid(partners.clone()).append(&mut params),
+            )),
+            (Some(tags), None) => clauses.push(format!(
+                "(search.partner = ${} or search.tags && ${})",
+                ParamValue::RawUuid(*val).append(&mut params),
+                ParamValue::RawVecString(tags.clone()).append(&mut params),
+            )),
+            (Some(tags), Some(partners)) => clauses.push(format!(
+                "(search.partner = ${} or search.partner = any(${}) or search.tags && ${})",
+                ParamValue::RawUuid(*val).append(&mut params),
+                ParamValue::RawVecUuid(partners.clone()).append(&mut params),
+                ParamValue::RawVecString(tags.clone()).append(&mut params),
+            )),
+        };
     }
 
     // if let Some(val) = &query.partner_member {

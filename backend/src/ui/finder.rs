@@ -250,6 +250,7 @@ struct SearchQuery {
     pub proximity: Option<f32>,
     pub online: Option<bool>,
     pub text: Option<String>,
+    pub include_tags: Option<String>,
     pub beginning: Option<DateTime<FixedOffset>>,
     pub ending: Option<DateTime<FixedOffset>>,
     pub physical: Option<OpportunityQueryPhysical>,
@@ -262,6 +263,7 @@ struct SearchQuery {
     pub venue_type: Option<VenueType>,
     pub host: Option<String>,
     pub partner: Option<Uuid>,
+    pub include_partners: Option<String>,
     pub prefer_partner: Option<Uuid>,
     pub mine: Option<bool>,
     pub sort: Option<OpportunityQueryOrdering>,
@@ -357,6 +359,14 @@ RETURNING coalesce(pre."home_location" != post."home_location", true) as "change
     } else {
         None
     };
+
+    if let Some(combined) = search.include_tags {
+        query.include_tags = Some(combined.split(',').map(str::to_owned).collect());
+    }
+
+    if let Some(combined) = search.include_partners {
+        query.include_partners = Some(combined.split(',').flat_map(Uuid::parse_str).collect());
+    }
 
     if let Some(p) = person {
         if search.mine.unwrap_or(false) {
