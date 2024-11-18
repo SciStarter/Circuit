@@ -19,6 +19,24 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     let hours = Duration::new(60 * 60, 0);
 
     importers.push(Box::new(Import {
+        source: source::WordPressRest::new("https://networkforyouthsuccess.org/wp-json/tribe/events/v1/events/?status=publish&per_page=50"),
+        format: format::Json,
+        structure: structure::EventsJson(PartnerInfo {
+            partner: "d5d0282c-1fd7-5b58-a4c2-3512778217b9".parse().unwrap(),
+            partner_name: "New York State Network for Youth Success".to_string(),
+            partner_website: Some("https://networkforyouthsuccess.org/".to_string()),
+            partner_logo_url: None,
+            domain: Domain::OutOfSchoolTimeProgram,
+            descriptor: vec![Descriptor::Community, Descriptor::LiveScience],
+            topics: vec![Topic::GeneralScience],
+            flags: vec![],
+            address: None,
+            timezone: Some(chrono_tz::US::Eastern),
+        }),
+        period: 24 * hours,
+    }));
+
+    importers.push(Box::new(Import {
         source: Embedded::new(include_bytes!("csv/pbc_stem.csv")),
         format: CommaSeparated,
         structure: PBCStemCenter,
