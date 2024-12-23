@@ -248,7 +248,7 @@
       <li><external-link href="https://stemcouncil.alabama.gov/stem-near-me/">Alabama STEM Ecosystem</external-link></li>
       <li><external-link href="https://www.nationofmakers.us/find-a-maker-event">Nation of Makers</external-link></li>
       <li><external-link href="https://www.wisconsinsciencefest.org/science%20near%20me/">Wisconsin Science Festival</external-link></li>
-      <li><external-link href="https://mainediscovery.wixsite.com/sciencearoundme/science">Maine Discovery Museum</external-link> (beta)</li>
+      <!-- <li><external-link href="https://mainediscovery.wixsite.com/sciencearoundme/science">Maine Discovery Museum</external-link> (beta)</li> -->
     </ul>
     <!-- <h2 class="h3" style="margin-top:20px">Request an Exchange</h2>
     <ol>
