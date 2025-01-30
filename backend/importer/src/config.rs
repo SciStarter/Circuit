@@ -150,7 +150,8 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     }));
 
     importers.push(Box::new(Import {
-        source: source::HttpGet::new("https://nightsky.jpl.nasa.gov/js/data/events_json_api.cfm"),
+        //source: source::HttpGet::new("https://nightsky.jpl.nasa.gov/js/data/events_json_api.cfm"),
+        source: source::HttpGet::new("https://nightsky.jpl.nasa.gov/json/events/api/"),
         format: format::Json,
         structure: structure::NightSkyNetwork,
         period: 24 * hours,
