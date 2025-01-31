@@ -102,8 +102,16 @@ impl Structure for NightSkyNetwork {
                     // NSN generates incorrect GeoJSON, with the
                     // coordinates in lat,lon instead of the specified
                     // lon,lat (aka x,y) order
-                    let lat = obj["location_point"]["coordinates"][0].as_f64();
-                    let lon = obj["location_point"]["coordinates"][1].as_f64();
+                    let mut lat = obj["location_point"]["coordinates"][0].as_f64();
+                    let mut lon = obj["location_point"]["coordinates"][1].as_f64();
+                    if lat.is_none() && lon.is_none() {
+                        lat = obj["location_point"]["coordinates"][0]
+                            .as_str()
+                            .and_then(|s| s.parse().ok());
+                        lon = obj["location_point"]["coordinates"][1]
+                            .as_str()
+                            .and_then(|s| s.parse().ok());
+                    }
 
                     let tz = if let (Some(lon), Some(lat)) = (lon, lat) {
                         obj["location_point"]["coordinates"][0] = lon.into();
