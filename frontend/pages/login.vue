@@ -1,5 +1,12 @@
 <template>
   <div class="snm-wrapper">
+    <div class="forgot-alert snm-container">
+      <b-message 
+            type="is-warning" 
+            aria-close-label="Close message">
+            If your email address exists in our database, you should receive a password recovery link at your email address in a few minutes.
+        </b-message>
+    </div>
     <div class="snm-container standalone-form">
       <h1>Log In</h1>
 
@@ -65,5 +72,9 @@ export default {
     .field.is-floating-label {
       margin-bottom: 2rem;
     }
+  }
+  .forgot-alert {
+    max-width: 800px;
+    margin:2rem auto;
   }
 </style>

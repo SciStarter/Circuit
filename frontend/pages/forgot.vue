@@ -1,50 +1,31 @@
 <template>
-  <div class="login-form">
-    <slot />
-    <div class="form-header" v-if="!hideExtras">
-      <p>
-        Or
-        <a v-if="inModal" @click="$emit('signup')">Create a Science Near Me account</a>
-        <a v-else @click="$router.replace(partner ? {name: 'exchange-uid-signup', params: {uid: partner}, query: $route.query} : {name: 'signup', query: $route.query})">Create a Science Near Me account</a>.
-      </p>
-      <div class="was-p" v-if="!partner">
-        Do you have a
-        <img src="~/assets/img/scistarter-logo.svg" alt="SciStarter">
-        account?
-        <a @click="via_scistarter">
-          Log in with your SciStarter account
-        </a>.
-        <b-tooltip label="SciStarter is a citizen science database." position="is-left">
-          <b-button label="?" />
-        </b-tooltip>
+    <div class="snm-wrapper">
+      <div class="snm-container standalone-form">
+        <h1 style="margin-bottom:2rem">Forgot Your Password?</h1>
+        <div class="login-form" id="forgot-password-form">
+            <form @submit.prevent="0">
+                <b-field label="Email" :type="validate_email.type" :message="validate_email.message" label-position="on-border">
+                    <b-input v-model="login.email" type="email" required />
+                </b-field>
+               
+                <div class="flex flex-justify-sb">
+                    <action-button :loading="working" type="is-primary" primary @click="log_in">
+                    Send me password reset instructions
+                    </action-button>
+                    <b-button v-if="!notCancelable" type="is-text" @click="inModal ? $emit('close') : $router.go(-1);">
+                    Cancel
+                    </b-button>
+                </div>
+                </form>
+        </div>
+        
       </div>
     </div>
-    <form @submit.prevent="0">
-      <b-field label="Email" :type="validate_email.type" :message="validate_email.message" label-position="on-border">
-        <b-input v-model="login.email" type="email" required />
-      </b-field>
-      <b-field label="Password" :type="validate_password.type" :message="validate_password.message" label-position="on-border">
-        <b-input v-model="login.password" type="password" required />
-      </b-field>
-      <div class="forgot">
-        <a href="/forgot">Forgot password?</a>
-      </div>
-      <div class="flex flex-justify-sb">
-        <action-button :loading="working" type="is-primary" primary @click="log_in">
-          Log in
-        </action-button>
-        <b-button v-if="!notCancelable" type="is-text" @click="inModal ? $emit('close') : $router.go(-1);">
-          Cancel
-        </b-button>
-      </div>
-    </form>
-    <p class="trouble"><span>Trouble logging in? </span><a @click="forgot">Send a one-time login link to my email</a></p>
-  </div>
-</template>
+  </template>
 
 <script>
 export default {
-    name: "LoginForm",
+    name: "Forgot",
 
     props: {
         next: {
@@ -184,6 +165,23 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.standalone-form {
+    padding: 2rem 3rem;
+    border: 1px solid $snm-color-border;
+    max-width: 800px;
+    border-radius: 6px;
+
+    h1 {
+      font-size: 1.8rem;
+      color: $snm-color-background-meddark;
+      text-align: center;
+      font-weight: bold;
+      font-family: $snm-font-heading;
+    }
+    .field.is-floating-label {
+      margin-bottom: 2rem;
+    }
+  }
 .help {
   font-size:1rem;
 }
@@ -219,7 +217,7 @@ export default {
   }
 }
 .standalone-form {
-  .flex button {
+    .flex button {
         margin:0!important;
     }
   p:first-child {
@@ -235,15 +233,6 @@ export default {
 }
 .forgot {
   text-align: right;
-  margin-top: -1.8rem;
-    margin-bottom: 0.5rem;
-}
-.trouble {
-  margin-top:3rem;
-  span {
-    font-weight: bold;
-  }
-  
 }
 
 </style>
