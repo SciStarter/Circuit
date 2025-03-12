@@ -127,6 +127,7 @@
   <Footer />
   <SubFooter />
 
+  <PageView/>
 </div>
 </template>
 

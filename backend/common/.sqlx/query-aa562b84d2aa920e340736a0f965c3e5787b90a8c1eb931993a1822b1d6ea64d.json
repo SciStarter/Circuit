@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, exterior, interior from c_involvement where ($1::jsonb) @> (exterior -> 'opportunity');\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "exterior",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "interior",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "aa562b84d2aa920e340736a0f965c3e5787b90a8c1eb931993a1822b1d6ea64d"
+}

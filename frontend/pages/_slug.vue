@@ -1,9 +1,12 @@
 <template>
+  <div>
 <div v-if="authorization_required">
   This page requires you to <a @click="$router.push({name: 'login', query: {next: $route.path}})">log in</a>
   to an authorized account in order to view it, or perhaps it doesn't exist at all.
 </div>
 <component v-else :is="selected_component" :entity="entity" :user="user" :from-search="fromSearch" @login="$parent.$emit('login')" @signup="$parent.$emit('signup')" />
+<PageView/>
+</div>
 </template>
 
 <script>

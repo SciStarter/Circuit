@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n  c_partner.id as \"id\",\n  (c_partner.exterior -> 'uid') as \"uid\",\n  c_partner.exterior->>'name' as \"name\",\n  (c_partner.interior -> 'manager' ->> 'name') as \"manager_name\",\n  (c_partner.interior -> 'manager' ->> 'email') as \"manager_email\",\n  c_partner.\"created\" as \"joined\",\n  count(distinct c_opportunity.id) as \"published\"\nfrom c_partner left join c_opportunity\n  on c_partner.exterior->'uid' = c_opportunity.exterior->'partner'\nwhere c_opportunity.interior->>'accepted' != 'false'\n  and c_opportunity.interior->>'withdrawn' != 'true'\ngroup by\n  c_partner.id,\n  c_partner.exterior -> 'uid',\n  c_partner.exterior->>'name',\n  c_partner.interior -> 'manager' ->> 'name',\n  c_partner.interior -> 'manager' ->> 'email',\n  c_partner.\"created\"\norder by c_partner.exterior->>'name' asc;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "uid",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "manager_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "manager_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "joined",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "published",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "9f611480f2395b2d7a33137bab0feb3a54162cadc81c0ef6cca95d9c87bb84eb"
+}

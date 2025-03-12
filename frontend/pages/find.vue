@@ -297,6 +297,7 @@
     </action-button>
   </div>
 </div>
+<PageView/>
 </div>
 </template>
 

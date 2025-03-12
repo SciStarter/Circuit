@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, exterior, interior\nfrom c_partner\nwhere (exterior -> 'uid' != $2::jsonb) and (((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb)))\norder by exterior ->> 'name' asc;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "exterior",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "interior",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a8929c4d1b2c19e90c515e0119fe9902b0a2b853d7f16ea452d4ea4627b9f519"
+}
