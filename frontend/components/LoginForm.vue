@@ -38,7 +38,7 @@
         </b-button>
       </div>
     </form>
-    <p class="trouble"><span>Trouble logging in? </span><a @click="forgot">Send a one-time login link to my email</a></p>
+    <!-- <p class="trouble"><span>Trouble logging in? </span><a @click="forgot">Send a one-time login link to my email</a></p> -->
   </div>
 </template>
 
