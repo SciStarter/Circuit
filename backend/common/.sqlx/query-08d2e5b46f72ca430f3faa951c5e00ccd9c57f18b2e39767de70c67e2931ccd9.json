@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT x.exterior->>'pes_domain' AS \"domain!\", COUNT(x.*) AS \"total!\"\nFROM (\n  SELECT DISTINCT ON (o.exterior->>'title', o.exterior->>'partner') *\n  FROM c_opportunity o JOIN c_region r ON r.\"name\" = $1\n  WHERE\n    c_opportunity_is_current(o.interior, o.exterior) AND\n    o.exterior->>'pes_domain' != 'unspecified' AND\n    o.exterior->>'location_type' = 'near' AND\n    ST_Intersects(o.location_polygon, r.geometry)\n  ORDER BY o.exterior->>'title', o.exterior->>'partner'\n) x\nGROUP BY x.exterior->>'pes_domain'\nORDER BY \"total!\" DESC\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "domain!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "08d2e5b46f72ca430f3faa951c5e00ccd9c57f18b2e39767de70c67e2931ccd9"
+}

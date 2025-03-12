@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update c_views set \"lon\" = $2, \"lat\" = $3 where \"id\" = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Float4",
+        "Float4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "afab741b5cca22fe86b47cca442718a4a4d1fc698a8d93f75c7ab996664907b4"
+}

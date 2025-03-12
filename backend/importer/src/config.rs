@@ -7,7 +7,6 @@ use common::model::Partner;
 use importer::format::{self, CommaSeparated, Format};
 use importer::source::embedded::Embedded;
 use importer::source::{self, Source};
-use importer::structure::pbc::PBCStemCenter;
 use importer::structure::{self, OneOrMany, PartnerAddress, PartnerFlag, PartnerInfo, Structure};
 use importer::web::{Field, Page, Process};
 use importer::{Error, Importer};
@@ -47,8 +46,8 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     importers.push(Box::new(Import {
         source: Embedded::new(include_bytes!("csv/pbc_stem.csv")),
         format: CommaSeparated,
-        structure: PBCStemCenter,
-        period: 24 * hours,
+        structure: structure::PBCStemCenter,
+        period: 90 * 24 * hours,
     }));
 
     importers.push(Box::new(

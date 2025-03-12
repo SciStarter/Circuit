@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into c_views (\"when\", \"page\", \"user\", \"session\", \"ip\", \"lon\", \"lat\")\n               values (CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Varchar",
+        "Varchar",
+        "Float4",
+        "Float4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "83b8a911d67058f5661b6bfa19eff61f443b7973c79d08f22bed2368dc2a6316"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select exists(select 1 from c_partner where ($1::jsonb) @> (exterior -> 'uid')) as \"exists\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d97f02bf2620ddcd59b280f5b5d37dc015d2c8e380a46c6aa692901c38e81199"
+}

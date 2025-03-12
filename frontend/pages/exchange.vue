@@ -1,6 +1,7 @@
 <template>
   <div class="exchange">
     <nuxt-child />
+    <PageView/>
   </div>
 </template>
 

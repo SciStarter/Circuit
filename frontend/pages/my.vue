@@ -3,6 +3,7 @@
     <div class="snm-container">
       <nuxt-child />
     </div>
+<PageView/>
   </div>
 </template>
 

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, exterior, interior from c_person where ($1::jsonb) @> (exterior -> 'uid');\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "exterior",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "interior",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "3c0fe1e4ace1686507f9ba8f135fc4217d948ef3fc11b0fadfdfee99fa62b4cc"
+}

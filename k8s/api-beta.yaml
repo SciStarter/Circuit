@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-api-beta
-        image: scistarter/circuit-api:master-0.1.243
+        image: scistarter/circuit-api:master-0.1.248
         ports:
         - containerPort: 8000
         env:
@@ -69,6 +69,11 @@ spec:
             secretKeyRef:
               name: uploader-auth
               key: UPLOADER_AUTH_SECRET
+        - name: IPGEOLOCATION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ipgeolocation
+              key: IPGEOLOCATION_KEY
 ---
 apiVersion: v1
 kind: Service

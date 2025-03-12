@@ -170,6 +170,7 @@
   </div>
 </b-modal>
 
+<PageView/>
 </section>
 </template>
 
