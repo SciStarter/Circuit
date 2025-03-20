@@ -10,7 +10,7 @@ pub mod eventsjson;
 pub mod eventsql;
 pub mod ldjson;
 pub mod mec;
-pub mod nc_science_fest;
+//pub mod nc_science_fest;
 pub mod neon;
 pub mod night_sky_network;
 pub mod pbc;
@@ -20,7 +20,7 @@ pub use eventsjson::EventsJson;
 pub use eventsql::EventsQL;
 pub use ldjson::LdJson;
 pub use mec::ModernEventsCalendar;
-pub use nc_science_fest::NCScienceFest;
+//pub use nc_science_fest::NCScienceFest;
 pub use night_sky_network::NightSkyNetwork;
 pub use pbc::PBCStemCenter;
 

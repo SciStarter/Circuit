@@ -11,6 +11,7 @@ use crate::Error;
 
 use super::{OneOrMany, Structure};
 
+// TODO: Waiting on confirmation of who the right project is.
 const NC_SCIENCE_FEST: Uuid = match Uuid::try_parse("") {
     Ok(uid) => uid,
     Err(_) => panic!("Expected to be able to parse the UUID constant"),
