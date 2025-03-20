@@ -14,6 +14,7 @@ pub mod mec;
 pub mod neon;
 pub mod night_sky_network;
 pub mod pbc;
+pub mod sciact;
 
 pub use atlanta_science_fest::AtlantaScienceFest;
 pub use eventsjson::EventsJson;
@@ -23,6 +24,7 @@ pub use mec::ModernEventsCalendar;
 //pub use nc_science_fest::NCScienceFest;
 pub use night_sky_network::NightSkyNetwork;
 pub use pbc::PBCStemCenter;
+pub use sciact::NASASciAct;
 
 pub enum OneOrMany<T> {
     One(T),
@@ -72,4 +74,23 @@ pub trait Structure: std::fmt::Debug {
 
     fn interpret(&self, parsed: Value) -> OneOrMany<Result<Self::Data, LoggedError>>;
     async fn load_partner(&self, db: &Pool<Postgres>) -> Result<Partner, Error>;
+}
+
+pub trait EmptyAsNone {
+    fn empty_as_none(self) -> Self;
+}
+
+impl EmptyAsNone for Option<&str> {
+    fn empty_as_none(self) -> Self {
+        match self {
+            Some(s) => {
+                if s.trim().is_empty() {
+                    None
+                } else {
+                    Some(s)
+                }
+            }
+            None => None,
+        }
+    }
 }

@@ -18,6 +18,13 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     let hours = Duration::new(60 * 60, 0);
 
     importers.push(Box::new(Import {
+        source: Embedded::new(include_bytes!("csv/sciact.csv")), // Remember to clean up the CSV headers
+        format: CommaSeparated,
+        structure: structure::NASASciAct,
+        period: 90 * 24 * hours,
+    }));
+
+    importers.push(Box::new(Import {
         //source: source::HttpGet::new("https://nightsky.jpl.nasa.gov/js/data/events_json_api.cfm"),
         source: source::HttpGet::new("https://nightsky.jpl.nasa.gov/json/events/api/"),
         format: format::Json,
