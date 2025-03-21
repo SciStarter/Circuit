@@ -324,6 +324,7 @@ Write a public-friendly description for the web, written for an audience has no 
             }
         }
 
+        opp.exterior.partner = NASA_SCIACT;
         opp.exterior.partner_name = "NASA SciAct".to_owned();
         opp.exterior.partner_website =
             Some("https://science.nasa.gov/learn/about-science-activation/".to_owned());

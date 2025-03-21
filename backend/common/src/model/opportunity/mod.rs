@@ -1682,7 +1682,7 @@ FROM c_region WHERE "name" = ${})
                        and
                        coalesce(array_length(search.end_datetimes, 1), 0) = 1
                        and
-                       age(search.end_datetimes[0], search.start_datetimes[0]) <= interval '7 days'
+                       age(search.end_datetimes[1], search.start_datetimes[1]) <= interval '7 days'
                      )
                     )"#,
                 ));
@@ -1703,7 +1703,7 @@ FROM c_region WHERE "name" = ${})
                       or
                       coalesce(array_length(search.end_datetimes, 1), 0) != 1
                       or
-                      age(search.end_datetimes[0], search.start_datetimes[0]) > interval '7 days'
+                      age(search.end_datetimes[1], search.start_datetimes[1]) > interval '7 days'
                     )"#,
                 ));
             }
