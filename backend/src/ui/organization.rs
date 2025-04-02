@@ -428,8 +428,9 @@ WHERE
                     0,
                 )
                 .map(|row| row.data)
-                .fetch_one(req.state())
-                .await?,
+                .fetch_optional(req.state())
+                .await?
+                .unwrap_or_default(),
             )?,
         );
 
