@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: circuit-importer-beta
-        image: scistarter/circuit-importer:0.1.87
+        image: scistarter/circuit-importer:0.1.88
         env:
         - name: DATABASE_URL
           valueFrom:
