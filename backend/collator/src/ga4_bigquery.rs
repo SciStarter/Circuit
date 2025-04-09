@@ -42,6 +42,7 @@ static FIELD_SUBSTITUTIONS: Lazy<BTreeMap<String, String>> = Lazy::new(|| {
 });
 
 pub use crate::ga4::{is_cached, is_overview_cached, is_search_terms_cached};
+use crate::retry_query;
 
 static BQ_SIMULTANEOUS: Lazy<tokio::sync::Semaphore> = Lazy::new(|| tokio::sync::Semaphore::new(8));
 
@@ -387,8 +388,9 @@ pub async fn cache_report(
         let new_users = row.get_int("newUsers");
         let engagement_duration = row.get_float("userEngagementDuration");
 
-        if let Err(err) = sqlx::query!(
-            r#"
+        if let Err(err) = retry_query!(
+            sqlx::query!(
+                r#"
 INSERT INTO c_analytics_cache (
     "temporary",
     "begin",
@@ -414,29 +416,29 @@ VALUES (
   $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
 )
 "#,
-            temporary,
-            begin,
-            end,
-            opportunity,
-            partner,
-            date,
-            city,
-            device_category,
-            first_session_date,
-            page_path,
-            region,
-            views,
-            events,
-            total_users,
-            new_users,
-            engagement_duration,
-            sessions,
-            session_channel_group,
-            page_referrer,
-        )
-        .execute(db)
-        .await
-        {
+                temporary,
+                begin,
+                end,
+                opportunity,
+                partner,
+                date,
+                city,
+                device_category,
+                first_session_date,
+                page_path,
+                region,
+                views,
+                events,
+                total_users,
+                new_users,
+                engagement_duration,
+                sessions,
+                session_channel_group,
+                page_referrer,
+            )
+            .execute(db)
+            .await
+        ) {
             println!("Error inserting into c_analytics_cache: {:?}", err);
         }
     }

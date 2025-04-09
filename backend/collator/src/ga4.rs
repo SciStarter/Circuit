@@ -11,6 +11,7 @@ use google_analyticsdata1_beta::{hyper, hyper_rustls, oauth2, AnalyticsData};
 use uuid::Uuid;
 
 use crate::reportiter::ReportIterator;
+use crate::retry_query;
 
 const HOURLY_SECONDS_PER_TOKEN: f32 = (60.0 * 60.0) / 5000.0;
 const DAILY_SECONDS_PER_TOKEN: f32 = (60.0 * 60.0 * 24.0) / 25000.0;
@@ -267,8 +268,9 @@ pub async fn cache_report(
         let new_users = row.get_int("newUsers");
         let engagement_duration = row.get_float("userEngagementDuration");
 
-        if let Err(err) = sqlx::query!(
-            r#"
+        if let Err(err) = retry_query!(
+            sqlx::query!(
+                r#"
 INSERT INTO c_analytics_cache (
     "temporary",
     "begin",
@@ -294,29 +296,29 @@ VALUES (
   $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
 )
 "#,
-            temporary,
-            begin,
-            end,
-            opportunity,
-            partner,
-            date,
-            city,
-            device_category,
-            first_session_date,
-            page_path,
-            region,
-            views,
-            events,
-            total_users,
-            new_users,
-            engagement_duration,
-            sessions,
-            session_channel_group,
-            page_referrer,
-        )
-        .execute(db)
-        .await
-        {
+                temporary,
+                begin,
+                end,
+                opportunity,
+                partner,
+                date,
+                city,
+                device_category,
+                first_session_date,
+                page_path,
+                region,
+                views,
+                events,
+                total_users,
+                new_users,
+                engagement_duration,
+                sessions,
+                session_channel_group,
+                page_referrer,
+            )
+            .execute(db)
+            .await
+        ) {
             println!("Error inserting into c_analytics_cache: {:?}", err);
         }
     }
@@ -328,14 +330,14 @@ pub async fn is_cached(
     end: DateTime<FixedOffset>,
     opp: Uuid,
 ) -> bool {
-    sqlx::query_scalar!(
+    retry_query!(sqlx::query_scalar!(
         r#"SELECT EXISTS(SELECT 1 FROM c_analytics_cache WHERE "begin" = $1 AND "end" = $2 AND "opportunity" = $3) AS "exists!: bool""#,
         begin,
         end,
         opp
     )
     .fetch_one(db)
-    .await.unwrap_or(false)
+    .await).unwrap_or(false)
 }
 
 pub async fn is_overview_cached(
@@ -343,13 +345,13 @@ pub async fn is_overview_cached(
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
 ) -> bool {
-    sqlx::query_scalar!(
+    retry_query!(sqlx::query_scalar!(
         r#"SELECT EXISTS(SELECT 1 FROM c_analytics_overview_cache WHERE "begin" = $1 AND "end" = $2) AS "exists!: bool""#,
         begin,
         end,
     )
     .fetch_one(db)
-    .await.unwrap_or(false)
+    .await).unwrap_or(false)
 }
 
 pub async fn is_search_terms_cached(
@@ -357,24 +359,30 @@ pub async fn is_search_terms_cached(
     begin: DateTime<FixedOffset>,
     end: DateTime<FixedOffset>,
 ) -> bool {
-    sqlx::query_scalar!(
+    retry_query!(sqlx::query_scalar!(
         r#"SELECT EXISTS(SELECT 1 FROM c_analytics_search_term_cache WHERE "begin" = $1 AND "end" = $2) AS "exists!: bool""#,
         begin,
         end,
     )
     .fetch_one(db)
-    .await.unwrap_or(false)
+    .await).unwrap_or(false)
 }
 
 pub async fn clear_cached_temporary(db: &Database) -> Result<(), Error> {
-    sqlx::query!(r#"DELETE FROM c_analytics_cache WHERE "temporary" = true"#)
-        .execute(db)
-        .await?;
-    sqlx::query!(r#"DELETE FROM c_analytics_overview_cache WHERE "temporary" = true"#)
-        .execute(db)
-        .await?;
-    sqlx::query!(r#"DELETE FROM c_analytics_search_term_cache WHERE "temporary" = true"#)
-        .execute(db)
-        .await?;
+    retry_query!(
+        sqlx::query!(r#"DELETE FROM c_analytics_cache WHERE "temporary" = true"#)
+            .execute(db)
+            .await
+    )?;
+    retry_query!(
+        sqlx::query!(r#"DELETE FROM c_analytics_overview_cache WHERE "temporary" = true"#)
+            .execute(db)
+            .await
+    )?;
+    retry_query!(
+        sqlx::query!(r#"DELETE FROM c_analytics_search_term_cache WHERE "temporary" = true"#)
+            .execute(db)
+            .await
+    )?;
     Ok(())
 }

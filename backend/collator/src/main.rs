@@ -17,6 +17,20 @@ mod organization;
 mod overview;
 mod reportiter;
 
+#[macro_export]
+macro_rules! retry_query {
+    ($query: expr) => {
+        'retry_loop: loop {
+            match ($query) {
+                Err(sqlx::Error::Io(_)) => {
+                    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+                }
+                other => break 'retry_loop other,
+            }
+        }
+    };
+}
+
 #[derive(Default, Debug, Clone)]
 pub struct CommonState {
     begin: DateTime<FixedOffset>,
@@ -34,8 +48,9 @@ async fn collect(
     period: RelativeTimePeriod,
     status: Status, // Only used for constructing the result; the collected analytics are universal
 ) -> Result<CommonState, Box<dyn std::error::Error>> {
-    let (mean_views, mean_unique, median_views, median_unique) = sqlx::query!(
-        r#"
+    let (mean_views, mean_unique, median_views, median_unique) = retry_query!(
+        sqlx::query!(
+            r#"
 SELECT
   AVG("view_count")::bigint AS "mean_views: i64",
   AVG("unique_count")::bigint AS "mean_unique: i64",
@@ -48,22 +63,24 @@ FROM (
   GROUP BY "opportunity"
 ) AS c_sub
 "#,
-        begin,
-        end
-    )
-    .map(|row| {
-        (
-            row.mean_views.unwrap_or(0).try_into().unwrap_or(0),
-            row.mean_unique.unwrap_or(0).try_into().unwrap_or(0),
-            row.median_views.unwrap_or(0).try_into().unwrap_or(0),
-            row.median_unique.unwrap_or(0).try_into().unwrap_or(0),
+            begin,
+            end
         )
-    })
-    .fetch_one(db)
-    .await?;
+        .map(|row| {
+            (
+                row.mean_views.unwrap_or(0).try_into().unwrap_or(0),
+                row.mean_unique.unwrap_or(0).try_into().unwrap_or(0),
+                row.median_views.unwrap_or(0).try_into().unwrap_or(0),
+                row.median_unique.unwrap_or(0).try_into().unwrap_or(0),
+            )
+        })
+        .fetch_one(db)
+        .await
+    )?;
 
-    let (mean_clicks, median_clicks) = sqlx::query!(
-        r#"
+    let (mean_clicks, median_clicks) = retry_query!(
+        sqlx::query!(
+            r#"
 SELECT
   AVG("clicks")::bigint AS "mean_clicks: i64",
   PERCENTILE_CONT(0.5) WITHIN GROUP (order by "clicks")::bigint AS "median_clicks: i64"
@@ -74,17 +91,18 @@ FROM (
   GROUP BY "object"
 ) AS c_sub
 "#,
-        begin,
-        end
-    )
-    .map(|row| {
-        (
-            row.mean_clicks.unwrap_or(0).try_into().unwrap_or(0),
-            row.median_clicks.unwrap_or(0).try_into().unwrap_or(0),
+            begin,
+            end
         )
-    })
-    .fetch_one(db)
-    .await?;
+        .map(|row| {
+            (
+                row.mean_clicks.unwrap_or(0).try_into().unwrap_or(0),
+                row.median_clicks.unwrap_or(0).try_into().unwrap_or(0),
+            )
+        })
+        .fetch_one(db)
+        .await
+    )?;
 
     Ok(CommonState {
         begin,
@@ -107,9 +125,11 @@ FROM (
 async fn process(db: &Database, cycle: u64) -> Result<(), Box<dyn std::error::Error>> {
     let threshold: DateTime<FixedOffset> = DateTime::from_str("2021-01-01T00:00:00Z").unwrap();
 
-    sqlx::query!("SELECT c_refresh_log_by_when_this_year()")
-        .execute(db)
-        .await?;
+    retry_query!(
+        sqlx::query!("SELECT c_refresh_log_by_when_this_year()")
+            .execute(db)
+            .await
+    )?;
 
     for period in RelativeTimePeriod::iter() {
         println!("{} [{}][{:?}]", Utc::now(), cycle, &period);
@@ -203,10 +223,11 @@ async fn process(db: &Database, cycle: u64) -> Result<(), Box<dyn std::error::Er
                     opp.id.unwrap_or(0),
                     &opp.exterior.title
                 );
-                let data = opportunity::collect(db, &opp, &state).await?;
+                let data = serde_json::to_value(opportunity::collect(db, &opp, &state).await?)?;
 
-                sqlx::query!(
-                    r#"
+                retry_query!(
+                    sqlx::query!(
+                        r#"
 INSERT INTO c_analytics_compiled (
   "about",
   "kind",
@@ -219,13 +240,14 @@ INSERT INTO c_analytics_compiled (
 ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
   "data" = EXCLUDED."data"
 "#,
-                    opp.exterior.uid,
-                    period.discriminate(),
-                    status.discriminate(),
-                    serde_json::to_value(data)?,
-                )
-                .execute(db)
-                .await?;
+                        opp.exterior.uid,
+                        period.discriminate(),
+                        status.discriminate(),
+                        data,
+                    )
+                    .execute(db)
+                    .await
+                )?;
             }
 
             let mut partner_tasks = Vec::new();
@@ -248,10 +270,13 @@ ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
                             &partner.exterior.name
                         );
 
-                        let data = organization::collect(&db, &partner, &state).await?;
+                        let data = serde_json::to_value(
+                            organization::collect(&db, &partner, &state).await?,
+                        )?;
 
-                        sqlx::query!(
-                            r#"
+                        retry_query!(
+                            sqlx::query!(
+                                r#"
 INSERT INTO c_analytics_compiled (
   "about",
   "kind",
@@ -264,13 +289,14 @@ INSERT INTO c_analytics_compiled (
 ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
   "data" = EXCLUDED."data"
 "#,
-                            partner.exterior.uid,
-                            period.discriminate(),
-                            status.discriminate(),
-                            serde_json::to_value(data)?,
-                        )
-                        .execute(&db)
-                        .await?;
+                                partner.exterior.uid,
+                                period.discriminate(),
+                                status.discriminate(),
+                                data,
+                            )
+                            .execute(&db)
+                            .await
+                        )?;
 
                         println!(
                             "{} [{}][{:?}][{:?}][{}: {:?}] Collecting hosts",
@@ -281,10 +307,12 @@ ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
                             partner.id.unwrap_or(0),
                             &partner.exterior.name
                         );
-                        let data = hosts::collect(&db, &partner, &state).await?;
+                        let data =
+                            serde_json::to_value(hosts::collect(&db, &partner, &state).await?)?;
 
-                        sqlx::query!(
-                            r#"
+                        retry_query!(
+                            sqlx::query!(
+                                r#"
 INSERT INTO c_analytics_compiled (
   "about",
   "kind",
@@ -297,13 +325,14 @@ INSERT INTO c_analytics_compiled (
 ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
   "data" = EXCLUDED."data"
 "#,
-                            partner.exterior.uid,
-                            period.discriminate(),
-                            status.discriminate(),
-                            serde_json::to_value(data)?,
-                        )
-                        .execute(&db)
-                        .await?;
+                                partner.exterior.uid,
+                                period.discriminate(),
+                                status.discriminate(),
+                                data,
+                            )
+                            .execute(&db)
+                            .await
+                        )?;
 
                         println!(
                             "{} [{}][{:?}][{:?}][{}: {:?}] Partner collected",
@@ -331,10 +360,11 @@ ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
                 &period,
                 &status,
             );
-            let data = overview::collect(db, &state).await?;
+            let data = serde_json::to_value(overview::collect(db, &state).await?)?;
 
-            sqlx::query!(
-                r#"
+            retry_query!(
+                sqlx::query!(
+                    r#"
 INSERT INTO c_analytics_compiled (
   "about",
   "kind",
@@ -347,13 +377,14 @@ INSERT INTO c_analytics_compiled (
 ON CONFLICT ("about", "kind", "period", "status") DO UPDATE SET
   "data" = EXCLUDED."data"
 "#,
-                Uuid::nil(),
-                period.discriminate(),
-                status.discriminate(),
-                serde_json::to_value(data)?,
-            )
-            .execute(db)
-            .await?;
+                    Uuid::nil(),
+                    period.discriminate(),
+                    status.discriminate(),
+                    data,
+                )
+                .execute(db)
+                .await
+            )?;
         }
     }
 
@@ -375,14 +406,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut cycle = 0;
 
     loop {
-        sqlx::query!(
-            r#"update c_visits_cumulative
+        retry_query!(
+            sqlx::query!(
+                r#"update c_visits_cumulative
                  set "as_of" = now(),
                  "total" = (select sum("times") from c_visits)
             "#
-        )
-        .execute(&pool)
-        .await?;
+            )
+            .execute(&pool)
+            .await
+        )?;
 
         let began = Utc::now();
 

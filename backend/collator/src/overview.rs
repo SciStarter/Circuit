@@ -19,7 +19,7 @@ use google_analyticsdata1_beta::api::{Dimension, Filter, FilterExpression, Metri
 use strum::IntoEnumIterator;
 use uuid::Uuid;
 
-use crate::{ga4_bigquery as ga4, CommonState};
+use crate::{ga4_bigquery as ga4, retry_query, CommonState};
 
 pub async fn cache(
     db: &Database,
@@ -58,6 +58,7 @@ pub async fn cache(
             }
         }
 
+        retry_query!(
         sqlx::query!(
             r#"
 INSERT INTO c_analytics_overview_cache (
@@ -96,7 +97,7 @@ VALUES (
             opportunity_unique,
         )
         .execute(db)
-        .await?;
+        .await)?;
     }
 
     if !ga4::is_search_terms_cached(db, begin, end).await {
@@ -150,8 +151,9 @@ VALUES (
         }
 
         for (term, times) in search_counts {
-            sqlx::query!(
-                r#"
+            retry_query!(
+                sqlx::query!(
+                    r#"
 INSERT INTO c_analytics_search_term_cache (
   "temporary",
   "begin",
@@ -163,14 +165,15 @@ VALUES (
   $1, $2, $3, $4, $5
 )
 "#,
-                temporary,
-                begin,
-                end,
-                term,
-                times
-            )
-            .execute(db)
-            .await?;
+                    temporary,
+                    begin,
+                    end,
+                    term,
+                    times
+                )
+                .execute(db)
+                .await
+            )?;
         }
     }
 
@@ -181,21 +184,24 @@ pub async fn collect(db: &Database, state: &CommonState) -> Result<Overview, Err
     let engagement = OverviewEngagementData {
         begin: state.begin,
         end: state.end,
-        search_max: sqlx::query_scalar!(
-            r#"
+        search_max: retry_query!(
+            sqlx::query_scalar!(
+                r#"
 SELECT COALESCE(MAX("times"), 0) AS "times!"
 FROM c_analytics_search_term_cache
 WHERE "begin" = $1 AND "end" = $2
 "#,
-            state.begin,
-            state.end,
-        )
-        .fetch_one(db)
-        .await?
+                state.begin,
+                state.end,
+            )
+            .fetch_one(db)
+            .await
+        )?
         .try_into()
         .unwrap_or(0),
-        stats: sqlx::query!(
-            r#"
+        stats: retry_query!(
+            sqlx::query!(
+                r#"
 SELECT
   "unique_visitors" AS "unique_visitors!",
   "shares" AS "shares!",
@@ -213,25 +219,27 @@ WHERE
   "end" = $2
 LIMIT 1
 "#,
-            state.begin,
-            state.end,
-        )
-        .map(|row| OverviewEngagementDataStats {
-            unique_visitors: row.unique_visitors.try_into().unwrap_or(0),
-            accounts: row.accounts.try_into().unwrap_or(0),
-            opportunity_views: row.opportunity_views.try_into().unwrap_or(0),
-            opportunity_unique: row.opportunity_unique.try_into().unwrap_or(0),
-            opportunity_exits: row.opportunity_exits.try_into().unwrap_or(0),
-            didits: row.didits.try_into().unwrap_or(0),
-            saves: row.saves.try_into().unwrap_or(0),
-            likes: row.likes.try_into().unwrap_or(0),
-            shares: row.shares.try_into().unwrap_or(0),
-            calendar_adds: row.calendar_adds.try_into().unwrap_or(0),
-        })
-        .fetch_one(db)
-        .await?,
-        searches: sqlx::query!(
-            r#"
+                state.begin,
+                state.end,
+            )
+            .map(|row| OverviewEngagementDataStats {
+                unique_visitors: row.unique_visitors.try_into().unwrap_or(0),
+                accounts: row.accounts.try_into().unwrap_or(0),
+                opportunity_views: row.opportunity_views.try_into().unwrap_or(0),
+                opportunity_unique: row.opportunity_unique.try_into().unwrap_or(0),
+                opportunity_exits: row.opportunity_exits.try_into().unwrap_or(0),
+                didits: row.didits.try_into().unwrap_or(0),
+                saves: row.saves.try_into().unwrap_or(0),
+                likes: row.likes.try_into().unwrap_or(0),
+                shares: row.shares.try_into().unwrap_or(0),
+                calendar_adds: row.calendar_adds.try_into().unwrap_or(0),
+            })
+            .fetch_one(db)
+            .await
+        )?,
+        searches: retry_query!(
+            sqlx::query!(
+                r#"
 SELECT
   "term" AS "term!",
   "times" AS "times!"
@@ -242,28 +250,31 @@ WHERE
 ORDER BY "times" DESC
 LIMIT 30
 "#,
-            state.begin,
-            state.end
-        )
-        .map(|row| OverviewEngagementDataSearch {
-            phrase: row.term,
-            searches: row.times.try_into().unwrap_or(0),
-        })
-        .fetch_all(db)
-        .await?
+                state.begin,
+                state.end
+            )
+            .map(|row| OverviewEngagementDataSearch {
+                phrase: row.term,
+                searches: row.times.try_into().unwrap_or(0),
+            })
+            .fetch_all(db)
+            .await
+        )?
         .into_iter()
         .collect(),
     };
 
     let demographics: OverviewDemographics = serde_json::from_value(
-        sqlx::query_scalar!(
-            r#"
+        retry_query!(
+            sqlx::query_scalar!(
+                r#"
 SELECT "data" AS "data!" FROM c_demographics WHERE "about" = $1
 "#,
-            Uuid::nil()
-        )
-        .fetch_optional(db)
-        .await?
+                Uuid::nil()
+            )
+            .fetch_optional(db)
+            .await
+        )?
         .expect("No demographics data uploaded"),
     )?;
 
@@ -290,7 +301,7 @@ GROUP BY "region"
     )
     .fetch(db);
 
-    while let Some(state_row) = states_rows.try_next().await? {
+    while let Some(state_row) = retry_query!(states_rows.try_next().await)? {
         let state_name = state_row.state;
 
         let state_row = DetailedEngagementDataChart {
@@ -367,7 +378,7 @@ GROUP BY "city"
         )
         .fetch(db);
 
-        while let Some(region_row) = regions_rows.try_next().await? {
+        while let Some(region_row) = retry_query!(regions_rows.try_next().await)? {
             let region_name = region_row.region;
 
             let region_row = DetailedEngagementDataChart {
@@ -467,7 +478,7 @@ GROUP BY "city"
     let mut tech_tablet = DetailedEngagementDataChart::default();
     let mut tech_mobile = DetailedEngagementDataChart::default();
 
-    let tech_rows = sqlx::query!(
+    let tech_rows = retry_query!(sqlx::query!(
         r#"
 SELECT
   "device_category" AS "device_category!: String",
@@ -486,7 +497,7 @@ GROUP BY "device_category"
         state.status.discriminate()
     )
     .fetch_all(db)
-    .await?;
+    .await)?;
 
     for row in tech_rows {
         let chart = match row.device_category.as_ref() {
@@ -543,8 +554,9 @@ GROUP BY "device_category"
             .max(tech_mobile.average_time),
     };
 
-    let traffic_chart = sqlx::query!(
-        r#"
+    let traffic_chart = retry_query!(
+        sqlx::query!(
+            r#"
 SELECT
   "date" AS "date!: DateTime<FixedOffset>",
   SUM("views")::bigint AS "views: i64",
@@ -562,20 +574,21 @@ FROM c_analytics_cache
 WHERE "date" >= $1 AND "date" < $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
 GROUP BY "date"
 "#,
-        state.begin,
-        state.end,
-        state.status.discriminate()
-    )
-    .map(|row| EngagementDataChart {
-        date: row.date,
-        views: row.views.unwrap_or(0).try_into().unwrap_or(0),
-        unique: row.unique.unwrap_or(0).try_into().unwrap_or(0),
-        new: row.new.unwrap_or(0).try_into().unwrap_or(0),
-        returning: row.returning.unwrap_or(0).try_into().unwrap_or(0),
-        clicks: row.clicks.unwrap_or(0).try_into().unwrap_or(0),
-    })
-    .fetch_all(db)
-    .await?;
+            state.begin,
+            state.end,
+            state.status.discriminate()
+        )
+        .map(|row| EngagementDataChart {
+            date: row.date,
+            views: row.views.unwrap_or(0).try_into().unwrap_or(0),
+            unique: row.unique.unwrap_or(0).try_into().unwrap_or(0),
+            new: row.new.unwrap_or(0).try_into().unwrap_or(0),
+            returning: row.returning.unwrap_or(0).try_into().unwrap_or(0),
+            clicks: row.clicks.unwrap_or(0).try_into().unwrap_or(0),
+        })
+        .fetch_all(db)
+        .await
+    )?;
 
     let traffic_pie = PieChart {
         labels: vec![
@@ -605,27 +618,29 @@ GROUP BY "date"
                 "#5bbd08".into(),
                 "#a15e36".into(),
             ],
-            data: sqlx::query!(
-                r#"
+            data: retry_query!(
+                sqlx::query!(
+                    r#"
 SELECT "session_channel_group" AS "group!", SUM("views")::bigint AS "count: i64"
 FROM c_analytics_cache
 WHERE "date" >= $1 AND "date" < $2 AND c_opportunity_by_uid_is_status("opportunity", $3)
 GROUP BY "session_channel_group"
 ORDER BY "session_channel_group"
 "#,
-                state.begin,
-                state.end,
-                state.status.discriminate()
-            )
-            .map(|row| row.count.unwrap_or(0).try_into().unwrap_or(0))
-            .fetch_all(db)
-            .await?,
+                    state.begin,
+                    state.end,
+                    state.status.discriminate()
+                )
+                .map(|row| row.count.unwrap_or(0).try_into().unwrap_or(0))
+                .fetch_all(db)
+                .await
+            )?,
         }],
     };
 
     let mut traffic_max = DetailedEngagementDataChart::default();
 
-    let traffic_table = sqlx::query!(
+    let traffic_table = retry_query!(sqlx::query!(
         r#"
 SELECT
   "page_referrer" AS "page_referrer!",
@@ -680,7 +695,7 @@ GROUP BY "page_referrer", "session_channel_group"
         chart
     })
     .fetch_all(db)
-    .await?;
+    .await)?;
 
     let mut crossover_data: BTreeMap<(String, String), EngagementDataChart> = BTreeMap::new();
     let mut crossover_involve: BTreeMap<String, u64> = BTreeMap::new();
@@ -706,7 +721,7 @@ WHERE
     )
     .fetch(db);
 
-    while let Ok(Some(row)) = query.try_next().await {
+    while let Ok(Some(row)) = retry_query!(query.try_next().await) {
         let entry = crossover_data
             .entry(if row.prior_domain > row.postor_domain {
                 (row.postor_domain.clone(), row.prior_domain.clone())

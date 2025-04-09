@@ -5,15 +5,16 @@ use common::{
     Database, ToFixedOffset,
 };
 
-use crate::CommonState;
+use crate::{retry_query, CommonState};
 
 pub async fn collect(
     db: &Database,
     org: &common::model::Partner,
     state: &CommonState,
 ) -> Result<Hosts, Error> {
-    let host_names = sqlx::query!(
-        r#"
+    let host_names = retry_query!(
+        sqlx::query!(
+            r#"
 SELECT DISTINCT
   "exterior"->>'organization_name' AS "host!: String"
 FROM
@@ -26,12 +27,13 @@ WHERE
 ORDER BY
   "exterior"->>'organization_name'
 "#,
-        state.end,
-        org.exterior.uid,
-    )
-    .map(|row| row.host)
-    .fetch_all(db)
-    .await?;
+            state.end,
+            org.exterior.uid,
+        )
+        .map(|row| row.host)
+        .fetch_all(db)
+        .await
+    )?;
 
     let total_hosts = host_names.len().try_into().unwrap_or(0);
     let mut total_opportunities = 0;
@@ -49,7 +51,7 @@ ORDER BY
             &host_name,
         );
 
-        let row = sqlx::query!(
+        let row = retry_query!(sqlx::query!(
             r#"
 SELECT
   COALESCE(COUNT(*), 0) AS "total!: i64",
@@ -76,7 +78,7 @@ WHERE
             state.end,
         )
         .fetch_one(db)
-        .await?;
+        .await)?;
 
         let row = HostsDataChart {
             name: Some(host_name),

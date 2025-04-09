@@ -16,7 +16,7 @@ use common::{
 use futures_util::TryStreamExt;
 use strum::IntoEnumIterator;
 
-use crate::CommonState;
+use crate::{retry_query, CommonState};
 
 pub async fn cache(
     _db: &Database,
@@ -57,7 +57,7 @@ WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND c_opportunity_by_uid_is
     )
     .fetch(db);
 
-    while let Ok(Some(entry)) = query.try_next().await {
+    while let Ok(Some(entry)) = retry_query!(query.try_next().await) {
         let date = entry.date.to_fixed_offset();
 
         let row: &mut EngagementDataChart = engagement_data_chart.entry(date).or_default();
@@ -67,19 +67,20 @@ WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND c_opportunity_by_uid_is
         row.new += entry.new_users.try_into().unwrap_or(0);
         row.returning = row.unique - row.new;
 
-        if let Some(opp_info) = sqlx::query!(
-            r#"
+        if let Some(opp_info) = retry_query!(
+            sqlx::query!(
+                r#"
 SELECT
   exterior->>'title' AS "name!",
   exterior->>'slug' AS "slug!"
 FROM c_opportunity
 WHERE (exterior->>'uid')::uuid = $1 LIMIT 1
 "#,
-            entry.opportunity
-        )
-        .fetch_optional(db)
-        .await?
-        {
+                entry.opportunity
+            )
+            .fetch_optional(db)
+            .await
+        )? {
             let row: &mut OpportunityChart =
                 engagement_data_table.entry(entry.opportunity).or_default();
             row.name = opp_info.name;
@@ -99,12 +100,19 @@ WHERE (exterior->>'uid')::uuid = $1 LIMIT 1
             0,
             0,
             0,
-        ) else { println!("Error calculating beginning of day: {}", row.date); continue; };
+        ) else {
+            println!("Error calculating beginning of day: {}", row.date);
+            continue;
+        };
 
-        let Some(end) = begin.checked_add_days(Days::new(1)) else { println!("Error calculating end of day: {}", row.date); continue; };
+        let Some(end) = begin.checked_add_days(Days::new(1)) else {
+            println!("Error calculating end of day: {}", row.date);
+            continue;
+        };
 
-        row.clicks = sqlx::query_scalar!(
-            r#"
+        row.clicks = retry_query!(
+            sqlx::query_scalar!(
+                r#"
 SELECT
   COUNT(*) AS "count: i64"
 FROM c_log INNER JOIN c_opportunity ON c_log."object" = (c_opportunity.exterior->>'uid')::uuid
@@ -114,12 +122,13 @@ WHERE
   "when" >= $2 AND
   "when" < $3
 "#,
-            org.exterior.uid,
-            begin,
-            end
-        )
-        .fetch_one(db)
-        .await?
+                org.exterior.uid,
+                begin,
+                end
+            )
+            .fetch_one(db)
+            .await
+        )?
         .unwrap_or(0)
         .try_into()
         .unwrap_or(0);
@@ -132,8 +141,9 @@ WHERE
     }
 
     for (uid, row) in engagement_data_table.iter_mut() {
-        row.values.clicks = sqlx::query_scalar!(
-            r#"
+        row.values.clicks = retry_query!(
+            sqlx::query_scalar!(
+                r#"
 SELECT
   COUNT(*) AS "count: i64"
 FROM c_log
@@ -143,12 +153,13 @@ WHERE
   "when" >= $2 AND
   "when" < $3
 "#,
-            uid,
-            state.begin,
-            state.end
-        )
-        .fetch_one(db)
-        .await?
+                uid,
+                state.begin,
+                state.end
+            )
+            .fetch_one(db)
+            .await
+        )?
         .unwrap_or(0)
         .try_into()
         .unwrap_or(0);
@@ -184,7 +195,7 @@ GROUP BY "region"
     )
     .fetch(db);
 
-    while let Some(state_row) = states_rows.try_next().await? {
+    while let Some(state_row) = retry_query!(states_rows.try_next().await)? {
         let state_name = state_row.state;
 
         let state_row = DetailedEngagementDataChart {
@@ -262,7 +273,7 @@ GROUP BY "city"
         )
         .fetch(db);
 
-        while let Some(region_row) = regions_rows.try_next().await? {
+        while let Some(region_row) = retry_query!(regions_rows.try_next().await)? {
             let region_name = region_row.region;
 
             let region_row = DetailedEngagementDataChart {
@@ -362,7 +373,7 @@ GROUP BY "city"
     let mut tech_tablet = DetailedEngagementDataChart::default();
     let mut tech_mobile = DetailedEngagementDataChart::default();
 
-    let tech_rows = sqlx::query!(
+    let tech_rows = retry_query!(sqlx::query!(
         r#"
 SELECT
   "device_category" AS "device_category!: String",
@@ -382,7 +393,7 @@ GROUP BY "device_category"
         state.status.discriminate()
     )
     .fetch_all(db)
-    .await?;
+    .await)?;
 
     for row in tech_rows {
         let chart = match row.device_category.as_ref() {
@@ -439,7 +450,7 @@ GROUP BY "device_category"
             .max(tech_mobile.average_time),
     };
 
-    let traffic_chart = sqlx::query!(
+    let traffic_chart = retry_query!(sqlx::query!(
         r#"
 SELECT
   "date" AS "date!: DateTime<FixedOffset>",
@@ -473,7 +484,7 @@ GROUP BY "date"
         clicks: row.clicks.unwrap_or(0).try_into().unwrap_or(0),
     })
     .fetch_all(db)
-    .await?;
+    .await)?;
 
     let traffic_pie = PieChart {
         labels: vec![
@@ -503,7 +514,7 @@ GROUP BY "date"
                 "#5bbd08".into(),
                 "#a15e36".into(),
             ],
-            data: sqlx::query!(
+            data: retry_query!(sqlx::query!(
                 r#"
 SELECT "session_channel_group" AS "group!", SUM("views")::bigint AS "count: i64"
 FROM c_analytics_cache
@@ -518,13 +529,13 @@ ORDER BY "session_channel_group"
             )
             .map(|row| row.count.unwrap_or(0).try_into().unwrap_or(0))
             .fetch_all(db)
-            .await?,
+            .await)?,
         }],
     };
 
     let mut traffic_max = DetailedEngagementDataChart::default();
 
-    let traffic_table = sqlx::query!(
+    let traffic_table = retry_query!(sqlx::query!(
         r#"
 SELECT
   "page_referrer" AS "page_referrer!",
@@ -580,7 +591,7 @@ GROUP BY "page_referrer", "session_channel_group"
         chart
     })
     .fetch_all(db)
-    .await?;
+    .await)?;
 
     Ok(Organization {
         organization: org.exterior.uid,

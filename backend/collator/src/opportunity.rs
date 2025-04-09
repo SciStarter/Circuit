@@ -18,7 +18,7 @@ use futures_util::TryStreamExt;
 use google_analyticsdata1_beta::api::{Filter, FilterExpression, StringFilter};
 use strum::IntoEnumIterator;
 
-use crate::{ga4_bigquery as ga4, CommonState};
+use crate::{ga4_bigquery as ga4, retry_query, CommonState};
 
 pub async fn cache(
     db: &Database,
@@ -82,7 +82,7 @@ pub async fn collect(
     )
     .fetch(db);
 
-    while let Ok(Some(entry)) = query.try_next().await {
+    while let Ok(Some(entry)) = retry_query!(query.try_next().await) {
         let date = entry.date.to_fixed_offset();
 
         let row: &mut EngagementDataChart = engagement_data_chart.entry(date).or_default();
@@ -101,30 +101,36 @@ pub async fn collect(
             0,
             0,
             0,
-        ) else { println!("Error calculating beginning of day: {}", row.date); continue; };
+        ) else {
+            println!("Error calculating beginning of day: {}", row.date);
+            continue;
+        };
 
-        let Some(end) = begin.checked_add_days(Days::new(1)) else { println!("Error calculating end of day: {}", row.date); continue; };
+        let Some(end) = begin.checked_add_days(Days::new(1)) else {
+            println!("Error calculating end of day: {}", row.date);
+            continue;
+        };
 
-        row.clicks = sqlx::query_scalar!(
+        row.clicks = retry_query!(sqlx::query_scalar!(
             r#"SELECT COUNT(*) AS "count: i64" FROM c_log WHERE "action" = 'external' AND "object" = $1 AND "when" >= $2 AND "when" < $3"#,
             opp.exterior.uid,
             begin,
             end
         )
         .fetch_one(db)
-        .await?.unwrap_or(0).try_into().unwrap_or(0);
+        .await)?.unwrap_or(0).try_into().unwrap_or(0);
     }
 
-    let opp_clicks = sqlx::query_scalar!(
+    let opp_clicks = retry_query!(sqlx::query_scalar!(
             r#"SELECT COUNT(*) AS "count: i64" FROM c_log WHERE "action" = 'external' AND "object" = $1 AND "when" >= $2 AND "when" < $3"#,
             opp.exterior.uid,
             state.begin,
             state.end
         )
         .fetch_one(db)
-        .await?.unwrap_or(0).try_into().unwrap_or(0);
+        .await)?.unwrap_or(0).try_into().unwrap_or(0);
 
-    let (opp_views, opp_unique) = sqlx::query!(
+    let (opp_views, opp_unique) = retry_query!(sqlx::query!(
         r#"SELECT SUM("views")::bigint AS "views: i64", SUM("total_users")::bigint AS "unique: i64" FROM c_analytics_cache WHERE "opportunity" = $1 AND "begin" = $2 AND "end" = $3"#,
         opp.exterior.uid,
         state.begin,
@@ -137,7 +143,7 @@ pub async fn collect(
             )
         })
         .fetch_one(db)
-        .await?;
+        .await)?;
 
     let mut states_max = DetailedEngagementDataChart::default();
     let mut states = BTreeMap::new();
@@ -169,7 +175,7 @@ GROUP BY "region"
     )
     .fetch(db);
 
-    while let Some(state_row) = states_rows.try_next().await? {
+    while let Some(state_row) = retry_query!(states_rows.try_next().await)? {
         let state_name = state_row.state;
 
         let state_row = DetailedEngagementDataChart {
@@ -246,7 +252,7 @@ GROUP BY "city"
         )
         .fetch(db);
 
-        while let Some(region_row) = regions_rows.try_next().await? {
+        while let Some(region_row) = retry_query!(regions_rows.try_next().await)? {
             let region_name = region_row.region;
 
             let region_row = DetailedEngagementDataChart {
@@ -346,7 +352,7 @@ GROUP BY "city"
     let mut tech_tablet = DetailedEngagementDataChart::default();
     let mut tech_mobile = DetailedEngagementDataChart::default();
 
-    let tech_rows = sqlx::query!(
+    let tech_rows = retry_query!(sqlx::query!(
         r#"
 SELECT
   "device_category" AS "device_category!: String",
@@ -365,7 +371,7 @@ GROUP BY "device_category"
         opp.exterior.uid,
     )
     .fetch_all(db)
-    .await?;
+    .await)?;
 
     for row in tech_rows {
         let chart = match row.device_category.as_ref() {
@@ -422,8 +428,9 @@ GROUP BY "device_category"
             .max(tech_mobile.average_time),
     };
 
-    let traffic_chart = sqlx::query!(
-        r#"
+    let traffic_chart = retry_query!(
+        sqlx::query!(
+            r#"
 SELECT
   "date" AS "date!: DateTime<FixedOffset>",
   SUM("views")::bigint AS "views: i64",
@@ -442,20 +449,21 @@ FROM c_analytics_cache
 WHERE "opportunity" = $1 AND "date" >= $2 AND "date" < $3
 GROUP BY "date"
 "#,
-        opp.exterior.uid,
-        state.begin,
-        state.end,
-    )
-    .map(|row| EngagementDataChart {
-        date: row.date,
-        views: row.views.unwrap_or(0).try_into().unwrap_or(0),
-        unique: row.unique.unwrap_or(0).try_into().unwrap_or(0),
-        new: row.new.unwrap_or(0).try_into().unwrap_or(0),
-        returning: row.returning.unwrap_or(0).try_into().unwrap_or(0),
-        clicks: row.clicks.unwrap_or(0).try_into().unwrap_or(0),
-    })
-    .fetch_all(db)
-    .await?;
+            opp.exterior.uid,
+            state.begin,
+            state.end,
+        )
+        .map(|row| EngagementDataChart {
+            date: row.date,
+            views: row.views.unwrap_or(0).try_into().unwrap_or(0),
+            unique: row.unique.unwrap_or(0).try_into().unwrap_or(0),
+            new: row.new.unwrap_or(0).try_into().unwrap_or(0),
+            returning: row.returning.unwrap_or(0).try_into().unwrap_or(0),
+            clicks: row.clicks.unwrap_or(0).try_into().unwrap_or(0),
+        })
+        .fetch_all(db)
+        .await
+    )?;
 
     let traffic_pie = PieChart {
         labels: vec![
@@ -485,27 +493,29 @@ GROUP BY "date"
                 "#5bbd08".into(),
                 "#a15e36".into(),
             ],
-            data: sqlx::query!(
-                r#"
+            data: retry_query!(
+                sqlx::query!(
+                    r#"
 SELECT "session_channel_group" AS "group!", SUM("views")::bigint AS "count: i64"
 FROM c_analytics_cache
 WHERE "opportunity" = $1 AND "date" >= $2 AND "date" < $3
 GROUP BY "session_channel_group"
 ORDER BY "session_channel_group"
 "#,
-                opp.exterior.uid,
-                state.begin,
-                state.end,
-            )
-            .map(|row| row.count.unwrap_or(0).try_into().unwrap_or(0))
-            .fetch_all(db)
-            .await?,
+                    opp.exterior.uid,
+                    state.begin,
+                    state.end,
+                )
+                .map(|row| row.count.unwrap_or(0).try_into().unwrap_or(0))
+                .fetch_all(db)
+                .await
+            )?,
         }],
     };
 
     let mut traffic_max = DetailedEngagementDataChart::default();
 
-    let traffic_table = sqlx::query!(
+    let traffic_table = retry_query!(sqlx::query!(
         r#"
 SELECT
   "page_referrer" AS "page_referrer!",
@@ -560,10 +570,11 @@ GROUP BY "page_referrer", "session_channel_group"
         chart
     })
     .fetch_all(db)
-    .await?;
+    .await)?;
 
-    let overlap = sqlx::query!(
-        r#"
+    let overlap = retry_query!(
+        sqlx::query!(
+            r#"
 WITH c_neighbors AS (
   SELECT
     "other",
@@ -608,23 +619,24 @@ FROM
 WHERE c_opportunity.exterior->>'entity_type' = 'opportunity'
 ORDER BY "overlap!" DESC;
 "#,
-        opp.exterior.uid,
-        state.begin,
-        state.end,
-        opp_clicks as f32
-    )
-    .map(|row| OpportunityOverlapChart {
-        name: row.name,
-        overlap: row.overlap.into(),
-        host: row.host,
-        activity_types: serde_json::from_value(row.activity_types).unwrap_or_default(),
-        format: row.format,
-        venue_types: serde_json::from_value(row.venue_types).unwrap_or_default(),
-        min_age: row.min_age,
-        max_age: row.max_age,
-    })
-    .fetch_all(db)
-    .await?;
+            opp.exterior.uid,
+            state.begin,
+            state.end,
+            opp_clicks as f32
+        )
+        .map(|row| OpportunityOverlapChart {
+            name: row.name,
+            overlap: row.overlap.into(),
+            host: row.host,
+            activity_types: serde_json::from_value(row.activity_types).unwrap_or_default(),
+            format: row.format,
+            venue_types: serde_json::from_value(row.venue_types).unwrap_or_default(),
+            min_age: row.min_age,
+            max_age: row.max_age,
+        })
+        .fetch_all(db)
+        .await
+    )?;
 
     Ok(Opportunity {
         opportunity: opp.exterior.uid,
