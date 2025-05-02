@@ -24,23 +24,32 @@ pub struct NASASciAct;
 
 impl NASASciAct {
     fn import_one(&self, row: &serde_json::Value) -> Result<Opportunity, LoggedError> {
-        dbg!(&row);
-
         let mut opp = Opportunity::default();
+
+        //dbg!(&row);
 
         let name = row["Name/Title of Event/Activity*"]
             .as_str()
             .empty_as_none();
+
         opp.exterior.title = if let Some(name) = name {
+            if name == "OLD/ARCHIVED EVENTS BELOW" {
+                return Err(LoggedError::new(
+                    LoggedErrorLevel::TerminateProcessing,
+                    "Found end marker",
+                ));
+            }
             name.to_owned()
         } else {
             return Err(LoggedError::new(
-                LoggedErrorLevel::Warning,
-                "Opportunity is missing a title",
+                LoggedErrorLevel::Info,
+                "No opportunity on row",
             ));
         };
 
         let name = opp.exterior.title.clone();
+
+        // dbg!(&name);
 
         let start_date = row["Start Date"].as_str().empty_as_none().ok_or_else(|| {
             LoggedError::new(
@@ -50,6 +59,8 @@ impl NASASciAct {
             .set_title(&name)
         })?;
 
+        // dbg!(&start_date);
+
         let end_date = row["End Date"].as_str().empty_as_none().ok_or_else(|| {
             LoggedError::new(
                 LoggedErrorLevel::Warning,
@@ -57,6 +68,8 @@ impl NASASciAct {
             )
             .set_title(&name)
         })?;
+
+        // dbg!(&end_date);
 
         let start_time = row["Start Time"].as_str().empty_as_none().ok_or_else(|| {
             LoggedError::new(
@@ -66,6 +79,8 @@ impl NASASciAct {
             .set_title(&name)
         })?;
 
+        // dbg!(&start_time);
+
         let end_time = row["End Time"].as_str().empty_as_none().ok_or_else(|| {
             LoggedError::new(
                 LoggedErrorLevel::Warning,
@@ -74,25 +89,47 @@ impl NASASciAct {
             .set_title(opp.exterior.title.clone())
         })?;
 
-        let location_zone = row["Time Zone"]
+        // dbg!(&end_time);
+
+        let location_zone = row["Time Zone "]
             .as_str()
             .empty_as_none()
             .unwrap_or("US/Eastern");
 
-        let start_ndt = NaiveDateTime::parse_from_str(
+        // dbg!(&location_zone);
+
+        let start_ndt = match NaiveDateTime::parse_from_str(
             &format!("{} {}", start_date, start_time),
             "%Y/%m/%d %H:%M:%S",
-        )?;
+        ) {
+            Ok(ndt) => ndt,
+            Err(_) => NaiveDateTime::parse_from_str(
+                &format!("{} {}", start_date, start_time),
+                "%m/%d/%Y %H:%M",
+            )?,
+        };
 
-        let end_ndt = NaiveDateTime::parse_from_str(
+        // dbg!(&start_ndt);
+
+        let end_ndt = match NaiveDateTime::parse_from_str(
             &format!("{} {}", end_date, end_time),
             "%Y/%m/%d %H:%M:%S",
-        )?;
+        ) {
+            Ok(ndt) => ndt,
+            Err(_) => NaiveDateTime::parse_from_str(
+                &format!("{} {}", end_date, end_time),
+                "%m/%d/%Y %H:%M",
+            )?,
+        };
+
+        // dbg!(&end_ndt);
 
         let tz: Tz = location_zone.parse().map_err(|_| {
             LoggedError::new(LoggedErrorLevel::Warning, "Unrecognized time zone")
                 .set_title(opp.exterior.title.clone())
         })?;
+
+        // dbg!(&tz);
 
         let Some(start_dt) = start_ndt.and_local_timezone(tz.clone()).earliest() else {
             return Err(LoggedError::new(
@@ -101,6 +138,8 @@ impl NASASciAct {
             ));
         };
 
+        // dbg!(&start_dt);
+
         let Some(end_dt) = end_ndt.and_local_timezone(tz).earliest() else {
             return Err(LoggedError::new(
                 LoggedErrorLevel::Warning,
@@ -108,10 +147,15 @@ impl NASASciAct {
             ));
         };
 
+        // dbg!(&end_dt);
+
         opp.exterior.start_datetimes = vec![start_dt.fixed_offset()];
         opp.exterior.end_datetimes = vec![end_dt.fixed_offset()];
 
         let guid = row["GUID (internal use only)"].as_str().empty_as_none();
+
+        // dbg!(&guid);
+
         opp.exterior.uid = guid
             .and_then(|s| Uuid::parse_str(s).ok())
             .unwrap_or_else(|| {
@@ -123,11 +167,15 @@ impl NASASciAct {
 
         let host = row["Name of Host Organization*"].as_str().empty_as_none();
 
+        // dbg!(&host);
+
         if let Some(host) = host {
             opp.exterior.organization_name = host.to_owned();
         }
 
         let contact_name = row["Contact Name*"].as_str().empty_as_none();
+
+        // dbg!(&contact_name);
 
         if let Some(contact_name) = contact_name {
             opp.interior.contact_name = contact_name.to_owned();
@@ -135,11 +183,20 @@ impl NASASciAct {
 
         let contact_email = row["Contact Email*"].as_str().empty_as_none();
 
+        // dbg!(&contact_email);
+
         if let Some(contact_email) = contact_email {
             opp.interior.contact_email = contact_email.to_owned();
         }
 
-        let location_type = row["Where is your Opportunity?*"].as_str().empty_as_none();
+        let location_type = row[r#"Where is Your Opportunity?*
+Online Only,
+ Physical Location,
+or Physical Location & Online"#]
+            .as_str()
+            .empty_as_none();
+
+        // dbg!(&location_type);
 
         if let Some(location_type) = location_type {
             opp.exterior.location_type = match location_type {
@@ -153,47 +210,73 @@ impl NASASciAct {
 
         let join_url = row["Link to Register or Join*"].as_str().empty_as_none();
 
+        // dbg!(&join_url);
+
         if let Some(join_url) = join_url {
             opp.exterior.partner_opp_url = Some(join_url.to_owned());
         }
 
-        let location_name = row["Name of Physical Location "].as_str().empty_as_none();
+        let location_name = row["For In-Person Events: Name of Physical Location "]
+            .as_str()
+            .empty_as_none();
+
+        // dbg!(&location_name);
 
         if let Some(location_name) = location_name {
             opp.exterior.location_name = location_name.to_owned();
         }
 
-        let location_street = row["Location Street Address"].as_str().empty_as_none();
+        let location_street = row["For In-Person Events: Street Address"]
+            .as_str()
+            .empty_as_none();
+
+        // dbg!(&location_street);
 
         if let Some(location_street) = location_street {
             opp.exterior.address_street = location_street.to_owned();
         }
 
-        let location_city = row["Location City"].as_str().empty_as_none();
+        let location_city = row["For In-Person Events: City"].as_str().empty_as_none();
+
+        // dbg!(&location_city);
 
         if let Some(location_city) = location_city {
             opp.exterior.address_city = location_city.to_owned();
         }
 
-        let location_state = row["Location State (or Province)"].as_str().empty_as_none();
+        let location_state = row["For In-Person Events: Location State (or Province)"]
+            .as_str()
+            .empty_as_none();
+
+        // dbg!(&location_state);
 
         if let Some(location_state) = location_state {
             opp.exterior.address_state = location_state.to_owned();
         }
 
-        let location_country = row["Location Country"].as_str().empty_as_none();
+        let location_country = row["For In-Person Events: Country"]
+            .as_str()
+            .empty_as_none();
+
+        // dbg!(&location_country);
 
         if let Some(location_country) = location_country {
             opp.exterior.address_country = location_country.to_owned();
         }
 
-        let location_zip = row["Location Zip/Postal Code"].as_str().empty_as_none();
+        let location_zip = row["For In-Person Events: Zip/Postal Code"]
+            .as_str()
+            .empty_as_none();
+
+        // dbg!(&location_zip);
 
         if let Some(location_zip) = location_zip {
             opp.exterior.address_zip = location_zip.to_owned();
         }
 
         let webpage_url = row["Webpage URL for More Information About This Event/Activity (No Links to Google Drive)"].as_str().empty_as_none();
+
+        // dbg!(&webpage_url);
 
         if let Some(webpage_url) = webpage_url {
             if opp.exterior.partner_opp_url.is_none() {
@@ -204,6 +287,8 @@ impl NASASciAct {
         let short_description = row[r#"Short Summary (164 Character Limit):*
 Tell prospective participants what to expect from your opportunity in a short, friendly sentence. Appears in search results."#].as_str().empty_as_none();
 
+        // dbg!(&short_description);
+
         if let Some(short_desc) = short_description {
             opp.exterior.short_desc = short_desc.to_owned();
         }
@@ -211,11 +296,15 @@ Tell prospective participants what to expect from your opportunity in a short, f
         let description = row[r#"Detailed Description of Opportunity:*
 Write a public-friendly description for the web, written for an audience has no idea who you are or what this is.)"#].as_str().empty_as_none();
 
+        // dbg!(&description);
+
         if let Some(desc) = description {
             opp.exterior.description = desc.to_owned();
         }
 
-        let image_url = row["Display Image (URL)"].as_str().empty_as_none();
+        let image_url = row[r#"Ideal images should reflect the activity participants will experience, rather than a logo. Acceptable "web friendly" formats: png, jpeg, webp. Recommended dimensions: 600×400 pixels."#].as_str().empty_as_none();
+
+        // dbg!(&image_url);
 
         if let Some(image_url) = image_url {
             opp.exterior.image_url = image_url.to_owned();
@@ -228,6 +317,8 @@ Write a public-friendly description for the web, written for an audience has no 
             .as_str()
             .empty_as_none();
 
+        // dbg!(&image_credit);
+
         if let Some(image_credit) = image_credit {
             opp.exterior.image_credit = image_credit.to_owned();
         }
@@ -236,6 +327,8 @@ Write a public-friendly description for the web, written for an audience has no 
             ["Select the engagement domain that fits your opportunity best (select ONE)*"]
             .as_str()
             .empty_as_none();
+
+        // dbg!(&domain);
 
         if let Some(domain) = domain {
             opp.exterior.pes_domain = Domain::from_str(domain).unwrap_or(Domain::Unspecified);
@@ -246,6 +339,8 @@ Write a public-friendly description for the web, written for an audience has no 
             .as_str()
             .empty_as_none();
 
+        // dbg!(&descriptor);
+
         if let Some(descriptor) = descriptor {
             for descriptor in descriptor.split(',') {
                 if let Ok(descr) = Descriptor::from_str(descriptor.trim()) {
@@ -255,6 +350,8 @@ Write a public-friendly description for the web, written for an audience has no 
         }
 
         let cost = row["Associated Cost*"].as_str().empty_as_none();
+
+        // dbg!(&cost);
 
         if let Some(cost) = cost {
             opp.exterior.cost = match cost {
@@ -269,17 +366,23 @@ Write a public-friendly description for the web, written for an audience has no 
 
         let min_age = row["Minimum Age"].as_str().empty_as_none();
 
+        // dbg!(&min_age);
+
         if let Some(min_age) = min_age {
             opp.exterior.min_age = min_age.parse().unwrap_or(0);
         }
 
         let max_age = row["Maximum Age"].as_str().empty_as_none();
 
+        // dbg!(&max_age);
+
         if let Some(max_age) = max_age {
             opp.exterior.max_age = max_age.parse().unwrap_or(999);
         }
 
         let venue = row["Select the Venue Type(s) that fit your opportunity best* (leave blank for virtual events)"].as_str().empty_as_none();
+
+        // dbg!(&venue);
 
         if let Some(venue) = venue {
             opp.exterior.opp_venue = match venue {
@@ -293,6 +396,8 @@ Write a public-friendly description for the web, written for an audience has no 
             .as_str()
             .empty_as_none();
 
+        // dbg!(&topics);
+
         if let Some(topics) = topics {
             for topic in topics.split(',') {
                 if let Ok(topic) = Topic::from_str(topic.trim()) {
@@ -304,6 +409,8 @@ Write a public-friendly description for the web, written for an audience has no 
         let ticket_required = row["Registration/Ticket Required?*"]
             .as_str()
             .empty_as_none();
+
+        // dbg!(&ticket_required);
 
         if let Some(ticket_required) = ticket_required {
             opp.exterior.ticket_required = match ticket_required {
@@ -317,6 +424,8 @@ Write a public-friendly description for the web, written for an audience has no 
         }
 
         let keywords = row["Add Keywords/Phrases. Separate with a comma. (e.g. museum, astronomy, afterschool, library, kids, citizen science, nature)"].as_str().empty_as_none();
+
+        // dbg!(&keywords);
 
         if let Some(keywords) = keywords {
             for keyword in keywords.split(',') {
@@ -343,7 +452,15 @@ impl Structure for NASASciAct {
 
     fn interpret(&self, parsed: serde_json::Value) -> OneOrMany<Result<Self::Data, LoggedError>> {
         let opps = if let Some(rows) = parsed.as_array() {
-            rows.iter().map(|row| self.import_one(row)).collect()
+            let mut accumulator = Vec::with_capacity(rows.len());
+            for row in rows.iter() {
+                let res = self.import_one(row);
+                match res {
+                    Err(e) if e.level == LoggedErrorLevel::TerminateProcessing => break,
+                    _ => accumulator.push(res),
+                }
+            }
+            accumulator
         } else {
             Vec::new()
         };

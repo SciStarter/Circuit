@@ -14,10 +14,12 @@ use uuid::Uuid;
 
 #[derive(Default, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd, Copy, Clone)]
 pub enum LoggedErrorLevel {
+    Info,
     #[default]
     Debug,
     Warning,
     Error,
+    TerminateProcessing,
 }
 
 impl TryFrom<i16> for LoggedErrorLevel {
@@ -25,6 +27,7 @@ impl TryFrom<i16> for LoggedErrorLevel {
 
     fn try_from(value: i16) -> Result<Self, <LoggedErrorLevel as TryFrom<i16>>::Error> {
         match value {
+            -1 => Ok(LoggedErrorLevel::Info),
             0 => Ok(LoggedErrorLevel::Debug),
             1 => Ok(LoggedErrorLevel::Warning),
             2 => Ok(LoggedErrorLevel::Error),
@@ -36,9 +39,13 @@ impl TryFrom<i16> for LoggedErrorLevel {
 impl From<LoggedErrorLevel> for i16 {
     fn from(value: LoggedErrorLevel) -> Self {
         match value {
+            LoggedErrorLevel::Info => -1,
             LoggedErrorLevel::Debug => 0,
             LoggedErrorLevel::Warning => 1,
             LoggedErrorLevel::Error => 2,
+            LoggedErrorLevel::TerminateProcessing => {
+                panic!("TerminateProcessing should never be saved or restored.")
+            }
         }
     }
 }

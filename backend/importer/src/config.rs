@@ -3,6 +3,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 
 use common::model::opportunity::{Descriptor, Domain, OpportunityImportRecord, Topic};
+use common::model::partner::LoggedErrorLevel;
 use common::model::Partner;
 use importer::format::{self, CommaSeparated, Format};
 use importer::source::embedded::Embedded;
@@ -459,7 +460,9 @@ where
                             .id
                             .expect("The id should be set after loading from the database");
                         let _ = le.store(&db).await;
-                        println!("[Interpret] Logged error: {}", &le.message);
+                        if le.level != LoggedErrorLevel::Info {
+                            println!("[Interpret] Logged error: {}", &le.message);
+                        }
                     }
                 }
             }
@@ -497,7 +500,9 @@ where
                                 .id
                                 .expect("The id should be set after loading from the database");
                             let _ = le.store(&db).await;
-                            println!("[Interpret] Logged error: {}", &le.message);
+                            if le.level != LoggedErrorLevel::Info {
+                                println!("[Interpret] Logged error: {}", &le.message);
+                            }
                         }
                     }
                 }
