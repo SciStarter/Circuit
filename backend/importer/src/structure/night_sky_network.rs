@@ -89,6 +89,12 @@ impl Structure for NightSkyNetwork {
                 let mut opps = Vec::new();
 
                 for mut obj in objects {
+                    // if obj["title"].as_str().is_some_and(|s| s.contains("MOON")) {
+                    //     println!("{}", parsed);
+                    // } else {
+                    //     continue;
+                    // }
+
                     // The uid field may either be absent or filled
                     // with a UUID string. They included it but left
                     // it empty instead.
