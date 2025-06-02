@@ -26,7 +26,7 @@ impl NASASciAct {
     fn import_one(&self, row: &serde_json::Value) -> Result<Opportunity, LoggedError> {
         let mut opp = Opportunity::default();
 
-        //dbg!(&row);
+        dbg!(&row);
 
         let name = row["Name/Title of Event/Activity*"]
             .as_str()

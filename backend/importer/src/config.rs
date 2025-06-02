@@ -19,11 +19,10 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
     let hours = Duration::new(60 * 60, 0);
 
     importers.push(Box::new(Import {
-        //source: source::HttpGet::new("https://nightsky.jpl.nasa.gov/js/data/events_json_api.cfm"),
-        source: source::HttpGet::new("https://nightsky.jpl.nasa.gov/json/events/api/"),
-        format: format::Json,
-        structure: structure::NightSkyNetwork,
-        period: 24 * hours,
+        source: Embedded::new(include_bytes!("csv/pbc_stem.csv")),
+        format: CommaSeparated,
+        structure: structure::PBCStemCenter,
+        period: 90 * 24 * hours,
     }));
 
     importers.push(Box::new(Import {
@@ -31,6 +30,14 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
         format: CommaSeparated,
         structure: structure::NASASciAct,
         period: 90 * 24 * hours,
+    }));
+
+    importers.push(Box::new(Import {
+        //source: source::HttpGet::new("https://nightsky.jpl.nasa.gov/js/data/events_json_api.cfm"),
+        source: source::HttpGet::new("https://nightsky.jpl.nasa.gov/json/events/api/"),
+        format: format::Json,
+        structure: structure::NightSkyNetwork,
+        period: 24 * hours,
     }));
 
     importers.push(Box::new(Import {
@@ -49,13 +56,6 @@ pub fn configure(importers: &mut Vec<Box<dyn Importer>>) {
             timezone: Some(chrono_tz::US::Eastern),
         }),
         period: 24 * hours,
-    }));
-
-    importers.push(Box::new(Import {
-        source: Embedded::new(include_bytes!("csv/pbc_stem.csv")),
-        format: CommaSeparated,
-        structure: structure::PBCStemCenter,
-        period: 90 * 24 * hours,
     }));
 
     importers.push(Box::new(
