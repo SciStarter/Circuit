@@ -51,23 +51,29 @@ impl NASASciAct {
 
         // dbg!(&name);
 
-        let start_date = row["Start Date"].as_str().empty_as_none().ok_or_else(|| {
-            LoggedError::new(
-                LoggedErrorLevel::Warning,
-                "Opportunity is missing a start date",
-            )
-            .set_title(&name)
-        })?;
+        let start_date = row["Start Date \n(YYYY-MM-DD)"]
+            .as_str()
+            .empty_as_none()
+            .ok_or_else(|| {
+                LoggedError::new(
+                    LoggedErrorLevel::Warning,
+                    "Opportunity is missing a start date",
+                )
+                .set_title(&name)
+            })?;
 
         // dbg!(&start_date);
 
-        let end_date = row["End Date"].as_str().empty_as_none().ok_or_else(|| {
-            LoggedError::new(
-                LoggedErrorLevel::Warning,
-                "Opportunity is missing an end date",
-            )
-            .set_title(&name)
-        })?;
+        let end_date = row["End Date\n(YYYY-MM-DD)"]
+            .as_str()
+            .empty_as_none()
+            .ok_or_else(|| {
+                LoggedError::new(
+                    LoggedErrorLevel::Warning,
+                    "Opportunity is missing an end date",
+                )
+                .set_title(&name)
+            })?;
 
         // dbg!(&end_date);
 
@@ -103,10 +109,16 @@ impl NASASciAct {
             "%Y/%m/%d %H:%M:%S",
         ) {
             Ok(ndt) => ndt,
-            Err(_) => NaiveDateTime::parse_from_str(
+            Err(_) => match NaiveDateTime::parse_from_str(
                 &format!("{} {}", start_date, start_time),
-                "%m/%d/%Y %H:%M",
-            )?,
+                "%m/%d/%Y %I:%M %p",
+            ) {
+                Ok(ndt) => ndt,
+                Err(_) => NaiveDateTime::parse_from_str(
+                    &format!("{} {}", start_date, start_time),
+                    "%m/%d/%Y %H:%M",
+                )?,
+            },
         };
 
         // dbg!(&start_ndt);
@@ -116,10 +128,16 @@ impl NASASciAct {
             "%Y/%m/%d %H:%M:%S",
         ) {
             Ok(ndt) => ndt,
-            Err(_) => NaiveDateTime::parse_from_str(
+            Err(_) => match NaiveDateTime::parse_from_str(
                 &format!("{} {}", end_date, end_time),
-                "%m/%d/%Y %H:%M",
-            )?,
+                "%m/%d/%Y %I:%M %p",
+            ) {
+                Ok(ndt) => ndt,
+                Err(_) => NaiveDateTime::parse_from_str(
+                    &format!("{} {}", end_date, end_time),
+                    "%m/%d/%Y %H:%M",
+                )?,
+            },
         };
 
         // dbg!(&end_ndt);
