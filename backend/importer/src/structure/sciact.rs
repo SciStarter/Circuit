@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chrono::NaiveDateTime;
+use chrono::{Datelike, NaiveDateTime, TimeDelta};
 use chrono_tz::Tz;
 use common::model::{
     opportunity::{Cost, Descriptor, Domain, EntityType, LocationType, Topic, VenueType},
@@ -26,7 +26,7 @@ impl NASASciAct {
     fn import_one(&self, row: &serde_json::Value) -> Result<Opportunity, LoggedError> {
         let mut opp = Opportunity::default();
 
-        dbg!(&row);
+        // dbg!(&row);
 
         let name = row["Name/Title of Event/Activity*"]
             .as_str()
@@ -141,6 +141,22 @@ impl NASASciAct {
         };
 
         // dbg!(&end_ndt);
+
+        let start_ndt = if start_ndt.year() < 100 {
+            start_ndt
+                .with_year(2000 + start_ndt.year())
+                .unwrap_or_default()
+        } else {
+            start_ndt
+        };
+
+        let end_ndt = if end_ndt.year() < 100 {
+            end_ndt.with_year(2000 + end_ndt.year()).unwrap_or_default()
+        } else {
+            end_ndt
+        };
+
+        //dbg!(&start_ndt, &end_ndt);
 
         let tz: Tz = location_zone.parse().map_err(|_| {
             LoggedError::new(LoggedErrorLevel::Warning, "Unrecognized time zone")
