@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH opportunity_stats AS (\n  SELECT\n    exterior->'partner' AS partner_uid,\n    COUNT(*) AS total_opportunities,\n    COUNT(*) FILTER (WHERE c_opportunity_is_current(interior, exterior) = true) AS current_opportunities\n  FROM c_opportunity\n  GROUP BY exterior->'partner'\n)\nSELECT DISTINCT\n  c_partner.exterior->>'name' AS \"name\",\n  COALESCE(c_partner.interior->'contact'->>'name', c_partner.interior->'manager'->>'name', '') AS \"contact_name\",\n  COALESCE(c_partner.interior->'contact'->>'email', c_partner.interior->'manager'->>'email', '') AS \"contact_email\",\n  COALESCE(os.total_opportunities, 0) AS \"total_opportunities\",\n  COALESCE(os.current_opportunities, 0) AS \"current_opportunities\"\nFROM c_partner\nLEFT JOIN opportunity_stats os ON os.partner_uid = c_partner.exterior->'uid'\nWHERE EXISTS (\n  SELECT 1 FROM c_person\n  WHERE c_person.interior->'join_channel'->>'Exchange' = c_partner.exterior->>'uid'\n)\nORDER BY c_partner.exterior->>'name' ASC;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "contact_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "contact_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_opportunities",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "current_opportunities",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "509bcf7fb1097942327cfc468d7464fc2f584547dcb9a7fbcf95ce38b569e54c"
+}

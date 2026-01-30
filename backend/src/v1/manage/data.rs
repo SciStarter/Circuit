@@ -1,9 +1,10 @@
 use common::{
-    model::{analytics::OverviewDemographics, person::Permission},
+    model::{analytics::OverviewDemographics, person::Permission, Partner},
     Database,
 };
 use http_types::{Method, StatusCode};
 use sailfish::TemplateOnce;
+use tide::Response;
 use tide_fluent_routes::{
     routebuilder::{RouteBuilder, RouteBuilderExt},
     RouteSegment,
@@ -18,6 +19,8 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
     routes
         .get(data)
         .at("demographics", |r| r.get(demographics).post(demographics))
+        .at("partners.csv", |r| r.get(partners_csv))
+        .at("exchanges.csv", |r| r.get(exchanges_csv))
 }
 
 #[derive(TemplateOnce, Default)]
@@ -388,4 +391,50 @@ ON CONFLICT ("about") DO UPDATE SET
     }
 
     Ok(DemographicsPage.into_response(StatusCode::Ok)?)
+}
+
+pub async fn partners_csv(req: tide::Request<Database>) -> tide::Result {
+    let _admin = match authorized_admin(&req, &Permission::ManageContent).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let report = Partner::report(req.state()).await?;
+
+    let mut out = csv::Writer::from_writer(Vec::new());
+
+    for row in report {
+        out.serialize(row)?;
+    }
+
+    out.flush()?;
+
+    Ok(Response::builder(StatusCode::Ok)
+        .content_type("text/csv")
+        .header("Content-Disposition", "attachment; filename=\"partners.csv\"")
+        .body(out.into_inner()?)
+        .build())
+}
+
+pub async fn exchanges_csv(req: tide::Request<Database>) -> tide::Result {
+    let _admin = match authorized_admin(&req, &Permission::ManageContent).await {
+        Ok(person) => person,
+        Err(resp) => return Ok(resp),
+    };
+
+    let report = Partner::exchanges(req.state()).await?;
+
+    let mut out = csv::Writer::from_writer(Vec::new());
+
+    for row in report {
+        out.serialize(row)?;
+    }
+
+    out.flush()?;
+
+    Ok(Response::builder(StatusCode::Ok)
+        .content_type("text/csv")
+        .header("Content-Disposition", "attachment; filename=\"exchanges.csv\"")
+        .body(out.into_inner()?)
+        .build())
 }

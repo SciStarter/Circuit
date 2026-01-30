@@ -193,6 +193,26 @@ pub struct PartnerListRow {
     pub published: i64,
 }
 
+#[derive(Debug, Serialize)]
+pub struct PartnerReportRow {
+    pub name: String,
+    pub contact_name: String,
+    pub contact_email: String,
+    pub joined: DateTime<FixedOffset>,
+    pub total_opportunities: i64,
+    pub current_opportunities: i64,
+    pub most_recent_opportunity: Option<DateTime<FixedOffset>>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ExchangeReportRow {
+    pub name: String,
+    pub contact_name: String,
+    pub contact_email: String,
+    pub total_opportunities: i64,
+    pub current_opportunities: i64,
+}
+
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Partner {
     pub id: Option<i32>,
@@ -360,6 +380,60 @@ INSERT
                     published: row
                         .published
                         .ok_or_else(|| Error::Missing("published".to_string()))?,
+                })
+            })
+            .fetch_all(db)
+            .await?
+            .into_iter()
+            .flatten()
+            .collect())
+    }
+
+    pub async fn report(db: &Database) -> Result<Vec<PartnerReportRow>, Error> {
+        Ok(sqlx::query_file!("db/partner/report.sql")
+            .map(|row| -> Result<PartnerReportRow, Error> {
+                Ok(PartnerReportRow {
+                    name: row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
+                    contact_name: row
+                        .contact_name
+                        .ok_or_else(|| Error::Missing("contact_name".to_string()))?,
+                    contact_email: row
+                        .contact_email
+                        .ok_or_else(|| Error::Missing("contact_email".to_string()))?,
+                    joined: row.joined.into(),
+                    total_opportunities: row
+                        .total_opportunities
+                        .ok_or_else(|| Error::Missing("total_opportunities".to_string()))?,
+                    current_opportunities: row
+                        .current_opportunities
+                        .ok_or_else(|| Error::Missing("current_opportunities".to_string()))?,
+                    most_recent_opportunity: row.most_recent_opportunity.map(Into::into),
+                })
+            })
+            .fetch_all(db)
+            .await?
+            .into_iter()
+            .flatten()
+            .collect())
+    }
+
+    pub async fn exchanges(db: &Database) -> Result<Vec<ExchangeReportRow>, Error> {
+        Ok(sqlx::query_file!("db/partner/exchanges.sql")
+            .map(|row| -> Result<ExchangeReportRow, Error> {
+                Ok(ExchangeReportRow {
+                    name: row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
+                    contact_name: row
+                        .contact_name
+                        .ok_or_else(|| Error::Missing("contact_name".to_string()))?,
+                    contact_email: row
+                        .contact_email
+                        .ok_or_else(|| Error::Missing("contact_email".to_string()))?,
+                    total_opportunities: row
+                        .total_opportunities
+                        .ok_or_else(|| Error::Missing("total_opportunities".to_string()))?,
+                    current_opportunities: row
+                        .current_opportunities
+                        .ok_or_else(|| Error::Missing("current_opportunities".to_string()))?,
                 })
             })
             .fetch_all(db)
