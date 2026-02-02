@@ -201,6 +201,7 @@ pub struct PartnerReportRow {
     pub joined: DateTime<FixedOffset>,
     pub total_opportunities: i64,
     pub current_opportunities: i64,
+    pub current_opportunities_one_month_ago: i64,
     pub most_recent_opportunity: Option<DateTime<FixedOffset>>,
 }
 
@@ -211,6 +212,7 @@ pub struct ExchangeReportRow {
     pub contact_email: String,
     pub total_opportunities: i64,
     pub current_opportunities: i64,
+    pub current_opportunities_one_month_ago: i64,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -407,6 +409,9 @@ INSERT
                     current_opportunities: row
                         .current_opportunities
                         .ok_or_else(|| Error::Missing("current_opportunities".to_string()))?,
+                    current_opportunities_one_month_ago: row
+                        .current_opportunities_one_month_ago
+                        .ok_or_else(|| Error::Missing("current_opportunities_one_month_ago".to_string()))?,
                     most_recent_opportunity: row.most_recent_opportunity.map(Into::into),
                 })
             })
@@ -434,6 +439,9 @@ INSERT
                     current_opportunities: row
                         .current_opportunities
                         .ok_or_else(|| Error::Missing("current_opportunities".to_string()))?,
+                    current_opportunities_one_month_ago: row
+                        .current_opportunities_one_month_ago
+                        .ok_or_else(|| Error::Missing("current_opportunities_one_month_ago".to_string()))?,
                 })
             })
             .fetch_all(db)
