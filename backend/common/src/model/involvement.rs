@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use uuid::Uuid;
 
-use crate::{model::Error, Database};
+use crate::{model::Error, Database, ToFixedOffset};
 
 use super::Pagination;
 
@@ -46,6 +46,42 @@ pub struct Involvement {
     pub interior: InvolvementInterior,
 }
 
+fn mode_from_db(val: i16) -> Mode {
+    match val {
+        0 => Mode::Deleted,
+        5 => Mode::Ignored,
+        10 => Mode::Interest,
+        20 => Mode::Saved,
+        30 => Mode::Logged,
+        40 => Mode::Contributed,
+        _ => Mode::Deleted,
+    }
+}
+
+fn involvement_from_row(
+    id: i32,
+    opportunity: Uuid,
+    first: DateTime<chrono::Utc>,
+    latest: DateTime<chrono::Utc>,
+    mode: i16,
+    participant: Uuid,
+    location: Option<serde_json::Value>,
+) -> Involvement {
+    Involvement {
+        id: Some(id),
+        exterior: InvolvementExterior {
+            opportunity,
+            first: first.to_fixed_offset(),
+            latest: latest.to_fixed_offset(),
+            mode: mode_from_db(mode),
+        },
+        interior: InvolvementInterior {
+            participant,
+            location,
+        },
+    }
+}
+
 impl Involvement {
     pub fn validate(&mut self) -> Result<(), Error> {
         Ok(())
@@ -60,10 +96,10 @@ impl Involvement {
     ) -> Result<(), Error> {
         sqlx::query_file!(
             "db/involvement/upgrade.sql",
-            serde_json::to_value(participant)?,
-            serde_json::to_value(opportunity)?,
-            serde_json::to_value(mode)?,
-            serde_json::to_value(location)?
+            *participant,
+            *opportunity,
+            mode as i16,
+            location.clone() as Option<serde_json::Value>,
         )
         .execute(db)
         .await?;
@@ -79,7 +115,7 @@ impl Involvement {
     ) -> Result<u32, Error> {
         Ok(sqlx::query_file!(
             "db/involvement/count_by_participant.sql",
-            serde_json::to_value(participant)?,
+            *participant,
             min_mode.map(|x| x as i32),
             max_mode.map(|x| x as i32),
         )
@@ -106,7 +142,7 @@ impl Involvement {
         Ok(match text {
             Some(text) if !text.is_empty() => sqlx::query_file!(
                 "db/involvement/all_by_participant_and_text.sql",
-                serde_json::to_value(participant)?,
+                *participant,
                 min_mode.map(|x| x as i32),
                 max_mode.map(|x| x as i32),
                 text,
@@ -114,32 +150,36 @@ impl Involvement {
                 offset,
             )
             .try_map(|rec| {
-                Ok(Involvement {
-                    id: Some(rec.id),
-                    exterior: serde_json::from_value(rec.exterior)
-                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-                    interior: serde_json::from_value(rec.interior)
-                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-                })
+                Ok(involvement_from_row(
+                    rec.id,
+                    rec.opportunity,
+                    rec.first,
+                    rec.latest,
+                    rec.mode,
+                    rec.participant,
+                    rec.location,
+                ))
             })
             .fetch(db)
             .err_into(),
             _ => sqlx::query_file!(
                 "db/involvement/all_by_participant.sql",
-                serde_json::to_value(participant)?,
+                *participant,
                 min_mode.map(|x| x as i32),
                 max_mode.map(|x| x as i32),
                 limit,
                 offset,
             )
             .try_map(|rec| {
-                Ok(Involvement {
-                    id: Some(rec.id),
-                    exterior: serde_json::from_value(rec.exterior)
-                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-                    interior: serde_json::from_value(rec.interior)
-                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-                })
+                Ok(involvement_from_row(
+                    rec.id,
+                    rec.opportunity,
+                    rec.first,
+                    rec.latest,
+                    rec.mode,
+                    rec.participant,
+                    rec.location,
+                ))
             })
             .fetch(db)
             .err_into(),
@@ -152,16 +192,18 @@ impl Involvement {
     ) -> Result<impl Stream<Item = Result<Involvement, Error>> + 'db, Error> {
         Ok(sqlx::query_file!(
             "db/involvement/all_by_opportunity.sql",
-            serde_json::to_value(opportunity)?,
+            *opportunity,
         )
         .try_map(|rec| {
-            Ok(Involvement {
-                id: Some(rec.id),
-                exterior: serde_json::from_value(rec.exterior)
-                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-                interior: serde_json::from_value(rec.interior)
-                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-            })
+            Ok(involvement_from_row(
+                rec.id,
+                rec.opportunity,
+                rec.first,
+                rec.latest,
+                rec.mode,
+                rec.participant,
+                rec.location,
+            ))
         })
         .fetch(db)
         .err_into())
@@ -172,11 +214,15 @@ impl Involvement {
             .fetch_one(db)
             .await?;
 
-        Ok(Involvement {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        Ok(involvement_from_row(
+            rec.id,
+            rec.opportunity,
+            rec.first,
+            rec.latest,
+            rec.mode,
+            rec.participant,
+            rec.location,
+        ))
     }
 
     pub async fn load_by_participant_and_opportunity(
@@ -186,17 +232,21 @@ impl Involvement {
     ) -> Result<Option<Involvement>, Error> {
         if let Some(rec) = sqlx::query_file!(
             "db/involvement/get_by_participant_and_opportunity.sql",
-            serde_json::to_value(participant)?,
-            serde_json::to_value(opportunity)?
+            *participant,
+            *opportunity,
         )
         .fetch_optional(db)
         .await?
         {
-            Ok(Some(Involvement {
-                id: Some(rec.id),
-                exterior: serde_json::from_value(rec.exterior)?,
-                interior: serde_json::from_value(rec.interior)?,
-            }))
+            Ok(Some(involvement_from_row(
+                rec.id,
+                rec.opportunity,
+                rec.first,
+                rec.latest,
+                rec.mode,
+                rec.participant,
+                rec.location,
+            )))
         } else {
             Ok(None)
         }
@@ -209,16 +259,24 @@ impl Involvement {
             sqlx::query_file!(
                 "db/involvement/update.sql",
                 id,
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.exterior.opportunity,
+                self.exterior.first,
+                self.exterior.latest,
+                self.exterior.mode as i16,
+                self.interior.participant,
+                self.interior.location.clone() as Option<serde_json::Value>,
             )
             .execute(db)
             .await?;
         } else {
             let rec = sqlx::query_file!(
                 "db/involvement/insert.sql",
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.exterior.opportunity,
+                self.exterior.first,
+                self.exterior.latest,
+                self.exterior.mode as i16,
+                self.interior.participant,
+                self.interior.location.clone() as Option<serde_json::Value>,
             )
             .fetch_one(db)
             .await?;

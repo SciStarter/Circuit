@@ -1,4 +1,4 @@
 select count(*) didit
 from c_involvement I inner join c_opportunity O
-on (I.exterior -> 'opportunity') @> (O.exterior -> 'uid')
-where (I.exterior -> 'mode')::integer >= 30 and (O.exterior ->> 'slug') = $1;
+on I.opportunity = O.uid
+where I.mode >= 30 and O.slug = $1;

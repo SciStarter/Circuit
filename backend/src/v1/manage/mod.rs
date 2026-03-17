@@ -654,27 +654,27 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
 
     let form: HealthForm = req.query()?;
 
-    let mut narrow = "(exterior ->> 'entity_type') = 'opportunity'".to_string();
+    let mut narrow = "entity_type = 'opportunity'".to_string();
     let mut params = vec![];
 
     if let Some(uid) = &form.partner {
-        narrow.push_str(" AND (exterior ->> 'partner') = $1");
+        narrow.push_str(" AND opp_partner::text = $1");
         params.push(uid.to_string());
     }
 
     if let Some(accepted) = &form.accepted {
         if *accepted {
-            narrow.push_str(" AND (interior ->> 'accepted') = 'true'");
+            narrow.push_str(" AND accepted = true");
         } else {
-            narrow.push_str(" AND (interior ->> 'accepted') != 'true'");
+            narrow.push_str(" AND (accepted IS NULL OR accepted != true)");
         }
     }
 
     if let Some(withdrawn) = &form.accepted {
         if *withdrawn {
-            narrow.push_str(" AND (interior ->> 'withdrawn') = 'true'");
+            narrow.push_str(" AND withdrawn = true");
         } else {
-            narrow.push_str(" AND (interior ->> 'withdrawn') != 'true'");
+            narrow.push_str(" AND withdrawn != true");
         }
     }
 
@@ -711,7 +711,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
             count(
                 db,
                 &format!(
-                    "{} AND (exterior -> 'partner_created') != 'null'::jsonb",
+                    "{} AND partner_created IS NOT NULL",
                     &narrow
                 ),
                 &params,
@@ -723,7 +723,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
             count(
                 db,
                 &format!(
-                    "{} AND (exterior -> 'partner_updated') != 'null'::jsonb",
+                    "{} AND partner_updated IS NOT NULL",
                     &narrow
                 ),
                 &params,
@@ -734,7 +734,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         slug: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'slug') != 'null'::jsonb AND (exterior ->> 'slug') != ''", &narrow),
+                &format!("{} AND slug != ''", &narrow),
                 &params,
             )
             .await?
@@ -743,7 +743,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         partner_name: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'partner_name') != 'null'::jsonb AND (exterior ->> 'partner_name') != ''", &narrow),
+                &format!("{} AND partner_name != ''", &narrow),
                 &params,
             )
             .await?
@@ -752,7 +752,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         partner_website: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'partner_website') != 'null'::jsonb AND (exterior ->> 'partner_website') != ''", &narrow),
+                &format!("{} AND partner_website IS NOT NULL AND partner_website != ''", &narrow),
                 &params,
             )
             .await?
@@ -761,7 +761,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         partner_logo_url: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'partner_logo_url') != 'null'::jsonb AND (exterior ->> 'partner_logo_url') != ''", &narrow),
+                &format!("{} AND partner_logo_url IS NOT NULL AND partner_logo_url != ''", &narrow),
                 &params,
             )
             .await?
@@ -770,7 +770,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         partner_opp_url: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'partner_opp_url') != 'null'::jsonb AND (exterior ->> 'partner_opp_url') != ''", &narrow),
+                &format!("{} AND partner_opp_url IS NOT NULL AND partner_opp_url != ''", &narrow),
                 &params,
             )
             .await?
@@ -779,7 +779,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         organization_name: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'organization_name') != 'null'::jsonb AND (exterior ->> 'organization_name') != ''", &narrow),
+                &format!("{} AND organization_name != ''", &narrow),
                 &params,
             )
             .await?
@@ -788,7 +788,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         organization_type: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'organization_type') != 'null'::jsonb AND (exterior ->> 'organization_type') != 'unspecified'", &narrow),
+                &format!("{} AND organization_type != 'unspecified'", &narrow),
                 &params,
             )
             .await?
@@ -797,7 +797,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         organization_website: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'organization_website') != 'null'::jsonb AND (exterior ->> 'organization_website') != ''", &narrow),
+                &format!("{} AND organization_website IS NOT NULL AND organization_website != ''", &narrow),
                 &params,
             )
             .await?
@@ -806,7 +806,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         organization_logo_url: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'organization_logo_url') != 'null'::jsonb AND (exterior ->> 'organization_logo_url') != ''", &narrow),
+                &format!("{} AND organization_logo_url IS NOT NULL AND organization_logo_url != ''", &narrow),
                 &params,
             )
             .await?
@@ -815,7 +815,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         opp_venue: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'opp_venue') != 'null'::jsonb AND (exterior -> 'opp_venue') != '[]'::jsonb", &narrow),
+                &format!("{} AND array_length(opp_venue, 1) > 0", &narrow),
                 &params,
             )
             .await?
@@ -824,7 +824,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         opp_descriptor: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'opp_descriptor') != 'null'::jsonb AND (exterior -> 'opp_descriptor') != '[]'::jsonb", &narrow),
+                &format!("{} AND array_length(opp_descriptor, 1) > 0", &narrow),
                 &params,
             )
             .await?
@@ -833,7 +833,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         min_age: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'min_age') != 'null'::jsonb AND (exterior -> 'min_age') != '0'::jsonb", &narrow),
+                &format!("{} AND min_age != 0", &narrow),
                 &params,
             )
             .await?
@@ -842,7 +842,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         max_age: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'max_age') != 'null'::jsonb AND (exterior -> 'max_age') != '999'::jsonb", &narrow),
+                &format!("{} AND max_age != 999", &narrow),
                 &params,
             )
             .await?
@@ -851,7 +851,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         pes_domain: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'pes_domain') != 'null'::jsonb AND (exterior ->> 'pes_domain') != 'unspecified'", &narrow),
+                &format!("{} AND pes_domain != 'unspecified'", &narrow),
                 &params,
             )
             .await?
@@ -860,7 +860,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         tags: {
             count(
                 db,
-                &format!(r#"{} AND (exterior -> 'tags') != 'null'::jsonb AND (exterior -> 'tags') != '[]'::jsonb AND (exterior -> 'tags') != '[""]'::jsonb"#, &narrow),
+                &format!(r#"{} AND array_length(tags, 1) > 0 AND tags != ARRAY['']"#, &narrow),
                 &params,
             )
             .await?
@@ -869,7 +869,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         opp_topics: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'opp_topics') != 'null'::jsonb AND (exterior -> 'opp_topics') != '[]'::jsonb", &narrow),
+                &format!("{} AND array_length(opp_topics, 1) > 0", &narrow),
                 &params,
             )
             .await?
@@ -878,7 +878,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         ticket_required: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'ticket_required') != 'null'::jsonb", &narrow),
+                &format!("{} AND ticket_required IS NOT NULL", &narrow),
                 &params,
             )
             .await?
@@ -887,7 +887,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         title: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'title') != 'null'::jsonb AND (exterior ->> 'title') != ''", &narrow),
+                &format!("{} AND title != ''", &narrow),
                 &params,
             )
             .await?
@@ -896,7 +896,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         description: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'description') != 'null'::jsonb AND (exterior ->> 'description') != ''", &narrow),
+                &format!("{} AND description != ''", &narrow),
                 &params,
             )
             .await?
@@ -905,7 +905,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         short_desc: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'short_desc') != 'null'::jsonb AND (exterior ->> 'short_desc') != ''", &narrow),
+                &format!("{} AND short_desc != ''", &narrow),
                 &params,
             )
             .await?
@@ -914,7 +914,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         image_url: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'image_url') != 'null'::jsonb AND (exterior ->> 'image_url') != ''", &narrow),
+                &format!("{} AND image_url != ''", &narrow),
                 &params,
             )
             .await?
@@ -923,7 +923,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         image_credit: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'image_credit') != 'null'::jsonb AND (exterior ->> 'image_credit') != ''", &narrow),
+                &format!("{} AND image_credit != ''", &narrow),
                 &params,
             )
             .await?
@@ -932,7 +932,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         start_datetimes: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'start_datetimes') != 'null'::jsonb AND (exterior -> 'start_datetimes') != '[]'::jsonb", &narrow),
+                &format!("{} AND array_length(start_datetimes, 1) > 0", &narrow),
                 &params,
             )
             .await?
@@ -941,7 +941,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         end_datetimes: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'end_datetimes') != 'null'::jsonb AND (exterior -> 'end_datetimes') != '[]'::jsonb", &narrow),
+                &format!("{} AND array_length(end_datetimes, 1) > 0", &narrow),
                 &params,
             )
             .await?
@@ -950,7 +950,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         attraction_hours: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'attraction_hours') != 'null'::jsonb", &narrow),
+                &format!("{} AND attraction_hours IS NOT NULL", &narrow),
                 &params,
             )
             .await?
@@ -959,7 +959,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         cost: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'cost') != 'null'::jsonb AND (exterior ->> 'cost') != ''", &narrow),
+                &format!("{} AND cost != ''", &narrow),
                 &params,
             )
             .await?
@@ -968,7 +968,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         languages: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'languages') != 'null'::jsonb AND (exterior -> 'languages') != '[]'::jsonb", &narrow),
+                &format!("{} AND array_length(languages, 1) > 0", &narrow),
                 &params,
             )
             .await?
@@ -977,7 +977,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         opp_hashtags: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'opp_hashtags') != 'null'::jsonb AND (exterior -> 'opp_hashtags') != '[]'::jsonb", &narrow),
+                &format!("{} AND array_length(opp_hashtags, 1) > 0", &narrow),
                 &params,
             )
             .await?
@@ -986,7 +986,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         opp_social_handles: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'opp_social_handles') != 'null'::jsonb AND (exterior -> 'opp_social_handles') != '{{}}'::jsonb", &narrow),
+                &format!("{} AND opp_social_handles IS NOT NULL AND opp_social_handles != '{{}}'::jsonb", &narrow),
                 &params,
             )
             .await?
@@ -995,7 +995,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         is_online: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'is_online') != 'null'::jsonb", &narrow),
+                &format!("{} AND is_online IS NOT NULL", &narrow),
                 &params,
             )
             .await?
@@ -1004,7 +1004,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         location_type: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'location_type') != 'null'::jsonb AND (exterior ->> 'location_type') != ''", &narrow),
+                &format!("{} AND location_type != ''", &narrow),
                 &params,
             )
             .await?
@@ -1013,7 +1013,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         location_point: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'location_point') != 'null'::jsonb AND (exterior -> 'location_point') != '{{}}'::jsonb", &narrow),
+                &format!("{} AND location_point_geojson IS NOT NULL AND location_point_geojson != '{{}}'::jsonb", &narrow),
                 &params,
             )
             .await?
@@ -1022,7 +1022,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         location_polygon: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'location_polygon') != 'null'::jsonb AND (exterior -> 'location_polygon') != '{{}}'::jsonb", &narrow),
+                &format!("{} AND location_polygon_geojson IS NOT NULL AND location_polygon_geojson != '{{}}'::jsonb", &narrow),
                 &params,
             )
             .await?
@@ -1031,7 +1031,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         address_street: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'address_street') != 'null'::jsonb AND (exterior ->> 'address_street') != ''", &narrow),
+                &format!("{} AND address_street != ''", &narrow),
                 &params,
             )
             .await?
@@ -1040,7 +1040,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         address_city: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'address_city') != 'null'::jsonb AND (exterior ->> 'address_city') != ''", &narrow),
+                &format!("{} AND address_city != ''", &narrow),
                 &params,
             )
             .await?
@@ -1049,7 +1049,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         address_state: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'address_state') != 'null'::jsonb AND (exterior ->> 'address_state') != ''", &narrow),
+                &format!("{} AND address_state != ''", &narrow),
                 &params,
             )
             .await?
@@ -1058,7 +1058,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         address_country: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'address_country') != 'null'::jsonb AND (exterior ->> 'address_country') != ''", &narrow),
+                &format!("{} AND address_country != ''", &narrow),
                 &params,
             )
             .await?
@@ -1067,7 +1067,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         address_zip: {
             count(
                 db,
-                &format!("{} AND (exterior -> 'address_zip') != 'null'::jsonb AND (exterior ->> 'address_zip') != ''", &narrow),
+                &format!("{} AND address_zip != ''", &narrow),
                 &params,
             )
             .await?
@@ -1076,7 +1076,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         contact_name: {
             count(
                 db,
-                &format!("{} AND (interior -> 'contact_name') != 'null'::jsonb AND (interior ->> 'contact_name') != ''", &narrow),
+                &format!("{} AND contact_name != ''", &narrow),
                 &params,
             )
             .await?
@@ -1085,7 +1085,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         contact_email: {
             count(
                 db,
-                &format!("{} AND (interior -> 'contact_email') != 'null'::jsonb AND (interior ->> 'contact_email') != ''", &narrow),
+                &format!("{} AND contact_email != ''", &narrow),
                 &params,
             )
             .await?
@@ -1094,7 +1094,7 @@ async fn health(req: tide::Request<Database>) -> tide::Result {
         contact_phone: {
             count(
                 db,
-                &format!("{} AND (interior -> 'contact_phone') != 'null'::jsonb AND (interior ->> 'contact_phone') != ''", &narrow),
+                &format!("{} AND contact_phone != ''", &narrow),
                 &params,
             )
             .await?

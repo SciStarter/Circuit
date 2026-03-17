@@ -1,4 +1,7 @@
-select id, exterior, interior
+select id, uid, "name", organization_type, pes_domain, url, image_url,
+  description, background_color, primary_color, secondary_color, tertiary_color,
+  under, open_submission, default_query,
+  manager, contact, prime, authorized, pending, secret
 from c_partner
-where (exterior -> 'uid' != $2::jsonb) and (((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb)))
-order by exterior ->> 'name' asc;
+where (uid != $2) and (($1 = ANY(authorized)) or (prime = $1))
+order by "name" asc;

@@ -336,6 +336,31 @@ pub enum JoinChannel {
     Exchange(Uuid),
 }
 
+impl JoinChannel {
+    pub fn as_db_str(&self) -> &str {
+        match self {
+            JoinChannel::Local => "Local",
+            JoinChannel::SciStarter => "SciStarter",
+            JoinChannel::Exchange(_) => "Exchange",
+        }
+    }
+
+    pub fn detail_uuid(&self) -> Option<Uuid> {
+        match self {
+            JoinChannel::Exchange(uuid) => Some(*uuid),
+            _ => None,
+        }
+    }
+
+    pub fn from_db(channel: &str, detail: Option<Uuid>) -> Self {
+        match channel {
+            "SciStarter" => JoinChannel::SciStarter,
+            "Exchange" => JoinChannel::Exchange(detail.unwrap_or_default()),
+            _ => JoinChannel::Local,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PersonInterior {
@@ -347,9 +372,6 @@ pub struct PersonInterior {
     pub last_name: Option<String>,
     pub genders: Vec<Gender>,
     pub gender_other: Option<String>,
-    // Moved to be direct children of the c_person table
-    // pub home_location: Option<serde_json::Value>,
-    // pub last_location: Option<serde_json::Value>,
     pub joined_at: DateTime<FixedOffset>,
     pub active_at: DateTime<FixedOffset>,
     pub phone: Option<String>,
@@ -382,8 +404,6 @@ impl Default for PersonInterior {
             join_channel: Default::default(),
             genders: Default::default(),
             gender_other: Default::default(),
-            // home_location: Default::default(),
-            // last_location: Default::default(),
             joined_at: Utc::now().to_fixed_offset(),
             active_at: Utc::now().to_fixed_offset(),
             phone: Default::default(),
@@ -419,6 +439,90 @@ fn normalize_email(email: &str) -> String {
         // the same recommendation.
         .to_ascii_lowercase()
         .into()
+}
+
+use super::serde_helpers::{deserialize_enum, deserialize_enum_vec, serialize_enum, serialize_enum_vec};
+
+pub fn person_from_row(
+    id: i32,
+    uid: Uuid,
+    username: Option<String>,
+    person_image_url: Option<String>,
+    email: String,
+    email_hashes: Vec<String>,
+    password: Option<String>,
+    join_channel: String,
+    join_channel_detail: Option<Uuid>,
+    first_name: Option<String>,
+    last_name: Option<String>,
+    genders: Vec<String>,
+    gender_other: Option<String>,
+    joined_at: DateTime<Utc>,
+    active_at: DateTime<Utc>,
+    phone: Option<String>,
+    whatsapp: Option<String>,
+    zip_code: Option<String>,
+    birth_year: Option<i32>,
+    ethnicities: Vec<String>,
+    ethnicity_other: Option<String>,
+    family_income: Option<String>,
+    education_level: Option<String>,
+    opt_in_research: Option<bool>,
+    opt_in_volunteer: Option<bool>,
+    permissions: Vec<String>,
+    private: bool,
+    newsletter: bool,
+    allow_emails: bool,
+    recent_point: Option<serde_json::Value>,
+    last_used_people_recruiter: Option<DateTime<Utc>>,
+    extra: Option<serde_json::Value>,
+) -> Result<Person, Error> {
+    Ok(Person {
+        id: Some(id),
+        exterior: PersonExterior {
+            uid,
+            username,
+            image_url: person_image_url,
+        },
+        interior: PersonInterior {
+            email,
+            email_hashes,
+            password,
+            join_channel: JoinChannel::from_db(&join_channel, join_channel_detail),
+            first_name,
+            last_name,
+            genders: deserialize_enum_vec(&genders),
+            gender_other,
+            joined_at: joined_at.to_fixed_offset(),
+            active_at: active_at.to_fixed_offset(),
+            phone,
+            whatsapp,
+            zip_code,
+            birth_year: birth_year.map(|y| y as u32),
+            ethnicities: deserialize_enum_vec(&ethnicities),
+            ethnicity_other,
+            family_income: family_income
+                .as_deref()
+                .map(|s| deserialize_enum(s))
+                .transpose()?,
+            education_level: education_level
+                .as_deref()
+                .map(|s| deserialize_enum(s))
+                .transpose()?,
+            opt_in_research,
+            opt_in_volunteer,
+            permissions: deserialize_enum_vec(&permissions),
+            private,
+            newsletter,
+            allow_emails,
+            recent_point,
+            last_used_people_recruiter,
+            extra: extra
+                .map(|v| serde_json::from_value(v))
+                .transpose()
+                .map_err(|e| Error::Value(format!("deserializing extra: {e}")))?,
+        },
+    })
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -529,9 +633,9 @@ impl Person {
     ) -> Result<i32, Error> {
         Ok(sqlx::query_file!(
             "db/person/count_participation_between.sql",
-            self.exterior.uid.to_string(),
-            begin.to_rfc3339(),
-            end.to_rfc3339(),
+            self.exterior.uid,
+            begin.clone(),
+            end.clone(),
         )
         .fetch_one(db)
         .await?
@@ -547,11 +651,11 @@ impl Person {
         Ok(sqlx::query_file_as!(
             ParticipationRow,
             "db/person/all_participation_between.sql",
-            self.exterior.uid.to_string(),
-            begin.to_rfc3339(),
-            end.to_rfc3339(),
+            self.exterior.uid,
+            begin.clone(),
+            end.clone(),
         )
-        .map(|row| row.into())
+        .map(|row: ParticipationRow| row.into())
         .fetch(db))
     }
 
@@ -705,13 +809,40 @@ WHERE id = $1
 
         sqlx::query_file!("db/person/catalog.sql", limit, offset)
             .map(|rec| {
-                Ok(Person {
-                    id: Some(rec.id),
-                    exterior: serde_json::from_value(rec.exterior)
-                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-                    interior: serde_json::from_value(rec.interior)
-                        .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-                })
+                Ok(person_from_row(
+                    rec.id,
+                    rec.uid,
+                    rec.username,
+                    rec.person_image_url,
+                    rec.email,
+                    rec.email_hashes,
+                    rec.password,
+                    rec.join_channel,
+                    rec.join_channel_detail,
+                    rec.first_name,
+                    rec.last_name,
+                    rec.genders,
+                    rec.gender_other,
+                    rec.joined_at,
+                    rec.active_at,
+                    rec.phone,
+                    rec.whatsapp,
+                    rec.zip_code,
+                    rec.birth_year,
+                    rec.ethnicities,
+                    rec.ethnicity_other,
+                    rec.family_income,
+                    rec.education_level,
+                    rec.opt_in_research,
+                    rec.opt_in_volunteer,
+                    rec.permissions,
+                    rec.private,
+                    rec.newsletter,
+                    rec.allow_emails,
+                    rec.recent_point,
+                    rec.last_used_people_recruiter,
+                    rec.extra,
+                )?)
             })
             .fetch_all(db)
             .await?
@@ -738,8 +869,8 @@ WHERE id = $1
             r#"
 SELECT COUNT(*) AS "total!"
 FROM c_person
-WHERE (interior ->> 'email' ILIKE $1)
-   OR (CONCAT(interior ->> 'first_name', ' ', interior ->> 'last_name') ILIKE $1);
+WHERE (email ILIKE $1)
+   OR (CONCAT(first_name, ' ', last_name) ILIKE $1);
 "#,
             &pattern
         )
@@ -749,11 +880,16 @@ WHERE (interior ->> 'email' ILIKE $1)
 
         let persons = sqlx::query!(
             r#"
-SELECT id, exterior, interior
+SELECT id, uid, username, person_image_url, email, email_hashes, "password",
+  join_channel, join_channel_detail, first_name, last_name, genders, gender_other,
+  joined_at, active_at, phone, whatsapp, zip_code, birth_year, ethnicities,
+  ethnicity_other, family_income, education_level, opt_in_research, opt_in_volunteer,
+  permissions, "private", newsletter, allow_emails, recent_point,
+  last_used_people_recruiter, extra
 FROM c_person
-WHERE (interior ->> 'email' ILIKE $3)
-   OR (CONCAT(interior ->> 'first_name', ' ', interior ->> 'last_name') ILIKE $3)
-ORDER BY (interior -> 'email')
+WHERE (email ILIKE $3)
+   OR (CONCAT(first_name, ' ', last_name) ILIKE $3)
+ORDER BY email
 LIMIT $1 OFFSET $2;
 "#,
             limit,
@@ -761,13 +897,40 @@ LIMIT $1 OFFSET $2;
             &pattern
         )
         .map(|rec| {
-            Ok::<Person, sqlx::Error>(Person {
-                id: Some(rec.id),
-                exterior: serde_json::from_value(rec.exterior)
-                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-                interior: serde_json::from_value(rec.interior)
-                    .map_err(|e| sqlx::Error::Decode(Box::new(e)))?,
-            })
+            Ok::<Person, Error>(person_from_row(
+                rec.id,
+                rec.uid,
+                rec.username,
+                rec.person_image_url,
+                rec.email,
+                rec.email_hashes,
+                rec.password,
+                rec.join_channel,
+                rec.join_channel_detail,
+                rec.first_name,
+                rec.last_name,
+                rec.genders,
+                rec.gender_other,
+                rec.joined_at,
+                rec.active_at,
+                rec.phone,
+                rec.whatsapp,
+                rec.zip_code,
+                rec.birth_year,
+                rec.ethnicities,
+                rec.ethnicity_other,
+                rec.family_income,
+                rec.education_level,
+                rec.opt_in_research,
+                rec.opt_in_volunteer,
+                rec.permissions,
+                rec.private,
+                rec.newsletter,
+                rec.allow_emails,
+                rec.recent_point,
+                rec.last_used_people_recruiter,
+                rec.extra,
+            )?)
         })
         .fetch_all(db)
         .await?
@@ -796,15 +959,15 @@ LIMIT $1 OFFSET $2;
 SELECT EXISTS(
     SELECT 1 FROM c_partner
     WHERE (
-        (exterior -> 'open_submission') @> 'true'::jsonb OR
-        (interior -> 'prime') @> $1::jsonb OR
-        (interior -> 'authorized') @> $1::jsonb
+        open_submission = true OR
+        prime = $1 OR
+        $1 = ANY(authorized)
     )
-    AND (exterior -> 'uid') @> $2::jsonb
+    AND uid = $2
 ) AS "authorized!"
 "#,
-                    serde_json::to_value(self.exterior.uid)?,
-                    serde_json::to_value(opportunity.exterior.partner)?,
+                    self.exterior.uid,
+                    opportunity.exterior.partner,
                 )
                 .fetch_one(db)
                 .await?
@@ -817,14 +980,14 @@ SELECT EXISTS(
 SELECT EXISTS(
     SELECT 1 FROM c_partner
     WHERE (
-        (interior -> 'prime') @> $1::jsonb OR
-        (interior -> 'authorized') @> $1::jsonb
+        prime = $1 OR
+        $1 = ANY(authorized)
     )
-    AND (exterior -> 'uid') @> $2::jsonb
+    AND uid = $2
 ) AS "authorized!"
 "#,
-                        serde_json::to_value(self.exterior.uid)?,
-                        serde_json::to_value(opportunity.exterior.partner)?,
+                        self.exterior.uid,
+                        opportunity.exterior.partner,
                     )
                     .fetch_one(db)
                     .await?
@@ -836,14 +999,14 @@ SELECT EXISTS(
 SELECT EXISTS(
     SELECT 1 FROM c_partner
     WHERE (
-        (interior -> 'prime') @> $1::jsonb OR
-        (interior -> 'authorized') @> $1::jsonb
+        prime = $1 OR
+        $1 = ANY(authorized)
     )
-    AND (exterior -> 'uid') @> $2::jsonb
+    AND uid = $2
 ) AS "authorized!"
 "#,
-                    serde_json::to_value(self.exterior.uid)?,
-                    serde_json::to_value(opportunity.exterior.partner)?,
+                    self.exterior.uid,
+                    opportunity.exterior.partner,
                 )
                 .fetch_one(db)
                 .await?
@@ -880,8 +1043,8 @@ SELECT EXISTS(
     pub async fn count_partners(&self, db: &Database) -> Result<i32, Error> {
         Ok(sqlx::query_file!(
             "db/person/count_partners.sql",
-            serde_json::to_value(self.exterior.uid)?,
-            serde_json::to_value(*crate::INTERNAL_UID)?,
+            self.exterior.uid,
+            *crate::INTERNAL_UID,
         )
         .map(|row| row.total)
         .fetch_one(db)
@@ -892,15 +1055,17 @@ SELECT EXISTS(
     pub async fn load_partners(&self, db: &Database) -> Result<Vec<Result<Partner, Error>>, Error> {
         Ok(sqlx::query_file!(
             "db/person/fetch_partners.sql",
-            serde_json::to_value(self.exterior.uid)?,
-            serde_json::to_value(*crate::INTERNAL_UID)?,
+            self.exterior.uid,
+            *crate::INTERNAL_UID,
         )
         .map(|row| {
-            Ok(Partner {
-                id: Some(row.id),
-                exterior: serde_json::from_value(row.exterior)?,
-                interior: serde_json::from_value(row.interior)?,
-            })
+            super::partner::partner_from_row(
+                row.id, row.uid, row.name, row.organization_type, row.pes_domain,
+                row.url, row.image_url, row.description,
+                row.background_color, row.primary_color, row.secondary_color, row.tertiary_color,
+                row.under, row.open_submission, row.default_query,
+                row.manager, row.contact, row.prime, row.authorized, row.pending, row.secret,
+            )
         })
         .fetch_all(db)
         .await?)
@@ -1020,27 +1185,39 @@ SELECT EXISTS(
             .fetch_one(db)
             .await?;
 
-        Ok(Person {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        person_from_row(
+            rec.id, rec.uid, rec.username, rec.person_image_url,
+            rec.email, rec.email_hashes, rec.password,
+            rec.join_channel, rec.join_channel_detail,
+            rec.first_name, rec.last_name, rec.genders, rec.gender_other,
+            rec.joined_at, rec.active_at, rec.phone, rec.whatsapp,
+            rec.zip_code, rec.birth_year, rec.ethnicities, rec.ethnicity_other,
+            rec.family_income, rec.education_level, rec.opt_in_research, rec.opt_in_volunteer,
+            rec.permissions, rec.private, rec.newsletter, rec.allow_emails,
+            rec.recent_point, rec.last_used_people_recruiter, rec.extra,
+        )
     }
 
     pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<Person, Error> {
-        let rec = sqlx::query_file!("db/person/get_by_uid.sql", serde_json::to_value(uid)?)
+        let rec = sqlx::query_file!("db/person/get_by_uid.sql", uid)
             .fetch_one(db)
             .await?;
 
-        Ok(Person {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        person_from_row(
+            rec.id, rec.uid, rec.username, rec.person_image_url,
+            rec.email, rec.email_hashes, rec.password,
+            rec.join_channel, rec.join_channel_detail,
+            rec.first_name, rec.last_name, rec.genders, rec.gender_other,
+            rec.joined_at, rec.active_at, rec.phone, rec.whatsapp,
+            rec.zip_code, rec.birth_year, rec.ethnicities, rec.ethnicity_other,
+            rec.family_income, rec.education_level, rec.opt_in_research, rec.opt_in_volunteer,
+            rec.permissions, rec.private, rec.newsletter, rec.allow_emails,
+            rec.recent_point, rec.last_used_people_recruiter, rec.extra,
+        )
     }
 
     pub async fn exists_by_uid(db: &Database, uid: &Uuid) -> Result<bool, Error> {
-        let rec = sqlx::query_file!("db/person/exists_by_uid.sql", serde_json::to_value(uid)?)
+        let rec = sqlx::query_file!("db/person/exists_by_uid.sql", uid)
             .fetch_one(db)
             .await?;
 
@@ -1048,27 +1225,29 @@ SELECT EXISTS(
     }
 
     pub async fn load_by_email(db: &Database, email: &str) -> Result<Person, Error> {
-        let rec = sqlx::query_file!(
-            "db/person/get_by_email.sql",
-            serde_json::to_value(normalize_email(email))?
-        )
-        .fetch_one(db)
-        .await?;
+        let normalized = normalize_email(email);
+        let rec = sqlx::query_file!("db/person/get_by_email.sql", normalized)
+            .fetch_one(db)
+            .await?;
 
-        Ok(Person {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        person_from_row(
+            rec.id, rec.uid, rec.username, rec.person_image_url,
+            rec.email, rec.email_hashes, rec.password,
+            rec.join_channel, rec.join_channel_detail,
+            rec.first_name, rec.last_name, rec.genders, rec.gender_other,
+            rec.joined_at, rec.active_at, rec.phone, rec.whatsapp,
+            rec.zip_code, rec.birth_year, rec.ethnicities, rec.ethnicity_other,
+            rec.family_income, rec.education_level, rec.opt_in_research, rec.opt_in_volunteer,
+            rec.permissions, rec.private, rec.newsletter, rec.allow_emails,
+            rec.recent_point, rec.last_used_people_recruiter, rec.extra,
+        )
     }
 
     pub async fn exists_by_email(db: &Database, email: &str) -> Result<bool, Error> {
-        let rec = sqlx::query_file!(
-            "db/person/exists_by_email.sql",
-            serde_json::to_value(normalize_email(email))?
-        )
-        .fetch_one(db)
-        .await?;
+        let normalized = normalize_email(email);
+        let rec = sqlx::query_file!("db/person/exists_by_email.sql", normalized)
+            .fetch_one(db)
+            .await?;
 
         Ok(rec.exists.unwrap_or(false))
     }
@@ -1078,11 +1257,17 @@ SELECT EXISTS(
             .fetch_one(db)
             .await?;
 
-        Ok(Person {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        person_from_row(
+            rec.id, rec.uid, rec.username, rec.person_image_url,
+            rec.email, rec.email_hashes, rec.password,
+            rec.join_channel, rec.join_channel_detail,
+            rec.first_name, rec.last_name, rec.genders, rec.gender_other,
+            rec.joined_at, rec.active_at, rec.phone, rec.whatsapp,
+            rec.zip_code, rec.birth_year, rec.ethnicities, rec.ethnicity_other,
+            rec.family_income, rec.education_level, rec.opt_in_research, rec.opt_in_volunteer,
+            rec.permissions, rec.private, rec.newsletter, rec.allow_emails,
+            rec.recent_point, rec.last_used_people_recruiter, rec.extra,
+        )
     }
 
     pub async fn exists_by_email_hash(db: &Database, hash: &str) -> Result<bool, Error> {
@@ -1099,11 +1284,17 @@ SELECT EXISTS(
     ) -> Result<Vec<Result<Person, Error>>, Error> {
         Ok(sqlx::query_file!("db/person/all_by_email_hash.sql", hash)
             .map(|row| {
-                Ok(Person {
-                    id: Some(row.id),
-                    exterior: serde_json::from_value(row.exterior)?,
-                    interior: serde_json::from_value(row.interior)?,
-                })
+                person_from_row(
+                    row.id, row.uid, row.username, row.person_image_url,
+                    row.email, row.email_hashes, row.password,
+                    row.join_channel, row.join_channel_detail,
+                    row.first_name, row.last_name, row.genders, row.gender_other,
+                    row.joined_at, row.active_at, row.phone, row.whatsapp,
+                    row.zip_code, row.birth_year, row.ethnicities, row.ethnicity_other,
+                    row.family_income, row.education_level, row.opt_in_research, row.opt_in_volunteer,
+                    row.permissions, row.private, row.newsletter, row.allow_emails,
+                    row.recent_point, row.last_used_people_recruiter, row.extra,
+                )
             })
             .fetch_all(db)
             .await?)
@@ -1113,16 +1304,29 @@ SELECT EXISTS(
         db: &Database,
         perm: &Permission,
     ) -> Result<Vec<Result<Person, Error>>, Error> {
+        let perm_str = serialize_enum(perm);
         Ok(sqlx::query!(
-            r#"SELECT "id" AS "id?", "exterior", "interior" FROM "c_person" WHERE "interior" -> 'permissions' @> $1"#,
-            serde_json::to_value(perm)?
+            r#"SELECT id, uid, username, person_image_url, email, email_hashes, "password",
+              join_channel, join_channel_detail, first_name, last_name, genders, gender_other,
+              joined_at, active_at, phone, whatsapp, zip_code, birth_year, ethnicities,
+              ethnicity_other, family_income, education_level, opt_in_research, opt_in_volunteer,
+              permissions, "private", newsletter, allow_emails, recent_point,
+              last_used_people_recruiter, extra
+            FROM c_person WHERE $1 = ANY(permissions)"#,
+            perm_str
         )
         .map(|row| {
-            Ok(Person {
-                id: row.id,
-                exterior: serde_json::from_value(row.exterior)?,
-                interior: serde_json::from_value(row.interior)?,
-            })
+            person_from_row(
+                row.id, row.uid, row.username, row.person_image_url,
+                row.email, row.email_hashes, row.password,
+                row.join_channel, row.join_channel_detail,
+                row.first_name, row.last_name, row.genders, row.gender_other,
+                row.joined_at, row.active_at, row.phone, row.whatsapp,
+                row.zip_code, row.birth_year, row.ethnicities, row.ethnicity_other,
+                row.family_income, row.education_level, row.opt_in_research, row.opt_in_volunteer,
+                row.permissions, row.private, row.newsletter, row.allow_emails,
+                row.recent_point, row.last_used_people_recruiter, row.extra,
+            )
         })
         .fetch_all(db)
         .await?)
@@ -1131,20 +1335,87 @@ SELECT EXISTS(
     pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
         self.validate()?;
 
+        let genders = serialize_enum_vec(&self.interior.genders);
+        let ethnicities = serialize_enum_vec(&self.interior.ethnicities);
+        let permissions = serialize_enum_vec(&self.interior.permissions);
+        let family_income = self.interior.family_income.as_ref().map(|v| serialize_enum(v));
+        let education_level = self.interior.education_level.as_ref().map(|v| serialize_enum(v));
+        let extra_json = self.interior.extra.as_ref()
+            .map(|e| serde_json::to_value(e))
+            .transpose()?;
+
         if let Some(id) = self.id {
             sqlx::query_file!(
                 "db/person/update.sql",
                 id,
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.exterior.uid,
+                self.exterior.username,
+                self.exterior.image_url,
+                self.interior.email,
+                &self.interior.email_hashes,
+                self.interior.password,
+                self.interior.join_channel.as_db_str(),
+                self.interior.join_channel.detail_uuid(),
+                self.interior.first_name,
+                self.interior.last_name,
+                &genders as &[String],
+                self.interior.gender_other,
+                self.interior.joined_at,
+                self.interior.active_at,
+                self.interior.phone,
+                self.interior.whatsapp,
+                self.interior.zip_code,
+                self.interior.birth_year.map(|y| y as i32),
+                &ethnicities as &[String],
+                self.interior.ethnicity_other,
+                family_income,
+                education_level,
+                self.interior.opt_in_research,
+                self.interior.opt_in_volunteer,
+                &permissions as &[String],
+                self.interior.private,
+                self.interior.newsletter,
+                self.interior.allow_emails,
+                self.interior.recent_point.clone() as Option<serde_json::Value>,
+                self.interior.last_used_people_recruiter,
+                extra_json as Option<serde_json::Value>,
             )
             .execute(db)
             .await?;
         } else {
             let rec = sqlx::query_file!(
                 "db/person/insert.sql",
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.exterior.uid,
+                self.exterior.username,
+                self.exterior.image_url,
+                self.interior.email,
+                &self.interior.email_hashes,
+                self.interior.password,
+                self.interior.join_channel.as_db_str(),
+                self.interior.join_channel.detail_uuid(),
+                self.interior.first_name,
+                self.interior.last_name,
+                &genders as &[String],
+                self.interior.gender_other,
+                self.interior.joined_at,
+                self.interior.active_at,
+                self.interior.phone,
+                self.interior.whatsapp,
+                self.interior.zip_code,
+                self.interior.birth_year.map(|y| y as i32),
+                &ethnicities as &[String],
+                self.interior.ethnicity_other,
+                family_income,
+                education_level,
+                self.interior.opt_in_research,
+                self.interior.opt_in_volunteer,
+                &permissions as &[String],
+                self.interior.private,
+                self.interior.newsletter,
+                self.interior.allow_emails,
+                self.interior.recent_point.clone() as Option<serde_json::Value>,
+                self.interior.last_used_people_recruiter,
+                extra_json as Option<serde_json::Value>,
             )
             .fetch_one(db)
             .await?;

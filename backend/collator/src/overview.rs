@@ -83,8 +83,8 @@ VALUES (
   (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE "action" LIKE 'shared:%' AND "when" >= $2 AND "when" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE "action" LIKE 'calendar:%' AND "when" >= $2 AND "when" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_opportunity_like WHERE "when" >= $2 AND "when" < $3),
-  (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE ("exterior"->'mode')::integer = 20 AND "updated" >= $2 AND "updated" < $3),
-  (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE ("exterior"->'mode')::integer >= 30 AND "updated" >= $2 AND "updated" < $3),
+  (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE mode = 20 AND "updated" >= $2 AND "updated" < $3),
+  (SELECT COALESCE(COUNT(*), 0) FROM c_involvement WHERE mode >= 30 AND "updated" >= $2 AND "updated" < $3),
   (SELECT COALESCE(SUM("views")::bigint, 0) FROM c_analytics_cache WHERE "begin" = $2 AND "end" = $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_log WHERE "action" = 'external' AND "when" >= $2 AND "when" < $3),
   (SELECT COALESCE(COUNT(*), 0) FROM c_person WHERE "created" >= $2 AND "created" < $3)
@@ -565,7 +565,7 @@ SELECT
   COALESCE(SUM("sessions")::bigint, 0) - COALESCE(SUM("new_users")::bigint, 0) AS "returning: i64",
   (
     SELECT COUNT(*)
-    FROM c_log INNER JOIN c_opportunity ON c_log."object" = (c_opportunity.exterior->>'uid')::uuid
+    FROM c_log INNER JOIN c_opportunity ON c_log."object" = c_opportunity.uid
     WHERE
       "action" = 'external' AND
       "when"::date = c_analytics_cache."date"::date

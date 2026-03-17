@@ -1,3 +1,3 @@
-select id, (exterior -> 'uid') as "uid", (exterior -> 'name') as "name"
+select id, uid, "name"
 from c_partner
-order by exterior ->> 'name' asc;
+order by "name" asc;

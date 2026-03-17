@@ -3,30 +3,30 @@ from
   (
     ( -- Count each "I did this" in the timeframe as one
       select
-        (I.exterior -> 'opportunity') as "opportunity",
-        (I.exterior -> 'latest') as "when"
+        I.opportunity,
+        I.latest as "when"
       from c_involvement I
       where
-        (I.interior ->> 'participant') = $1::text
+        I.participant = $1::uuid
       and
-        (I.exterior -> 'mode') = '30'::jsonb
+        I.mode = 30
       and
-        (I.exterior ->> 'latest') >= $2::text
+        I.latest >= $2::timestamptz
       and
-        (I.exterior ->> 'latest') <= $3::text
+        I.latest <= $3::timestamptz
     )
   union
     ( -- Count each partner-reported contribution in the timeframe as one
       select
-        (P.exterior -> 'opportunity') as "opportunity",
-        (P.exterior -> 'when') as "when"
+        P.opportunity,
+        P."when"
       from c_participation P
       where
-        (P.interior ->> 'participant') = $1::text
+        P.participant = $1::uuid
       and
-        (P.exterior ->> 'when') >= $2::text
+        P."when" >= $2::timestamptz
       and
-        (P.exterior ->> 'when') <= $3::text
+        P."when" <= $3::timestamptz
     )
   ) as "merged"
 ;

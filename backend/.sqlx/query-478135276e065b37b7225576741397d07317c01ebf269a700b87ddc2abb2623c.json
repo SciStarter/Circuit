@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update c_involvement\nset opportunity = $2, first = $3, latest = $4, mode = $5, participant = $6, \"location\" = $7\nwhere id = $1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz",
+        "Int2",
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "478135276e065b37b7225576741397d07317c01ebf269a700b87ddc2abb2623c"
+}

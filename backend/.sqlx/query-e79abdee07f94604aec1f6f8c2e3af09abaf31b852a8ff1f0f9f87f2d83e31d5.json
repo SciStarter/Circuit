@@ -1,0 +1,142 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, uid, \"name\", organization_type, pes_domain, url, image_url,\n  description, background_color, primary_color, secondary_color, tertiary_color,\n  under, open_submission, default_query,\n  manager, contact, prime, authorized, pending, secret\nfrom c_partner where id = $1 limit 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "organization_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "pes_domain",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "background_color",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "primary_color",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "secondary_color",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "tertiary_color",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "under",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 13,
+        "name": "open_submission",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 14,
+        "name": "default_query",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "manager",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 16,
+        "name": "contact",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 17,
+        "name": "prime",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 18,
+        "name": "authorized",
+        "type_info": "UuidArray"
+      },
+      {
+        "ordinal": 19,
+        "name": "pending",
+        "type_info": "UuidArray"
+      },
+      {
+        "ordinal": 20,
+        "name": "secret",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "e79abdee07f94604aec1f6f8c2e3af09abaf31b852a8ff1f0f9f87f2d83e31d5"
+}

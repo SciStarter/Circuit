@@ -5,7 +5,7 @@ use super::{
     person::Person,
     Error, PARTNER_NAMESPACE,
 };
-use crate::{Database, INTERNAL_UID};
+use crate::{Database, ToFixedOffset, INTERNAL_UID};
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
@@ -224,6 +224,69 @@ pub struct Partner {
     pub interior: PartnerInterior,
 }
 
+pub fn partner_from_row(
+    id: i32,
+    uid: Uuid,
+    name: String,
+    organization_type: String,
+    pes_domain: String,
+    url: Option<String>,
+    image_url: Option<String>,
+    description: String,
+    background_color: Option<String>,
+    primary_color: Option<String>,
+    secondary_color: Option<String>,
+    tertiary_color: Option<String>,
+    under: Option<Uuid>,
+    open_submission: Option<bool>,
+    default_query: Option<String>,
+    manager: serde_json::Value,
+    contact: Option<serde_json::Value>,
+    prime: Uuid,
+    authorized: Vec<Uuid>,
+    pending: Vec<Uuid>,
+    secret: Option<String>,
+) -> Result<Partner, Error> {
+    Ok(Partner {
+        id: Some(id),
+        exterior: PartnerExterior {
+            uid,
+            name,
+            organization_type: serde_json::from_value(
+                serde_json::Value::String(organization_type),
+            )
+            .unwrap_or_default(),
+            pes_domain: serde_json::from_value(serde_json::Value::String(pes_domain))
+                .unwrap_or_default(),
+            url,
+            image_url,
+            description,
+            background_color,
+            primary_color,
+            secondary_color,
+            tertiary_color,
+            under,
+            open_submission,
+            default_query,
+        },
+        interior: PartnerInterior {
+            manager: serde_json::from_value(manager).unwrap_or_default(),
+            contact: contact.and_then(|v| serde_json::from_value(v).ok()),
+            prime,
+            authorized,
+            pending,
+            secret,
+        },
+    })
+}
+
+pub fn serialize_enum<T: Serialize>(val: &T) -> String {
+    serde_json::to_string(val)
+        .unwrap_or_default()
+        .trim_matches('"')
+        .to_string()
+}
+
 impl Partner {
     pub fn person_has_permission(&self, uid: &Uuid) -> bool {
         if uid == &self.interior.prime {
@@ -321,46 +384,29 @@ INSERT
     }
 
     pub async fn find_by_name(db: &Database, name: &str) -> Result<Vec<PartnerReference>, Error> {
-        Ok(sqlx::query!(r#"SELECT id, (exterior -> 'uid') AS "uid", (exterior -> 'name') AS "name" FROM c_partner WHERE exterior -> 'uid' != $2 AND exterior ->> 'name' ILIKE $1"#, format!("%{name}%"), serde_json::to_value(*INTERNAL_UID)?)
-            .map(|row| -> Result<PartnerReference, Error> {
-                Ok(PartnerReference {
-                    id: row.id,
-                    uid: serde_json::from_value(
-                        row.uid.ok_or_else(|| Error::Missing("uid".to_string()))?,
-                    )?,
-                    name: serde_json::from_value(
-                        row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
-                    )?,
-                })
-            })
-            .fetch_all(db)
-            .await?
-            .into_iter()
-            // remove this flatten() and the top-level Ok() to change
-            // the semantics to fail if any row fails, rather than
-            // ignoring failing rows
-            .flatten()
-            .collect())
+        Ok(sqlx::query!(
+            r#"SELECT id, uid, "name" FROM c_partner WHERE uid != $2 AND "name" ILIKE $1"#,
+            format!("%{name}%"),
+            *INTERNAL_UID,
+        )
+        .map(|row| PartnerReference {
+            id: row.id,
+            uid: row.uid,
+            name: row.name,
+        })
+        .fetch_all(db)
+        .await?)
     }
 
     pub async fn catalog(db: &Database) -> Result<Vec<PartnerReference>, Error> {
         Ok(sqlx::query_file!("db/partner/catalog.sql")
-            .map(|row| -> Result<PartnerReference, Error> {
-                Ok(PartnerReference {
-                    id: row.id,
-                    uid: serde_json::from_value(
-                        row.uid.ok_or_else(|| Error::Missing("uid".to_string()))?,
-                    )?,
-                    name: serde_json::from_value(
-                        row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
-                    )?,
-                })
+            .map(|row| PartnerReference {
+                id: row.id,
+                uid: row.uid,
+                name: row.name,
             })
             .fetch_all(db)
-            .await?
-            .into_iter()
-            .flatten()
-            .collect())
+            .await?)
     }
 
     pub async fn catalog_extra(db: &Database) -> Result<Vec<PartnerListRow>, Error> {
@@ -368,17 +414,15 @@ INSERT
             .map(|row| -> Result<PartnerListRow, Error> {
                 Ok(PartnerListRow {
                     id: row.id,
-                    uid: serde_json::from_value(
-                        row.uid.ok_or_else(|| Error::Missing("uid".to_string()))?,
-                    )?,
-                    name: row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
+                    uid: row.uid,
+                    name: row.name,
                     manager_name: row
                         .manager_name
                         .ok_or_else(|| Error::Missing("manager_name".to_string()))?,
                     manager_email: row
                         .manager_email
                         .ok_or_else(|| Error::Missing("manager_email".to_string()))?,
-                    joined: row.joined.into(),
+                    joined: row.joined.to_fixed_offset(),
                     published: row
                         .published
                         .ok_or_else(|| Error::Missing("published".to_string()))?,
@@ -395,14 +439,14 @@ INSERT
         Ok(sqlx::query_file!("db/partner/report.sql")
             .map(|row| -> Result<PartnerReportRow, Error> {
                 Ok(PartnerReportRow {
-                    name: row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
+                    name: row.name,
                     contact_name: row
                         .contact_name
                         .ok_or_else(|| Error::Missing("contact_name".to_string()))?,
                     contact_email: row
                         .contact_email
                         .ok_or_else(|| Error::Missing("contact_email".to_string()))?,
-                    joined: row.joined.into(),
+                    joined: row.joined.to_fixed_offset(),
                     total_opportunities: row
                         .total_opportunities
                         .ok_or_else(|| Error::Missing("total_opportunities".to_string()))?,
@@ -412,7 +456,7 @@ INSERT
                     current_opportunities_one_month_ago: row
                         .current_opportunities_one_month_ago
                         .ok_or_else(|| Error::Missing("current_opportunities_one_month_ago".to_string()))?,
-                    most_recent_opportunity: row.most_recent_opportunity.map(Into::into),
+                    most_recent_opportunity: row.most_recent_opportunity.map(|d| d.to_fixed_offset()),
                 })
             })
             .fetch_all(db)
@@ -426,7 +470,7 @@ INSERT
         Ok(sqlx::query_file!("db/partner/exchanges.sql")
             .map(|row| -> Result<ExchangeReportRow, Error> {
                 Ok(ExchangeReportRow {
-                    name: row.name.ok_or_else(|| Error::Missing("name".to_string()))?,
+                    name: row.name,
                     contact_name: row
                         .contact_name
                         .ok_or_else(|| Error::Missing("contact_name".to_string()))?,
@@ -460,14 +504,20 @@ INSERT
 
         Ok(sqlx::query_file!(
             "db/partner/fetch_persons.sql",
-            serde_json::to_value(persons)?
+            &persons,
         )
         .map(|row| {
-            Ok(Person {
-                id: Some(row.id),
-                exterior: serde_json::from_value(row.exterior)?,
-                interior: serde_json::from_value(row.interior)?,
-            })
+            super::person::person_from_row(
+                row.id, row.uid, row.username, row.person_image_url,
+                row.email, row.email_hashes, row.password,
+                row.join_channel, row.join_channel_detail,
+                row.first_name, row.last_name, row.genders, row.gender_other,
+                row.joined_at, row.active_at, row.phone, row.whatsapp,
+                row.zip_code, row.birth_year, row.ethnicities, row.ethnicity_other,
+                row.family_income, row.education_level, row.opt_in_research, row.opt_in_volunteer,
+                row.permissions, row.private, row.newsletter, row.allow_emails,
+                row.recent_point, row.last_used_people_recruiter, row.extra,
+            )
         })
         .fetch_all(db)
         .await?)
@@ -481,14 +531,20 @@ INSERT
 
         Ok(sqlx::query_file!(
             "db/partner/fetch_persons.sql",
-            serde_json::to_value(persons)?
+            &persons,
         )
         .map(|row| {
-            Ok(Person {
-                id: Some(row.id),
-                exterior: serde_json::from_value(row.exterior)?,
-                interior: serde_json::from_value(row.interior)?,
-            })
+            super::person::person_from_row(
+                row.id, row.uid, row.username, row.person_image_url,
+                row.email, row.email_hashes, row.password,
+                row.join_channel, row.join_channel_detail,
+                row.first_name, row.last_name, row.genders, row.gender_other,
+                row.joined_at, row.active_at, row.phone, row.whatsapp,
+                row.zip_code, row.birth_year, row.ethnicities, row.ethnicity_other,
+                row.family_income, row.education_level, row.opt_in_research, row.opt_in_volunteer,
+                row.permissions, row.private, row.newsletter, row.allow_emails,
+                row.recent_point, row.last_used_people_recruiter, row.extra,
+            )
         })
         .fetch_all(db)
         .await?)
@@ -498,16 +554,27 @@ INSERT
         &self,
         db: &Database,
     ) -> Result<Vec<Result<Opportunity, Error>>, Error> {
+        use super::opportunity::opportunity_from_row;
         Ok(sqlx::query_file!(
             "db/partner/fetch_opportunities.sql",
-            serde_json::to_value(self.exterior.uid)?
+            self.exterior.uid
         )
         .map(|row| {
-            Ok(Opportunity {
-                id: Some(row.id),
-                exterior: serde_json::from_value(row.exterior)?,
-                interior: serde_json::from_value(row.interior)?,
-            })
+            opportunity_from_row(
+                row.id, row.uid, row.slug, row.partner_name, row.partner_website, row.partner_logo_url,
+                row.partner_created, row.partner_updated, row.partner_opp_url,
+                row.organization_name, row.organization_type, row.organization_website, row.organization_logo_url,
+                row.entity_type, row.opp_venue, row.opp_descriptor, row.min_age, row.max_age, row.pes_domain,
+                row.tags, row.opp_topics, row.ticket_required,
+                row.title, row.description, row.short_desc, row.image_url, row.image_credit,
+                row.start_datetimes, row.has_end, row.end_datetimes, row.recurrence, row.end_recurrence, row.timezone,
+                row.attraction_hours, row.cost, row.languages, row.is_online,
+                row.location_type, row.location_name, row.location_point_geojson, row.location_polygon_geojson,
+                row.address_street, row.address_city, row.address_state, row.address_country, row.address_zip,
+                row.opp_hashtags, row.opp_social_handles, row.opp_partner,
+                row.accepted, row.withdrawn, row.submitted_by, row.review_status,
+                row.contact_name, row.contact_email, row.contact_phone, row.extra_data,
+            )
         })
         .fetch_all(db)
         .await?)
@@ -518,9 +585,9 @@ INSERT
             r#"
             SELECT COUNT(*) AS "count!: i64"
             FROM c_opportunity
-            WHERE exterior -> 'partner' @> $1::jsonb
+            WHERE opp_partner = $1
             "#,
-            serde_json::to_value(self.exterior.uid)?
+            self.exterior.uid
         )
         .fetch_one(db)
         .await?
@@ -534,10 +601,10 @@ INSERT
             r#"
             SELECT COUNT(*) AS "count!: i64"
             FROM c_opportunity
-            WHERE exterior -> 'partner' @> $1::jsonb
-            AND c_opportunity_is_current(interior, exterior) = true
+            WHERE opp_partner = $1
+            AND c_opportunity_is_current(c_opportunity) = true
             "#,
-            serde_json::to_value(self.exterior.uid)?
+            self.exterior.uid
         )
         .fetch_one(db)
         .await?
@@ -569,27 +636,31 @@ INSERT
             .fetch_one(db)
             .await?;
 
-        Ok(Partner {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        partner_from_row(
+            rec.id, rec.uid, rec.name, rec.organization_type, rec.pes_domain,
+            rec.url, rec.image_url, rec.description,
+            rec.background_color, rec.primary_color, rec.secondary_color, rec.tertiary_color,
+            rec.under, rec.open_submission, rec.default_query,
+            rec.manager, rec.contact, rec.prime, rec.authorized, rec.pending, rec.secret,
+        )
     }
 
     pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<Partner, Error> {
-        let rec = sqlx::query_file!("db/partner/get_by_uid.sql", serde_json::to_value(uid)?)
+        let rec = sqlx::query_file!("db/partner/get_by_uid.sql", *uid)
             .fetch_one(db)
             .await?;
 
-        Ok(Partner {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        partner_from_row(
+            rec.id, rec.uid, rec.name, rec.organization_type, rec.pes_domain,
+            rec.url, rec.image_url, rec.description,
+            rec.background_color, rec.primary_color, rec.secondary_color, rec.tertiary_color,
+            rec.under, rec.open_submission, rec.default_query,
+            rec.manager, rec.contact, rec.prime, rec.authorized, rec.pending, rec.secret,
+        )
     }
 
     pub async fn exists_by_uid(db: &Database, uid: &Uuid) -> Result<bool, Error> {
-        let rec = sqlx::query_file!("db/partner/exists_by_uid.sql", serde_json::to_value(uid)?)
+        let rec = sqlx::query_file!("db/partner/exists_by_uid.sql", *uid)
             .fetch_one(db)
             .await?;
 
@@ -599,20 +670,66 @@ INSERT
     pub async fn store(&mut self, db: &Database) -> Result<(), Error> {
         self.validate()?;
 
+        let org_type = serialize_enum(&self.exterior.organization_type);
+        let domain = serialize_enum(&self.exterior.pes_domain);
+        let manager_json = serde_json::to_value(&self.interior.manager)?;
+        let contact_json = self
+            .interior
+            .contact
+            .as_ref()
+            .map(|c| serde_json::to_value(c))
+            .transpose()?;
+
         if let Some(id) = self.id {
             sqlx::query_file!(
                 "db/partner/update.sql",
                 id,
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.exterior.uid,
+                self.exterior.name,
+                org_type,
+                domain,
+                self.exterior.url.as_deref(),
+                self.exterior.image_url.as_deref(),
+                self.exterior.description,
+                self.exterior.background_color.as_deref(),
+                self.exterior.primary_color.as_deref(),
+                self.exterior.secondary_color.as_deref(),
+                self.exterior.tertiary_color.as_deref(),
+                self.exterior.under as Option<Uuid>,
+                self.exterior.open_submission,
+                self.exterior.default_query.as_deref(),
+                manager_json,
+                contact_json as Option<serde_json::Value>,
+                self.interior.prime,
+                &self.interior.authorized,
+                &self.interior.pending,
+                self.interior.secret.as_deref(),
             )
             .execute(db)
             .await?;
         } else {
             let rec = sqlx::query_file!(
                 "db/partner/insert.sql",
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.exterior.uid,
+                self.exterior.name,
+                org_type,
+                domain,
+                self.exterior.url.as_deref(),
+                self.exterior.image_url.as_deref(),
+                self.exterior.description,
+                self.exterior.background_color.as_deref(),
+                self.exterior.primary_color.as_deref(),
+                self.exterior.secondary_color.as_deref(),
+                self.exterior.tertiary_color.as_deref(),
+                self.exterior.under as Option<Uuid>,
+                self.exterior.open_submission,
+                self.exterior.default_query.as_deref(),
+                manager_json,
+                contact_json as Option<serde_json::Value>,
+                self.interior.prime,
+                &self.interior.authorized,
+                &self.interior.pending,
+                self.interior.secret.as_deref(),
             )
             .fetch_one(db)
             .await?;

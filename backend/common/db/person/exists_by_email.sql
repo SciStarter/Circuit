@@ -1,1 +1,1 @@
-select exists(select 1 from c_person where ($1::jsonb) @> (interior -> 'email')) as "exists";
+select exists(select 1 from c_person where email = $1) as "exists";

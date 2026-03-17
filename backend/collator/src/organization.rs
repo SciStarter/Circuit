@@ -71,10 +71,10 @@ WHERE "begin" = $1 AND "end" = $2 AND "partner" = $3 AND c_opportunity_by_uid_is
             sqlx::query!(
                 r#"
 SELECT
-  exterior->>'title' AS "name!",
-  exterior->>'slug' AS "slug!"
+  title AS "name!",
+  slug AS "slug!"
 FROM c_opportunity
-WHERE (exterior->>'uid')::uuid = $1 LIMIT 1
+WHERE uid = $1 LIMIT 1
 "#,
                 entry.opportunity
             )
@@ -115,10 +115,10 @@ WHERE (exterior->>'uid')::uuid = $1 LIMIT 1
                 r#"
 SELECT
   COUNT(*) AS "count: i64"
-FROM c_log INNER JOIN c_opportunity ON c_log."object" = (c_opportunity.exterior->>'uid')::uuid
+FROM c_log INNER JOIN c_opportunity ON c_log."object" = c_opportunity.uid
 WHERE
   "action" = 'external' AND
-  (c_opportunity.exterior->>'partner')::uuid = $1 AND
+  c_opportunity.opp_partner = $1 AND
   "when" >= $2 AND
   "when" < $3
 "#,
@@ -460,10 +460,10 @@ SELECT
   SUM("sessions")::bigint - SUM("new_users")::bigint AS "returning: i64",
   (
     SELECT COUNT(*)
-    FROM c_log INNER JOIN c_opportunity ON c_log."object" = (c_opportunity.exterior->>'uid')::uuid
+    FROM c_log INNER JOIN c_opportunity ON c_log."object" = c_opportunity.uid
     WHERE
       "action" = 'external' AND
-      (c_opportunity.exterior->>'partner')::uuid = $1 AND
+      c_opportunity.opp_partner = $1 AND
       "when"::date = c_analytics_cache."date"::date
   ) AS "clicks: i64"
 FROM c_analytics_cache

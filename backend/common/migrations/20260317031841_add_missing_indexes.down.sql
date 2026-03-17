@@ -1,0 +1,10 @@
+DROP INDEX IF EXISTS c_person_by_exchange_channel;
+DROP INDEX IF EXISTS c_analytics_cache_by_date;
+DROP INDEX IF EXISTS c_person_by_created;
+DROP INDEX IF EXISTS c_involvement_by_latest;
+DROP INDEX IF EXISTS c_opportunity_organization_name;
+DROP INDEX IF EXISTS c_log_external_by_object_and_when;
+DROP INDEX IF EXISTS c_involvement_by_participant_and_mode;
+CREATE INDEX c_involvement_by_participant ON c_involvement (participant);
+DROP INDEX IF EXISTS c_involvement_by_updated;
+DROP INDEX IF EXISTS c_opportunity_search_partner;

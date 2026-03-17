@@ -1,1 +1,1 @@
-select id from c_opportunity where ($1::jsonb) @> (exterior -> 'uid') limit 1;
+select id from c_opportunity where uid = $1 limit 1;

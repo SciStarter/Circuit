@@ -14,6 +14,7 @@ pub mod opportunity;
 pub mod participation;
 pub mod partner;
 pub mod person;
+pub mod serde_helpers;
 
 pub static ROOT_NAMESPACE: Lazy<uuid::Uuid> =
     Lazy::new(|| uuid::Uuid::parse_str("f6d641e2-75b3-4dce-be29-082f74f44b80").unwrap());

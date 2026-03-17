@@ -724,7 +724,7 @@ async fn send(state: &mut State, args: Vec<String>) -> Result<(), DynError> {
         println!("Send a one-off:\n   send message person@example.com \"subject\" \"body\"");
         println!("Send a template to the selected people:\n   send template template-slug");
         println!(
-            "Send a template to the people selected by a custom query:\n   send template template-slug with select * from c_person where interior->>'email' like '%@example.com'"
+            "Send a template to the people selected by a custom query:\n   send template template-slug with select * from c_person where email like '%@example.com'"
         );
         return Ok(());
     }
@@ -919,7 +919,7 @@ async fn new_accounts(state: &mut State, _args: Vec<String>) -> Result<(), DynEr
     let mut joins: Counter<String> = Counter::new();
 
     let mut stream = sqlx::query!(
-        "SELECT substring(interior ->> 'joined_at' FROM 0 FOR 8) AS month FROM c_person"
+        "SELECT substring(joined_at::text FROM 0 FOR 8) AS month FROM c_person"
     )
     .fetch(&state.db);
 

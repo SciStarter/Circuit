@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Datelike, Days, FixedOffset, LocalResult, TimeZone, Utc};
 use common::{
+    model::serde_helpers::deserialize_enum_vec,
     model::analytics::{
         DetailedEngagementDataChart, DetailedEngagementDataChartWithPoint, EngagementDataBar,
         EngagementDataChart, EngagementType, Opportunity, OpportunityEngagement,
@@ -603,20 +604,20 @@ WITH c_neighbors AS (
 )
 SELECT
   CASE WHEN $4::real > 0 THEN c_neighbors."views"::real / $4::real ELSE 0.0 END AS "overlap!",
-  c_opportunity.exterior->>'title' AS "name!",
-  c_opportunity.exterior->>'organization_name' AS "host!",
-  c_opportunity.exterior->'opp_descriptor' AS "activity_types!",
+  c_opportunity.title AS "name!",
+  c_opportunity.organization_name AS "host!",
+  c_opportunity.opp_descriptor::text[] AS "activity_types!",
   CASE
-    WHEN (c_opportunity.exterior->'has_end')::bool THEN 'Event'
+    WHEN c_opportunity.has_end THEN 'Event'
     ELSE 'On Demand'
   END AS "format!",
-  c_opportunity.exterior->'opp_venue' AS "venue_types!",
-  (c_opportunity.exterior->'min_age')::smallint AS "min_age!",
-  (c_opportunity.exterior->'max_age')::smallint AS "max_age!"
+  c_opportunity.opp_venue::text[] AS "venue_types!",
+  c_opportunity.min_age AS "min_age!",
+  c_opportunity.max_age AS "max_age!"
 FROM
   c_neighbors INNER JOIN c_opportunity
-  ON c_neighbors."other"::text = c_opportunity."exterior"->>'uid'
-WHERE c_opportunity.exterior->>'entity_type' = 'opportunity'
+  ON c_neighbors."other" = c_opportunity.uid
+WHERE c_opportunity.entity_type = 'opportunity'
 ORDER BY "overlap!" DESC;
 "#,
             opp.exterior.uid,
@@ -628,9 +629,9 @@ ORDER BY "overlap!" DESC;
             name: row.name,
             overlap: row.overlap.into(),
             host: row.host,
-            activity_types: serde_json::from_value(row.activity_types).unwrap_or_default(),
+            activity_types: deserialize_enum_vec(&row.activity_types),
             format: row.format,
-            venue_types: serde_json::from_value(row.venue_types).unwrap_or_default(),
+            venue_types: deserialize_enum_vec(&row.venue_types),
             min_age: row.min_age,
             max_age: row.max_age,
         })

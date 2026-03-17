@@ -1,13 +1,12 @@
 pub mod for_slug;
 
-//use super::partner::LoggedErrorLevel;
 use super::person::PermitAction;
+use super::serde_helpers::{deserialize_enum, deserialize_enum_vec, serialize_enum, serialize_enum_vec};
 use super::Error;
 use crate::model::involvement;
 use crate::{geo, Database, ToFixedOffset};
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
-//use deunicode::deunicode;
 use inflections::Inflect;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -947,6 +946,163 @@ impl From<Opportunity> for OpportunityForCsv {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+pub fn opportunity_from_row(
+    id: i32,
+    uid: Uuid,
+    slug: String,
+    partner_name: String,
+    partner_website: Option<String>,
+    partner_logo_url: Option<String>,
+    partner_created: Option<DateTime<Utc>>,
+    partner_updated: Option<DateTime<Utc>>,
+    partner_opp_url: Option<String>,
+    organization_name: String,
+    organization_type: String,
+    organization_website: Option<String>,
+    organization_logo_url: Option<String>,
+    entity_type: String,
+    opp_venue: Vec<String>,
+    opp_descriptor: Vec<String>,
+    min_age: i16,
+    max_age: i16,
+    pes_domain: String,
+    tags: Vec<String>,
+    opp_topics: Vec<String>,
+    ticket_required: bool,
+    title: String,
+    description: String,
+    short_desc: String,
+    image_url: String,
+    image_credit: String,
+    start_datetimes: Vec<DateTime<Utc>>,
+    has_end: bool,
+    end_datetimes: Vec<DateTime<Utc>>,
+    recurrence: String,
+    end_recurrence: Option<DateTime<Utc>>,
+    timezone: Option<String>,
+    attraction_hours: Option<serde_json::Value>,
+    cost: String,
+    languages: Vec<String>,
+    is_online: bool,
+    location_type: String,
+    location_name: String,
+    location_point_geojson: Option<serde_json::Value>,
+    location_polygon_geojson: Option<serde_json::Value>,
+    address_street: String,
+    address_city: String,
+    address_state: String,
+    address_country: String,
+    address_zip: String,
+    opp_hashtags: Vec<String>,
+    opp_social_handles: serde_json::Value,
+    opp_partner: Uuid,
+    accepted: Option<bool>,
+    withdrawn: bool,
+    submitted_by: Option<Uuid>,
+    review_status: String,
+    contact_name: String,
+    contact_email: String,
+    contact_phone: String,
+    extra_data: serde_json::Value,
+) -> Result<Opportunity, Error> {
+    Ok(Opportunity {
+        id: Some(id),
+        exterior: OpportunityExterior {
+            uid,
+            slug,
+            partner_name,
+            partner_website,
+            partner_logo_url,
+            partner_created: partner_created.map(|dt| dt.to_fixed_offset()),
+            partner_updated: partner_updated.map(|dt| dt.to_fixed_offset()),
+            partner_opp_url,
+            organization_name,
+            organization_type: deserialize_enum(&organization_type).unwrap_or_default(),
+            organization_website,
+            organization_logo_url,
+            entity_type: deserialize_enum(&entity_type).unwrap_or_default(),
+            opp_venue: deserialize_enum_vec(&opp_venue),
+            opp_descriptor: deserialize_enum_vec(&opp_descriptor),
+            min_age,
+            max_age,
+            pes_domain: deserialize_enum(&pes_domain).unwrap_or_default(),
+            tags: tags.into_iter().collect(),
+            opp_topics: deserialize_enum_vec(&opp_topics),
+            ticket_required,
+            title,
+            description,
+            short_desc,
+            image_url,
+            image_credit,
+            start_datetimes: start_datetimes.into_iter().map(|dt| dt.to_fixed_offset()).collect(),
+            has_end,
+            end_datetimes: end_datetimes.into_iter().map(|dt| dt.to_fixed_offset()).collect(),
+            recurrence: deserialize_enum(&recurrence).unwrap_or_default(),
+            end_recurrence: end_recurrence.map(|dt| dt.to_fixed_offset()),
+            timezone,
+            attraction_hours: attraction_hours
+                .map(|v| serde_json::from_value(v).unwrap_or_default()),
+            cost: deserialize_enum(&cost).unwrap_or_default(),
+            languages,
+            is_online,
+            location_type: deserialize_enum(&location_type).unwrap_or_default(),
+            location_name,
+            location_point: location_point_geojson,
+            location_polygon: location_polygon_geojson,
+            address_street,
+            address_city,
+            address_state,
+            address_country,
+            address_zip,
+            opp_hashtags,
+            opp_social_handles: serde_json::from_value(opp_social_handles).unwrap_or_default(),
+            partner: opp_partner,
+        },
+        interior: OpportunityInterior {
+            accepted,
+            withdrawn,
+            submitted_by,
+            review_status: deserialize_enum(&review_status).unwrap_or_default(),
+            contact_name,
+            contact_email,
+            contact_phone,
+            extra_data,
+        },
+    })
+}
+
+fn apply_overlay(opp: &mut Opportunity, overlay_exterior: Option<serde_json::Value>, overlay_interior: Option<serde_json::Value>) {
+    if let Some(ext_overlay) = overlay_exterior {
+        if let Ok(mut base) = serde_json::to_value(&opp.exterior) {
+            if let serde_json::Value::Object(ref mut base_map) = base {
+                if let serde_json::Value::Object(overlay_map) = ext_overlay {
+                    for (k, v) in overlay_map {
+                        base_map.insert(k, v);
+                    }
+                }
+            }
+            if let Ok(merged) = serde_json::from_value(base) {
+                opp.exterior = merged;
+            }
+        }
+    }
+    if let Some(int_overlay) = overlay_interior {
+        if let Ok(mut base) = serde_json::to_value(&opp.interior) {
+            if let serde_json::Value::Object(ref mut base_map) = base {
+                if let serde_json::Value::Object(overlay_map) = int_overlay {
+                    for (k, v) in overlay_map {
+                        base_map.insert(k, v);
+                    }
+                }
+            }
+            if let Ok(merged) = serde_json::from_value(base) {
+                opp.interior = merged;
+            }
+        }
+    }
+}
+
 #[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Opportunity {
@@ -1084,14 +1240,6 @@ enum ParamValue {
     RawVecEntityType(Vec<EntityType>),
     RawVecUuid(Vec<Uuid>),
     RawVenueType(VenueType),
-    //Bool(bool),
-    Uuid(Uuid),
-    //VecString(Vec<String>),
-    //VecTopic(Vec<Topic>),
-    //VecEntityType(Vec<EntityType>),
-    //VecDescriptor(Vec<Descriptor>),
-    //VecVenueType(Vec<VenueType>),
-    //VecUuid(Vec<Uuid>),
 }
 
 impl ParamValue {
@@ -1118,15 +1266,6 @@ impl ParamValue {
                     .collect::<Vec<DBEntityType>>(),
             ),
             ParamValue::RawVenueType(val) => query.bind(val),
-
-            //ParamValue::Bool(val) => query.bind(serde_json::to_value(val)?),
-            ParamValue::Uuid(val) => query.bind(serde_json::to_value(val)?),
-            //ParamValue::VecString(val) => query.bind(serde_json::to_value(val)?),
-            //ParamValue::VecTopic(val) => query.bind(serde_json::to_value(val)?),
-            //ParamValue::VecEntityType(val) => query.bind(serde_json::to_value(val)?),
-            //ParamValue::VecDescriptor(val) => query.bind(serde_json::to_value(val)?),
-            //ParamValue::VecVenueType(val) => query.bind(serde_json::to_value(val)?),
-            //ParamValue::VecUuid(val) => query.bind(serde_json::to_value(val)?),
         })
     }
 
@@ -1157,11 +1296,6 @@ fn build_matching_query(
     // https://postgis.net/docs/ST_Intersects.html
 
     if let Some(uid) = query.uid {
-        // clauses.push(format!(
-        //     "(${}::jsonb) @> (primary_table.exterior -> 'uid')",
-        //     ParamValue::Uuid(uid).append(&mut params)
-        // ));
-
         clauses.push(format!(
             "${} = search.uid",
             ParamValue::RawUuid(uid).append(&mut params)
@@ -1169,11 +1303,6 @@ fn build_matching_query(
     }
 
     if let Some(slug) = &query.slug {
-        // clauses.push(format!(
-        //     "${} = (primary_table.exterior ->> 'slug')",
-        //     ParamValue::RawString(slug.to_string()).append(&mut params)
-        // ));
-
         clauses.push(format!(
             "${} = search.slug",
             ParamValue::RawString(slug.to_string()).append(&mut params)
@@ -1181,11 +1310,6 @@ fn build_matching_query(
     }
 
     if let Some(val) = query.accepted {
-        // clauses.push(format!(
-        //     "(${}::jsonb) @> (primary_table.interior -> 'accepted')",
-        //     ParamValue::Bool(val).append(&mut params)
-        // ));
-
         clauses.push(format!(
             "${} = search.accepted",
             ParamValue::RawBool(val).append(&mut params)
@@ -1194,32 +1318,13 @@ fn build_matching_query(
 
     if let Some(val) = query.withdrawn {
         if val {
-            // clauses.push(
-            //     "(('true'::jsonb) @> (primary_table.interior -> 'withdrawn') OR coalesce(nullif(primary_table.interior ->> 'review_status', ''), 'not_required') IN ('draft', 'pending'))".to_string(),
-            // );
             clauses.push(String::from("(true = coalesce(search.withdrawn, false) OR coalesce(search.review_status, 'not_required') in ('draft', 'pending'))"));
         } else {
-            // clauses.push(
-            //     "(('false'::jsonb) @> (primary_table.interior -> 'withdrawn') AND coalesce(nullif(primary_table.interior ->> 'review_status', ''), 'not_required') NOT IN ('draft', 'pending'))".to_string(),
-            // );
             clauses.push(String::from("(false = coalesce(search.withdrawn, false) AND coalesce(search.review_status, 'not_required') not in ('draft', 'pending'))"));
         }
     }
 
     if let Some(region) = &query.region {
-        //         clauses.push(format!(
-        //             r#"(
-        // SELECT
-        //  COALESCE(
-        //   NULLIF(ST_Intersects(c_region.geometry, primary_table.location_point), false),
-        //   NULLIF(ST_Intersects(c_region.geometry, primary_table.location_polygon), false),
-        //   false
-        //  )
-        // FROM c_region WHERE "name" = ${}
-        // )"#,
-        //             ParamValue::RawString(region.to_owned()).append(&mut params)
-        //         ));
-
         clauses.push(format!(
             r#"
 (SELECT
@@ -1247,20 +1352,6 @@ FROM c_region WHERE "name" = ${})
         let begin_param = ParamValue::RawString(begin).append(&mut params);
         let end_param = ParamValue::RawString(end).append(&mut params);
 
-        // clauses.push(format!(
-        //     r#"(
-        //         (
-        //          EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz AND value::timestamptz < ${}::timestamptz)
-        //          AND
-        //          EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz AND value::timestamptz < ${}::timestamptz)
-        //         )
-        //         OR
-        //         (
-        //          coalesce(nullif(primary_table.exterior ->> 'end_recurrence', ''), '0001-01-01')::timestamptz > ${}::timestamptz
-        //         )
-        //        )"#,
-        //     begin_param, end_param, begin_param, end_param, begin_param));
-
         clauses.push(format!(
             r#"(
                 (
@@ -1277,10 +1368,6 @@ FROM c_region WHERE "name" = ${})
         ));
     } else {
         if let Some(val) = query.current {
-            // clauses.push(format!(
-            //     r#"c_opportunity_is_current(primary_table.interior, primary_table.exterior) = ${}"#,
-            //     ParamValue::RawBool(val).append(&mut params)
-            // ));
             clauses.push(format!(
                 r#"
                 ${} = coalesce(
@@ -1316,10 +1403,10 @@ FROM c_region WHERE "name" = ${})
     if let Some(person) = query.involved {
         clauses.push(format!(
             r#"EXISTS (SELECT 1 FROM c_involvement AS inv
-              WHERE (inv.exterior -> 'opportunity') @> ('"' || search.uid::text || '"')::jsonb
-              AND (inv.interior -> 'participant') @> ${}::jsonb
-              AND (inv.exterior ->> 'mode')::integer >= ${})"#,
-            ParamValue::Uuid(person).append(&mut params),
+              WHERE inv.opportunity = search.uid
+              AND inv.participant = ${}
+              AND inv.mode >= ${})"#,
+            ParamValue::RawUuid(person).append(&mut params),
             ParamValue::RawInt(involvement::Mode::Interest as i32).append(&mut params),
         ));
     }
@@ -1327,10 +1414,10 @@ FROM c_region WHERE "name" = ${})
     if let Some(person) = query.saved {
         clauses.push(format!(
             r#"EXISTS (SELECT 1 FROM c_involvement AS inv
-              WHERE (inv.exterior -> 'opportunity') @> ('"' || search.uid::text || '"')::jsonb
-              AND (inv.interior -> 'participant') @> ${}::jsonb
-              AND (inv.exterior ->> 'mode')::integer = ${})"#,
-            ParamValue::Uuid(person).append(&mut params),
+              WHERE inv.opportunity = search.uid
+              AND inv.participant = ${}
+              AND inv.mode = ${})"#,
+            ParamValue::RawUuid(person).append(&mut params),
             ParamValue::RawInt(involvement::Mode::Saved as i32).append(&mut params),
         ));
     }
@@ -1338,19 +1425,15 @@ FROM c_region WHERE "name" = ${})
     if let Some(person) = query.participated {
         clauses.push(format!(
             r#"EXISTS (SELECT 1 FROM c_involvement AS inv
-              WHERE (inv.exterior -> 'opportunity') @> ('"' || search.uid::text || '"')::jsonb
-              AND (inv.interior -> 'participant') @> ${}::jsonb
-              AND (inv.exterior ->> 'mode')::integer >= ${})"#,
-            ParamValue::Uuid(person).append(&mut params),
+              WHERE inv.opportunity = search.uid
+              AND inv.participant = ${}
+              AND inv.mode >= ${})"#,
+            ParamValue::RawUuid(person).append(&mut params),
             ParamValue::RawInt(involvement::Mode::Logged as i32).append(&mut params),
         ));
     }
 
     if let Some(val) = &query.entity_type {
-        // clauses.push(format!(
-        //     r"(primary_table.exterior -> 'entity_type') <@ ${}",
-        //     ParamValue::VecEntityType(val.clone()).append(&mut params)
-        // ));
         clauses.push(format!(
             "search.entity_type = any(${})",
             ParamValue::RawVecEntityType(val.clone()).append(&mut params)
@@ -1358,10 +1441,6 @@ FROM c_region WHERE "name" = ${})
     }
 
     if let Some(val) = &query.title_contains {
-        // clauses.push(format!(
-        //     "(primary_table.exterior ->> 'title') ILIKE ${}",
-        //     ParamValue::RawString(format!("%{}%", val)).append(&mut params)
-        // ));
         clauses.push(format!(
             "search.title ilike ${}",
             ParamValue::RawString(format!("%{}%", val)).append(&mut params)
@@ -1369,11 +1448,6 @@ FROM c_region WHERE "name" = ${})
     }
 
     if let Some(val) = &query.tags {
-        // clauses.push(format!(
-        //     "(primary_table.exterior -> 'tags') @> ${}",
-        //     ParamValue::VecString(val.clone()).append(&mut params)
-        // ));
-
         clauses.push(format!(
             "search.tags && ${}", // In Postgresql when comparing arrays, && means 'is the intersection not empty?'
             ParamValue::RawVecString(val.clone()).append(&mut params)
@@ -1381,11 +1455,6 @@ FROM c_region WHERE "name" = ${})
     }
 
     if let Some(val) = &query.topics {
-        // clauses.push(format!(
-        //     "(primary_table.exterior -> 'opp_topics') ?| ${}",
-        //     ParamValue::RawVecString(val.clone().into_iter().map(|x| x.to_string()).collect())
-        //         .append(&mut params)
-        // ));
         clauses.push(format!(
             "search.topics && ${}",
             ParamValue::RawVecString(val.iter().map(|v| v.db_repr()).collect()).append(&mut params)
@@ -1393,12 +1462,6 @@ FROM c_region WHERE "name" = ${})
     }
 
     if let Some(val) = &query.descriptors {
-        // clauses.push(format!(
-        //     "(primary_table.exterior -> 'opp_descriptor') ?| ${}",
-        //     ParamValue::RawVecString(val.clone().into_iter().map(|x| x.to_string()).collect())
-        //         .append(&mut params)
-        // ))
-
         clauses.push(format!(
             "search.descriptors && ${}",
             ParamValue::RawVecString(val.iter().map(|v| v.db_repr()).collect()).append(&mut params)
@@ -1406,11 +1469,6 @@ FROM c_region WHERE "name" = ${})
     }
 
     if let Some(val) = &query.partner {
-        // clauses.push(format!(
-        //     "(${}::jsonb) @> (primary_table.exterior -> 'partner')",
-        //     ParamValue::Uuid(val.clone()).append(&mut params)
-        // ));
-
         match (&query.include_tags, &query.include_partners) {
             (None, None) => clauses.push(format!(
                 "search.partner = ${}",
@@ -1435,37 +1493,18 @@ FROM c_region WHERE "name" = ${})
         };
     }
 
-    // if let Some(val) = &query.partner_member {
-    //     let uuid_param = ParamValue::Uuid(val.clone()).append(&mut params);
-    //     clauses.push(format!(
-    //         r#"
-    //         (
-    //           (primary_table.interior -> 'submitted_by' @> ${}::jsonb)
-    //           or
-    //           (
-    //             SELECT jsonb_agg("uid") FROM (
-    //                 SELECT (c_partner.exterior -> 'uid') AS "uid" FROM c_partner
-    //                 WHERE (c_partner.interior -> 'authorized') @> (${}::jsonb)
-    //                 OR (c_partner.interior -> 'prime') @> (${}::jsonb)
-    //             ) AS "authorized_partners"
-    //           ) @> (primary_table.exterior -> 'partner')
-    //         )"#,
-    //         uuid_param, uuid_param, uuid_param
-    //     ));
-    // }
-
     if let Some(val) = &query.partner_member {
-        let uuid_param = ParamValue::Uuid(val.clone()).append(&mut params);
+        let uuid_param = ParamValue::RawUuid(val.clone()).append(&mut params);
         clauses.push(format!(
             r#"
             (
-              (primary_table.interior -> 'submitted_by' @> ${}::jsonb)
+              (primary_table.submitted_by = ${})
               or
               EXISTS (
                 SELECT 1
                 FROM c_partner
-                WHERE (c_partner.exterior->>'uid') = search."partner"::text
-                  AND (c_partner.interior->'authorized') @> (${}::jsonb)
+                WHERE c_partner.uid = search."partner"
+                  AND (${} = ANY(c_partner.authorized))
               )
             )"#,
             uuid_param, uuid_param
@@ -1473,11 +1512,6 @@ FROM c_region WHERE "name" = ${})
     }
 
     if let Some(text) = &query.text {
-        // clauses.push(format!(
-        //     "primary_table.fulltext_english @@ websearch_to_tsquery(${})",
-        //     ParamValue::RawString(text.to_string()).append(&mut params)
-        // ));
-
         clauses.push(format!(
             "search.fulltext_english @@ websearch_to_tsquery(${})",
             ParamValue::RawString(text.to_string()).append(&mut params)
@@ -1486,18 +1520,6 @@ FROM c_region WHERE "name" = ${})
 
     if let Some(beginning) = &query.beginning {
         let time_param = ParamValue::RawString(beginning.to_rfc3339()).append(&mut params);
-        // clauses.push(format!(
-        //     r"(EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
-        //       OR
-        //       EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz)
-        //       OR
-        //       ((primary_table.exterior->>'recurrence' = 'daily' OR primary_table.exterior->>'recurrence' = 'weekly') AND (primary_table.exterior->>'end_recurrence' IS null OR (primary_table.exterior->>'end_recurrence')::timestamptz > ${}::timestamptz ))
-        //       OR (
-        //        jsonb_array_length(primary_table.exterior -> 'start_datetimes') <= 1
-        //        AND
-        //        jsonb_array_length(primary_table.exterior -> 'end_datetimes') = 0
-        //       ))",
-        // time_param, time_param, time_param));
 
         clauses.push(format!(
             r#"
@@ -1522,11 +1544,6 @@ FROM c_region WHERE "name" = ${})
 
     if let Some(ending) = &query.ending {
         let time_param = ParamValue::RawString(ending.to_rfc3339()).append(&mut params);
-        // clauses.push(format!(
-        //     r"(NOT EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'start_datetimes') WHERE value::timestamptz > ${}::timestamptz)
-        //       AND
-        //       NOT EXISTS (SELECT value FROM jsonb_array_elements_text(primary_table.exterior -> 'end_datetimes') WHERE value::timestamptz > ${}::timestamptz))",
-        // time_param, time_param));
 
         clauses.push(format!(
             r#"
@@ -1545,11 +1562,6 @@ FROM c_region WHERE "name" = ${})
     // queried max age checks that the opporuntity minimum is less
     // than the queried minimum
     if let Some(min_age) = &query.min_age {
-        // clauses.push(format!(
-        //     "(primary_table.exterior -> 'max_age')::integer >= ${}",
-        //     ParamValue::RawInt(*min_age as i32).append(&mut params)
-        // ))
-
         clauses.push(format!(
             "search.max_age >= ${}",
             ParamValue::RawInt(*min_age as i32).append(&mut params)
@@ -1557,11 +1569,6 @@ FROM c_region WHERE "name" = ${})
     }
 
     if let Some(max_age) = &query.max_age {
-        // clauses.push(format!(
-        //     "(primary_table.exterior -> 'min_age')::integer <= ${}",
-        //     ParamValue::RawInt(*max_age as i32).append(&mut params)
-        // ))
-
         clauses.push(format!(
             "search.min_age <= ${}",
             ParamValue::RawInt(*max_age as i32).append(&mut params)
@@ -1569,21 +1576,14 @@ FROM c_region WHERE "name" = ${})
     }
 
     if query.kids_only.unwrap_or(false) {
-        // clauses.push("(primary_table.exterior -> 'max_age')::integer <= 18".to_string())
         clauses.push("search.max_age <= 18".to_string())
     }
 
     if query.adults_only.unwrap_or(false) {
-        // clauses.push("(primary_table.exterior -> 'min_age')::integer >= 21".to_string())
         clauses.push("search.min_age >= 21".to_string())
     }
 
     if let Some(cost) = &query.cost {
-        // clauses.push(format!(
-        //     "(primary_table.exterior ->> 'cost') = ${}",
-        //     ParamValue::RawString(cost.as_ref().to_lowercase()).append(&mut params)
-        // ))
-
         clauses.push(format!(
             "search.cost = ${}",
             ParamValue::RawString(cost.db_repr()).append(&mut params)
@@ -1591,11 +1591,6 @@ FROM c_region WHERE "name" = ${})
     }
 
     if let Some(venue_type) = &query.venue_type {
-        // clauses.push(format!(
-        //     "(primary_table.exterior -> 'opp_venue') @> ${}",
-        //     ParamValue::VecVenueType(vec![venue_type.clone()]).append(&mut params)
-        // ))
-
         clauses.push(format!(
             "any(search.venue_type) = ${}",
             ParamValue::RawVenueType(venue_type.clone()).append(&mut params)
@@ -1603,11 +1598,6 @@ FROM c_region WHERE "name" = ${})
     }
 
     if let Some(host) = &query.host {
-        // clauses.push(format!(
-        //     "(primary_table.exterior ->> 'organization_name') ILIKE ${}",
-        //     ParamValue::RawString(format!("%{}%", host)).append(&mut params)
-        // ))
-
         clauses.push(format!(
             "search.organization_name ilike ${}",
             ParamValue::RawString(host.to_string()).append(&mut params)
@@ -1618,18 +1608,6 @@ FROM c_region WHERE "name" = ${})
         match physical {
             OpportunityQueryPhysical::InPersonOrOnline => {}
             OpportunityQueryPhysical::InPerson => {
-                // clauses.push(format!(
-                //     "(${}::jsonb) @> (exterior -> 'is_online')",
-                //     ParamValue::Bool(false).append(&mut params)
-                // ));
-
-                // The area constant is ten thousand square miles in square meters
-
-                // clauses.push(format!(
-                //     "(((${}::jsonb) @> (primary_table.exterior -> 'is_online')) AND (primary_table.location_polygon IS NULL OR ST_Area(primary_table.location_polygon, false) <= 25899752356) AND (primary_table.exterior ->> 'location_type' NOT IN ('any', 'unknown')))",
-                //     ParamValue::Bool(false).append(&mut params)
-                // ));
-
                 clauses.push(String::from(
                     r#"
                     (
@@ -1642,15 +1620,6 @@ FROM c_region WHERE "name" = ${})
                 ));
             }
             OpportunityQueryPhysical::Online => {
-                // clauses.push(format!(
-                //     "(${}::jsonb) @> (exterior -> 'is_online')",
-                //     ParamValue::Bool(true).append(&mut params)
-                // ));
-
-                // The area constant is ten thousand square miles in square meters
-
-                // clauses.push(format!("(((${}::jsonb) @> (primary_table.exterior -> 'is_online')) OR (primary_table.location_polygon IS NOT NULL AND ST_Area(primary_table.location_polygon, false) > 25899752356))", ParamValue::Bool(true).append(&mut params)));
-
                 clauses.push(String::from(
                     r#"
                     (
@@ -1667,11 +1636,6 @@ FROM c_region WHERE "name" = ${})
         match temporal {
             OpportunityQueryTemporal::OnDemandOrScheduled => {}
             OpportunityQueryTemporal::Scheduled => {
-                // clauses.push(
-                //     "c_opportunity_is_scheduled(primary_table.interior, primary_table.exterior)"
-                //         .into(),
-                // );
-
                 clauses.push(String::from(
                     r#"
                     (coalesce(array_length(search.start_datetimes, 1), 0) > 1
@@ -1688,11 +1652,6 @@ FROM c_region WHERE "name" = ${})
                 ));
             }
             OpportunityQueryTemporal::OnDemand => {
-                // clauses.push(
-                //     "c_opportunity_is_ondemand(primary_table.interior, primary_table.exterior)"
-                //         .into(),
-                // );
-
                 clauses.push(String::from(
                     r#"
                     coalesce(array_length(search.start_datetimes, 1), 0) <= 1
@@ -1709,32 +1668,6 @@ FROM c_region WHERE "name" = ${})
             }
         }
     }
-
-    //     let point = if let Some((longitude, latitude, proximity)) = &query.near {
-    //         let lon_param = ParamValue::RawFloat(*longitude).append(&mut params);
-    //         let lat_param = ParamValue::RawFloat(*latitude).append(&mut params);
-    //         let prox_param = ParamValue::RawFloat(*proximity).append(&mut params);
-
-    //         clauses.push(format!(
-    //             r#"(
-    //   (exterior ->> 'location_type') = 'any'
-    //   OR
-    //   CASE WHEN location_polygon IS NOT NULL
-    //     THEN ST_Intersects(ST_Buffer(ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, ${}), location_polygon)
-    //     ELSE false END
-    //   OR
-    //   CASE WHEN location_point IS NOT NULL
-    //     THEN ST_Distance(ST_SetSRID(ST_Point(${}, ${}), 4326)::geography, location_point, false) < ${}
-    //     ELSE false END
-    // )"#,
-    //             lon_param, lat_param, prox_param,
-    //             lon_param, lat_param, prox_param
-    //         ));
-
-    //         Some((lon_param, lat_param))
-    //     } else {
-    //         None
-    //     };
 
     if let Some(probability) = query.sample {
         clauses.push(format!(
@@ -1762,38 +1695,19 @@ FROM c_region WHERE "name" = ${})
         _ => query_string.push_str(fields.join(", ").as_str()),
     }
 
-    //     query_string.push_str(
-    //         r#" FROM (
-    // SELECT
-    //     id,
-    //     created,
-    //     updated,
-    //     location_point,
-    //     location_polygon,
-    //     fulltext_english,
-    //     (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) AS exterior,
-    //     (c_opportunity.interior || COALESCE(c_opportunity_overlay.interior, '{}'::jsonb)) AS interior
-    // "#,
-    //     );
-
     query_string.push_str(
         r#" FROM c_opportunity_search search JOIN (
                     SELECT
-                        id,
-                        created,
-                        updated,
-                        location_point,
-                        location_polygon,
-                        fulltext_english,
-                        (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) AS exterior,
-                        (c_opportunity.interior || COALESCE(c_opportunity_overlay.interior, '{}'::jsonb)) AS interior
+                        c_opportunity.*,
+                        c_opportunity_overlay.exterior AS overlay_exterior,
+                        c_opportunity_overlay.interior AS overlay_interior
                     "#,
     );
 
     if let Some(uid) = &query.prefer_partner {
         query_string.push_str(&format!(
-            ", ((${}::jsonb) @> (c_opportunity.exterior -> 'partner'))::int AS _sort_preferential",
-            ParamValue::Uuid(uid.clone()).append(&mut params)
+            ", (c_opportunity.opp_partner = ${})::int AS _sort_preferential",
+            ParamValue::RawUuid(uid.clone()).append(&mut params)
         ));
     } else {
         query_string.push_str(", 0 as _sort_preferential");
@@ -1804,18 +1718,18 @@ FROM c_region WHERE "name" = ${})
         let lat_param = ParamValue::RawFloat(*latitude).append(&mut params);
         let prox_param = ParamValue::RawFloat(*proximity).append(&mut params);
 
-        query_string.push_str(", CASE WHEN (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) ->> 'location_type' = 'any' OR (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) ->> 'is_online' = 'true' THEN 2 ELSE 1 END AS _sort_location_priority");
+        query_string.push_str(", CASE WHEN c_opportunity.location_type = 'any' OR c_opportunity.is_online = true THEN 2 ELSE 1 END AS _sort_location_priority");
 
         query_string.push_str(", CASE");
 
         query_string.push_str(
-            &format!(" WHEN location_polygon IS NOT NULL THEN ST_Distance(location_polygon, ST_SetSRID(ST_Point(${lon_param}, ${lat_param}), 4326)::geography, false)")
+            &format!(" WHEN c_opportunity.location_polygon IS NOT NULL THEN ST_Distance(c_opportunity.location_polygon, ST_SetSRID(ST_Point(${lon_param}, ${lat_param}), 4326)::geography, false)")
         );
 
         query_string
-            .push_str(&format!(" WHEN location_point IS NOT NULL THEN ST_Distance(location_point, ST_SetSRID(ST_Point(${lon_param}, ${lat_param}), 4326)::geography, false)"));
+            .push_str(&format!(" WHEN c_opportunity.location_point IS NOT NULL THEN ST_Distance(c_opportunity.location_point, ST_SetSRID(ST_Point(${lon_param}, ${lat_param}), 4326)::geography, false)"));
 
-        query_string.push_str(&format!(" WHEN (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{{}}'::jsonb)) ->> 'location_type' = 'any' OR (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{{}}'::jsonb)) ->> 'is_online' = 'true' THEN ${prox_param}"));
+        query_string.push_str(&format!(" WHEN c_opportunity.location_type = 'any' OR c_opportunity.is_online = true THEN ${prox_param}"));
 
         // This constant number is roughly the square root of the surface area of the earth, in meters, i.e. about as far away as you can get
         query_string.push_str(" ELSE 22585394 END AS _sort_distance");
@@ -1824,32 +1738,30 @@ FROM c_region WHERE "name" = ${})
             clauses.push(format!("(_sort_distance < 1.1 * ${prox_param})"));
         }
     } else {
-        query_string.push_str(", CASE WHEN (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) ->> 'location_type' = 'any' OR (c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) ->> 'is_online' = 'true' THEN 0 ELSE 1 END AS _sort_location_priority");
+        query_string.push_str(", CASE WHEN c_opportunity.location_type = 'any' OR c_opportunity.is_online = true THEN 0 ELSE 1 END AS _sort_location_priority");
         query_string.push_str(", 1 AS _sort_distance");
     }
 
-    query_string.push_str(", CASE WHEN location_polygon IS NOT NULL THEN ST_Area(location_polygon, false) ELSE 0 END AS _sort_area");
+    query_string.push_str(", CASE WHEN c_opportunity.location_polygon IS NOT NULL THEN ST_Area(c_opportunity.location_polygon, false) ELSE 0 END AS _sort_area");
 
     // We bump ongoing opportunities so that they sort as a week in the future, to give actual timely opportunities priority
     query_string.push_str(r#",
             CASE
-              WHEN jsonb_array_length((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') = 0 AND jsonb_array_length((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') = 0
+              WHEN coalesce(array_length(c_opportunity.start_datetimes, 1), 0) = 0 AND coalesce(array_length(c_opportunity.end_datetimes, 1), 0) = 0
               THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
-              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') t(value) WHERE value::timestamptz > CURRENT_TIMESTAMP)
-              THEN (SELECT MIN(value::timestamptz) FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'start_datetimes') t(value) WHERE value::timestamptz > CURRENT_TIMESTAMP LIMIT 1)
-              WHEN EXISTS (SELECT 1 FROM jsonb_array_elements_text((c_opportunity.exterior || COALESCE(c_opportunity_overlay.exterior, '{}'::jsonb)) -> 'end_datetimes') t(value) WHERE value::timestamptz > CURRENT_TIMESTAMP)
+              WHEN EXISTS (SELECT 1 FROM unnest(c_opportunity.start_datetimes) t(value) WHERE value > CURRENT_TIMESTAMP)
+              THEN (SELECT MIN(value) FROM unnest(c_opportunity.start_datetimes) t(value) WHERE value > CURRENT_TIMESTAMP LIMIT 1)
+              WHEN EXISTS (SELECT 1 FROM unnest(c_opportunity.end_datetimes) t(value) WHERE value > CURRENT_TIMESTAMP)
               THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
               ELSE '100000-01-01T00:00:00.0+00:00'::timestamptz
             END AS _sort_time
         "#);
 
-    // query_string.push_str(" FROM c_opportunity LEFT JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id) AS primary_table");
     query_string.push_str(" FROM c_opportunity LEFT JOIN c_opportunity_overlay ON c_opportunity.id = c_opportunity_overlay.opportunity_id) AS primary_table ON search.opp_id = primary_table.id");
 
     if ordering == OpportunityQueryOrdering::PartnerName {
-        // query_string.push_str(" LEFT JOIN c_partner ON primary_table.exterior->>'partner' = c_partner.exterior->>'uid'");
         query_string.push_str(
-            " LEFT JOIN c_partner ON search.partner = (c_partner.exterior->>'uid')::uuid",
+            " LEFT JOIN c_partner ON search.partner = c_partner.uid",
         );
     }
 
@@ -1893,7 +1805,7 @@ FROM c_region WHERE "name" = ${})
             query_string.push_str(" ORDER BY search.title, search.partner ASC")
         }
         OpportunityQueryOrdering::PartnerName => {
-            query_string.push_str(" ORDER BY (c_partner.exterior->>'name') ASC, search.title ASC")
+            query_string.push_str(r#" ORDER BY c_partner."name" ASC, search.title ASC"#)
         }
     }
 
@@ -1965,7 +1877,7 @@ impl OpportunityPseudoIter {
 impl Opportunity {
     pub async fn catalog(db: &Database) -> Result<OpportunityPseudoIter, Error> {
         Ok(OpportunityPseudoIter {
-            uids: sqlx::query!(r#"SELECT ("exterior"->>'uid')::uuid AS "uid!" FROM c_opportunity"#)
+            uids: sqlx::query!(r#"SELECT uid AS "uid!" FROM c_opportunity"#)
                 .map(|row| row.uid)
                 .fetch_all(db)
                 .await?
@@ -2045,11 +1957,11 @@ impl Opportunity {
     ) -> Result<Vec<OpportunityReference>, Error> {
         let (query_string, query_params) = build_matching_query(
             &[
-                "(primary_table.exterior -> 'uid') as uid",
-                "(primary_table.exterior -> 'slug') as slug",
-                "(primary_table.exterior -> 'title') as title",
-                "(primary_table.exterior -> 'image_url') as image_url",
-                "(primary_table.exterior -> 'short_desc') as short_desc",
+                "primary_table.uid",
+                "primary_table.slug",
+                "primary_table.title",
+                "primary_table.image_url",
+                "primary_table.short_desc",
             ],
             query,
             ordering,
@@ -2061,14 +1973,11 @@ impl Opportunity {
         query_obj
             .map(|rec| {
                 Ok(OpportunityReference {
-                    uid: serde_json::from_value(rec.get("uid"))?,
-                    slug: serde_json::from_value(
-                        rec.try_get("slug")
-                            .unwrap_or_else(|_| serde_json::Value::String(String::new())),
-                    )?,
-                    title: serde_json::from_value(rec.get("title"))?,
-                    image_url: serde_json::from_value(rec.get("image_url"))?,
-                    short_desc: serde_json::from_value(rec.get("short_desc"))?,
+                    uid: rec.get("uid"),
+                    slug: rec.try_get("slug").unwrap_or_default(),
+                    title: rec.get("title"),
+                    image_url: rec.get("image_url"),
+                    short_desc: rec.get("short_desc"),
                 })
             })
             .fetch_all(db)
@@ -2089,11 +1998,69 @@ impl Opportunity {
 
         query_obj
             .map(|rec| {
-                Ok(Opportunity {
-                    id: Some(rec.get("id")),
-                    exterior: serde_json::from_value(rec.get("exterior"))?,
-                    interior: serde_json::from_value(rec.get("interior"))?,
-                })
+                let mut opp = opportunity_from_row(
+                    rec.get("id"),
+                    rec.get("uid"),
+                    rec.get("slug"),
+                    rec.get("partner_name"),
+                    rec.get("partner_website"),
+                    rec.get("partner_logo_url"),
+                    rec.get("partner_created"),
+                    rec.get("partner_updated"),
+                    rec.get("partner_opp_url"),
+                    rec.get("organization_name"),
+                    rec.get("organization_type"),
+                    rec.get("organization_website"),
+                    rec.get("organization_logo_url"),
+                    rec.get("entity_type"),
+                    rec.get("opp_venue"),
+                    rec.get("opp_descriptor"),
+                    rec.get("min_age"),
+                    rec.get("max_age"),
+                    rec.get("pes_domain"),
+                    rec.get("tags"),
+                    rec.get("opp_topics"),
+                    rec.get("ticket_required"),
+                    rec.get("title"),
+                    rec.get("description"),
+                    rec.get("short_desc"),
+                    rec.get("image_url"),
+                    rec.get("image_credit"),
+                    rec.get("start_datetimes"),
+                    rec.get("has_end"),
+                    rec.get("end_datetimes"),
+                    rec.get("recurrence"),
+                    rec.get("end_recurrence"),
+                    rec.get("timezone"),
+                    rec.get("attraction_hours"),
+                    rec.get("cost"),
+                    rec.get("languages"),
+                    rec.get("is_online"),
+                    rec.get("location_type"),
+                    rec.get("location_name"),
+                    rec.get("location_point_geojson"),
+                    rec.get("location_polygon_geojson"),
+                    rec.get("address_street"),
+                    rec.get("address_city"),
+                    rec.get("address_state"),
+                    rec.get("address_country"),
+                    rec.get("address_zip"),
+                    rec.get("opp_hashtags"),
+                    rec.get("opp_social_handles"),
+                    rec.get("opp_partner"),
+                    rec.get("accepted"),
+                    rec.get("withdrawn"),
+                    rec.get("submitted_by"),
+                    rec.get("review_status"),
+                    rec.get("contact_name"),
+                    rec.get("contact_email"),
+                    rec.get("contact_phone"),
+                    rec.get("extra_data"),
+                )?;
+                let overlay_ext: Option<serde_json::Value> = rec.get("overlay_exterior");
+                let overlay_int: Option<serde_json::Value> = rec.get("overlay_interior");
+                apply_overlay(&mut opp, overlay_ext, overlay_int);
+                Ok(opp)
             })
             .fetch_all(db)
             .await?
@@ -2208,15 +2175,6 @@ impl Opportunity {
             return Err(Error::Missing("title".into()));
         }
 
-        // if self
-        //     .exterior
-        //     .partner_opp_url
-        //     .map(|url| url.is_empty())
-        //     .unwrap_or(true)
-        // {
-        //     return Err(Error::Missing("partner_opp_url".into()));
-        // }
-
         if self.exterior.uid.is_nil() {
             let namespace = Uuid::new_v5(&PARTNER_NAMESPACE, self.exterior.partner_name.as_ref());
 
@@ -2239,11 +2197,21 @@ impl Opportunity {
             .fetch_one(db)
             .await?;
 
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        opportunity_from_row(
+            rec.id, rec.uid, rec.slug, rec.partner_name, rec.partner_website, rec.partner_logo_url,
+            rec.partner_created, rec.partner_updated, rec.partner_opp_url,
+            rec.organization_name, rec.organization_type, rec.organization_website, rec.organization_logo_url,
+            rec.entity_type, rec.opp_venue, rec.opp_descriptor, rec.min_age, rec.max_age, rec.pes_domain,
+            rec.tags, rec.opp_topics, rec.ticket_required,
+            rec.title, rec.description, rec.short_desc, rec.image_url, rec.image_credit,
+            rec.start_datetimes, rec.has_end, rec.end_datetimes, rec.recurrence, rec.end_recurrence, rec.timezone,
+            rec.attraction_hours, rec.cost, rec.languages, rec.is_online,
+            rec.location_type, rec.location_name, rec.location_point_geojson, rec.location_polygon_geojson,
+            rec.address_street, rec.address_city, rec.address_state, rec.address_country, rec.address_zip,
+            rec.opp_hashtags, rec.opp_social_handles, rec.opp_partner,
+            rec.accepted, rec.withdrawn, rec.submitted_by, rec.review_status,
+            rec.contact_name, rec.contact_email, rec.contact_phone, rec.extra_data,
+        )
     }
 
     pub async fn load_by_id_with_overlay(db: &Database, id: i32) -> Result<Opportunity, Error> {
@@ -2251,42 +2219,76 @@ impl Opportunity {
             .fetch_one(db)
             .await?;
 
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        let mut opp = opportunity_from_row(
+            rec.id, rec.uid, rec.slug, rec.partner_name, rec.partner_website, rec.partner_logo_url,
+            rec.partner_created, rec.partner_updated, rec.partner_opp_url,
+            rec.organization_name, rec.organization_type, rec.organization_website, rec.organization_logo_url,
+            rec.entity_type, rec.opp_venue, rec.opp_descriptor, rec.min_age, rec.max_age, rec.pes_domain,
+            rec.tags, rec.opp_topics, rec.ticket_required,
+            rec.title, rec.description, rec.short_desc, rec.image_url, rec.image_credit,
+            rec.start_datetimes, rec.has_end, rec.end_datetimes, rec.recurrence, rec.end_recurrence, rec.timezone,
+            rec.attraction_hours, rec.cost, rec.languages, rec.is_online,
+            rec.location_type, rec.location_name, rec.location_point_geojson, rec.location_polygon_geojson,
+            rec.address_street, rec.address_city, rec.address_state, rec.address_country, rec.address_zip,
+            rec.opp_hashtags, rec.opp_social_handles, rec.opp_partner,
+            rec.accepted, rec.withdrawn, rec.submitted_by, rec.review_status,
+            rec.contact_name, rec.contact_email, rec.contact_phone, rec.extra_data,
+        )?;
+        apply_overlay(&mut opp, rec.overlay_exterior, rec.overlay_interior);
+        Ok(opp)
     }
 
     pub async fn load_by_uid(db: &Database, uid: &Uuid) -> Result<Opportunity, Error> {
-        let rec = sqlx::query_file!("db/opportunity/get_by_uid.sql", serde_json::to_value(uid)?)
+        let rec = sqlx::query_file!("db/opportunity/get_by_uid.sql", uid)
             .fetch_one(db)
             .await?;
 
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        opportunity_from_row(
+            rec.id, rec.uid, rec.slug, rec.partner_name, rec.partner_website, rec.partner_logo_url,
+            rec.partner_created, rec.partner_updated, rec.partner_opp_url,
+            rec.organization_name, rec.organization_type, rec.organization_website, rec.organization_logo_url,
+            rec.entity_type, rec.opp_venue, rec.opp_descriptor, rec.min_age, rec.max_age, rec.pes_domain,
+            rec.tags, rec.opp_topics, rec.ticket_required,
+            rec.title, rec.description, rec.short_desc, rec.image_url, rec.image_credit,
+            rec.start_datetimes, rec.has_end, rec.end_datetimes, rec.recurrence, rec.end_recurrence, rec.timezone,
+            rec.attraction_hours, rec.cost, rec.languages, rec.is_online,
+            rec.location_type, rec.location_name, rec.location_point_geojson, rec.location_polygon_geojson,
+            rec.address_street, rec.address_city, rec.address_state, rec.address_country, rec.address_zip,
+            rec.opp_hashtags, rec.opp_social_handles, rec.opp_partner,
+            rec.accepted, rec.withdrawn, rec.submitted_by, rec.review_status,
+            rec.contact_name, rec.contact_email, rec.contact_phone, rec.extra_data,
+        )
     }
 
     pub async fn load_by_uid_with_overlay(db: &Database, uid: &Uuid) -> Result<Opportunity, Error> {
         let rec = sqlx::query_file!(
             "db/opportunity/get_by_uid_with_overlay.sql",
-            serde_json::to_value(uid)?
+            uid
         )
         .fetch_one(db)
         .await?;
 
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        let mut opp = opportunity_from_row(
+            rec.id, rec.uid, rec.slug, rec.partner_name, rec.partner_website, rec.partner_logo_url,
+            rec.partner_created, rec.partner_updated, rec.partner_opp_url,
+            rec.organization_name, rec.organization_type, rec.organization_website, rec.organization_logo_url,
+            rec.entity_type, rec.opp_venue, rec.opp_descriptor, rec.min_age, rec.max_age, rec.pes_domain,
+            rec.tags, rec.opp_topics, rec.ticket_required,
+            rec.title, rec.description, rec.short_desc, rec.image_url, rec.image_credit,
+            rec.start_datetimes, rec.has_end, rec.end_datetimes, rec.recurrence, rec.end_recurrence, rec.timezone,
+            rec.attraction_hours, rec.cost, rec.languages, rec.is_online,
+            rec.location_type, rec.location_name, rec.location_point_geojson, rec.location_polygon_geojson,
+            rec.address_street, rec.address_city, rec.address_state, rec.address_country, rec.address_zip,
+            rec.opp_hashtags, rec.opp_social_handles, rec.opp_partner,
+            rec.accepted, rec.withdrawn, rec.submitted_by, rec.review_status,
+            rec.contact_name, rec.contact_email, rec.contact_phone, rec.extra_data,
+        )?;
+        apply_overlay(&mut opp, rec.overlay_exterior, rec.overlay_interior);
+        Ok(opp)
     }
 
     pub async fn id_by_uid(db: &Database, uid: &Uuid) -> Result<Option<i32>, Error> {
-        let rec = sqlx::query_file!("db/opportunity/id_by_uid.sql", serde_json::to_value(uid)?)
+        let rec = sqlx::query_file!("db/opportunity/id_by_uid.sql", uid)
             .fetch_optional(db)
             .await?;
 
@@ -2296,7 +2298,7 @@ impl Opportunity {
     pub async fn exists_by_uid(db: &Database, uid: &Uuid) -> Result<bool, Error> {
         let rec = sqlx::query_file!(
             "db/opportunity/exists_by_uid.sql",
-            serde_json::to_value(uid)?
+            uid
         )
         .fetch_one(db)
         .await?;
@@ -2317,11 +2319,21 @@ impl Opportunity {
             .fetch_one(db)
             .await?;
 
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        opportunity_from_row(
+            rec.id, rec.uid, rec.slug, rec.partner_name, rec.partner_website, rec.partner_logo_url,
+            rec.partner_created, rec.partner_updated, rec.partner_opp_url,
+            rec.organization_name, rec.organization_type, rec.organization_website, rec.organization_logo_url,
+            rec.entity_type, rec.opp_venue, rec.opp_descriptor, rec.min_age, rec.max_age, rec.pes_domain,
+            rec.tags, rec.opp_topics, rec.ticket_required,
+            rec.title, rec.description, rec.short_desc, rec.image_url, rec.image_credit,
+            rec.start_datetimes, rec.has_end, rec.end_datetimes, rec.recurrence, rec.end_recurrence, rec.timezone,
+            rec.attraction_hours, rec.cost, rec.languages, rec.is_online,
+            rec.location_type, rec.location_name, rec.location_point_geojson, rec.location_polygon_geojson,
+            rec.address_street, rec.address_city, rec.address_state, rec.address_country, rec.address_zip,
+            rec.opp_hashtags, rec.opp_social_handles, rec.opp_partner,
+            rec.accepted, rec.withdrawn, rec.submitted_by, rec.review_status,
+            rec.contact_name, rec.contact_email, rec.contact_phone, rec.extra_data,
+        )
     }
 
     pub async fn load_by_slug_with_overlay(
@@ -2332,11 +2344,23 @@ impl Opportunity {
             .fetch_one(db)
             .await?;
 
-        Ok(Opportunity {
-            id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
-        })
+        let mut opp = opportunity_from_row(
+            rec.id, rec.uid, rec.slug, rec.partner_name, rec.partner_website, rec.partner_logo_url,
+            rec.partner_created, rec.partner_updated, rec.partner_opp_url,
+            rec.organization_name, rec.organization_type, rec.organization_website, rec.organization_logo_url,
+            rec.entity_type, rec.opp_venue, rec.opp_descriptor, rec.min_age, rec.max_age, rec.pes_domain,
+            rec.tags, rec.opp_topics, rec.ticket_required,
+            rec.title, rec.description, rec.short_desc, rec.image_url, rec.image_credit,
+            rec.start_datetimes, rec.has_end, rec.end_datetimes, rec.recurrence, rec.end_recurrence, rec.timezone,
+            rec.attraction_hours, rec.cost, rec.languages, rec.is_online,
+            rec.location_type, rec.location_name, rec.location_point_geojson, rec.location_polygon_geojson,
+            rec.address_street, rec.address_city, rec.address_state, rec.address_country, rec.address_zip,
+            rec.opp_hashtags, rec.opp_social_handles, rec.opp_partner,
+            rec.accepted, rec.withdrawn, rec.submitted_by, rec.review_status,
+            rec.contact_name, rec.contact_email, rec.contact_phone, rec.extra_data,
+        )?;
+        apply_overlay(&mut opp, rec.overlay_exterior, rec.overlay_interior);
+        Ok(opp)
     }
 
     pub async fn id_by_slug(db: &Database, slug: &str) -> Result<Option<i32>, Error> {
@@ -2352,7 +2376,7 @@ impl Opportunity {
             .fetch_optional(db)
             .await?;
 
-        Ok(rec.map(|row| row.uid).flatten())
+        Ok(rec.map(|row| row.uid))
     }
 
     pub async fn exists_by_slug(db: &Database, slug: &str) -> Result<bool, Error> {
@@ -2385,20 +2409,146 @@ impl Opportunity {
 
         self.set_slug_if_necessary(db).await?;
 
+        let entity_type = serialize_enum(&self.exterior.entity_type);
+        let opp_venue: Vec<String> = serialize_enum_vec(&self.exterior.opp_venue);
+        let opp_descriptor: Vec<String> = serialize_enum_vec(&self.exterior.opp_descriptor);
+        let pes_domain = serialize_enum(&self.exterior.pes_domain);
+        let tags: Vec<String> = self.exterior.tags.iter().cloned().collect();
+        let opp_topics: Vec<String> = serialize_enum_vec(&self.exterior.opp_topics);
+        let start_datetimes: Vec<DateTime<FixedOffset>> = self.exterior.start_datetimes.clone();
+        let end_datetimes: Vec<DateTime<FixedOffset>> = self.exterior.end_datetimes.clone();
+        let recurrence = serialize_enum(&self.exterior.recurrence);
+        let attraction_hours = self.exterior.attraction_hours.as_ref()
+            .map(|h| serde_json::to_value(h).unwrap_or_default());
+        let cost = serialize_enum(&self.exterior.cost);
+        let organization_type = serialize_enum(&self.exterior.organization_type);
+        let location_type = serialize_enum(&self.exterior.location_type);
+        let opp_social_handles = serde_json::to_value(&self.exterior.opp_social_handles)?;
+        let review_status = serialize_enum(&self.interior.review_status);
+        let extra_data = &self.interior.extra_data;
+
         if let Some(id) = self.id {
             sqlx::query_file!(
                 "db/opportunity/update.sql",
                 id,
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.exterior.uid,
+                self.exterior.slug,
+                self.exterior.partner_name,
+                self.exterior.partner_website,
+                self.exterior.partner_logo_url,
+                self.exterior.partner_created,
+                self.exterior.partner_updated,
+                self.exterior.partner_opp_url,
+                self.exterior.organization_name,
+                organization_type,
+                self.exterior.organization_website,
+                self.exterior.organization_logo_url,
+                entity_type,
+                &opp_venue as &[String],
+                &opp_descriptor as &[String],
+                self.exterior.min_age,
+                self.exterior.max_age,
+                pes_domain,
+                &tags as &[String],
+                &opp_topics as &[String],
+                self.exterior.ticket_required,
+                self.exterior.title,
+                self.exterior.description,
+                self.exterior.short_desc,
+                self.exterior.image_url,
+                self.exterior.image_credit,
+                &start_datetimes as &[DateTime<FixedOffset>],
+                self.exterior.has_end,
+                &end_datetimes as &[DateTime<FixedOffset>],
+                recurrence,
+                self.exterior.end_recurrence,
+                self.exterior.timezone,
+                attraction_hours as Option<serde_json::Value>,
+                cost,
+                &self.exterior.languages as &[String],
+                self.exterior.is_online,
+                location_type,
+                self.exterior.location_name,
+                self.exterior.location_point.clone() as Option<serde_json::Value>,
+                self.exterior.location_polygon.clone() as Option<serde_json::Value>,
+                self.exterior.address_street,
+                self.exterior.address_city,
+                self.exterior.address_state,
+                self.exterior.address_country,
+                self.exterior.address_zip,
+                &self.exterior.opp_hashtags as &[String],
+                opp_social_handles,
+                self.exterior.partner,
+                self.interior.accepted,
+                self.interior.withdrawn,
+                self.interior.submitted_by,
+                review_status,
+                self.interior.contact_name,
+                self.interior.contact_email,
+                self.interior.contact_phone,
+                extra_data,
             )
             .execute(db)
             .await?;
         } else {
             let rec = sqlx::query_file!(
                 "db/opportunity/insert.sql",
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.exterior.uid,
+                self.exterior.slug,
+                self.exterior.partner_name,
+                self.exterior.partner_website,
+                self.exterior.partner_logo_url,
+                self.exterior.partner_created,
+                self.exterior.partner_updated,
+                self.exterior.partner_opp_url,
+                self.exterior.organization_name,
+                organization_type,
+                self.exterior.organization_website,
+                self.exterior.organization_logo_url,
+                entity_type,
+                &opp_venue as &[String],
+                &opp_descriptor as &[String],
+                self.exterior.min_age,
+                self.exterior.max_age,
+                pes_domain,
+                &tags as &[String],
+                &opp_topics as &[String],
+                self.exterior.ticket_required,
+                self.exterior.title,
+                self.exterior.description,
+                self.exterior.short_desc,
+                self.exterior.image_url,
+                self.exterior.image_credit,
+                &start_datetimes as &[DateTime<FixedOffset>],
+                self.exterior.has_end,
+                &end_datetimes as &[DateTime<FixedOffset>],
+                recurrence,
+                self.exterior.end_recurrence,
+                self.exterior.timezone,
+                attraction_hours as Option<serde_json::Value>,
+                cost,
+                &self.exterior.languages as &[String],
+                self.exterior.is_online,
+                location_type,
+                self.exterior.location_name,
+                self.exterior.location_point.clone() as Option<serde_json::Value>,
+                self.exterior.location_polygon.clone() as Option<serde_json::Value>,
+                self.exterior.address_street,
+                self.exterior.address_city,
+                self.exterior.address_state,
+                self.exterior.address_country,
+                self.exterior.address_zip,
+                &self.exterior.opp_hashtags as &[String],
+                opp_social_handles,
+                self.exterior.partner,
+                self.interior.accepted,
+                self.interior.withdrawn,
+                self.interior.submitted_by,
+                review_status,
+                self.interior.contact_name,
+                self.interior.contact_email,
+                self.interior.contact_phone,
+                extra_data,
             )
             .fetch_one(db)
             .await?;
@@ -2419,11 +2569,11 @@ impl Opportunity {
 SELECT v.interior AS "interior!", v.exterior AS "exterior!"
 FROM c_opportunity_overlay v JOIN c_opportunity o ON v.opportunity_id = o.id
 WHERE
-  o.exterior->>'title' = $1 AND
-  o.exterior->>'partner' = $2
+  o.title = $1 AND
+  o.opp_partner = $2
 "#,
                 &self.exterior.title,
-                self.exterior.partner.to_string(),
+                self.exterior.partner,
             )
             .fetch_optional(db)
             .await?;

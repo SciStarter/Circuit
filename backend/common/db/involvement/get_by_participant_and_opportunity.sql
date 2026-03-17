@@ -1,1 +1,2 @@
-select id, exterior, interior from c_involvement where ($1::jsonb) @> (interior -> 'participant') and ($2::jsonb) @> (exterior -> 'opportunity') limit 1;
+select id, opportunity, first, latest, mode, participant, "location"
+from c_involvement where participant = $1 and opportunity = $2 limit 1;

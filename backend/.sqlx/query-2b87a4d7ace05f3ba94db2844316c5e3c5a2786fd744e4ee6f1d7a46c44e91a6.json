@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select count(*) as \"total!\"\nfrom\n  (\n    ( -- Count each \"I did this\" in the timeframe as one\n      select\n        I.opportunity,\n        I.latest as \"when\"\n      from c_involvement I\n      where\n        I.participant = $1::uuid\n      and\n        I.mode = 30\n      and\n        I.latest >= $2::timestamptz\n      and\n        I.latest <= $3::timestamptz\n    )\n  union\n    ( -- Count each partner-reported contribution in the timeframe as one\n      select\n        P.opportunity,\n        P.\"when\"\n      from c_participation P\n      where\n        P.participant = $1::uuid\n      and\n        P.\"when\" >= $2::timestamptz\n      and\n        P.\"when\" <= $3::timestamptz\n    )\n  ) as \"merged\"\n;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "2b87a4d7ace05f3ba94db2844316c5e3c5a2786fd744e4ee6f1d7a46c44e91a6"
+}

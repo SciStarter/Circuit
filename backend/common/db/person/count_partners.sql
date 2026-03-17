@@ -1,3 +1,3 @@
 select count(*) as total
 from c_partner
-where (exterior -> 'uid' != $2::jsonb) and (((interior -> 'authorized') @> ($1::jsonb)) or ((interior -> 'prime') @> ($1::jsonb)));
+where (uid != $2) and (($1 = ANY(authorized)) or (prime = $1));

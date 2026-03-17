@@ -16,16 +16,16 @@ pub async fn collect(
         sqlx::query!(
             r#"
 SELECT DISTINCT
-  "exterior"->>'organization_name' AS "host!: String"
+  organization_name AS "host!: String"
 FROM
   c_opportunity
 WHERE
-  "exterior"->>'organization_name' != '' AND
-  "exterior"->>'organization_name' != 'test' AND
+  organization_name != '' AND
+  organization_name != 'test' AND
   "created" < $1 AND
-  ("exterior"->>'partner')::uuid = $2
+  opp_partner = $2
 ORDER BY
-  "exterior"->>'organization_name'
+  organization_name
 "#,
             state.end,
             org.exterior.uid,
@@ -65,10 +65,10 @@ SELECT
   COALESCE(SUM(c_opportunity_by_uid_calendar_adds_during("opportunity", $3, $4))::bigint, 0) AS "calendar_adds!: i64"
 FROM
   c_analytics_cache INNER JOIN c_opportunity ON
-    "opportunity" = ("exterior"->>'uid')::uuid
+    "opportunity" = c_opportunity.uid
 WHERE
   "partner" = $1 AND
-  "exterior"->>'organization_name' = $2 AND
+  c_opportunity.organization_name = $2 AND
   "begin" = $3 AND
   "end" = $4
 "#,

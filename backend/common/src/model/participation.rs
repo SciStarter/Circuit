@@ -1,5 +1,5 @@
 use super::Error;
-use crate::Database;
+use crate::{Database, ToFixedOffset};
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
@@ -13,6 +13,27 @@ pub enum Mode {
     CollectData,
     AnalyzeData,
     Organize,
+}
+
+impl Mode {
+    fn as_db_str(&self) -> &'static str {
+        match self {
+            Mode::Signup => "signup",
+            Mode::CollectData => "collect-data",
+            Mode::AnalyzeData => "analyze-data",
+            Mode::Organize => "organize",
+        }
+    }
+
+    fn from_db_str(s: &str) -> Result<Self, Error> {
+        match s {
+            "signup" => Ok(Mode::Signup),
+            "collect-data" => Ok(Mode::CollectData),
+            "analyze-data" => Ok(Mode::AnalyzeData),
+            "organize" => Ok(Mode::Organize),
+            other => Err(Error::Value(format!("Unknown participation mode: {}", other))),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -67,8 +88,18 @@ impl Participation {
 
         Ok(Participation {
             id: Some(rec.id),
-            exterior: serde_json::from_value(rec.exterior)?,
-            interior: serde_json::from_value(rec.interior)?,
+            exterior: ParticipationExterior {
+                opportunity: rec.opportunity,
+                partner: rec.partner,
+                when: rec.r#when.to_fixed_offset(),
+                mode: Mode::from_db_str(&rec.mode)?,
+                keywords: rec.keywords,
+            },
+            interior: ParticipationInterior {
+                participant: rec.participant,
+                snml: rec.snml,
+                location: rec.location,
+            },
         })
     }
 
@@ -83,8 +114,14 @@ impl Participation {
             sqlx::query_file!(
                 "db/participation/update.sql",
                 id,
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.exterior.opportunity,
+                self.exterior.partner,
+                self.exterior.when,
+                self.exterior.mode.as_db_str(),
+                &self.exterior.keywords,
+                self.interior.participant as Option<Uuid>,
+                self.interior.snml.as_deref(),
+                self.interior.location.clone() as Option<serde_json::Value>,
             )
             .execute(db)
             .await?;
@@ -102,8 +139,14 @@ impl Participation {
 
             let rec = sqlx::query_file!(
                 "db/participation/insert.sql",
-                serde_json::to_value(&self.exterior)?,
-                serde_json::to_value(&self.interior)?,
+                self.exterior.opportunity,
+                self.exterior.partner,
+                self.exterior.when,
+                self.exterior.mode.as_db_str(),
+                &self.exterior.keywords,
+                self.interior.participant as Option<Uuid>,
+                self.interior.snml.as_deref(),
+                self.interior.location.clone() as Option<serde_json::Value>,
             )
             .fetch_one(db)
             .await?;
