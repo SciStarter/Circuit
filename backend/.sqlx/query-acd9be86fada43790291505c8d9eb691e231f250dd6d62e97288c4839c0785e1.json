@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT \"data\" FROM c_misc_cache WHERE \"key\" = 'opps-overview' AND NOW() - \"when\" < INTERVAL '7 days'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "data",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "acd9be86fada43790291505c8d9eb691e231f250dd6d62e97288c4839c0785e1"
+}

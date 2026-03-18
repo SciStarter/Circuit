@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into c_person (\n  uid, username, person_image_url, email, email_hashes, \"password\",\n  join_channel, join_channel_detail, first_name, last_name, genders, gender_other,\n  joined_at, active_at, phone, whatsapp, zip_code, birth_year, ethnicities,\n  ethnicity_other, family_income, education_level, opt_in_research, opt_in_volunteer,\n  permissions, \"private\", newsletter, allow_emails, recent_point,\n  last_used_people_recruiter, extra\n) values (\n  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,\n  $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24,\n  $25, $26, $27, $28, $29, $30, $31\n) returning id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "Text",
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "TextArray",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "TextArray",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
+        "TextArray",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Jsonb",
+        "Timestamptz",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "652e1474fbd16a480d0b2c98360218ed25f3d047171f607676daf6984d50351d"
+}

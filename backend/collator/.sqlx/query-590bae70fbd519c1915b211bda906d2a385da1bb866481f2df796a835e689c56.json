@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update c_participation\nset opportunity = $2, partner = $3, \"when\" = $4, mode = $5, keywords = $6,\n    participant = $7, snml = $8, \"location\" = $9\nwhere id = $1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Uuid",
+        "Uuid",
+        "Timestamptz",
+        "Text",
+        "TextArray",
+        "Uuid",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "590bae70fbd519c1915b211bda906d2a385da1bb866481f2df796a835e689c56"
+}

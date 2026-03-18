@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH opportunity_stats AS (\n  SELECT\n    opp_partner AS partner_uid,\n    COUNT(*) AS total_opportunities,\n    COUNT(*) FILTER (WHERE c_opportunity_is_current(c_opportunity) = true) AS current_opportunities,\n    COUNT(*) FILTER (WHERE c_opportunity_is_current_as_of(c_opportunity, NOW() - INTERVAL '1 month') = true) AS current_opportunities_one_month_ago\n  FROM c_opportunity\n  GROUP BY opp_partner\n)\nSELECT DISTINCT\n  c_partner.\"name\" AS \"name\",\n  COALESCE(c_partner.contact->>'name', c_partner.manager->>'name', '') AS \"contact_name\",\n  COALESCE(c_partner.contact->>'email', c_partner.manager->>'email', '') AS \"contact_email\",\n  COALESCE(os.total_opportunities, 0) AS \"total_opportunities\",\n  COALESCE(os.current_opportunities, 0) AS \"current_opportunities\",\n  COALESCE(os.current_opportunities_one_month_ago, 0) AS \"current_opportunities_one_month_ago\"\nFROM c_partner\nLEFT JOIN opportunity_stats os ON os.partner_uid = c_partner.uid\nWHERE EXISTS (\n  SELECT 1 FROM c_person\n  WHERE c_person.join_channel = 'Exchange' AND c_person.join_channel_detail = c_partner.uid\n)\nORDER BY c_partner.\"name\" ASC;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "contact_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "contact_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_opportunities",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "current_opportunities",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "current_opportunities_one_month_ago",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f8a27b5dae1f447da28395c43e109b0e71d11faec4c7806bf88ec345419c4731"
+}

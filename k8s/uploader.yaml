@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: circuit-uploader
-        image: scistarter/circuit-uploader:0.1.21
+        #image: scistarter/circuit-uploader:0.1.21
+        image: scistarter/circuit-uploader:0.1.22
         ports:
         - containerPort: 9001
         env:

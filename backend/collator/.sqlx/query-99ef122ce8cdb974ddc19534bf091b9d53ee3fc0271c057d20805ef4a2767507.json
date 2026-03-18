@@ -1,0 +1,358 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, uid, slug, partner_name, partner_website, partner_logo_url,\n  partner_created, partner_updated, partner_opp_url,\n  organization_name, organization_type, organization_website, organization_logo_url,\n  entity_type, opp_venue, opp_descriptor, min_age, max_age, pes_domain,\n  tags, opp_topics, ticket_required,\n  title, description, short_desc, image_url, image_credit,\n  start_datetimes, has_end, end_datetimes, recurrence, end_recurrence, timezone,\n  attraction_hours, cost, languages, is_online,\n  location_type, location_name, location_point_geojson, location_polygon_geojson,\n  address_street, address_city, address_state, address_country, address_zip,\n  opp_hashtags, opp_social_handles, opp_partner,\n  accepted, withdrawn, submitted_by, review_status,\n  contact_name, contact_email, contact_phone, extra_data\nfrom c_opportunity where uid = $1 limit 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "partner_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "partner_website",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "partner_logo_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "partner_created",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "partner_updated",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "partner_opp_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "organization_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "organization_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "organization_website",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "organization_logo_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "entity_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "opp_venue",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 15,
+        "name": "opp_descriptor",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 16,
+        "name": "min_age",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 17,
+        "name": "max_age",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 18,
+        "name": "pes_domain",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 19,
+        "name": "tags",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 20,
+        "name": "opp_topics",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 21,
+        "name": "ticket_required",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 22,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 23,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 24,
+        "name": "short_desc",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 25,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 26,
+        "name": "image_credit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 27,
+        "name": "start_datetimes",
+        "type_info": "TimestamptzArray"
+      },
+      {
+        "ordinal": 28,
+        "name": "has_end",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 29,
+        "name": "end_datetimes",
+        "type_info": "TimestamptzArray"
+      },
+      {
+        "ordinal": 30,
+        "name": "recurrence",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 31,
+        "name": "end_recurrence",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 32,
+        "name": "timezone",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 33,
+        "name": "attraction_hours",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 34,
+        "name": "cost",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 35,
+        "name": "languages",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 36,
+        "name": "is_online",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 37,
+        "name": "location_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 38,
+        "name": "location_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 39,
+        "name": "location_point_geojson",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 40,
+        "name": "location_polygon_geojson",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 41,
+        "name": "address_street",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 42,
+        "name": "address_city",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 43,
+        "name": "address_state",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 44,
+        "name": "address_country",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 45,
+        "name": "address_zip",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 46,
+        "name": "opp_hashtags",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 47,
+        "name": "opp_social_handles",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 48,
+        "name": "opp_partner",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 49,
+        "name": "accepted",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 50,
+        "name": "withdrawn",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 51,
+        "name": "submitted_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 52,
+        "name": "review_status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 53,
+        "name": "contact_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 54,
+        "name": "contact_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 55,
+        "name": "contact_phone",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 56,
+        "name": "extra_data",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "99ef122ce8cdb974ddc19534bf091b9d53ee3fc0271c057d20805ef4a2767507"
+}

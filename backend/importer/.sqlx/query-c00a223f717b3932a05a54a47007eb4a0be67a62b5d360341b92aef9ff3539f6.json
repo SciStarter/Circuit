@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, opportunity, first, latest, mode, participant, \"location\"\nfrom c_involvement where opportunity = $1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "opportunity",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "first",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "latest",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "mode",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 5,
+        "name": "participant",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "location",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "c00a223f717b3932a05a54a47007eb4a0be67a62b5d360341b92aef9ff3539f6"
+}

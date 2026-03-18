@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, opportunity, partner, \"when\", mode, keywords, participant, snml, \"location\"\nfrom c_participation where id = $1 limit 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "opportunity",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "partner",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "when",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "mode",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "keywords",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 6,
+        "name": "participant",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "snml",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "location",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "8cf7ab8a5397db2810c0dfd6c8cca3e209152666dbc3ffd2babaa41edb2e867c"
+}

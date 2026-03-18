@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT lower(trim(v.tag)) AS \"text!\", count(*) as \"total!\" FROM c_opportunity o JOIN unnest(o.tags) v(tag) ON true GROUP BY lower(trim(v.tag)) ORDER BY \"total!\" DESC LIMIT 30",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "text!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "c5757b0aaa04e13fcda9dea14bbad3fb0c390a13398ddb5895413587f66308cc"
+}

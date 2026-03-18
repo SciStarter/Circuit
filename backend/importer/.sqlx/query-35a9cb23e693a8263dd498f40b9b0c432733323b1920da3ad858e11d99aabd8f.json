@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select uid from c_opportunity where lower(slug) = lower($1::text) limit 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uid",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "35a9cb23e693a8263dd498f40b9b0c432733323b1920da3ad858e11d99aabd8f"
+}

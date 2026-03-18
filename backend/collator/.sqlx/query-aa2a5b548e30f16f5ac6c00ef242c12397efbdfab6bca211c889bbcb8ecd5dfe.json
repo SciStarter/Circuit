@@ -1,0 +1,67 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nWITH c_neighbors AS (\n  SELECT\n    \"other\",\n    COUNT(*) AS \"views\"\n  FROM (\n    SELECT\n      \"created\" AS \"when\",\n      \"prior\" AS \"other\"\n    FROM c_transit\n    WHERE\n      \"postor\" = $1::uuid AND\n      \"created\" >= $2 AND\n      \"created\" < $3\n    UNION\n    SELECT\n      \"created\" AS \"when\",\n      \"postor\" AS \"other\"\n    FROM c_transit\n    WHERE\n      \"prior\" = $1::uuid AND\n      \"created\" >= $2 AND\n      \"created\" < $3\n     \n  ) AS \"inner\"\n  GROUP BY \"other\"\n)\nSELECT\n  CASE WHEN $4::real > 0 THEN c_neighbors.\"views\"::real / $4::real ELSE 0.0 END AS \"overlap!\",\n  c_opportunity.title AS \"name!\",\n  c_opportunity.organization_name AS \"host!\",\n  c_opportunity.opp_descriptor::text[] AS \"activity_types!\",\n  CASE\n    WHEN c_opportunity.has_end THEN 'Event'\n    ELSE 'On Demand'\n  END AS \"format!\",\n  c_opportunity.opp_venue::text[] AS \"venue_types!\",\n  c_opportunity.min_age AS \"min_age!\",\n  c_opportunity.max_age AS \"max_age!\"\nFROM\n  c_neighbors INNER JOIN c_opportunity\n  ON c_neighbors.\"other\" = c_opportunity.uid\nWHERE c_opportunity.entity_type = 'opportunity'\nORDER BY \"overlap!\" DESC;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "overlap!",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "host!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "activity_types!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 4,
+        "name": "format!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "venue_types!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 6,
+        "name": "min_age!",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 7,
+        "name": "max_age!",
+        "type_info": "Int2"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz",
+        "Float4"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      false,
+      false,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "aa2a5b548e30f16f5ac6c00ef242c12397efbdfab6bca211c889bbcb8ecd5dfe"
+}

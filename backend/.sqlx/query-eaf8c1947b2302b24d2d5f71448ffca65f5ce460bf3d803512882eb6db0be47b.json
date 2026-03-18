@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT substring(joined_at::text FROM 0 FOR 8) AS month FROM c_person",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "month",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "eaf8c1947b2302b24d2d5f71448ffca65f5ce460bf3d803512882eb6db0be47b"
+}

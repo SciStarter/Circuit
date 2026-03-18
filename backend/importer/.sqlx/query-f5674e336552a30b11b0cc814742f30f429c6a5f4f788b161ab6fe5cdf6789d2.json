@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT EXISTS(\n    SELECT 1 FROM c_partner\n    WHERE (\n        prime = $1 OR\n        $1 = ANY(authorized)\n    )\n    AND uid = $2\n) AS \"authorized!\"\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "authorized!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f5674e336552a30b11b0cc814742f30f429c6a5f4f788b161ab6fe5cdf6789d2"
+}

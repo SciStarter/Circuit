@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select R.\"id\", R.\"person\", R.\"rating\", R.\"comment\", R.\"when\",\n  case when P.uid is not null then coalesce(P.username, '') else '' end as \"username\",\n  case when P.uid is not null then coalesce(P.person_image_url, '') else '' end as \"image_url\"\nfrom c_opportunity_review R\ninner join c_opportunity O on R.opportunity_id = O.id\nleft outer join c_person P on R.person = P.uid\nwhere O.slug = $1 order by r.\"when\" desc;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "person",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "rating",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 3,
+        "name": "comment",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "when",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "image_url",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "794916ad4fd2a00782c55098abd1ec01ab76c08d857741f84b0ccb6330db3b3f"
+}

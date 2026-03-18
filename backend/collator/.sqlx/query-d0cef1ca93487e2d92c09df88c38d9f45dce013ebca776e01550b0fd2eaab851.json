@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT DISTINCT\n  organization_name AS \"host!: String\"\nFROM\n  c_opportunity\nWHERE\n  organization_name != '' AND\n  organization_name != 'test' AND\n  \"created\" < $1 AND\n  opp_partner = $2\nORDER BY\n  organization_name\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "host!: String",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d0cef1ca93487e2d92c09df88c38d9f45dce013ebca776e01550b0fd2eaab851"
+}

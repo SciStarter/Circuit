@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into c_participation (opportunity, partner, \"when\", mode, keywords, participant, snml, \"location\")\nvalues ($1, $2, $3, $4, $5, $6, $7, $8)\nreturning id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Timestamptz",
+        "Text",
+        "TextArray",
+        "Uuid",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ad226836bf410e1299a068dd41fe3c32a08d8b1d77c05aedf01db9b28fed4752"
+}

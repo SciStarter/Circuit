@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.\"name\" AS \"name!\", count(*) AS \"total!\" FROM c_opportunity o JOIN c_partner p ON p.uid = o.opp_partner GROUP BY p.\"name\" ORDER BY \"total!\" DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "e7e77caacf55810158cd22e3670624e9c7b6c49958eb0afd876a19f74acadf51"
+}

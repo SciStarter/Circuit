@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: circuit-logger-beta
-        image: scistarter/circuit-logger:0.1.5
+        #image: scistarter/circuit-logger:0.1.5
+        image: scistarter/circuit-logger:0.1.6
         ports:
         - containerPort: 9000
         env:

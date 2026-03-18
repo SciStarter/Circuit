@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT \"state\" AS \"state!\", \"metro\" AS \"metro!\" FROM c_person WHERE \"state\" IS NOT NULL AND \"metro\" IS NOT NULL ORDER BY \"state\", \"metro\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "state!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "metro!",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "ca621dfb8daf2f7c9e0fda4fccc1ec8272a5da5cbbc8895917214ed5c7697c58"
+}

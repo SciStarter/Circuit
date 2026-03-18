@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT COUNT(*) AS \"count!: i64\"\n            FROM c_opportunity\n            WHERE opp_partner = $1\n            AND c_opportunity_is_current(c_opportunity) = true\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!: i64",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d4632a6ab79a12061acd3b67a528094a1bb29c1fff5f717ef8c6cfc0d818bf76"
+}

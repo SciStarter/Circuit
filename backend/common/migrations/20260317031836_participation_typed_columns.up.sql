@@ -38,7 +38,7 @@ create index c_participation_by_when on c_participation ("when");
 
 -- Drop old JSONB columns
 alter table c_participation
-  drop column exterior,
-  drop column interior;
+  drop column exterior cascade,
+  drop column interior cascade;
 
 commit;

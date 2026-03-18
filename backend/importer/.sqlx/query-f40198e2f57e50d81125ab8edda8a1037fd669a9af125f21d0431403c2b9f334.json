@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n  c_partner.id as \"id\",\n  c_partner.uid as \"uid!\",\n  c_partner.\"name\" as \"name!\",\n  (c_partner.manager ->> 'name') as \"manager_name\",\n  (c_partner.manager ->> 'email') as \"manager_email\",\n  c_partner.\"created\" as \"joined\",\n  count(distinct c_opportunity.id) as \"published\"\nfrom c_partner left join c_opportunity\n  on c_partner.uid = c_opportunity.opp_partner\nwhere c_opportunity.accepted != false\n  and c_opportunity.withdrawn != true\ngroup by\n  c_partner.id,\n  c_partner.uid,\n  c_partner.\"name\",\n  c_partner.manager ->> 'name',\n  c_partner.manager ->> 'email',\n  c_partner.\"created\"\norder by c_partner.\"name\" asc;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "uid!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "manager_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "manager_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "joined",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "published",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "f40198e2f57e50d81125ab8edda8a1037fd669a9af125f21d0431403c2b9f334"
+}

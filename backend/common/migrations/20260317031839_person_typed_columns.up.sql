@@ -51,7 +51,7 @@ update c_person set
   end,
   join_channel_detail = case
     when jsonb_typeof(interior->'join_channel') = 'object' and (select key from jsonb_each(interior->'join_channel') limit 1) = 'Exchange' then
-      (select value::text from jsonb_each(interior->'join_channel') limit 1)::uuid
+      (select value from jsonb_each_text(interior->'join_channel') limit 1)::uuid
     else null
   end,
   first_name = interior->>'first_name',
@@ -99,7 +99,7 @@ create index c_person_email_hashes on c_person using GIN (email_hashes);
 
 -- Drop old JSONB columns
 alter table c_person
-  drop column exterior,
-  drop column interior;
+  drop column exterior cascade,
+  drop column interior cascade;
 
 commit;

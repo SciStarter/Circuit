@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select count(*) saves\nfrom c_involvement I inner join c_opportunity O\non I.opportunity = O.uid\nwhere I.mode = 20 and O.slug = $1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "saves",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "7e06161c8d2aa57fe0a974e8c41b73333de1efb0c7c146c40e7fe500c5b6969f"
+}

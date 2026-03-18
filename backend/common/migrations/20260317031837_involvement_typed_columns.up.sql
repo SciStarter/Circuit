@@ -37,7 +37,7 @@ create unique index c_involvement_unique_participant_and_opportunity on c_involv
 
 -- Drop old JSONB columns
 alter table c_involvement
-  drop column exterior,
-  drop column interior;
+  drop column exterior cascade,
+  drop column interior cascade;
 
 commit;

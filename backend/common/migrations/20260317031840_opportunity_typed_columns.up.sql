@@ -147,6 +147,17 @@ update c_opportunity set
   contact_phone = coalesce(interior->>'contact_phone', ''),
   extra_data = coalesce(interior->'extra_data', '{}'::jsonb);
 
+-- Deduplicate: keep the row with the highest id for each uid
+delete from c_opportunity
+where id in (
+  select id from (
+    select id, row_number() over (partition by uid order by updated desc, id desc) as rn
+    from c_opportunity
+    where uid is not null
+  ) dupes
+  where rn > 1
+);
+
 -- Add NOT NULL constraint on uid
 alter table c_opportunity
   alter column uid set not null,
@@ -170,8 +181,8 @@ drop index if exists c_opportunity_fulltext_english;
 drop index if exists c_opportunity_withdrawn;
 
 alter table c_opportunity
-  drop column exterior,
-  drop column interior;
+  drop column exterior cascade,
+  drop column interior cascade;
 
 -- Phase 5: Create new indexes
 
@@ -203,8 +214,8 @@ alter table c_opportunity add column location_polygon geography(MULTIPOLYGON, 43
   end
 ) stored;
 
-create index c_opportunity_location_point on c_opportunity using SPGIST (location_point);
-create index c_opportunity_location_polygon on c_opportunity using SPGIST (location_polygon);
+create index c_opportunity_location_point on c_opportunity using GIST (location_point);
+create index c_opportunity_location_polygon on c_opportunity using GIST (location_polygon);
 
 -- Phase 7: Recreate PL/pgSQL functions with typed parameters
 

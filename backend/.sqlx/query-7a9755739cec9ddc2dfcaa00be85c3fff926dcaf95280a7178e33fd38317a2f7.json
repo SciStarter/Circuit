@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into c_visits (\"user\", \"times\") values ($1::uuid, 1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7a9755739cec9ddc2dfcaa00be85c3fff926dcaf95280a7178e33fd38317a2f7"
+}

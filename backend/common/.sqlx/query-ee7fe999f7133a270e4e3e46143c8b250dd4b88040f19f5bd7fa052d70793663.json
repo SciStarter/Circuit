@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update c_person set\n  uid = $2, username = $3, person_image_url = $4, email = $5, email_hashes = $6,\n  \"password\" = $7, join_channel = $8, join_channel_detail = $9,\n  first_name = $10, last_name = $11, genders = $12, gender_other = $13,\n  joined_at = $14, active_at = $15, phone = $16, whatsapp = $17,\n  zip_code = $18, birth_year = $19, ethnicities = $20, ethnicity_other = $21,\n  family_income = $22, education_level = $23, opt_in_research = $24,\n  opt_in_volunteer = $25, permissions = $26, \"private\" = $27,\n  newsletter = $28, allow_emails = $29, recent_point = $30,\n  last_used_people_recruiter = $31, extra = $32\nwhere id = $1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "Text",
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "TextArray",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "TextArray",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
+        "TextArray",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Jsonb",
+        "Timestamptz",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ee7fe999f7133a270e4e3e46143c8b250dd4b88040f19f5bd7fa052d70793663"
+}

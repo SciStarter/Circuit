@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT \"item\" FROM c_block WHERE \"language\" LIKE $1 AND \"group\" LIKE $2 ORDER BY \"item\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "item",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e3e4979a8993b5aa8281b730e005b1b9220b4a4ec9320465e04445d4b7162d99"
+}

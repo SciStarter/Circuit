@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert\ninto c_person_goals (\n    \"person_id\",\n    \"category\",\n    \"target\",\n    \"begin\",\n    \"end\",\n    \"status\"\n  )\nvalues ($1, $2, $3, $4, $5, $6::c_person_goals_status)\nreturning \"id\"\n;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        "Int4",
+        "Timestamptz",
+        "Timestamptz",
+        {
+          "Custom": {
+            "name": "c_person_goals_status",
+            "kind": {
+              "Enum": [
+                "canceled",
+                "failed",
+                "working",
+                "succeeded"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ec6fdfbd3f1cf5dd4004d27742517ddae0575c7ca3c66ff34937cc1f040d5c71"
+}

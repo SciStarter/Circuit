@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  LOWER(TRIM(c_person_searches.\"text\")) AS \"text!\",\n  COUNT(*) AS \"count!\"\nFROM\n  c_person JOIN c_person_searches ON c_person.id = c_person_searches.person_id\nGROUP BY LOWER(TRIM(c_person_searches.\"text\"))\nORDER BY COUNT(*) DESC\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "text!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "5301f0179adc0cb7a388924fc13a0b5db402e89ad1ad34cf1a83173b59a7e5bc"
+}

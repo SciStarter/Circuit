@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into c_partner (\n  uid, \"name\", organization_type, pes_domain, url, image_url,\n  description, background_color, primary_color, secondary_color, tertiary_color,\n  under, open_submission, default_query,\n  manager, contact, prime, authorized, pending, secret\n) values (\n  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20\n) returning id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid",
+        "Bool",
+        "Text",
+        "Jsonb",
+        "Jsonb",
+        "Uuid",
+        "UuidArray",
+        "UuidArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c7ac7527cc50fe6eaaade5d908e0533efd6e44a9d6f6d8b68dd2d00b548059eb"
+}

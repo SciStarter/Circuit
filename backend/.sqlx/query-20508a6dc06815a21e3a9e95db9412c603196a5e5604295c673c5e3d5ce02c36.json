@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT substring(created::text from 0 for 8) AS month FROM c_opportunity",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "month",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "20508a6dc06815a21e3a9e95db9412c603196a5e5604295c673c5e3d5ce02c36"
+}

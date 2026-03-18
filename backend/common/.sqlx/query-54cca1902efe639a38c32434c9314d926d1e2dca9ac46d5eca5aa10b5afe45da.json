@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into c_opportunity (\n  uid, slug, partner_name, partner_website, partner_logo_url,\n  partner_created, partner_updated, partner_opp_url,\n  organization_name, organization_type, organization_website, organization_logo_url,\n  entity_type, opp_venue, opp_descriptor, min_age, max_age, pes_domain,\n  tags, opp_topics, ticket_required,\n  title, description, short_desc, image_url, image_credit,\n  start_datetimes, has_end, end_datetimes, recurrence, end_recurrence, timezone,\n  attraction_hours, cost, languages, is_online,\n  location_type, location_name, location_point_geojson, location_polygon_geojson,\n  address_street, address_city, address_state, address_country, address_zip,\n  opp_hashtags, opp_social_handles, opp_partner,\n  accepted, withdrawn, submitted_by, review_status,\n  contact_name, contact_email, contact_phone, extra_data\n) values (\n  $1, $2, $3, $4, $5,\n  $6, $7, $8,\n  $9, $10, $11, $12,\n  $13, $14, $15, $16, $17, $18,\n  $19, $20, $21,\n  $22, $23, $24, $25, $26,\n  $27, $28, $29, $30, $31, $32,\n  $33, $34, $35, $36,\n  $37, $38, $39, $40,\n  $41, $42, $43, $44, $45,\n  $46, $47, $48,\n  coalesce($49, false), $50, $51, $52,\n  $53, $54, $55, $56\n) returning id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "Int2",
+        "Int2",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "TimestamptzArray",
+        "Bool",
+        "TimestamptzArray",
+        "Text",
+        "Timestamptz",
+        "Text",
+        "Jsonb",
+        "Text",
+        "TextArray",
+        "Bool",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "Jsonb",
+        "Uuid",
+        "Bool",
+        "Bool",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "54cca1902efe639a38c32434c9314d926d1e2dca9ac46d5eca5aa10b5afe45da"
+}

@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT\n  'public-domain' AS \"licence!\",\n  ST_Y(ST_Centroid(geom))::text AS \"lon!\",\n  ST_X(ST_Centroid(geom))::text AS \"lat!\",\n  'boundary' AS \"class!\",\n  ST_AsGeoJSON(ST_Simplify(geom, 0.5, true))::jsonb AS \"geojson\"\nFROM \"zip_code_tabulation_area\"\nWHERE \"zcta5ce20\" like $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "licence!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "lon!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "lat!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "class!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "geojson",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "6f9a7a763882bc027ee4fb28f0fdc404a9c5994466564bd1b138dbdb77456b9c"
+}

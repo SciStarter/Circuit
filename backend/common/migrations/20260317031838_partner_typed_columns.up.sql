@@ -63,10 +63,10 @@ create index c_partner_authorized on c_partner using GIN (authorized);
 -- Drop the view that depends on partner exterior before dropping columns
 drop view if exists c_partner_stats;
 
--- Drop old JSONB columns
+-- Drop old JSONB columns (CASCADE to drop any remaining dependent objects)
 alter table c_partner
-  drop column exterior,
-  drop column interior;
+  drop column exterior cascade,
+  drop column interior cascade;
 
 -- Recreate the view using typed partner columns (opportunity still uses JSONB)
 create view c_partner_stats

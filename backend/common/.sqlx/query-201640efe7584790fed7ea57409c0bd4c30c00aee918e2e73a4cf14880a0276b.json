@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT COUNT(x.*) AS \"result!\"\nFROM (\n  SELECT DISTINCT ON (o.title, o.opp_partner) 1\n  FROM c_opportunity o\n  WHERE\n    o.location_type = 'any' AND\n    c_opportunity_is_current(o)\n  ORDER BY title, opp_partner\n) x\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "result!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "201640efe7584790fed7ea57409c0bd4c30c00aee918e2e73a4cf14880a0276b"
+}

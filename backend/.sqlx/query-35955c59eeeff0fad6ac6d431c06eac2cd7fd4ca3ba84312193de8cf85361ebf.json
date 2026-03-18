@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into c_transit (\"prior\", \"postor\", \"actor\") values ($1, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "35955c59eeeff0fad6ac6d431c06eac2cd7fd4ca3ba84312193de8cf85361ebf"
+}

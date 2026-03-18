@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) AS \"result!\" FROM c_opportunity WHERE c_opportunity_is_current(c_opportunity)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "result!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9ce8e1cbfccc5551230d25bd33f336fa33ecf2ce9fb808bf32e17f679a85e7c2"
+}

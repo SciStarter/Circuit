@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT x.pes_domain AS \"domain!\", COUNT(x.*) AS \"total!\"\nFROM (\n  SELECT DISTINCT ON (o.title, o.opp_partner) *\n  FROM c_opportunity o\n  WHERE\n    c_opportunity_is_current(o) AND\n    o.pes_domain != 'unspecified' AND\n    o.location_type = 'any'\n  ORDER BY o.title, o.opp_partner\n  ) x\nGROUP BY pes_domain\nORDER BY \"total!\" DESC\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "domain!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "2cb8e7b62957ff4ce4d570f2947d08508f8cdac1d02581b09fb91445d86f91a3"
+}

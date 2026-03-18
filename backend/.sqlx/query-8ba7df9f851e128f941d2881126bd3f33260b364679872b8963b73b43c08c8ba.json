@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT v.descriptor AS \"descriptor!\", count(*) AS \"total!\"\nFROM c_opportunity o JOIN unnest(o.opp_descriptor) v(descriptor) ON true\nWHERE c_opportunity_is_current(o)\nGROUP BY v.descriptor;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "descriptor!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "total!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "8ba7df9f851e128f941d2881126bd3f33260b364679872b8963b73b43c08c8ba"
+}
