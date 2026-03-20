@@ -518,6 +518,7 @@ pub fn person_from_row(
             recent_point,
             last_used_people_recruiter,
             extra: extra
+                .filter(|v| !v.is_null())
                 .map(|v| serde_json::from_value(v))
                 .transpose()
                 .map_err(|e| Error::Value(format!("deserializing extra: {e}")))?,
