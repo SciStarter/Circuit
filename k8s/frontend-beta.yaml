@@ -16,15 +16,10 @@ spec:
     spec:
       containers:
       - name: circuit-frontend-beta
-        image: scistarter/circuit-frontend:master-0.1.425
+        image: scistarter/circuit-frontend:SSR-0.1.426
         ports:
         - containerPort: 3000
         env:
-        - name: MAPBOX_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: mapbox
-              key: MAPBOX_TOKEN
         - name: DOMAIN
           value: "beta.sciencenearme.org"
 ---
