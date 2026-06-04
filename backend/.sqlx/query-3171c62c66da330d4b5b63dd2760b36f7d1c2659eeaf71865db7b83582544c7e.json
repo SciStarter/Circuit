@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\nSELECT v.descriptor AS \"descriptor!\", count(*) AS \"total!\"\nFROM c_opportunity o JOIN unnest(o.opp_descriptor) v(descriptor) ON true\nGROUP BY v.descriptor\nORDER BY \"total!\" DESC\n",
+  "query": "\nSELECT v.descriptor AS \"descriptor!\", count(*) AS \"total!\"\nFROM c_opportunity o JOIN unnest(o.opp_descriptor) v(descriptor) ON true\nWHERE c_opportunity_is_published(o)\nGROUP BY v.descriptor\nORDER BY \"total!\" DESC\n",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       null
     ]
   },
-  "hash": "8bbec58216980f9c8b1d53d8c2329882929f33d441f32bc2c1e6626bb2be10b2"
+  "hash": "3171c62c66da330d4b5b63dd2760b36f7d1c2659eeaf71865db7b83582544c7e"
 }

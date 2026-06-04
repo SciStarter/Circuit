@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT COUNT(*) AS \"result!\" FROM c_opportunity",
+  "query": "SELECT COUNT(*) AS \"result!\" FROM c_opportunity WHERE location_type = 'near' AND c_opportunity_is_published(c_opportunity)",
   "describe": {
     "columns": [
       {
@@ -16,5 +16,5 @@
       null
     ]
   },
-  "hash": "b17860ffda4e53a0921ef3293095d59d4e4e77d40986fb46697dfb6853775fbf"
+  "hash": "64525c48165998125ba08249e379835bc1cad5ddfe6d67d58e61ec9077ec4ffe"
 }

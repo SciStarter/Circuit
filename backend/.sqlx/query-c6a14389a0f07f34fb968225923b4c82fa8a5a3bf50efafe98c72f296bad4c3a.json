@@ -1,16 +1,16 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select \"as_of\", \"total\" from c_visits_cumulative",
+  "query": "select now() as \"as_of!\", coalesce(sum(\"times\"), 0)::int as \"total!\" from c_visits",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "as_of",
+        "name": "as_of!",
         "type_info": "Timestamptz"
       },
       {
         "ordinal": 1,
-        "name": "total",
+        "name": "total!",
         "type_info": "Int4"
       }
     ],
@@ -18,9 +18,9 @@
       "Left": []
     },
     "nullable": [
-      false,
-      false
+      null,
+      null
     ]
   },
-  "hash": "6c169f3c7b6b20bb48d94791ff76557fbd1bc3ed29100d21d36dcea6d1394797"
+  "hash": "c6a14389a0f07f34fb968225923b4c82fa8a5a3bf50efafe98c72f296bad4c3a"
 }

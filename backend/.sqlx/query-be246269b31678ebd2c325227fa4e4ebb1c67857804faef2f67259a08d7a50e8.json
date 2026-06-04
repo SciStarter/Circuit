@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT COUNT(*) AS \"result!\" FROM c_opportunity WHERE is_online = true",
+  "query": "SELECT COUNT(*) AS \"result!\" FROM c_opportunity WHERE location_type = 'at' AND c_opportunity_is_published(c_opportunity)",
   "describe": {
     "columns": [
       {
@@ -16,5 +16,5 @@
       null
     ]
   },
-  "hash": "57115188130f8160f386ce7248e54b0943536b72c55b4123894177074b1d5f63"
+  "hash": "be246269b31678ebd2c325227fa4e4ebb1c67857804faef2f67259a08d7a50e8"
 }

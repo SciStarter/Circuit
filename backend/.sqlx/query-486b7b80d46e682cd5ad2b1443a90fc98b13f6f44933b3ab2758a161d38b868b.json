@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT count(*) AS \"total!\" FROM c_opportunity WHERE 'outdoors' = ANY(opp_venue)",
+  "query": "SELECT count(*) AS \"total!\" FROM c_opportunity WHERE 'indoors' = ANY(opp_venue) AND c_opportunity_is_published(c_opportunity)",
   "describe": {
     "columns": [
       {
@@ -16,5 +16,5 @@
       null
     ]
   },
-  "hash": "46b97bef6619d6547f1141bbc69b8bb141c5443eb5d0a5b3673fb311b23923fa"
+  "hash": "486b7b80d46e682cd5ad2b1443a90fc98b13f6f44933b3ab2758a161d38b868b"
 }

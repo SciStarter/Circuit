@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT lower(trim(v.tag)) AS \"text!\", count(*) as \"total!\" FROM c_opportunity o JOIN unnest(o.tags) v(tag) ON true GROUP BY lower(trim(v.tag)) ORDER BY \"total!\" DESC LIMIT 30",
+  "query": "SELECT lower(trim(v.tag)) AS \"text!\", count(*) as \"total!\" FROM c_opportunity o JOIN unnest(o.tags) v(tag) ON true WHERE c_opportunity_is_published(o) GROUP BY lower(trim(v.tag)) ORDER BY \"total!\" DESC LIMIT 30",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       null
     ]
   },
-  "hash": "c5757b0aaa04e13fcda9dea14bbad3fb0c390a13398ddb5895413587f66308cc"
+  "hash": "22d3cd0e51787734b0392c563374d792e888d4b7066e93ca87490e7290aa29e8"
 }

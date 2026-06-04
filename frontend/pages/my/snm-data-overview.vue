@@ -16,7 +16,7 @@
   </div>
 </div>
 
-  <aside class="data-update">Date updated: {{updated_local}}</aside>
+  <aside class="data-update" v-if="state == 'engagement' || state == 'states' || state == 'domain'">Date updated: {{updated_local}}</aside>
   <aside class="data-update">Demographics are estimates, and come from commercial sources</aside>
 
   <div v-if="state=='opps'">
@@ -617,6 +617,7 @@
       <div class="data-head">
           <h3>Referral Sources  <b-tooltip label="How users arrive to Science Near Me before finding your opportunity." position="is-top" append-to-body multilined><b-button label="?" /></b-tooltip></h3>
         </div>
+    <aside class="data-update">Date updated: {{updated_local}}</aside>
     <pie-chart :data="report.traffic.data.pie" />
     </div>
 

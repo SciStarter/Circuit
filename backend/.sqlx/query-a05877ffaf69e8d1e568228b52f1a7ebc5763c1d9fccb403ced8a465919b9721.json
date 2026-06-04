@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT p.\"name\" AS \"name!\", count(*) AS \"total!\" FROM c_opportunity o JOIN c_partner p ON p.uid = o.opp_partner GROUP BY p.\"name\" ORDER BY \"total!\" DESC",
+  "query": "\nSELECT pes_domain AS \"domain!\", COUNT(*) AS \"total!\"\nFROM c_opportunity\nWHERE pes_domain != 'unspecified' AND c_opportunity_is_published(c_opportunity)\nGROUP BY pes_domain\nORDER BY \"total!\" DESC\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "name!",
+        "name": "domain!",
         "type_info": "Text"
       },
       {
@@ -22,5 +22,5 @@
       null
     ]
   },
-  "hash": "e7e77caacf55810158cd22e3670624e9c7b6c49958eb0afd876a19f74acadf51"
+  "hash": "a05877ffaf69e8d1e568228b52f1a7ebc5763c1d9fccb403ced8a465919b9721"
 }

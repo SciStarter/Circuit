@@ -456,7 +456,7 @@ struct SiteData {
 pub async fn sitedata(req: tide::Request<Database>) -> tide::Result {
     let data = sqlx::query_as!(
         SiteData,
-        r#"select "as_of", "total" from c_visits_cumulative"#
+        r#"select now() as "as_of!", coalesce(sum("times"), 0)::int as "total!" from c_visits"#
     )
     .fetch_one(req.state())
     .await?;
@@ -478,13 +478,7 @@ struct LabeledValue {
 }
 
 pub async fn opps_overview(req: tide::Request<Database>) -> tide::Result {
-    let cached = sqlx::query_scalar!(r#"SELECT "data" FROM c_misc_cache WHERE "key" = 'opps-overview' AND NOW() - "when" < INTERVAL '7 days'"#).fetch_optional(req.state()).await?;
-
-    if let Some(data) = cached {
-        return okay(&serde_json::from_str::<serde_json::Value>(&data)?);
-    }
-
-    let total = sqlx::query_scalar!(r#"SELECT COUNT(*) AS "result!" FROM c_opportunity"#)
+    let total = sqlx::query_scalar!(r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE c_opportunity_is_published(c_opportunity)"#)
         .fetch_one(req.state())
         .await?;
 
@@ -495,19 +489,19 @@ pub async fn opps_overview(req: tide::Request<Database>) -> tide::Result {
     .await?;
 
     let online = sqlx::query_scalar!(
-        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE is_online = true"#
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE is_online = true AND c_opportunity_is_published(c_opportunity)"#
     )
     .fetch_one(req.state())
     .await?;
 
     let regional = sqlx::query_scalar!(
-        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE location_type = 'near'"#
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE location_type = 'near' AND c_opportunity_is_published(c_opportunity)"#
     )
     .fetch_one(req.state())
     .await?;
 
     let at_point = sqlx::query_scalar!(
-        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE location_type = 'at'"#
+        r#"SELECT COUNT(*) AS "result!" FROM c_opportunity WHERE location_type = 'at' AND c_opportunity_is_published(c_opportunity)"#
     )
     .fetch_one(req.state())
     .await?;
@@ -516,7 +510,7 @@ pub async fn opps_overview(req: tide::Request<Database>) -> tide::Result {
         r#"
 SELECT pes_domain AS "domain!", COUNT(*) AS "total!"
 FROM c_opportunity
-WHERE pes_domain != 'unspecified'
+WHERE pes_domain != 'unspecified' AND c_opportunity_is_published(c_opportunity)
 GROUP BY pes_domain
 ORDER BY "total!" DESC
 "#
@@ -546,6 +540,7 @@ ORDER BY "total!" DESC
         r#"
 SELECT v.descriptor AS "descriptor!", count(*) AS "total!"
 FROM c_opportunity o JOIN unnest(o.opp_descriptor) v(descriptor) ON true
+WHERE c_opportunity_is_published(o)
 GROUP BY v.descriptor
 ORDER BY "total!" DESC
 "#
@@ -570,14 +565,14 @@ GROUP BY v.descriptor;
 
     let activity_current: BTreeMap<String, i64> = activity_current.into_iter().collect();
 
-    let indoor_all = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE 'indoors' = ANY(opp_venue)"#).fetch_one(req.state()).await?;
-    let outdoor_all = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE 'outdoors' = ANY(opp_venue)"#).fetch_one(req.state()).await?;
+    let indoor_all = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE 'indoors' = ANY(opp_venue) AND c_opportunity_is_published(c_opportunity)"#).fetch_one(req.state()).await?;
+    let outdoor_all = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE 'outdoors' = ANY(opp_venue) AND c_opportunity_is_published(c_opportunity)"#).fetch_one(req.state()).await?;
     let indoor_current = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE c_opportunity_is_current(c_opportunity) AND 'indoors' = ANY(opp_venue)"#).fetch_one(req.state()).await?;
     let outdoor_current = sqlx::query_scalar!(r#"SELECT count(*) AS "total!" FROM c_opportunity WHERE c_opportunity_is_current(c_opportunity) AND 'outdoors' = ANY(opp_venue)"#).fetch_one(req.state()).await?;
 
-    let keywords = sqlx::query!(r#"SELECT lower(trim(v.tag)) AS "text!", count(*) as "total!" FROM c_opportunity o JOIN unnest(o.tags) v(tag) ON true GROUP BY lower(trim(v.tag)) ORDER BY "total!" DESC LIMIT 30"#).map(|row| (row.text.to_owned(), row.total)).fetch_all(req.state()).await?;
+    let keywords = sqlx::query!(r#"SELECT lower(trim(v.tag)) AS "text!", count(*) as "total!" FROM c_opportunity o JOIN unnest(o.tags) v(tag) ON true WHERE c_opportunity_is_published(o) GROUP BY lower(trim(v.tag)) ORDER BY "total!" DESC LIMIT 30"#).map(|row| (row.text.to_owned(), row.total)).fetch_all(req.state()).await?;
 
-    let providers = sqlx::query!(r#"SELECT p."name" AS "name!", count(*) AS "total!" FROM c_opportunity o JOIN c_partner p ON p.uid = o.opp_partner GROUP BY p."name" ORDER BY "total!" DESC"#)
+    let providers = sqlx::query!(r#"SELECT p."name" AS "name!", count(*) AS "total!" FROM c_opportunity o JOIN c_partner p ON p.uid = o.opp_partner WHERE c_opportunity_is_published(o) GROUP BY p."name" ORDER BY "total!" DESC"#)
         .map(|row| LabeledValue {
             label: row.name.to_owned(),
             value: row.total,
@@ -613,8 +608,6 @@ GROUP BY v.descriptor;
             "rows": providers,
         }
     });
-
-    sqlx::query!(r#"INSERT INTO c_misc_cache ("key", "when", "data") VALUES ('opps-overview', NOW(), $1) ON CONFLICT ("key") DO UPDATE SET "when" = EXCLUDED."when", "data" = EXCLUDED."data""#, serde_json::to_string(&result)?).execute(req.state()).await?;
 
     okay(&result)
 }

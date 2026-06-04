@@ -8,8 +8,7 @@ select
   count(distinct c_opportunity.id) as "published"
 from c_partner left join c_opportunity
   on c_partner.uid = c_opportunity.opp_partner
-where c_opportunity.accepted != false
-  and c_opportunity.withdrawn != true
+where c_opportunity_is_published(c_opportunity)
 group by
   c_partner.id,
   c_partner.uid,
