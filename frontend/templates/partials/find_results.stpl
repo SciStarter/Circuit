@@ -1,0 +1,53 @@
+<div id="find-results">
+  <% if cards.is_empty() { %>
+    <p class="no-results">No opportunities matched your search. Try broadening your filters.</p>
+  <% } else { %>
+    <div class="opportunity-cards">
+      <% for c in &cards { %>
+        <article class="opportunity-card">
+          <a href="/<%= c.slug %>" class="primary">
+            <img src="<%= c.image %>" alt="" loading="lazy" decoding="async">
+            <div>
+              <h2><%= c.subtitle %></h2>
+              <h1><%= c.title %></h1>
+              <small class="content"><%- c.short_desc_html %></small>
+            </div>
+          </a>
+          <div class="secondary">
+            <div class="info location">
+              <img src="/static/img/location-marker.svg" alt="Location">
+              <div><%= c.location_line %></div>
+            </div>
+            <div class="info time">
+              <img src="/static/img/calendar.svg" alt="When">
+              <div><%= c.time_line %></div>
+            </div>
+            <% if !c.keywords_line.is_empty() { %>
+            <div class="info keywords">
+              <img src="/static/img/tag.svg" alt="Keywords">
+              <div><%= c.keywords_line %></div>
+            </div>
+            <% } %>
+          </div>
+        </article>
+      <% } %>
+    </div>
+
+    <nav class="pagination" aria-label="pagination">
+      <% if has_prev { %>
+        <a class="action-button" hx-get="<%= prev_url %>" hx-target="#find-results" hx-select="#find-results" hx-swap="outerHTML" hx-push-url="true" href="<%= prev_url %>">&larr; Previous</a>
+      <% } else { %>
+        <span class="action-button disabled">&larr; Previous</span>
+      <% } %>
+      <span class="page-status">Page <%= page_human %> of <%= last_human %></span>
+      <% if has_next { %>
+        <a class="action-button" hx-get="<%= next_url %>" hx-target="#find-results" hx-select="#find-results" hx-swap="outerHTML" hx-push-url="true" href="<%= next_url %>">Next &rarr;</a>
+      <% } else { %>
+        <span class="action-button disabled">Next &rarr;</span>
+      <% } %>
+    </nav>
+  <% } %>
+</div>
+<% if oob { %>
+<div hx-swap-oob="innerHTML:#result-count"><p class="results-count"><strong><%= total %> opportunit<% if total == 1 { %>y<% } else { %>ies<% } %> found!</strong><% if total > 0 { %> <span class="results-hint">use fewer search filter criteria to find more opportunities</span><% } %></p></div>
+<% } %>

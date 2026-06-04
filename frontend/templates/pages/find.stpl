@@ -1,0 +1,155 @@
+<div class="finder">
+  <form class="finder-form" action="/find" method="get"
+        hx-get="/find" hx-target="#find-results" hx-select="#find-results"
+        hx-swap="outerHTML" hx-push-url="true"
+        hx-trigger="change, submit">
+
+    <!-- Top filter bar (teal band, white field pills) -->
+    <div class="finder-bar snm-wrapper">
+      <div class="finder-bar-inner snm-container">
+        <div class="fb-pill fb-search">
+          <label>Search</label>
+          <div class="fb-input">
+            <img src="/static/img/search.svg" alt="">
+            <input type="text" name="text" value="<%= params.text.as_deref().unwrap_or("") %>" placeholder="e.g. astronomy, festival" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="fb-pill fb-near" data-island="lookup-place">
+          <div class="fb-near-place">
+            <label>Near</label>
+            <input type="text" name="near" value="<%= params.near.as_deref().unwrap_or("") %>" placeholder="e.g. Iowa City, IA" autocomplete="off">
+            <input type="hidden" name="longitude" value="<%= params.longitude.as_deref().unwrap_or("") %>">
+            <input type="hidden" name="latitude" value="<%= params.latitude.as_deref().unwrap_or("") %>">
+          </div>
+          <div class="fb-distance">
+            <label>Distance</label>
+            <select name="proximity">
+              <% let prox = params.proximity.as_deref().unwrap_or(""); %>
+              <option value="0"<% if prox.is_empty() || prox == "0" { %> selected<% } %>>Anywhere</option>
+              <option value="8047"<% if prox == "8047" { %> selected<% } %>>5 miles</option>
+              <option value="16093"<% if prox == "16093" { %> selected<% } %>>10 miles</option>
+              <option value="40234"<% if prox == "40234" { %> selected<% } %>>25 miles</option>
+              <option value="80467"<% if prox == "80467" { %> selected<% } %>>50 miles</option>
+              <option value="160934"<% if prox == "160934" { %> selected<% } %>>100 miles</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fb-pill fb-date">
+          <label>From</label>
+          <input type="date" name="beginning" value="<%= params.beginning.as_deref().unwrap_or("") %>">
+        </div>
+        <div class="fb-pill fb-date">
+          <label>Until</label>
+          <input type="date" name="ending" value="<%= params.ending.as_deref().unwrap_or("") %>">
+        </div>
+
+        <button type="submit" class="fb-submit" title="Search"><img src="/static/img/search.svg" alt="Search"></button>
+      </div>
+    </div>
+
+    <!-- Result count (updated out-of-band on HTMX searches) -->
+    <div class="finder-resultcount snm-wrapper">
+      <div class="snm-container" id="result-count">
+        <p class="results-count"><strong><%= total %> opportunit<% if total == 1 { %>y<% } else { %>ies<% } %> found!</strong><% if total > 0 { %> <span class="results-hint">use fewer search filter criteria to find more opportunities</span><% } %></p>
+      </div>
+    </div>
+
+    <!-- Quick-filter bar -->
+    <div class="finder-quickbar snm-wrapper">
+      <div class="finder-quickbar-inner snm-container">
+        <select class="qf-sort" name="sort" aria-label="Sort by">
+          <option value="closest"<% if matches!(params.sort.as_deref(), Some("closest") | None) { %> selected<% } %>>Closest</option>
+          <option value="soonest"<% if params.sort.as_deref() == Some("soonest") { %> selected<% } %>>Soonest</option>
+        </select>
+
+        <div class="qf-group" role="group" aria-label="Location type">
+          <label class="qf-toggle"><input type="radio" name="physical" value="in-person"<% if params.physical.as_deref() == Some("in-person") { %> checked<% } %>><span>In Person</span></label>
+          <label class="qf-toggle"><input type="radio" name="physical" value="online"<% if params.physical.as_deref() == Some("online") { %> checked<% } %>><span>Online</span></label>
+        </div>
+
+        <div class="qf-group" role="group" aria-label="Timing">
+          <label class="qf-toggle"><input type="radio" name="temporal" value="scheduled"<% if params.temporal.as_deref() == Some("scheduled") { %> checked<% } %>><span>Scheduled</span></label>
+          <label class="qf-toggle"><input type="radio" name="temporal" value="on-demand"<% if params.temporal.as_deref() == Some("on-demand") { %> checked<% } %>><span>On Demand</span></label>
+        </div>
+
+        <button type="button" class="qf-more" data-toggle-facets><img src="/static/img/filter.svg" alt=""> More Filters</button>
+        <% if params.has_any_filter() { %><a class="qf-clear" href="/find">&times; Clear Filters</a><% } %>
+      </div>
+    </div>
+
+    <!-- Advanced facets: slide-in drawer from the right -->
+    <div class="more-filters" id="more-filters">
+      <div class="more-filters-header">
+        <h2>Filters</h2>
+        <button type="button" class="more-filters-close" data-toggle-facets aria-label="Close filters">&times;</button>
+      </div>
+      <div class="more-filters-body">
+        <fieldset class="facet facet-descriptors" data-island="tag-select" data-placeholder="Type an activity type…">
+          <legend>Activity Type</legend>
+          <div class="facet-options">
+            <% for d in &descriptors_all { %>
+              <label><input type="checkbox" name="descriptors[]" value="<%= d.0 %>"<% if params.has_descriptor(&d.0) { %> checked<% } %>> <%= d.1 %></label>
+            <% } %>
+          </div>
+        </fieldset>
+
+        <fieldset class="facet facet-age" data-island="age-range">
+          <legend>Age</legend>
+          <label><input type="checkbox" name="kids_only" value="true"<% if params.kids_only == Some(true) { %> checked<% } %>> Kid-friendly</label>
+          <label><input type="checkbox" name="adults_only" value="true"<% if params.adults_only == Some(true) { %> checked<% } %>> Adults (21+)</label>
+          <label class="field">Min age <input type="number" name="min_age" min="0" max="120" value="<%= params.min_age.as_deref().unwrap_or("") %>"></label>
+          <label class="field">Max age <input type="number" name="max_age" min="0" max="120" value="<%= params.max_age.as_deref().unwrap_or("") %>"></label>
+        </fieldset>
+
+        <fieldset class="facet facet-cost">
+          <legend>Cost</legend>
+          <label><input type="radio" name="cost" value=""<% if params.cost.is_none() { %> checked<% } %>> Any Cost</label>
+          <label><input type="radio" name="cost" value="free"<% if params.cost.as_deref() == Some("free") { %> checked<% } %>> Free</label>
+        </fieldset>
+
+        <fieldset class="facet facet-topics" data-island="tag-select" data-placeholder="Type a topic…">
+          <legend>Topic</legend>
+          <div class="facet-options">
+            <% for t in &topics_all { %>
+              <label><input type="checkbox" name="topics[]" value="<%= t.0 %>"<% if params.has_topic(&t.0) { %> checked<% } %>> <%= t.1 %></label>
+            <% } %>
+          </div>
+        </fieldset>
+
+        <fieldset class="facet facet-venue">
+          <legend>Venue Type</legend>
+          <select name="venue_type">
+            <option value=""<% if params.venue_type.is_none() { %> selected<% } %>>Either</option>
+            <option value="indoors"<% if params.venue_type.as_deref() == Some("indoors") { %> selected<% } %>>Indoors</option>
+            <option value="outdoors"<% if params.venue_type.as_deref() == Some("outdoors") { %> selected<% } %>>Outdoors</option>
+          </select>
+        </fieldset>
+
+        <fieldset class="facet facet-host">
+          <legend>Host Organization</legend>
+          <input type="text" name="host" value="<%= params.host.as_deref().unwrap_or("") %>" placeholder="Organization name" autocomplete="off">
+        </fieldset>
+
+        <fieldset class="facet facet-partner">
+          <legend>Partner Organization</legend>
+          <select name="partner">
+            <option value="">Any partner</option>
+            <% for p in &partners_all { %>
+              <option value="<%= p.uid %>"<% if params.partner.as_deref() == Some(p.uid.as_str()) { %> selected<% } %>><%= p.name %></option>
+            <% } %>
+          </select>
+        </fieldset>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="snm-wrapper">
+      <div class="snm-container">
+        <%- results_html %>
+      </div>
+    </div>
+  </form>
+</div>
+<div class="more-filters-backdrop" data-toggle-facets hidden></div>

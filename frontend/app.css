@@ -1,0 +1,1299 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens ported from the old Vue frontend's SCSS variables
+ * (old-frontend/assets/vars/{colors,fonts,responsive}.scss) so the new
+ * Tailwind-based UI carries the same visual language. Tailwind v4 is
+ * configured here in CSS via @theme (no tailwind.config.js); each token
+ * below also generates the matching utilities (bg-*, text-*, font-*, etc.).
+ */
+@theme {
+  /* Colors — see old-frontend/assets/vars/colors.scss */
+  --color-snm-bg: #ffffff;
+  --color-snm-bg-light: #f5f5f5;
+  --color-snm-bg-medlight: #bfdce2;
+  --color-snm-bg-medium: #7cb4bf;
+  --color-snm-bg-meddark: #065e6f;
+  --color-snm-bg-dark: #1b4a54;
+  --color-snm-bg-disabled: #cfcfcf;
+
+  --color-snm-element-light: #ffffff;
+  --color-snm-element-med: #087a91;
+  --color-snm-element-dark: #1a1a1a;
+  --color-snm-element-meddark: #4a4a4a;
+  --color-snm-element-sublabel: #3a3a3a;
+
+  --color-snm-heading-ondark: #f2c04b;
+  --color-snm-element-ondark: #ffffff;
+  --color-snm-border-ondark: #707070;
+
+  --color-snm-info: #991b08;
+  --color-snm-action: #ffbf40;
+  --color-snm-action-border: #b88728;
+  --color-snm-note: #ffe6b3;
+
+  --color-snm-shadow: #00000029;
+  --color-snm-hint: #817878;
+  --color-snm-border: #d9d9d9;
+  --color-snm-card: #cecece;
+  --color-snm-disabled: #a9a9a9;
+  --color-snm-glance: #595959;
+  --color-snm-caption: #314c52;
+  --color-snm-tldr: #625f5d;
+  --color-snm-prehead: #268699;
+
+  /* Fonts — see old-frontend/assets/vars/fonts.scss */
+  --font-sans: "Roboto", sans-serif;
+  --font-heading: "Fira Sans", sans-serif;
+  --font-content: "Roboto", sans-serif;
+  --font-meta: "Roboto", sans-serif;
+
+  /* Font sizes (the old $snm-font-* scale) */
+  --text-smallest: 0.75rem;
+  --text-smaller: 0.875rem;
+  --text-small: 1rem;
+  --text-medium-small: 1.125rem;
+  --text-medium: 1.3rem;
+  --text-large: 1.5rem;
+  --text-larger: 1.9rem;
+  --text-largest: 2rem;
+
+  /* Breakpoints — see old-frontend/assets/vars/responsive.scss */
+  --breakpoint-tablet: 768px;
+  --breakpoint-full: 960px;
+}
+
+/*
+ * Global chrome, ported from old-frontend/layouts/default.vue (+ Footer.vue /
+ * SubFooter.vue). Written as plain CSS against the @theme tokens above so the
+ * bespoke layout reproduces the old appearance; Tailwind utilities are used
+ * for page content. Breakpoints match the old SCSS: tablet 768, full 960.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-content);
+  color: var(--color-snm-element-dark);
+}
+
+.snm-wrapper {
+  width: 100%;
+  padding-inline: 1rem;
+}
+
+.snm-container {
+  max-width: 1000px;
+  margin-inline: auto;
+}
+
+.flex {
+  display: flex;
+}
+.flex-align-center {
+  align-items: center;
+}
+.flex-justify-sb {
+  justify-content: space-between;
+}
+
+.mobile-only {
+  display: revert;
+}
+.no-mobile {
+  display: revert;
+}
+.full-only {
+  display: none;
+}
+
+#page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#main {
+  flex: 1;
+  padding-top: 52px;
+}
+
+/* ---- Beta banner ---- */
+.beta-banner {
+  text-align: center;
+  padding: 0.5rem;
+  border-bottom: 1px solid #efefef;
+  z-index: 100;
+  margin-top: 52px;
+  margin-bottom: -52px;
+}
+.beta-banner img {
+  display: inline-block; /* override Tailwind Preflight's img { display: block } */
+  height: 20px;
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+  left: -2px;
+}
+.beta-banner p {
+  margin: 0;
+}
+
+/* ---- Header ---- */
+header {
+  height: 52px;
+  background-color: var(--color-snm-bg-medlight);
+  border-top: 2px solid var(--color-snm-bg-dark);
+  padding: 0 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+header .logo {
+  height: 39px;
+  width: auto;
+  margin: 6px 0;
+}
+header .logo img {
+  width: 100%;
+  height: 100%;
+}
+
+header .toggle-menu {
+  background-color: transparent;
+  border: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
+}
+
+header .toggle-search {
+  background-color: var(--color-snm-action);
+  border: 1px solid var(--color-snm-action-border);
+  border-radius: 5px;
+  padding: 5px;
+  height: 24px;
+  box-shadow: 0px 3px 6px var(--color-snm-shadow);
+  position: relative;
+  top: -1px;
+  white-space: nowrap;
+  color: var(--color-snm-element-dark);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-weight: bold;
+  text-decoration: none;
+}
+header .toggle-search img {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+header .button-icon {
+  width: auto;
+  height: 1.2em;
+  vertical-align: middle;
+}
+header .menu-icon {
+  display: inline-block; /* override Preflight img { display: block } */
+  width: auto;
+  height: 1.2em;
+  vertical-align: middle;
+  margin: 0 1rem;
+}
+header .no-icon {
+  margin-left: 1rem;
+}
+
+header .centered-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  margin-bottom: 0.75rem;
+}
+header .centered-row.flex-justify-sb {
+  justify-content: space-between;
+}
+
+/* Dropdown panels (mobile menu + search), hidden until toggled. */
+.menu-box {
+  display: none;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background-color: var(--color-snm-element-dark);
+  text-align: left;
+  box-shadow: 0px 3px 6px var(--color-snm-shadow);
+  width: 100%;
+}
+.menu-box .not-authenticated {
+  display: flex;
+  justify-content: space-evenly;
+  background-color: var(--color-snm-element-med);
+  padding: 0.75rem 0;
+}
+/* Login / Create Account header buttons: 0.85rem, 40px tall (find/default
+   SCSS), not the generic .action-button 16px size. */
+.menu-box .not-authenticated a {
+  font-size: 0.85rem;
+  height: 40px;
+  line-height: 1;
+  box-sizing: border-box;
+}
+.menu-box .authenticated ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.menu-box .authenticated li {
+  line-height: 48px;
+  padding-left: 1rem;
+}
+.menu-box .authenticated li a {
+  color: var(--color-snm-element-ondark);
+  text-decoration: none;
+}
+.menu-box .authenticated .subnav {
+  list-style: none;
+  padding: 0;
+}
+.menu-box .authenticated .subnav li {
+  padding-left: 56px;
+  background-color: #5694a2;
+}
+
+.search-box {
+  display: none;
+  position: absolute;
+  top: 52px;
+  left: 0;
+  right: 0;
+  box-shadow: 0px 3px 6px var(--color-snm-shadow);
+  background-color: var(--color-snm-bg);
+  min-height: 4rem;
+  z-index: 99;
+  padding: 1rem;
+}
+.search-box .field {
+  margin-bottom: 0.75rem;
+  display: block;
+}
+.search-box input[type="text"],
+.search-box input[type="date"] {
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-snm-border);
+  width: 100%;
+}
+.search-box .centered-row.flex-justify-sb .field {
+  width: calc(50% - 0.5rem);
+}
+
+.toggled {
+  display: block;
+  margin: 0 auto;
+}
+
+/* ---- Action button ---- */
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-family: var(--font-content);
+  font-weight: bold;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid var(--color-snm-bg-dark);
+  box-shadow: 0px 3px 6px var(--color-snm-shadow);
+}
+.action-button.primary {
+  background-color: var(--color-snm-bg-meddark);
+  color: var(--color-snm-element-light);
+}
+.action-button.primary:hover,
+.action-button.primary:active {
+  background-color: var(--color-snm-bg-dark);
+}
+
+/* ---- Cookie notice ---- */
+#cookie-notice {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 500;
+  width: 100vw;
+  min-width: 300px;
+  max-height: 55vh;
+  overflow-y: auto;
+  background-color: var(--color-snm-bg);
+  border: 1px solid var(--color-snm-bg-medium);
+  padding: 1rem;
+  box-shadow: 0px 0px 6px var(--color-snm-shadow);
+  display: flex;
+  flex-direction: column;
+}
+#cookie-notice[hidden] {
+  display: none;
+}
+#cookie-notice h1 {
+  font-family: var(--font-heading);
+  font-weight: bold;
+  font-size: 1.25rem;
+  margin: 0;
+}
+#cookie-notice h2 {
+  font-family: var(--font-heading);
+  font-weight: bold;
+  font-size: 1rem;
+}
+#cookie-notice p {
+  margin: 0 0 0.5rem 0;
+}
+
+/* ---- Bubble (notification count) ---- */
+.bubble {
+  position: relative;
+  top: -0.25em;
+  display: inline-flex;
+  font-size: 8pt;
+  color: var(--color-snm-element-light);
+  background-color: var(--color-snm-info);
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  min-width: 1rem;
+  height: 1rem;
+  line-height: 1rem;
+  margin-left: 0.5em;
+}
+
+/* ---- Authenticated left nav (desktop only) ---- */
+#authenticated-nav {
+  display: none;
+}
+#authenticated-nav nav {
+  display: flex;
+  flex-direction: column;
+}
+#authenticated-nav nav strong {
+  font-family: var(--font-content);
+  font-weight: bold;
+  font-size: var(--text-smallest);
+  text-transform: uppercase;
+  letter-spacing: 0.39px;
+  padding: 2rem 0 0 1rem;
+}
+#authenticated-nav nav strong.nav-separate {
+  margin-top: 2rem;
+  border-top: 1px solid var(--color-snm-bg-light);
+}
+#authenticated-nav nav a {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--color-snm-element-dark);
+  font-family: var(--font-content);
+  font-size: var(--text-small);
+  height: 48px;
+  padding: 0 1rem;
+  text-decoration: none;
+}
+#authenticated-nav nav a img {
+  min-width: 20px;
+  height: 20px;
+}
+#authenticated-nav nav a.active,
+#authenticated-nav nav a:hover {
+  background-color: var(--color-snm-bg-meddark);
+  color: var(--color-snm-element-light);
+}
+
+/* ---- Footer ---- */
+footer {
+  background-color: var(--color-snm-bg-dark);
+  padding-top: 2rem;
+}
+footer ul {
+  list-style: none;
+  padding: 0;
+}
+footer li {
+  line-height: 1.2;
+  border-bottom: 1px solid var(--color-snm-border-ondark);
+  padding: 0.5rem 0;
+}
+footer li h1 {
+  color: var(--color-snm-heading-ondark);
+  font-family: var(--font-heading);
+  font-size: var(--text-smaller);
+  font-weight: bold;
+  letter-spacing: 0.7px;
+}
+footer li a {
+  color: var(--color-snm-element-ondark);
+  font-family: var(--font-content);
+  font-size: var(--text-small);
+}
+footer .partner {
+  display: flex;
+  flex-direction: row;
+}
+footer .partner .nsf-logo {
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+footer .partner .nsf-logo img {
+  height: auto;
+  width: 56px;
+  vertical-align: top;
+}
+footer .partner .description {
+  color: var(--color-snm-element-ondark);
+  font-family: var(--font-content);
+  font-size: var(--text-smaller);
+  line-height: 22px;
+  margin: 16px 16px 16px 0;
+}
+.footer-social {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+.footer-social img {
+  height: 24px;
+  width: 24px;
+}
+
+.subfooter {
+  background-color: #1d3a40;
+}
+.subfooter ul {
+  list-style: none;
+  padding: 0.75rem 0;
+  margin: 0;
+}
+.subfooter li a {
+  color: var(--color-snm-heading-ondark);
+  text-decoration: none;
+}
+
+/* ===== Tablet and up ===== */
+@media (min-width: 768px) {
+  .no-tablet {
+    display: none;
+  }
+}
+
+/* ===== Full size and up (desktop) ===== */
+@media (min-width: 960px) {
+  .full-only {
+    display: block;
+  }
+  .mobile-only {
+    display: none !important;
+  }
+
+  #main {
+    padding-top: 0;
+  }
+
+  header {
+    height: 90px;
+    border-top: 10px solid var(--color-snm-prehead);
+    position: relative;
+    overflow: visible;
+  }
+  header .logo {
+    width: 180px;
+    height: auto;
+    margin: 1rem;
+  }
+  header .toggle-menu {
+    display: none;
+  }
+  header .toggle-search {
+    order: 3;
+    padding: 10px;
+    min-width: 40px;
+    height: 40px;
+    margin-right: 1rem;
+  }
+  header .toggle-search img {
+    width: 20px;
+    height: 20px;
+    margin-right: 6px;
+  }
+
+  .menu-box {
+    display: inline-block;
+    background-color: transparent;
+    box-shadow: none;
+    position: relative;
+    inset: unset;
+    padding: 0;
+  }
+  .menu-box .not-authenticated {
+    display: inline-block;
+    background-color: transparent;
+    padding: 0;
+  }
+  .menu-box .not-authenticated a {
+    margin-right: 1rem;
+  }
+  .menu-box .authenticated {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    border-radius: 6px;
+    background-color: var(--color-snm-bg-meddark);
+    color: var(--color-snm-element-light);
+    border: 1px solid var(--color-snm-bg-dark);
+    padding: 0 1rem;
+    margin-right: 1rem;
+  }
+
+  /* Search overlay centered on desktop */
+  header .search-box.toggled {
+    background-color: rgba(0, 0, 0, 0.8);
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  header .search-box.toggled .search-box-container {
+    background-color: #fff;
+    padding: 1rem;
+    border-radius: 6px;
+    min-width: 420px;
+  }
+  .search-box .sbc-header {
+    color: var(--color-snm-bg-meddark);
+  }
+
+  /* Authenticated desktop: fixed left sidebar */
+  .authenticated header {
+    justify-content: flex-end !important;
+    height: 80px;
+    position: fixed;
+  }
+  .authenticated header .logo {
+    display: none !important;
+  }
+  .authenticated #content {
+    padding-top: 80px;
+    margin-left: 200px;
+  }
+  .authenticated #authenticated-nav {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 200px;
+    background-color: var(--color-snm-bg-medium);
+    box-shadow: 0px 0px 6px var(--color-snm-shadow);
+    z-index: 101;
+  }
+  .authenticated #authenticated-nav .logo {
+    width: 180px;
+    margin: 1rem auto 0;
+    display: block;
+  }
+  .authenticated #authenticated-nav .an-overflow {
+    height: calc(100vh - 105px);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .authenticated footer,
+  .authenticated .subfooter {
+    padding-left: 200px;
+  }
+  .authenticated .beta-banner {
+    margin-top: 80px;
+    padding-left: 200px;
+    margin-bottom: -80px;
+  }
+  .not-authenticated .beta-banner {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  footer > .snm-container {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto;
+  }
+  footer > .snm-container > ul {
+    width: calc(25% - 0.5rem);
+  }
+  footer > .snm-container > ul li {
+    border: 0;
+  }
+  footer > .snm-container > ul li h1 {
+    text-decoration: underline;
+  }
+  footer .partner {
+    width: calc(50% - 0.5rem);
+  }
+
+  .subfooter ul {
+    display: flex;
+  }
+  .subfooter li {
+    margin-right: 1rem;
+  }
+  .subfooter li:not(:first-child)::before {
+    content: "|";
+    color: var(--color-snm-element-med);
+    margin-right: 8px;
+  }
+  .authenticated .subfooter ul {
+    padding-left: 2rem;
+  }
+}
+
+/* ===== Wide desktop ===== */
+@media (min-width: 1200px) {
+  .authenticated #authenticated-nav {
+    width: 280px;
+  }
+  .authenticated #content {
+    margin-left: 280px;
+  }
+  .authenticated footer,
+  .authenticated .subfooter {
+    padding-left: 280px;
+  }
+  .authenticated .beta-banner {
+    padding-left: 280px;
+  }
+}
+
+/* =====================================================================
+ * Finder page (/find) and auth pages. First-pass styling against the
+ * design tokens; the old FindResults two-column card layout and the
+ * Buefy taginput/slider widgets are a later visual-fidelity refinement.
+ * ===================================================================== */
+
+/* Top filter bar: full-width teal band with white field "pills". */
+.finder-bar {
+  background-color: var(--color-snm-element-med);
+  padding-block: 1rem;
+}
+.finder-bar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+.fb-pill {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: var(--color-snm-bg);
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  min-width: 0;
+}
+.fb-pill > label,
+.fb-near label {
+  font-size: var(--text-smallest);
+  font-weight: bold;
+  color: var(--color-snm-element-sublabel);
+}
+.fb-pill input,
+.fb-pill select {
+  border: 0;
+  outline: 0;
+  padding: 0.15rem 0;
+  font: inherit; /* 16px, matching the live filter-bar inputs */
+  background: transparent;
+  width: 100%;
+}
+.fb-search {
+  flex: 3 1 16rem;
+}
+.fb-search .fb-input {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.fb-search .fb-input img {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+}
+.fb-near {
+  flex: 3 1 16rem;
+  flex-direction: row;
+  gap: 0.5rem;
+}
+.fb-near-place {
+  flex: 2 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.fb-distance {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 1px solid var(--color-snm-border);
+  padding-left: 0.5rem;
+}
+.fb-distance select {
+  width: auto; /* size to the widest option so "Anywhere" isn't clipped */
+}
+.fb-date {
+  flex: 1 1 8rem;
+}
+.fb-submit {
+  flex: 0 0 auto;
+  background-color: var(--color-snm-action);
+  border: 1px solid var(--color-snm-action-border);
+  border-radius: 8px;
+  padding: 0 1rem;
+  cursor: pointer;
+}
+.fb-submit img {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
+
+/* Quick-filter bar: segmented sort/type/timing controls + actions. */
+.finder-quickbar {
+  background-color: var(--color-snm-bg);
+  padding-block: 0.6rem;
+}
+.finder-quickbar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+/* Quick-filter controls — sizing/colors from old-frontend find.vue
+   (.quickfilter / .qf-button-group): small text, #d4d4d4 borders, and the
+   active toggle is the action yellow. */
+.qf-sort {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.25rem 1.4rem 0.25rem 0.5rem;
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  background: #efefef
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23087a91' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E")
+    no-repeat right 0.5rem center;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  color: var(--color-snm-element-meddark);
+}
+.qf-group {
+  display: inline-flex;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.qf-toggle {
+  display: inline-flex;
+  cursor: pointer;
+}
+.qf-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.qf-toggle > span {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-snm-element-meddark);
+  white-space: nowrap;
+  background: var(--color-snm-bg);
+  border: 1px solid #d4d4d4;
+}
+.qf-toggle + .qf-toggle > span {
+  border-left: 0;
+}
+.qf-toggle:first-child > span {
+  border-radius: 6px 0 0 6px;
+}
+.qf-toggle:last-child > span {
+  border-radius: 0 6px 6px 0;
+}
+.qf-toggle input:checked + span {
+  background-color: var(--color-snm-action);
+  border-color: var(--color-snm-action);
+  color: var(--color-snm-element-dark);
+}
+.qf-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--color-snm-element-meddark);
+  background: var(--color-snm-bg);
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+.qf-more img {
+  width: 16px;
+  height: 16px;
+}
+.qf-clear {
+  font-size: 0.75rem;
+  color: var(--color-snm-element-med);
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+/* More Filters: slide-in drawer from the right (find.vue #filters-refine). */
+.more-filters {
+  position: fixed;
+  top: 0;
+  right: -360px;
+  width: 340px;
+  max-width: 90vw;
+  height: 100%;
+  z-index: 9999;
+  overflow: auto;
+  background: var(--color-snm-bg);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+  transition: right 0.4s ease-in;
+}
+.more-filters.shown {
+  right: 0;
+}
+.more-filters-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-snm-bg-medium);
+}
+.more-filters-header h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-medium);
+  color: var(--color-snm-element-light);
+}
+.more-filters-close {
+  background: transparent;
+  border: 0;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-snm-element-light);
+}
+.more-filters-body {
+  padding: 0 1.5rem 2rem;
+}
+.more-filters-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 9998;
+}
+.more-filters-backdrop[hidden] {
+  display: none;
+}
+.facet {
+  border: 0;
+  margin: 2rem 0;
+  padding: 0;
+}
+.facet legend {
+  color: var(--color-snm-bg-dark);
+  font-weight: bold;
+  font-family: var(--font-heading);
+  font-size: var(--text-small);
+  padding: 0 0 0.5rem;
+}
+.facet label {
+  font-family: var(--font-content);
+  font-weight: normal;
+  font-size: var(--text-smaller);
+  color: var(--color-snm-element-sublabel);
+}
+.facet-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.25rem 1rem;
+  max-height: 14rem;
+  overflow-y: auto;
+  padding: 0.25rem;
+  border: 1px solid var(--color-snm-border);
+  border-radius: 8px;
+  background-color: var(--color-snm-bg);
+}
+
+/* Results + cards */
+.results-count {
+  font-weight: bold;
+  margin: 0 0 1rem;
+}
+.no-results {
+  color: var(--color-snm-glance);
+}
+/* Cards — ported from old-frontend/components/OpportunityCard.vue: a
+   flex-column card (primary row on top, gray secondary strip below). */
+.opportunity-cards {
+  margin-top: 1rem;
+}
+.opportunity-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-snm-border);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  background-color: var(--color-snm-bg);
+  overflow: hidden;
+}
+.opportunity-card .primary {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  text-decoration: none;
+  color: inherit;
+}
+.opportunity-card .primary img {
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+  object-fit: cover;
+  object-position: center center;
+  flex-shrink: 0;
+  flex-grow: 0;
+  margin: 0 16px 0 0;
+}
+.opportunity-card h2 {
+  font-family: var(--font-content);
+  font-size: var(--text-smaller);
+  font-weight: bold;
+  color: var(--color-snm-element-dark);
+  line-height: 16px;
+  margin: 0;
+}
+.opportunity-card h1 {
+  text-decoration: underline;
+  color: var(--color-snm-element-med);
+  font-family: var(--font-heading);
+  font-size: var(--text-small);
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 0 0 8px;
+}
+.opportunity-card .content {
+  display: none; /* short_desc shown only at full size (see below) */
+}
+.opportunity-card .secondary {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-snm-bg-light);
+}
+.opportunity-card .secondary > div {
+  margin-bottom: 0.5rem;
+}
+.opportunity-card .info {
+  display: flex;
+  align-items: flex-start;
+}
+.opportunity-card .info img {
+  display: block;
+  width: 10px;
+  height: 12px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  margin-right: 5px;
+  margin-top: 0.4em;
+}
+
+@media (min-width: 960px) {
+  .opportunity-card .content {
+    display: block;
+    font-family: var(--font-content);
+    font-size: var(--text-smaller);
+    color: var(--color-snm-element-dark);
+    letter-spacing: 0.14px;
+  }
+  .opportunity-card .secondary {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .opportunity-card .secondary .info {
+    margin-right: 1rem;
+  }
+  .opportunity-card .secondary > :last-child {
+    width: 100%;
+    margin-bottom: 0;
+  }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.pagination .action-button.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.page-status {
+  font-size: var(--text-smaller);
+  color: var(--color-snm-glance);
+}
+
+/* Auth pages */
+.auth-page {
+  padding-block: 2rem;
+}
+.snm-container.narrow {
+  max-width: 28rem;
+}
+.auth-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+.auth-form .field > span {
+  font-weight: bold;
+  font-size: var(--text-smaller);
+}
+.auth-form input {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-snm-border);
+  border-radius: 8px;
+  font: inherit;
+}
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.form-error {
+  background-color: var(--color-snm-note);
+  border: 1px solid var(--color-snm-action-border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  color: var(--color-snm-info);
+}
+.auth-alt {
+  margin-top: 1.5rem;
+  font-size: var(--text-smaller);
+}
+
+/* Tag-autocomplete (More Filters: Topic / Activity Type), Buefy-style. */
+.tagselect-active .facet-options[hidden] {
+  display: none;
+}
+.tagselect {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--color-snm-border);
+  border-radius: 8px;
+  background: var(--color-snm-bg);
+  padding: 0.35rem 0.5rem;
+  min-height: 2.4rem;
+}
+.tagselect-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--color-snm-element-med);
+  color: var(--color-snm-element-light);
+  border-radius: 999px;
+  padding: 0.15rem 0.25rem 0.15rem 0.6rem;
+  font-size: var(--text-smaller);
+}
+.tagselect-x {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.2rem;
+}
+.tagselect-input {
+  flex: 1 1 8rem;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  min-width: 6rem;
+  padding: 0.2rem;
+}
+.tagselect-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 2px);
+  z-index: 30;
+  background: var(--color-snm-bg);
+  border: 1px solid var(--color-snm-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 10px var(--color-snm-shadow);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+.tagselect-item {
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  font-size: var(--text-smaller);
+}
+.tagselect-item:hover {
+  background: var(--color-snm-bg-medlight);
+}
+
+/* Age sliders (More Filters) */
+.facet-age .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+.facet-age .age-slider {
+  width: 100%;
+  accent-color: var(--color-snm-element-med);
+}
+
+/* Results count + hint (matches the live "N found! use fewer…" line). */
+.results-count {
+  font-weight: normal;
+  margin: 1.25rem 0 1rem;
+}
+.results-hint {
+  color: var(--color-snm-glance);
+  font-size: var(--text-smaller);
+}
+
+/* Result-count band (sits between the filter bar and the quick-bar; updated
+   out-of-band on HTMX searches). */
+.finder-resultcount {
+  padding-top: 1rem;
+}
+.finder-resultcount .results-count {
+  margin: 0;
+}
+
+/* Consistent text/select styling inside the More Filters drawer. */
+.more-filters-body input[type="text"]:not(.tagselect-input),
+.more-filters-body input[type="number"],
+.more-filters-body select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--color-snm-border);
+  border-radius: 6px;
+  font: inherit;
+  font-size: var(--text-smaller);
+  background: var(--color-snm-bg);
+  color: var(--color-snm-element-dark);
+}
+.facet-age .field {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+.facet-age .field input[type="number"] {
+  width: 5rem;
+}
+.facet-cost label,
+.facet-age > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-right: 1rem;
+}
+
+/* Location typeahead dropdown (finder "Near" field), fed by
+   /api/ui/finder/geosuggest. */
+.place-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 2px);
+  z-index: 1000;
+  background: var(--color-snm-bg);
+  border: 1px solid var(--color-snm-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 10px var(--color-snm-shadow);
+  max-height: 16rem;
+  overflow-y: auto;
+}
+.place-menu[hidden] {
+  display: none;
+}
+.place-item {
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+  font-size: var(--text-smaller);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.place-item:hover {
+  background: var(--color-snm-bg-medlight);
+}
+
+/* Universal HTMX activity indicator: a shared spinner shown via hx-indicator
+   (#page sets hx-indicator="#htmx-spinner", inherited by all request sites).
+   HTMX toggles .htmx-request on the spinner while a request is in flight. */
+.htmx-indicator {
+  opacity: 0;
+  visibility: hidden;
+}
+.htmx-request.htmx-indicator,
+.htmx-request .htmx-indicator,
+#htmx-spinner.active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 200ms ease-in;
+}
+#htmx-spinner {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--color-snm-bg-medlight);
+  border-top-color: var(--color-snm-element-med);
+  border-radius: 50%;
+  z-index: 2000;
+  pointer-events: none;
+  animation: htmx-spin 0.7s linear infinite;
+}
+@keyframes htmx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %></title>
+  <link rel="icon" href="/static/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script src="/static/js/htmx.min.js" defer></script>
+  <script src="/static/js/chrome.js" defer></script>
+  <script src="/static/js/lookup-place.js" defer></script>
+  <script src="/static/js/tag-select.js" defer></script>
+  <script src="/static/js/age-range.js" defer></script>
+</head>
+<body>
+<div id="htmx-spinner" class="htmx-indicator" aria-hidden="true"></div>
+<div id="page" hx-indicator:inherited="#htmx-spinner" class="<% if chrome.authenticated() { %>authenticated<% } else { %>not-authenticated<% } %>">
+
+  <div class="beta-banner snm-wrapper">
+    <div class="snm-container">
+      <p><img src="/static/img/atom.svg"><b>We're in beta!</b> If you find a bug or have feedback, let us know in our <a href="https://github.com/SciStarter/Circuit/issues">issue tracker</a>.</p>
+    </div>
+  </div>
+
+  <header class="flex flex-align-center flex-justify-sb">
+    <button class="toggle-menu mobile-only" title="Toggle menu" data-toggle="menu" aria-expanded="false">
+      <% if chrome.reports_pending() > 0 { %>
+        <img src="/static/img/hamburger-alert.svg" alt="menu">
+      <% } else { %>
+        <img src="/static/img/hamburger.svg" alt="menu">
+      <% } %>
+    </button>
+
+    <a href="/" class="logo" data-context="Science Near Me logo">
+      <img src="/static/img/logo-beta.svg" title="return to home page" alt="Science Near Me">
+    </a>
+
+    <div class="flex">
+      <a href="/find" class="toggle-search" data-toggle="search" data-context="header-search">
+        <img src="/static/img/search.svg" alt=""> <span class="no-mobile">Search Opportunities</span>
+      </a>
+
+      <aside class="search-box" data-panel="search">
+        <form class="search-box-container" action="/find" method="get">
+          <div class="full-only sbc-header flex flex-justify-sb">
+            <h2>Search</h2>
+            <button type="button" data-toggle="search">&#10005;</button>
+          </div>
+          <div class="field">
+            <input name="text" type="text" placeholder="e.g. astronomy" autocomplete="off">
+          </div>
+          <div class="field" data-island="lookup-place">
+            <input name="near" type="text" placeholder="Place or address" autocomplete="off">
+            <input name="longitude" type="hidden">
+            <input name="latitude" type="hidden">
+            <input name="proximity" type="hidden">
+          </div>
+          <div class="centered-row">
+            <label><input type="checkbox" name="include_online" value="1" checked> Include Online Opportunities</label>
+          </div>
+          <div class="centered-row flex-justify-sb">
+            <label class="field">From <input name="beginning" class="control" type="date"></label>
+            <label class="field">Until <input name="ending" class="control" type="date"></label>
+          </div>
+          <div class="centered-row">
+            <button type="submit" class="action-button primary arrow">
+              <img class="button-icon" src="/static/img/search.svg" alt=""> Search
+            </button>
+          </div>
+        </form>
+      </aside>
+
+      <aside class="menu-box mobile-menu" data-panel="menu">
+        <% if chrome.authenticated() { %>
+          <div class="authenticated">
+            <span class="no-mobile" data-context="header-username"><%= chrome.username() %></span>
+            <ul>
+              <li class="mobile-only"><a href="/find"><img class="menu-icon" src="/static/img/find-science-opportunities.svg" alt=""> Find Opportunities</a></li>
+              <li class="mobile-only"><a href="/my/saved"><img class="menu-icon" src="/static/img/saved-science-opportunities.svg" alt=""> Saved Opportunities</a></li>
+              <li class="mobile-only"><a href="/my/science"><img class="menu-icon" src="/static/img/my-science.svg" alt=""> My Activity Log<% if chrome.reports_pending() > 0 { %><span class="bubble"><%= chrome.reports_pending() %></span><% } %></a></li>
+              <li class="mobile-only"><a href="/my/goals"><img class="menu-icon" src="/static/img/my-goals.svg" alt=""> My Goals</a></li>
+              <li class="mobile-only"><a href="/my/profile"><img class="menu-icon" src="/static/img/my-profile-and-settings.svg" alt=""> My Profile &amp; Settings</a></li>
+              <% if chrome.owner() { %>
+              <li class="mobile-only"><a href="/my/opportunities"><img class="menu-icon" src="/static/img/current-opportunities.svg" alt=""> Your Opportunities</a></li>
+              <li class="mobile-only"><a href="/my/organization"><img class="menu-icon" src="/static/img/your-organization.svg" alt=""> Your Partner Organization</a></li>
+              <% } %>
+              <li class="mobile-only">
+                <a href="/my/data-overview"><img class="menu-icon" src="/static/img/data-insights.svg" alt=""> Data Insights</a>
+                <ul class="subnav">
+                  <% if chrome.owner() { %>
+                  <li><a href="/my/data-overview">Your Data Overview</a></li>
+                  <li><a href="/my/hosts-explorer">Hosts Explorer</a></li>
+                  <li><a href="/my/opportunity-data-explorer">Opportunity Data Explorer</a></li>
+                  <% } %>
+                  <li><a href="/my/snm-data-overview">SNM Data Overview</a></li>
+                </ul>
+              </li>
+              <% if chrome.owner() { %>
+              <li class="mobile-only"><a href="/my/submit-opportunity"><img class="menu-icon" src="/static/img/submit-opportunity.svg" alt=""> Add an Opportunity</a></li>
+              <% } %>
+              <li><span class="no-icon"></span><a href="/logout" data-method="post">Log Out</a></li>
+            </ul>
+          </div>
+        <% } else { %>
+          <div class="not-authenticated">
+            <a class="action-button primary" href="/login?next=<%= chrome.path %>">Login</a>
+            <a class="action-button primary" href="/signup?next=<%= chrome.path %>">Create Account</a>
+          </div>
+        <% } %>
+      </aside>
+    </div>
+  </header>
+
+  <section id="main">
+    <div id="content">
+      <%- body %>
+
+      <aside id="cookie-notice" data-cookie-notice hidden>
+        <div>
+          <h1>We Care About Your Privacy</h1>
+          <p>We and <a href="/about#our-partners">our partners</a> store and/or access information on a device, such as unique IDs in cookies to process personal data. Find the details on our <a href="/privacy">privacy policy</a> page.</p>
+          <button type="button" class="action-button primary" data-cookie-consent>Accept All</button>
+        </div>
+        <div>
+          <h2>We and our partners process data to provide:</h2>
+          <p>Geolocation data, personalized content, audience insights, product development and <a href="/research-participant">research participant studies.</a></p>
+        </div>
+      </aside>
+    </div>
+
+    <% if chrome.authenticated() { %>
+    <div id="authenticated-nav">
+      <a href="/" class="logo" data-context="Science Near Me logo">
+        <img src="/static/img/logo-beta.svg" title="return to home page" alt="Science Near Me">
+      </a>
+      <div class="an-overflow">
+        <nav>
+          <% if chrome.owner() { %><strong>My Participation</strong><% } %>
+          <a href="/find" class="<% if chrome.is_active("/find") { %>active<% } %>"><img src="/static/img/find-science-opportunities.svg" alt=""> Find Opportunities</a>
+          <a href="/my/saved" class="<% if chrome.is_active("/my/saved") { %>active<% } %>"><img src="/static/img/saved-science-opportunities.svg" alt=""> Saved Opportunities</a>
+          <a href="/my/science" class="<% if chrome.is_active("/my/science") { %>active<% } %>"><img src="/static/img/my-science.svg" alt=""> My Activity Log<% if chrome.reports_pending() > 0 { %><span class="bubble"><%= chrome.reports_pending() %></span><% } %></a>
+          <a href="/my/goals" class="<% if chrome.is_active("/my/goals") { %>active<% } %>"><img src="/static/img/my-goals.svg" alt=""> My Goals</a>
+          <a href="/my/profile" class="<% if chrome.is_active("/my/profile") { %>active<% } %>"><img src="/static/img/my-profile-and-settings.svg" alt=""> My Profile &amp; Settings</a>
+          <% if chrome.owner() { %>
+          <strong class="nav-separate">Manage Opportunities</strong>
+          <a href="/my/opportunities" class="<% if chrome.is_active("/my/opportunities") { %>active<% } %>"><img src="/static/img/current-opportunities.svg" alt=""> Your Opportunities</a>
+          <a href="/my/organization" class="<% if chrome.is_active("/my/organization") { %>active<% } %>"><img src="/static/img/your-organization.svg" alt=""> Your Partner Organization</a>
+          <a href="/my/data-overview"><img class="menu-icon" src="/static/img/data-insights.svg" alt=""> Data Insights</a>
+          <% } %>
+          <% if chrome.owner() { %>
+          <a href="/my/submit-opportunity" class="<% if chrome.is_active("/my/submit-opportunity") { %>active<% } %>"><img src="/static/img/submit-opportunity.svg" alt=""> Add an Opportunity</a>
+          <% } %>
+        </nav>
+      </div>
+    </div>
+    <% } %>
+  </section>
+
+  <footer class="snm-wrapper">
+    <div class="snm-container">
+      <ul>
+        <li><h1>For Everyone</h1></li>
+        <li><a href="/about">About Us</a></li>
+        <li><a href="/my/snm-data-overview">Data Overview</a></li>
+        <li><a href="/contact">Contact Us</a></li>
+        <li><a href="https://github.com/SciStarter/Circuit/issues">Issue Tracker</a></li>
+      </ul>
+      <ul>
+        <li><h1>For Providers</h1></li>
+        <li><a href="/add-opportunities">Add Your Opportunities to Science Near Me</a></li>
+        <li><a href="/display-opportunities">Display Science Near Me Opportunities on Your Website</a></li>
+        <li><a href="/api/docs/v1.html">API Documentation</a></li>
+      </ul>
+      <div class="partner">
+        <div class="nsf-logo"><img src="/static/img/NSF-small.png" alt="National Science Foundation"></div>
+        <div class="description">This project is based upon work supported, in part, by the National Science Foundation under Grant DRL-1906998. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not necessarily reflect the view of the National Science Foundation.</div>
+      </div>
+    </div>
+    <div class="snm-container">
+      <div class="footer-social">
+        <a href="https://www.facebook.com/find.science.near.me"><img src="/static/img/facebook-reverse.svg" alt="Facebook"></a>
+        <a href="https://www.instagram.com/science_near_me/"><img src="/static/img/instagram-reverse.svg" alt="Instagram"></a>
+        <a href="https://twitter.com/science_near_me"><img src="/static/img/twitter-app-reverse.svg" alt="Twitter"></a>
+        <a href="https://www.linkedin.com/company/science-near-me/"><img src="/static/img/linkedin-reverse.svg" alt="LinkedIn"></a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="subfooter snm-wrapper">
+    <div class="snm-container">
+      <ul>
+        <li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a href="/cookies">Cookies Policy</a></li>
+        <li><a href="/research-participant">Research Participant</a></li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

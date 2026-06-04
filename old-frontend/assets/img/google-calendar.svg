@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="460" height="460" viewBox="0 0 460 459.99999" version="1.1" id="svg18" sodipodi:docname="Google_Calendar_2020.svg" inkscape:version="0.92.3 (2405546, 2018-03-11)">
+  <metadata id="metadata22">
+    <rdf:RDF>
+      <cc:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <dc:title>logo</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="1366" inkscape:window-height="705" id="namedview20" showgrid="false" inkscape:zoom="0.40785734" inkscape:cx="136.59609" inkscape:cy="109.46785" inkscape:window-x="-8" inkscape:window-y="-8" inkscape:window-maximized="1" inkscape:current-layer="svg18"/>
+  <!-- Generator: Sketch 39.1 (31720) - http://www.bohemiancoding.com/sketch -->
+  <title id="title2">logo</title>
+  <desc id="desc4">Created with Sketch.</desc>
+  <defs id="defs6"/>
+  <g id="g26" transform="scale(18.157417)">
+    <path class="b" d="M 8.735,16.344 A 2.579,2.579 0 0 1 7.7,14.865 l 1.156,-0.476 a 1.76,1.76 0 0 0 0.55,0.93 1.418,1.418 0 0 0 0.947,0.328 1.461,1.461 0 0 0 0.975,-0.345 1.1,1.1 0 0 0 0.408,-0.878 1.088,1.088 0 0 0 -0.43,-0.89 1.665,1.665 0 0 0 -1.076,-0.345 H 9.565 v -1.145 h 0.6 a 1.461,1.461 0 0 0 0.935,-0.3 0.988,0.988 0 0 0 0.38,-0.822 0.911,0.911 0 0 0 -0.34,-0.742 1.315,1.315 0 0 0 -0.861,-0.278 1.157,1.157 0 0 0 -0.81,0.272 1.6,1.6 0 0 0 -0.437,0.668 L 7.887,10.365 a 2.544,2.544 0 0 1 0.838,-1.138 2.421,2.421 0 0 1 1.564,-0.493 2.859,2.859 0 0 1 1.263,0.271 2.162,2.162 0 0 1 0.878,0.754 1.917,1.917 0 0 1 0.317,1.081 1.768,1.768 0 0 1 -0.295,1.037 2.04,2.04 0 0 1 -0.725,0.652 V 12.6 a 2.2,2.2 0 0 1 0.93,0.725 1.9,1.9 0 0 1 0.363,1.167 2.183,2.183 0 0 1 -0.345,1.213 2.39,2.39 0 0 1 -0.951,0.838 3,3 0 0 1 -1.365,0.307 2.829,2.829 0 0 1 -1.624,-0.506 z" id="path10" inkscape:connector-curvature="0" style="fill:#4285f4"/>
+    <polygon class="b" points="14.571,11.522 13.936,10.559 16.214,8.915 17.087,8.915 17.087,16.667 15.841,16.667 15.841,10.604 " id="polygon12" style="fill:#4285f4"/>
+    <path class="c" d="M 19.334,19.334 H 6 v 6 h 13.334 z" id="path14" inkscape:connector-curvature="0" style="fill:#34a853"/>
+    <path class="b" d="M 19.334,0 H 2 A 2,2 0 0 0 0,2 V 19.334 H 6 V 6 h 13.334 z" id="path16" inkscape:connector-curvature="0" style="fill:#4285f4"/>
+    <path class="d" d="m 0,19.334 v 4 a 2,2 0 0 0 2,2 h 4 v -6 z" id="path18" inkscape:connector-curvature="0" style="fill:#188038"/>
+    <path class="e" d="m 25.334,6 h -6 v 13.334 h 6 z" id="path20" inkscape:connector-curvature="0" style="fill:#fbbc04"/>
+    <path class="f" d="M 25.334,6 V 2 a 2,2 0 0 0 -2,-2 h -4 v 6 z" id="path22" inkscape:connector-curvature="0" style="fill:#1967d2"/>
+    <path class="g" d="m 19.334,25.334 6,-6 h -6 z" id="path24" inkscape:connector-curvature="0" style="fill:#ea4335"/>
+  </g>
+</svg>

@@ -1,0 +1,27 @@
+<div class="auth-page snm-wrapper">
+  <div class="snm-container narrow">
+    <h1>Log in</h1>
+
+    <% if let Some(err) = &error { %>
+      <div class="form-error"><%- err %></div>
+    <% } %>
+
+    <form class="auth-form" action="/login" method="post">
+      <input type="hidden" name="next" value="<%= next %>">
+      <label class="field">
+        <span>Email</span>
+        <input type="email" name="email" autocomplete="email" required>
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="action-button primary">Log in</button>
+        <a href="/forgot" class="forgot-link">Forgot password?</a>
+      </div>
+    </form>
+
+    <p class="auth-alt">Don't have an account? <a href="/signup?next=<%= next %>">Create one</a>.</p>
+  </div>
+</div>
