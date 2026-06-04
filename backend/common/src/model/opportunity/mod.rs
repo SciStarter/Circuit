@@ -1585,14 +1585,14 @@ FROM c_region WHERE "name" = ${})
 
     if let Some(cost) = &query.cost {
         clauses.push(format!(
-            "search.cost = ${}",
+            "search.cost = ${}::t_cost",
             ParamValue::RawString(cost.db_repr()).append(&mut params)
         ));
     }
 
     if let Some(venue_type) = &query.venue_type {
         clauses.push(format!(
-            "any(search.venue_type) = ${}",
+            "${} = any(search.venue_type)",
             ParamValue::RawVenueType(venue_type.clone()).append(&mut params)
         ));
     }

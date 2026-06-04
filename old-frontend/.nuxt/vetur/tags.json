@@ -1,0 +1,158 @@
+{
+  "ActionButton": {
+    "description": "Auto imported from components/ActionButton.vue"
+  },
+  "ActivityRegional": {
+    "description": "Auto imported from components/ActivityRegional.vue"
+  },
+  "AddOpportunities": {
+    "description": "Auto imported from components/AddOpportunities.vue"
+  },
+  "BubbleChart": {
+    "description": "Auto imported from components/BubbleChart.vue"
+  },
+  "CalendarAdd": {
+    "description": "Auto imported from components/CalendarAdd.vue"
+  },
+  "Card": {
+    "description": "Auto imported from components/Card.vue"
+  },
+  "ChordDiagram": {
+    "description": "Auto imported from components/ChordDiagram.vue"
+  },
+  "ChoroplethStates": {
+    "description": "Auto imported from components/ChoroplethStates.vue"
+  },
+  "ComparisonBar": {
+    "description": "Auto imported from components/ComparisonBar.vue"
+  },
+  "DynamicBlock": {
+    "description": "Auto imported from components/DynamicBlock.vue"
+  },
+  "ExternalLink": {
+    "description": "Auto imported from components/ExternalLink.vue"
+  },
+  "FindResults": {
+    "description": "Auto imported from components/FindResults.vue"
+  },
+  "Footer": {
+    "description": "Auto imported from components/Footer.vue"
+  },
+  "GeneralFilters": {
+    "description": "Auto imported from components/GeneralFilters.vue"
+  },
+  "GeoExplorerMapRadius": {
+    "description": "Auto imported from components/GeoExplorerMapRadius.vue"
+  },
+  "GeoExplorerMapState": {
+    "description": "Auto imported from components/GeoExplorerMapState.vue"
+  },
+  "GeoExplorerMapUsa": {
+    "description": "Auto imported from components/GeoExplorerMapUsa.vue"
+  },
+  "JustContent": {
+    "description": "Auto imported from components/JustContent.vue"
+  },
+  "LDJson": {
+    "description": "Auto imported from components/LDJson.js"
+  },
+  "LineChart": {
+    "description": "Auto imported from components/LineChart.vue"
+  },
+  "LoadingSpinner": {
+    "description": "Auto imported from components/LoadingSpinner.vue"
+  },
+  "LoginForm": {
+    "description": "Auto imported from components/LoginForm.vue"
+  },
+  "LoginScistarterForm": {
+    "description": "Auto imported from components/LoginScistarterForm.vue"
+  },
+  "Logo": {
+    "description": "Auto imported from components/Logo.vue"
+  },
+  "LookupGeometry": {
+    "description": "Auto imported from components/LookupGeometry.vue"
+  },
+  "LookupPlace": {
+    "description": "Auto imported from components/LookupPlace.vue"
+  },
+  "MiniSelect": {
+    "description": "Auto imported from components/MiniSelect.vue"
+  },
+  "Opportunity": {
+    "description": "Auto imported from components/Opportunity.vue"
+  },
+  "OpportunityCalendar": {
+    "description": "Auto imported from components/OpportunityCalendar.vue"
+  },
+  "OpportunityCard": {
+    "description": "Auto imported from components/OpportunityCard.vue"
+  },
+  "OpportunityForm": {
+    "description": "Auto imported from components/OpportunityForm.vue"
+  },
+  "OpportunityKeywords": {
+    "description": "Auto imported from components/OpportunityKeywords.vue"
+  },
+  "OpportunityList": {
+    "description": "Auto imported from components/OpportunityList.vue"
+  },
+  "OpportunityLocation": {
+    "description": "Auto imported from components/OpportunityLocation.vue"
+  },
+  "OpportunityNotice": {
+    "description": "Auto imported from components/OpportunityNotice.vue"
+  },
+  "OpportunityTime": {
+    "description": "Auto imported from components/OpportunityTime.vue"
+  },
+  "PageView": {
+    "description": "Auto imported from components/PageView.vue"
+  },
+  "Pagination": {
+    "description": "Auto imported from components/Pagination.vue"
+  },
+  "PartnerForm": {
+    "description": "Auto imported from components/PartnerForm.vue"
+  },
+  "PieChart": {
+    "description": "Auto imported from components/PieChart.vue"
+  },
+  "ProfileItem": {
+    "description": "Auto imported from components/ProfileItem.vue"
+  },
+  "ProgressBar": {
+    "description": "Auto imported from components/ProgressBar.vue"
+  },
+  "ProgressGauge": {
+    "description": "Auto imported from components/ProgressGauge.vue"
+  },
+  "ReadMore": {
+    "description": "Auto imported from components/ReadMore.vue"
+  },
+  "SidewaysSlider": {
+    "description": "Auto imported from components/SidewaysSlider.vue"
+  },
+  "SignupForm": {
+    "description": "Auto imported from components/SignupForm.vue"
+  },
+  "SocialButton": {
+    "description": "Auto imported from components/SocialButton.vue"
+  },
+  "Stars": {
+    "description": "Auto imported from components/Stars.vue"
+  },
+  "SubFooter": {
+    "description": "Auto imported from components/SubFooter.vue"
+  },
+  "Treemap": {
+    "description": "Auto imported from components/Treemap.vue"
+  },
+  "UploadFile": {
+    "description": "Auto imported from components/UploadFile.vue"
+  },
+  "WordCloud": {
+    "description": "Auto imported from components/WordCloud.vue"
+  }
+}
