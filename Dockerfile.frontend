@@ -1,6 +1,19 @@
-FROM node:16
-EXPOSE 3000
-COPY frontend/ .
-RUN yarn build
-CMD ["yarn", "start", "-H", "0.0.0.0"]
+FROM rust:1-bookworm AS builder
+# The frontend depends on backend/common (path dependency), whose sqlx::query!
+# macros are built against the committed offline cache in backend/.sqlx.
+ENV SQLX_OFFLINE=true
+ADD backend/ /usr/src/backend/
+ADD frontend/ /usr/src/frontend/
+WORKDIR /usr/src/frontend/
+RUN cargo install --path . --features container
 
+FROM debian:bookworm-slim
+EXPOSE 3000
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /usr/local/cargo/bin/frontend /usr/local/bin/frontend
+# Sailfish templates are compiled into the binary; only static assets (incl.
+# the Make-compiled css/app.css) need to ship. Served relative to the CWD (/).
+COPY --from=builder /usr/src/frontend/static/ static/
+CMD ["frontend"]
