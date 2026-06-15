@@ -1,0 +1,117 @@
+<section id="homepage">
+  <!-- Search bar -->
+  <form class="finder-form home-search" action="/find" method="get">
+    <div class="finder-bar snm-wrapper">
+      <div class="finder-bar-inner snm-container">
+        <div class="fb-pill fb-search">
+          <label>Search</label>
+          <div class="fb-input">
+            <img src="/static/img/search.svg" alt="">
+            <input type="text" name="text" placeholder="e.g. astronomy, festival" autocomplete="off">
+          </div>
+        </div>
+        <div class="fb-pill fb-near" data-island="lookup-place">
+          <div class="fb-near-place">
+            <label>Near</label>
+            <input type="text" name="near" value="<%= search_near %>" placeholder="e.g. Iowa City, IA" autocomplete="off">
+            <input type="hidden" name="longitude" value="<%= search_longitude %>">
+            <input type="hidden" name="latitude" value="<%= search_latitude %>">
+          </div>
+        </div>
+        <div class="fb-pill fb-date">
+          <label>From</label>
+          <input type="date" name="beginning">
+        </div>
+        <div class="fb-pill fb-date">
+          <label>Until</label>
+          <input type="date" name="ending">
+        </div>
+        <button type="submit" class="fb-submit" title="Search"><img src="/static/img/search.svg" alt="Search"></button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Intent hero -->
+  <div id="intent-filters" class="snm-wrapper">
+    <div class="snm-container">
+      <h1>What would you like to do <img class="inline-sign" src="/static/img/near.svg" alt="near"> <%= city %>?</h1>
+      <div class="intent-slider">
+        <button type="button" class="intent-nav prev" data-slide="prev" aria-label="Scroll left">&lsaquo;</button>
+        <div class="intent-track">
+          <% for intent in &intents { %>
+            <div class="intent-card">
+              <a href="<%= intent.link %>">
+                <img src="<%= intent.image %>" srcset="<%= intent.image %> 1x, <%= intent.image2x %> 2x" alt="<%= intent.title %>">
+              </a>
+              <a href="<%= intent.link %>" class="intent-title"><%= intent.title %></a>
+              <p><%= intent.description %></p>
+            </div>
+          <% } %>
+        </div>
+        <button type="button" class="intent-nav next" data-slide="next" aria-label="Scroll right">&rsaquo;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Here & Now -->
+  <div id="here-now" class="snm-wrapper">
+    <div class="snm-container">
+      <h2>Here &amp; Now near <%= city %></h2>
+      <% if here_and_now.is_empty() { %>
+        <p class="no-results">No upcoming opportunities found near you right now. <a href="/find">Browse all opportunities</a>.</p>
+      <% } else { %>
+        <div class="opportunity-cards">
+          <% for c in &here_and_now { %>
+            <% include!("../partials/opportunity_card.stpl"); %>
+          <% } %>
+        </div>
+        <a href="<%= here_and_now_link %>" class="see-more">See More Here &amp; Now Opportunities</a>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- By Activity Type -->
+  <div id="by-topic" class="snm-wrapper">
+    <div class="snm-container">
+      <h2>Find &amp; Do Science By Activity Type</h2>
+      <div class="topics">
+        <% for topic in &topics { %>
+          <a href="<%= here_and_now_link %>&descriptors[]=<%= topic.0 %>"><span><%= topic.1 %></span></a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Benefits (anonymous only) -->
+  <% if !authenticated { %>
+    <div id="benefits" class="snm-wrapper">
+      <div class="snm-container">
+        <h2>Benefits of Creating an Account</h2>
+        <div class="benefit">
+          <img src="/static/img/benefits-1.svg" alt="">
+          <div>
+            <strong>Get Customized Recommendations</strong>
+            <p>As you search and save events and projects, our system learns your interests and helps you find better science opportunities for you.</p>
+          </div>
+        </div>
+        <div class="benefit">
+          <img src="/static/img/benefits-2.svg" alt="">
+          <div>
+            <strong>Save Opportunities</strong>
+            <p>Keep track of the science events and projects you're interested in, all in one place.</p>
+          </div>
+        </div>
+        <div class="benefit">
+          <img src="/static/img/benefits-3.svg" alt="">
+          <div>
+            <strong>Help Science Research</strong>
+            <p>Log your participation to help scientists study public engagement in science.</p>
+          </div>
+        </div>
+        <div class="benefits-cta">
+          <a class="action-button primary arrow" href="/signup">Create an Account Now</a>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</section>

@@ -72,6 +72,19 @@ impl ApiClient {
         Ok(req.send().await?)
     }
 
+    /// DELETE `path`, forwarding the session token if present.
+    pub async fn delete(
+        &self,
+        path: &str,
+        token: Option<&str>,
+    ) -> Result<reqwest::Response, AppError> {
+        let mut req = self.client.delete(self.url(path));
+        if let Some(t) = token {
+            req = req.bearer_auth(t);
+        }
+        Ok(req.send().await?)
+    }
+
     /// PUT `body` as JSON to `path`, forwarding the session token if present.
     pub async fn put_json<B: Serialize + ?Sized>(
         &self,

@@ -1,0 +1,23 @@
+<div class="auth-page snm-wrapper">
+  <% if sent { %>
+    <div class="snm-container forgot-alert">
+      <div class="info-message">
+        If your email address exists in our database, you will receive a password
+        recovery link at your email address in a few minutes.
+      </div>
+    </div>
+  <% } %>
+  <div class="snm-container standalone-form">
+    <h1>Forgot Your Password?</h1>
+    <form class="auth-form" action="/forgot" method="post">
+      <label class="field">
+        <span>Email</span>
+        <input type="email" name="email" autocomplete="email" required>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="action-button primary">Send me password reset instructions</button>
+        <a href="/login" class="forgot-link">Back to log in</a>
+      </div>
+    </form>
+  </div>
+</div>

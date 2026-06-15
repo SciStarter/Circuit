@@ -14,6 +14,10 @@
   <script src="/static/js/lookup-place.js" defer></script>
   <script src="/static/js/tag-select.js" defer></script>
   <script src="/static/js/age-range.js" defer></script>
+  <script src="/static/js/opp-time.js" defer></script>
+  <script src="/static/js/opp-actions.js" defer></script>
+  <script src="/static/js/opp-map.js" defer></script>
+  <script src="/static/js/offline.js" defer></script>
 </head>
 <body>
 <div id="htmx-spinner" class="htmx-indicator" aria-hidden="true"></div>
@@ -76,7 +80,7 @@
       <aside class="menu-box mobile-menu" data-panel="menu">
         <% if chrome.authenticated() { %>
           <div class="authenticated">
-            <span class="no-mobile" data-context="header-username"><%= chrome.username() %></span>
+            <span class="no-mobile" data-context="header-username" data-toggle="menu" role="button" tabindex="0" aria-expanded="false"><%= chrome.username() %></span>
             <ul>
               <li class="mobile-only"><a href="/find"><img class="menu-icon" src="/static/img/find-science-opportunities.svg" alt=""> Find Opportunities</a></li>
               <li class="mobile-only"><a href="/my/saved"><img class="menu-icon" src="/static/img/saved-science-opportunities.svg" alt=""> Saved Opportunities</a></li>

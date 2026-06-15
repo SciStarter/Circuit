@@ -1,0 +1,26 @@
+<article class="opportunity-card">
+  <a href="/<%= c.slug %>" class="primary">
+    <img src="<%= c.image %>" alt="" loading="lazy" decoding="async">
+    <div>
+      <h2><%= c.subtitle %></h2>
+      <h1><%= c.title %></h1>
+      <small class="content"><%- c.short_desc_html %></small>
+    </div>
+  </a>
+  <div class="secondary">
+    <div class="info location">
+      <img src="/static/img/location-marker.svg" alt="Location">
+      <div><%= c.location_line %></div>
+    </div>
+    <div class="info time">
+      <img src="/static/img/calendar.svg" alt="When">
+      <div><%= c.time_line %></div>
+    </div>
+    <% if !c.keywords_line.is_empty() { %>
+    <div class="info keywords">
+      <img src="/static/img/tag.svg" alt="Keywords">
+      <div><%= c.keywords_line %></div>
+    </div>
+    <% } %>
+  </div>
+</article>

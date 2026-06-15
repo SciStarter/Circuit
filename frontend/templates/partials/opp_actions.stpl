@@ -1,0 +1,72 @@
+<div id="opp-actions" class="opp-actions" data-slug="<%= slug %>">
+  <div class="opp-action-wrap">
+    <% if authenticated { %>
+      <button class="opp-action" hx-post="/<%= slug %>/save" hx-target="#opp-actions" hx-swap="outerHTML">
+        <span class="oa-icon save<% if did_save { %> marked<% } %>"></span>
+        <span class="oa-label"><% if did_save { %>Saved<% } else { %>Save for Later<% } %></span>
+      </button>
+    <% } else { %>
+      <a class="opp-action" href="/login?next=/<%= slug %>">
+        <span class="oa-icon save"></span>
+        <span class="oa-label">Save for Later</span>
+      </a>
+    <% } %>
+
+    <button class="opp-action" hx-post="/<%= slug %>/like" hx-target="#opp-actions" hx-swap="outerHTML">
+      <span class="oa-icon like<% if did_like { %> marked<% } %>"></span>
+      <span class="oa-label"><% if did_like { %>You liked this<% } else { %>Like<% } %><% if likes > 0 { %> (<%= likes %>)<% } %></span>
+    </button>
+
+    <% if !calendar.is_empty() { %>
+      <details class="opp-action oa-menu">
+        <summary class="oa-summary">
+          <span class="oa-icon calendar"></span>
+          <span class="oa-label">Add to Calendar</span>
+        </summary>
+        <div class="oa-pop oa-pop-cal">
+          <% for c in &calendar { %>
+            <div class="cal-row">
+              <div class="cal-when"><%= c.label %></div>
+              <a href="<%= c.google %>" target="_blank" rel="noopener" data-beacon="calendar:google">Google</a>
+              <a href="<%= c.outlook %>" target="_blank" rel="noopener" data-beacon="calendar:outlook">Outlook</a>
+              <a href="<%= c.office365 %>" target="_blank" rel="noopener" data-beacon="calendar:365">Office 365</a>
+              <a href="<%= c.yahoo %>" target="_blank" rel="noopener" data-beacon="calendar:yahoo">Yahoo</a>
+            </div>
+          <% } %>
+        </div>
+      </details>
+    <% } %>
+
+    <details class="opp-action oa-menu">
+      <summary class="oa-summary">
+        <span class="oa-icon share"></span>
+        <span class="oa-label">Share</span>
+      </summary>
+      <div class="oa-pop">
+        <a href="<%= facebook_url %>" target="_blank" rel="noopener" data-beacon="shared:facebook">Facebook</a>
+        <a href="<%= twitter_url %>" target="_blank" rel="noopener" data-beacon="shared:twitter">X / Twitter</a>
+        <a href="<%= linkedin_url %>" target="_blank" rel="noopener" data-beacon="shared:linkedin">LinkedIn</a>
+        <button type="button" class="oa-copy" data-copy="<%= public_url %>" data-beacon="shared:link">Copy link</button>
+      </div>
+    </details>
+
+    <% if let Some(url) = &weblink { %>
+      <a class="opp-action find-out-more" href="<%= url %>" target="_blank" rel="noopener" data-beacon="interest">
+        <span class="oa-icon visit"></span>
+        <span class="oa-label">Visit Website</span>
+      </a>
+    <% } %>
+
+    <% if authenticated { %>
+      <button class="opp-action" hx-post="/<%= slug %>/didit" hx-target="#opp-actions" hx-swap="outerHTML">
+        <span class="oa-icon didit<% if did_didit { %> marked<% } %>"></span>
+        <span class="oa-label"><% if did_didit { %>You did this<% } else { %>I Did This<% } %></span>
+      </button>
+    <% } else { %>
+      <a class="opp-action" href="/login?next=/<%= slug %>" data-offline-didit="<%= slug %>">
+        <span class="oa-icon didit"></span>
+        <span class="oa-label">I Did This</span>
+      </a>
+    <% } %>
+  </div>
+</div>

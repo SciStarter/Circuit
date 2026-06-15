@@ -564,6 +564,63 @@ footer .partner .description {
     border: 1px solid var(--color-snm-bg-dark);
     padding: 0 1rem;
     margin-right: 1rem;
+    position: relative;
+    min-width: 10rem;
+    justify-content: flex-end;
+  }
+  /* Username acts as the dropdown trigger, with a circular down-arrow cue. */
+  .menu-box .authenticated > span {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: var(--text-small);
+    display: inline-flex;
+    align-items: center;
+  }
+  .menu-box .authenticated > span::after {
+    content: "";
+    margin-left: 1rem;
+    width: 1.5em;
+    height: 1.5em;
+    border-radius: 1em;
+    background-color: var(--color-snm-element-light);
+    background-image: url(/static/img/down-arrow.svg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 0.8em;
+    transition: transform 0.3s;
+  }
+  .menu-box.toggled .authenticated > span::after {
+    transform: rotate(-0.5turn);
+  }
+  /* The menu list collapses into an absolutely-positioned dropdown, revealed
+     when the pill is toggled. On desktop the per-page nav links are
+     `.mobile-only` (hidden), so only Log Out remains. */
+  .menu-box .authenticated > ul {
+    position: absolute;
+    top: 40px;
+    right: -1px;
+    width: 10rem;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.4s, opacity 0.4s;
+    background-color: var(--color-snm-bg-meddark);
+    border: 1px solid var(--color-snm-bg-dark);
+    border-radius: 0 0 6px 6px;
+    z-index: 30;
+  }
+  .menu-box.toggled .authenticated > ul {
+    max-height: 12rem;
+    opacity: 1;
+  }
+  .menu-box.toggled .authenticated {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .menu-box .authenticated li {
+    line-height: 2;
+    padding: 0.25rem 1rem;
+    text-align: right;
   }
 
   /* Search overlay centered on desktop */
@@ -1053,6 +1110,883 @@ footer .partner .description {
   }
 }
 
+/* ===== Home page ===== */
+#homepage h1,
+#homepage h2 {
+  font-family: var(--font-heading);
+  font-weight: bold;
+  color: var(--color-snm-bg-meddark);
+}
+#intent-filters h1 {
+  font-size: var(--text-larger);
+  margin: 2rem 0 1.5rem;
+}
+#intent-filters .inline-sign {
+  display: inline-block; /* Tailwind Preflight makes img display:block */
+  height: 1.1em;
+  vertical-align: middle;
+}
+#here-now,
+#by-topic,
+#benefits {
+  padding-block: 2rem;
+}
+#here-now h2,
+#by-topic h2,
+#benefits h2 {
+  font-size: var(--text-large);
+  margin-bottom: 1.5rem;
+}
+#here-now {
+  background-color: var(--color-snm-bg-light);
+}
+
+/* Intent cards: horizontal slider (3 visible on desktop) with scroll buttons. */
+.intent-slider {
+  position: relative;
+}
+.intent-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 0.5rem;
+}
+.intent-track::-webkit-scrollbar {
+  display: none;
+}
+.intent-card {
+  flex: 0 0 80%;
+  scroll-snap-align: start;
+  border: 1px solid var(--color-snm-card);
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #fff;
+  padding-bottom: 1rem;
+}
+.intent-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+.intent-nav {
+  position: absolute;
+  top: calc(50% - 1.5rem);
+  width: 3rem;
+  height: 3rem;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--color-snm-action);
+  color: var(--color-snm-element-dark);
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 3px 6px var(--color-snm-shadow);
+  display: none;
+  z-index: 2;
+}
+.intent-nav.prev {
+  left: -1rem;
+}
+.intent-nav.next {
+  right: -1rem;
+}
+.intent-card .intent-title {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: bold;
+  color: var(--color-snm-element-med);
+  text-decoration: underline;
+  margin: 0.5rem 1rem 0.25rem;
+}
+.intent-card p {
+  font-size: var(--text-smaller);
+  color: var(--color-snm-glance);
+  line-height: 1.4;
+  margin: 0 1rem;
+}
+
+/* Here & Now cards: a responsive grid, not the finder's full-width stack. */
+#here-now .opportunity-cards {
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+#here-now .opportunity-card {
+  margin-bottom: 0;
+}
+.see-more {
+  display: inline-block;
+  margin-top: 1.5rem;
+  font-weight: bold;
+  color: var(--color-snm-element-med);
+}
+
+/* Tablet+: show 3 intent cards with nav buttons, and 3 Here & Now per row. */
+@media (min-width: 768px) {
+  .intent-card {
+    flex: 0 0 calc((100% - 2rem) / 3);
+  }
+  .intent-nav {
+    display: block;
+  }
+  #here-now .opportunity-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* By Activity Type chips */
+#by-topic .topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+#by-topic .topics a {
+  display: block;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-snm-element-med);
+  border-radius: 20px;
+  color: var(--color-snm-element-med);
+  font-size: var(--text-smaller);
+}
+#by-topic .topics a:hover {
+  background-color: var(--color-snm-element-med);
+  color: #fff;
+}
+
+/* Benefits */
+#benefits .benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+#benefits .benefit img {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+#benefits .benefit strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+#benefits .benefit p {
+  color: var(--color-snm-glance);
+  line-height: 1.4;
+}
+.benefits-cta {
+  margin-top: 1rem;
+}
+
+/* Owner/editor management bar (full width, above the two columns), styled as a
+   nav-tab bar: a bottom underline with the "Public View" tab breaking it. */
+.owner-view {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin: 1rem auto 2rem;
+  border-bottom: 1px solid #dee2e6;
+}
+.owner-view .ov-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+  color: var(--color-snm-element-dark);
+  padding: 0.5rem 1rem;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-bottom-color: #fff;
+  border-radius: 0.25rem 0.25rem 0 0;
+  margin-bottom: -1px; /* overlap the bar's underline so the tab connects */
+}
+.owner-view .ov-tab img {
+  width: 18px;
+  height: 18px;
+  /* eye.svg is white-filled (meant to be recolored); render it dark here. */
+  filter: brightness(0);
+}
+.owner-view .ov-status {
+  flex-grow: 1;
+  margin-bottom: 8px;
+  border: 1px solid var(--color-snm-border);
+  background-color: #f4f4f4;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: var(--text-smaller);
+  line-height: 1.4;
+}
+.owner-view .ov-status.hidden {
+  border-color: var(--color-snm-info);
+  color: var(--color-snm-info);
+  background-color: #ffe0e0;
+  font-weight: bold;
+}
+.owner-view .ov-status form {
+  display: inline;
+}
+.owner-view .ov-status button {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin-left: 0.4rem;
+  font: inherit;
+  font-weight: bold;
+  color: var(--color-snm-element-med);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.owner-view .ov-status.hidden button {
+  color: var(--color-snm-info);
+}
+.owner-view .ov-edit {
+  margin-left: auto;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  /* Match the gray status box's height: same vertical padding, font, line-height. */
+  padding: 6px 1.25rem;
+  font-size: var(--text-smaller);
+  line-height: 1.4;
+}
+@media (max-width: 699px) {
+  .owner-view {
+    flex-direction: column;
+    align-items: stretch;
+    border-bottom: 0;
+  }
+  .owner-view .ov-tab {
+    margin-bottom: 0;
+    border-bottom-color: #dee2e6;
+  }
+  .owner-view .ov-edit {
+    margin-left: 0;
+  }
+}
+
+/* ===== Entity (opportunity) detail page =====
+   Ported from Opportunity.vue's SCSS: dark-red title, medlight quick-label
+   pills, glance-grey pitch, bold info rows, bordered More Information card,
+   teal-outlined tags, and a light sticky related sidebar. */
+.opportunity {
+  padding-block: 1rem 3rem;
+}
+.opp-breadcrumbs {
+  font-size: var(--text-smaller);
+  margin-bottom: 1rem;
+}
+.opp-breadcrumbs a {
+  color: var(--color-snm-element-med);
+}
+
+/* Header: image + title/subtitle/labels. */
+.opp-head-top {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.opportunity-image {
+  width: 100%;
+  max-width: 320px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--color-snm-border);
+}
+.opportunity-name strong {
+  display: block;
+  font-family: var(--font-content);
+  color: var(--color-snm-element-dark);
+  font-weight: bold;
+  font-size: var(--text-smaller);
+  margin-bottom: 0.5rem;
+}
+.opportunity-name h1 {
+  font-family: var(--font-heading);
+  font-size: var(--text-large);
+  font-weight: bold;
+  color: var(--color-snm-info);
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+}
+
+/* Cost / venue / age "quick label" pills. */
+.opportunity .involvement {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.opportunity .quick-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: bold;
+  background-color: var(--color-snm-bg-medlight);
+  color: var(--color-snm-bg-meddark);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: var(--text-small);
+}
+.opportunity .quick-label img {
+  width: 20px;
+  height: 20px;
+}
+
+.elevator-pitch {
+  font-family: var(--font-content);
+  font-size: var(--text-small);
+  line-height: 1.4;
+  color: var(--color-snm-glance);
+  margin: 1rem 0 2rem;
+}
+
+/* Secondary info rows (location / time / weblink / keywords) — bold text, no box. */
+.opportunity .secondary {
+  margin-top: 1rem;
+}
+.opportunity .secondary .info {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1.6rem;
+  font-weight: bold;
+}
+.opportunity .secondary .info.keywords {
+  margin-bottom: 0;
+}
+.opportunity .secondary .info img {
+  width: 16px;
+  height: 16px;
+  margin: 0.25rem 20px 0 0;
+  flex-shrink: 0;
+}
+.opportunity .secondary .info a {
+  color: var(--color-snm-element-med);
+}
+.see-on-map {
+  font-weight: bold;
+  text-decoration: underline;
+}
+/* "See on map" modal. */
+.map-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.map-modal[hidden] {
+  display: none;
+}
+.map-modal-card {
+  position: relative;
+  width: 90vw;
+  max-width: 900px;
+  height: 70vh;
+  background-color: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px var(--color-snm-shadow);
+}
+.map-modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 1px 4px var(--color-snm-shadow);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.opp-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* Offline "I did this" explainer modal. */
+.didit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.didit-modal[hidden] {
+  display: none;
+}
+.didit-card {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 480px;
+  box-shadow: 0 6px 24px var(--color-snm-shadow);
+}
+.didit-card h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1rem;
+  font-family: var(--font-heading);
+  font-weight: bold;
+  font-size: var(--text-medium);
+  color: var(--color-snm-bg-dark);
+  margin-bottom: 0.75rem;
+}
+.didit-close {
+  background: none;
+  border: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-snm-hint);
+}
+.didit-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.action-button.secondary {
+  background-color: var(--color-snm-bg-light);
+  color: var(--color-snm-element-med);
+}
+.opportunity-time li {
+  list-style: none;
+}
+
+/* Interactive action bar: medlight band of round icon buttons. */
+.opp-actions {
+  margin: 1.5rem 0;
+}
+.opp-action-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--color-snm-bg-medlight);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+.opp-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 84px;
+  padding: 0.25rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+.opp-action .oa-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+/* Recolor the (white-filled) SVG icons via CSS mask so they take the teal. */
+.opp-action .oa-icon::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-snm-element-med);
+  -webkit-mask: var(--oa-img) center / 22px no-repeat;
+  mask: var(--oa-img) center / 22px no-repeat;
+}
+.opp-action .oa-icon.save {
+  --oa-img: url(/static/img/saved-science-opportunities.svg);
+}
+.opp-action .oa-icon.like {
+  --oa-img: url(/static/img/like.svg);
+}
+.opp-action .oa-icon.didit {
+  --oa-img: url(/static/img/plus.svg);
+}
+.opp-action .oa-icon.visit {
+  --oa-img: url(/static/img/link.svg);
+}
+.opp-action .oa-icon.marked::before {
+  background-color: #b5b5b5;
+}
+/* Visit Website uses a yellow circle with a dark icon. */
+.opp-action.find-out-more .oa-icon {
+  background-color: var(--color-snm-heading-ondark);
+}
+.opp-action.find-out-more .oa-icon::before {
+  background-color: var(--color-snm-element-dark);
+}
+.opp-action .oa-label {
+  font-size: var(--text-smallest);
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.1;
+  color: #000;
+}
+.opp-action .oa-icon.share {
+  --oa-img: url(/static/img/share.svg);
+}
+.opp-action .oa-icon.calendar {
+  --oa-img: url(/static/img/calendar.svg);
+}
+
+/* Share / Add-to-Calendar popovers (native <details>). */
+.oa-menu {
+  position: relative;
+}
+.oa-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+}
+.oa-summary::-webkit-details-marker {
+  display: none;
+}
+.oa-pop {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  margin-top: 4px;
+  background-color: #fff;
+  border: 1px solid var(--color-snm-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--color-snm-shadow);
+  padding: 0.5rem;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+}
+.oa-pop a,
+.oa-pop .oa-copy {
+  display: block;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  color: var(--color-snm-element-med);
+  background: none;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.oa-pop a:hover,
+.oa-pop .oa-copy:hover {
+  background-color: var(--color-snm-bg-light);
+}
+.oa-pop-cal {
+  min-width: 240px;
+}
+.cal-row {
+  padding: 0.4rem;
+  border-bottom: 1px solid var(--color-snm-border);
+}
+.cal-row:last-child {
+  border-bottom: 0;
+}
+.cal-when {
+  font-size: var(--text-smallest);
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+.cal-row a {
+  display: inline-block;
+  margin: 0 0.5rem 0.15rem 0;
+  font-size: var(--text-smaller);
+  color: var(--color-snm-element-med);
+}
+
+/* "Hosted by" / "Provided to SNM by" attributions. */
+.partner-and-org {
+  margin: 1.5rem 0;
+}
+.partner-and-org figure {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.partner-and-org figcaption {
+  font-family: var(--font-heading);
+  font-weight: bold;
+  font-size: var(--text-smaller);
+  color: var(--color-snm-caption);
+  min-width: 70px;
+}
+.partner-and-org img {
+  object-fit: contain;
+  min-height: 32px;
+  max-height: 64px;
+  max-width: 220px;
+  width: auto;
+}
+
+/* More Information section. */
+.more-info h2,
+.tags h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-large);
+  font-weight: bold;
+  color: var(--color-snm-bg-dark);
+  margin-bottom: 1rem;
+}
+.more-info .description {
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+.more-info .description :is(p, ul, ol) {
+  margin-bottom: 1rem;
+}
+.more-info .item {
+  margin: 0.4rem 0;
+}
+.opp-label {
+  font-weight: bold;
+}
+
+/* Tags: teal-outlined pills linking back into the finder. */
+.tags {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.tags h2 {
+  width: 100%;
+}
+.tags a {
+  display: block;
+  padding: 8px;
+  border: 1px solid var(--color-snm-element-med);
+  color: var(--color-snm-element-med);
+  border-radius: 10px;
+  margin: 0 8px 8px 0;
+  font-size: var(--text-smaller);
+}
+
+/* Reviews section. */
+.reviews {
+  margin-top: 2.5rem;
+}
+.reviews-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.reviews-header h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-large);
+  font-weight: bold;
+  color: var(--color-snm-bg-dark);
+  margin: 0;
+}
+.rev-avg {
+  color: var(--color-snm-action-border);
+  font-size: var(--text-small);
+  margin-left: 0.4rem;
+}
+.review-add {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: var(--color-snm-bg-light);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.review-add textarea {
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--color-snm-border);
+  border-radius: 6px;
+}
+.review-add button {
+  align-self: flex-start;
+}
+/* Pure-CSS star rating input (row-reverse so the highlight fills left). */
+.star-input {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+.star-input input {
+  display: none;
+}
+.star-input label {
+  color: #ccc;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.star-input label:hover,
+.star-input label:hover ~ label,
+.star-input input:checked ~ label {
+  color: var(--color-snm-action);
+}
+.review {
+  border-top: 1px solid var(--color-snm-border);
+  padding: 1rem 0;
+}
+.review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.review .stars {
+  color: #ccc;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+}
+.review .stars .on {
+  color: var(--color-snm-action);
+}
+.report {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-size: var(--text-smaller);
+  color: var(--color-snm-hint);
+}
+.reported {
+  font-size: var(--text-smaller);
+  color: var(--color-snm-element-med);
+  font-weight: bold;
+}
+.review-meta {
+  font-size: var(--text-smaller);
+  font-style: italic;
+  color: var(--color-snm-caption);
+  margin: 0.25rem 0;
+}
+.review-comment {
+  line-height: 1.5;
+}
+.no-reviews {
+  color: var(--color-snm-hint);
+}
+
+/* "Nearby & Similar" sidebar. */
+.related h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-medium);
+  font-weight: bold;
+  color: var(--color-snm-element-dark);
+  margin-bottom: 1rem;
+}
+.related-item {
+  display: block;
+  padding: 0 0 1.5rem;
+  color: inherit;
+}
+.related-item h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-small);
+  font-weight: bold;
+  color: var(--color-snm-element-med);
+  text-decoration: underline;
+  margin-bottom: 0.25rem;
+}
+.related-item .loc,
+.related-item .when {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: var(--text-smaller);
+  color: var(--color-snm-element-dark);
+  margin: 3px 0;
+}
+.related-item img {
+  width: 14px;
+  height: 14px;
+}
+
+@media (min-width: 768px) {
+  .opp-head-top {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .opportunity-image {
+    flex-shrink: 0;
+    max-width: 200px;
+    max-height: 180px;
+    object-fit: contain;
+    margin: 0 1rem 1rem 0;
+  }
+  .opp-head-info {
+    flex: 1;
+  }
+  .opportunity-name h1 {
+    font-size: var(--text-largest);
+    margin-bottom: 1rem;
+  }
+  /* More Information becomes a bordered card on wide screens. */
+  .more-info {
+    border: 1px solid var(--color-snm-border);
+    border-radius: 6px;
+    margin: 2rem 0;
+    padding: 1rem;
+  }
+  .more-info > :not(:first-child) {
+    border-top: 1px solid var(--color-snm-border);
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+  .more-info .partner-and-org figure {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+/* Two-column layout: main + light sticky related sidebar on wide screens. */
+@media (min-width: 960px) {
+  .opp-columns {
+    display: flex;
+    align-items: flex-start;
+  }
+  .opportunity-left {
+    flex: 0 0 66.66%;
+    max-width: 66.66%;
+    padding-right: 2rem;
+  }
+  .opportunity-right {
+    flex: 1;
+    padding: 1rem 0 1rem 2rem;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    background-color: #fbfbfb;
+    border-left: 1px solid #efefef;
+    min-height: 100vh;
+  }
+}
+
 .pagination {
   display: flex;
   align-items: center;
@@ -1107,6 +2041,108 @@ footer .partner .description {
 }
 .auth-alt {
   margin-top: 1.5rem;
+  font-size: var(--text-smaller);
+}
+
+/* Standalone auth card (login / signup / forgot / scistarter), ported from the
+   old `.standalone-form`. */
+.standalone-form {
+  padding: 2rem 3rem;
+  border: 1px solid var(--color-snm-border);
+  max-width: 800px;
+  margin-inline: auto;
+  border-radius: 6px;
+}
+.standalone-form h1 {
+  font-size: var(--text-larger);
+  color: var(--color-snm-bg-meddark);
+  text-align: center;
+  font-weight: bold;
+  font-family: var(--font-heading);
+  margin-bottom: 1rem;
+}
+.center {
+  text-align: center;
+}
+
+/* `/account`: login + signup side by side, stacking on mobile. */
+.account-columns {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.account-columns .standalone-form {
+  width: 48%;
+}
+@media (max-width: 767px) {
+  .account-columns {
+    flex-direction: column;
+  }
+  .account-columns .standalone-form {
+    width: 100%;
+  }
+}
+
+/* "Do you have a SciStarter account?" prompt strip. */
+.auth-scistarter {
+  margin: 0.6rem auto 1.5rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--color-snm-border);
+  border-bottom: 1px solid var(--color-snm-border);
+  font-size: var(--text-smaller);
+}
+.auth-scistarter img {
+  display: inline-block;
+  width: 72px;
+  vertical-align: middle;
+  position: relative;
+  top: 2px;
+}
+
+/* Signup checkboxes (terms / newsletter). The generic `.auth-form input` rule
+   styles text fields, so reset checkboxes back to their native look. */
+.auth-form .check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: var(--text-smaller);
+}
+.auth-form input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  border-radius: 0;
+  margin-top: 0.2rem;
+}
+.has-required {
+  color: var(--color-snm-info);
+  font-size: var(--text-smallest);
+}
+.has-optional {
+  color: var(--color-snm-hint);
+  font-weight: 400;
+  font-size: var(--text-smallest);
+}
+
+/* SciStarter legal text. */
+.legal {
+  margin-top: 2rem;
+  font-size: 90%;
+}
+
+/* Forgot-password confirmation banner. */
+.forgot-alert {
+  max-width: 800px;
+  margin: 0 auto 1.5rem;
+}
+.info-message {
+  background-color: var(--color-snm-note);
+  border: 1px solid var(--color-snm-action-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+.forgot-link {
   font-size: var(--text-smaller);
 }
 

@@ -1,0 +1,18 @@
+<% if let Some(err) = &login.error { %>
+  <div class="form-error"><%- err %></div>
+<% } %>
+<form class="auth-form" action="/login" method="post">
+  <input type="hidden" name="next" value="<%= login.next %>">
+  <label class="field">
+    <span>Email</span>
+    <input type="email" name="email" autocomplete="email" value="<%= login.email %>" required>
+  </label>
+  <label class="field">
+    <span>Password</span>
+    <input type="password" name="password" autocomplete="current-password" required>
+  </label>
+  <div class="form-actions">
+    <button type="submit" class="action-button primary">Log in</button>
+    <a href="/forgot" class="forgot-link">Forgot password?</a>
+  </div>
+</form>

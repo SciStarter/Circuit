@@ -4,6 +4,7 @@ mod config;
 mod error;
 mod iplookup;
 mod markdown;
+mod opportunity;
 mod proxy;
 mod render;
 mod routes;
@@ -12,8 +13,7 @@ mod session;
 use poem::endpoint::StaticFilesEndpoint;
 use poem::listener::TcpListener;
 use poem::middleware::CookieJarManager;
-use poem::web::Redirect;
-use poem::{get, handler, post, EndpointExt, IntoResponse, Route, Server};
+use poem::{get, handler, post, EndpointExt, Route, Server};
 
 use crate::api::ApiClient;
 use crate::config::Config;
@@ -28,12 +28,6 @@ pub struct AppState {
 #[handler]
 fn healthz() -> &'static str {
     "ok"
-}
-
-/// The home page is built in Phase 3; until then, send the root to the finder.
-#[handler]
-fn home() -> impl IntoResponse {
-    Redirect::see_other("/find")
 }
 
 #[tokio::main]
@@ -56,14 +50,39 @@ async fn main() -> std::io::Result<()> {
 
     let app = Route::new()
         .at("/healthz", get(healthz))
-        .at("/", get(home))
+        .at("/", get(routes::home::home))
         .at("/find", get(routes::finder::find))
         .at(
             "/login",
             get(routes::auth::login_form).post(routes::auth::login_submit),
         )
+        .at(
+            "/signup",
+            get(routes::auth::signup_form).post(routes::auth::signup_submit),
+        )
+        .at(
+            "/login-scistarter",
+            get(routes::auth::scistarter_form).post(routes::auth::scistarter_submit),
+        )
+        .at(
+            "/forgot",
+            get(routes::auth::forgot_form).post(routes::auth::forgot_submit),
+        )
+        .at("/account", get(routes::auth::account))
         .at("/logout", post(routes::auth::logout))
         .at("/api/*path", proxy::api_proxy)
+        // Interactive action-bar toggles (HTMX) on a detail page.
+        .at("/:slug/like", post(routes::entity::toggle_like))
+        .at("/:slug/save", post(routes::entity::toggle_save))
+        .at("/:slug/didit", post(routes::entity::toggle_didit))
+        .at("/:slug/reviews", post(routes::entity::add_review))
+        .at("/:slug/report-review", post(routes::entity::report_review))
+        // Owner/editor management actions on a detail page.
+        .at("/:slug/status", post(routes::entity::owner_set_status))
+        .at("/:slug/visibility", post(routes::entity::owner_set_visibility))
+        // Entity detail by slug. Registered last; Poem matches static segments
+        // (`/find`, `/login`, …) before this dynamic one.
+        .at("/:slug", get(routes::entity::entity_detail))
         .nest("/static", StaticFilesEndpoint::new("static"))
         .with(CookieJarManager::new())
         .data(state);

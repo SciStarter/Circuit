@@ -54,6 +54,18 @@
       return;
     }
 
+    // Home-page intent slider scroll buttons.
+    var slide = e.target.closest("[data-slide]");
+    if (slide) {
+      var slider = slide.closest(".intent-slider");
+      var track = slider && slider.querySelector(".intent-track");
+      if (track) {
+        var dir = slide.dataset.slide === "next" ? 1 : -1;
+        track.scrollBy({ left: dir * track.clientWidth * 0.9, behavior: "smooth" });
+      }
+      return;
+    }
+
     if (e.target.closest("[data-cookie-consent]")) {
       window.localStorage.setItem("cookie-consent", "true");
       var notice = document.querySelector("[data-cookie-notice]");
@@ -70,6 +82,17 @@
         if (backdrop) backdrop.hidden = !open;
       }
     }
+  });
+
+  // Keyboard activation for non-native toggles (the authenticated username
+  // pill is a role="button" <span>). Native buttons/links handle Enter/Space
+  // themselves, so we scope this to role="button" to avoid double-toggling.
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var toggle = e.target.closest('[data-toggle][role="button"]');
+    if (!toggle) return;
+    e.preventDefault();
+    togglePanel(toggle.dataset.toggle);
   });
 
   // Quick-filter toggles: clicking the already-selected option clears it

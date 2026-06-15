@@ -10,7 +10,7 @@ use crate::api::json_or_err;
 use crate::chrome::Chrome;
 use crate::error::AppError;
 use crate::iplookup;
-use crate::markdown;
+use crate::opportunity::CardView;
 use crate::render::{page, Render};
 use crate::session::token_from_jar;
 use crate::AppState;
@@ -185,73 +185,6 @@ impl FindParams {
 
     fn has_descriptor(&self, value: &str) -> bool {
         self.descriptors.iter().any(|d| d == value)
-    }
-}
-
-/// Per-card view model with display strings precomputed so the template stays
-/// logic-free. (Will be promoted to a shared partial when entity detail reuses
-/// the card in Phase 3.)
-struct CardView {
-    slug: String,
-    title: String,
-    subtitle: String,
-    short_desc_html: String,
-    image: String,
-    location_line: String,
-    time_line: String,
-    keywords_line: String,
-}
-
-impl CardView {
-    fn from(opp: OpportunityExterior) -> CardView {
-        let image = if opp.image_url.trim().is_empty() {
-            "/static/img/no-image-thumb.jpg".to_string()
-        } else {
-            opp.image_url.clone()
-        };
-
-        let location_line = if opp.is_online {
-            "Online".to_string()
-        } else {
-            let mut parts = Vec::new();
-            if !opp.address_city.trim().is_empty() {
-                parts.push(opp.address_city.clone());
-            }
-            if !opp.address_state.trim().is_empty() {
-                parts.push(opp.address_state.clone());
-            }
-            if parts.is_empty() {
-                opp.location_name.clone()
-            } else {
-                parts.join(", ")
-            }
-        };
-
-        let time_line = match opp.start_datetimes.first() {
-            Some(dt) => dt.format("%b %-d, %Y").to_string(),
-            None => "Available any time".to_string(),
-        };
-
-        // Card keywords/tags line (the old card's `.info keywords`).
-        let mut tags: Vec<&String> = opp.tags.iter().collect();
-        tags.sort();
-        let keywords_line = tags
-            .into_iter()
-            .take(6)
-            .cloned()
-            .collect::<Vec<_>>()
-            .join(", ");
-
-        CardView {
-            slug: opp.slug,
-            title: opp.title,
-            subtitle: opp.organization_name,
-            short_desc_html: markdown::to_html(&opp.short_desc),
-            image,
-            location_line,
-            time_line,
-            keywords_line,
-        }
     }
 }
 

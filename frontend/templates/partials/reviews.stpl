@@ -1,0 +1,39 @@
+<div id="reviews" class="reviews opportunity-section">
+  <div class="reviews-header">
+    <h2>Reviews<% if let Some(avg) = average { %> <span class="rev-avg">&#9733; <%= format!("{:.1}", avg) %></span><% } %></h2>
+    <% if !authenticated { %>
+      <a class="action-button secondary" href="/login?next=/<%= slug %>">Add Review</a>
+    <% } %>
+  </div>
+
+  <% if authenticated { %>
+    <form class="review-add" hx-post="/<%= slug %>/reviews" hx-target="#reviews" hx-swap="outerHTML">
+      <div class="star-input">
+        <input type="radio" name="rating" id="rv5" value="5" required><label for="rv5" title="5 stars">&#9733;</label>
+        <input type="radio" name="rating" id="rv4" value="4"><label for="rv4" title="4 stars">&#9733;</label>
+        <input type="radio" name="rating" id="rv3" value="3"><label for="rv3" title="3 stars">&#9733;</label>
+        <input type="radio" name="rating" id="rv2" value="2"><label for="rv2" title="2 stars">&#9733;</label>
+        <input type="radio" name="rating" id="rv1" value="1"><label for="rv1" title="1 star">&#9733;</label>
+      </div>
+      <textarea name="comment" rows="3" placeholder="Share your experience&hellip;"></textarea>
+      <button type="submit" class="action-button primary">Submit Review</button>
+    </form>
+  <% } %>
+
+  <% if reviews.is_empty() { %>
+    <p class="no-reviews">No reviews yet.</p>
+  <% } else { %>
+    <% for r in &reviews { %>
+      <div class="review">
+        <div class="review-top">
+          <span class="stars"><% for i in 1i16..=5 { %><span class="<% if i <= r.rating { %>on<% } %>">&#9733;</span><% } %></span>
+          <% if authenticated { %>
+            <button class="report" hx-post="/<%= slug %>/report-review" hx-vals='{"id": <%= r.id %>}' hx-target="this" hx-swap="outerHTML" title="Report this review">&#9873; Report</button>
+          <% } %>
+        </div>
+        <div class="review-meta"><%= r.username %> &bull; <%= r.when_label %></div>
+        <div class="review-comment content"><%- r.comment_html %></div>
+      </div>
+    <% } %>
+  <% } %>
+</div>

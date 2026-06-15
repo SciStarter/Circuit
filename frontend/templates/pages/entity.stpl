@@ -1,0 +1,204 @@
+<article class="opportunity snm-wrapper">
+  <% if show_owner_bar { %>
+    <div class="snm-container owner-view">
+      <span class="ov-tab"><img src="/static/img/eye.svg" alt=""> Public View</span>
+      <% if withdrawn { %>
+        <div class="ov-status hidden">
+          This opportunity is hidden.
+          <form method="post" action="/<%= slug %>/visibility">
+            <input type="hidden" name="withdrawn" value="false">
+            <button type="submit">Unhide it</button>
+          </form>
+        </div>
+      <% } else { %>
+        <div class="ov-status">
+          This opportunity is
+          <% if status_kind == "declined" { %>
+            declined by Science Near Me.
+          <% } else if status_kind == "live" { %>
+            live.
+            <form method="post" action="/<%= slug %>/visibility">
+              <input type="hidden" name="withdrawn" value="true">
+              <button type="submit">Hide</button>
+            </form>
+          <% } else if status_kind == "rejected" { %>
+            rejected.
+          <% } else if status_kind == "draft" { %>
+            in draft.
+          <% } else { %>
+            pending approval.
+            <% if can_manage { %>
+              <form method="post" action="/<%= slug %>/status"><input type="hidden" name="status" value="publish"><button type="submit">Publish</button></form> |
+              <form method="post" action="/<%= slug %>/status"><input type="hidden" name="status" value="reject"><button type="submit">Reject</button></form> |
+              <form method="post" action="/<%= slug %>/status"><input type="hidden" name="status" value="draft"><button type="submit">Return to draft</button></form>
+            <% } %>
+          <% } %>
+        </div>
+      <% } %>
+      <a class="ov-edit action-button primary" href="/my/opportunity/<%= uid %>">Edit Opportunity</a>
+    </div>
+  <% } %>
+  <div class="snm-container opp-columns">
+    <div class="opportunity-left">
+      <div class="opp-breadcrumbs">
+        <% if from_search { %>
+          <a href="/find">&laquo; Back to Search</a>
+        <% } else { %>
+          <a href="/">Home</a> &nbsp;&gt;&nbsp;
+          <a href="/find">Search Opportunities</a> &nbsp;&gt;&nbsp;
+          <%= title %>
+        <% } %>
+      </div>
+
+      <div class="opp-head opportunity-section">
+        <div class="opp-head-top">
+          <% if let Some(img) = &image { %>
+            <img src="<%= img %>" class="opportunity-image" title="<%= image_credit %>" alt="">
+          <% } %>
+          <div class="opp-head-info">
+            <div class="opportunity-name">
+              <% if !subtitle.is_empty() { %><strong><%= subtitle %></strong><% } %>
+              <h1><%= title %></h1>
+            </div>
+            <div class="involvement">
+              <% if let Some(cost) = &cost_label { %>
+                <span class="quick-label"><img src="/static/img/cost.svg" alt=""> <%= cost %></span>
+              <% } %>
+              <% if let Some(age) = &age_label { %>
+                <span class="quick-label"><%= age %></span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <% if !short_desc_html.is_empty() { %>
+          <div class="elevator-pitch content"><%- short_desc_html %></div>
+        <% } %>
+
+        <div class="secondary">
+          <div class="info location">
+            <img src="/static/img/location-marker.svg" alt="Location">
+            <div>
+              <%= location_line %>
+              <% for line in &address_lines { %><br><%= line %><% } %>
+              <% if map_geojson.is_some() { %>
+                <br><a href="#opp-map" class="see-on-map" data-toggle-map>see on map</a>
+              <% } %>
+            </div>
+          </div>
+          <div class="info time">
+            <img src="/static/img/calendar.svg" alt="When">
+            <div data-island="opp-time" data-starts="<%= starts_json %>" data-ends="<%= ends_json %>" data-has-end="<%= has_end %>"><%= time_line %></div>
+          </div>
+          <% if let Some(url) = &weblink { %>
+            <div class="info weblink">
+              <img src="/static/img/link.svg" alt="Website">
+              <a href="<%= url %>" target="_blank" rel="noopener" style="overflow-wrap:break-word"><%= url %></a>
+            </div>
+          <% } %>
+          <% if !keywords_line.is_empty() { %>
+            <div class="info keywords">
+              <img src="/static/img/tag.svg" alt="Keywords">
+              <div><%= keywords_line %></div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <% if let Some(geo) = &map_geojson { %>
+        <div id="opp-map-modal" class="map-modal" hidden>
+          <div class="map-modal-card">
+            <button type="button" class="map-modal-close" data-close-map aria-label="Close map">&times;</button>
+            <div id="opp-map" class="opp-map" data-geojson='<%= geo %>'></div>
+          </div>
+        </div>
+      <% } %>
+
+      <%- actions_html %>
+
+      <% if organization_logo_url.is_some() || !organization_name.is_empty() { %>
+        <div class="partner-and-org">
+          <figure>
+            <figcaption>Hosted by</figcaption>
+            <% if let Some(site) = &organization_website { %><a href="<%= site %>" target="_blank" rel="noopener"><% } %>
+            <% if let Some(logo) = &organization_logo_url { %>
+              <img src="<%= logo %>" alt="<%= organization_name %>" title="<%= organization_name %>">
+            <% } else { %>
+              <span><%= organization_name %></span>
+            <% } %>
+            <% if organization_website.is_some() { %></a><% } %>
+          </figure>
+        </div>
+      <% } %>
+
+      <div class="more-info opportunity-section">
+        <h2>More Information</h2>
+        <% if !description_html.is_empty() { %>
+          <div class="description content"><%- description_html %></div>
+        <% } %>
+
+        <p class="item"><span class="opp-label">Ticket Required:</span> <%= if ticket_required { "Yes" } else { "No" } %></p>
+        <% if let Some(min) = min_age { %><p class="item"><span class="opp-label">Minimum Age:</span> <%= min %></p><% } %>
+        <% if let Some(max) = max_age { %><p class="item"><span class="opp-label">Maximum Age:</span> <%= max %></p><% } %>
+        <% if !languages_line.is_empty() { %><p class="item"><span class="opp-label">Languages:</span> <%= languages_line %></p><% } %>
+
+        <% if partner_logo_url.is_some() || !partner_name.is_empty() { %>
+          <div class="partner-and-org">
+            <figure>
+              <figcaption>Provided to SNM by</figcaption>
+              <% if let Some(site) = &partner_website { %><a href="<%= site %>" target="_blank" rel="noopener"><% } %>
+              <% if let Some(logo) = &partner_logo_url { %>
+                <img src="<%= logo %>" alt="<%= partner_name %>" title="<%= partner_name %>">
+              <% } else { %>
+                <span><%= partner_name %></span>
+              <% } %>
+              <% if partner_website.is_some() { %></a><% } %>
+            </figure>
+          </div>
+        <% } %>
+      </div>
+
+      <% if !tags.is_empty() { %>
+        <div class="tags opportunity-section">
+          <h2>Tags</h2>
+          <% for tag in &tags { %>
+            <a href="/find?text=<%= tag %>"><%= tag %></a>
+          <% } %>
+        </div>
+      <% } %>
+
+      <%- reviews_html %>
+    </div>
+
+    <div class="opportunity-right">
+      <% if !related.is_empty() { %>
+        <div class="related">
+          <h2>Nearby &amp; Similar Opportunities</h2>
+          <% for rec in &related { %>
+            <a href="/<%= rec.slug %>" class="related-item">
+              <h3><%= rec.title %></h3>
+              <div class="loc"><img src="/static/img/location-marker.svg" alt=""> <%= rec.location_line %></div>
+              <div class="when"><img src="/static/img/calendar.svg" alt=""> <%= rec.time_line %></div>
+            </a>
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Offline "I did this" explainer (shown by offline.js for anonymous users) -->
+  <div id="didit-explainer" class="didit-modal" hidden>
+    <div class="didit-card">
+      <h2>Thanks for letting us know! But&hellip;
+        <button type="button" class="didit-close" data-close-didit aria-label="Close">&times;</button>
+      </h2>
+      <p>We saved that you did this in your browser. Create an account so you don't lose
+        credit for your participation &mdash; and to get better recommendations and save
+        opportunities for later.</p>
+      <div class="didit-actions">
+        <a class="action-button primary" href="/signup?next=/<%= slug %>">Create an account</a>
+        <a class="action-button secondary" href="/login?next=/<%= slug %>">Sign In</a>
+      </div>
+    </div>
+  </div>
+</article>

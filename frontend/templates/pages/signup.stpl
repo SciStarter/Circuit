@@ -1,15 +1,15 @@
 <div class="auth-page snm-wrapper">
   <div class="snm-container standalone-form">
-    <h1>Log In</h1>
+    <h1>Create an Account</h1>
 
     <p class="auth-alt center">
-      Or <a href="/signup?next=<%= login.next %>">create a Science Near Me account</a>.
+      Already have an account? <a href="/login?next=<%= signup.next %>">Log in here</a>.
     </p>
     <p class="auth-scistarter center">
       Do you have a <img src="/static/img/scistarter-logo.svg" alt="SciStarter"> account?
-      <a href="/login-scistarter?next=<%= login.next %>">Log in with your SciStarter account</a>.
+      <a href="/login-scistarter?next=<%= signup.next %>">Log in with your SciStarter account</a>.
     </p>
 
-    <% include!("../partials/login_form.stpl"); %>
+    <% include!("../partials/signup_form.stpl"); %>
   </div>
 </div>

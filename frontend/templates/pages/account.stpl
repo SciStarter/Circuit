@@ -1,0 +1,18 @@
+<div class="auth-page snm-wrapper">
+  <div class="snm-container">
+    <p class="auth-scistarter center">
+      Do you have a <img src="/static/img/scistarter-logo.svg" alt="SciStarter"> account?
+      <a href="/login-scistarter?next=<%= login.next %>">Log in with your SciStarter account</a>.
+    </p>
+    <div class="account-columns">
+      <div class="standalone-form">
+        <h1>Log In</h1>
+        <% include!("../partials/login_form.stpl"); %>
+      </div>
+      <div class="standalone-form">
+        <h1>Create an Account</h1>
+        <% include!("../partials/signup_form.stpl"); %>
+      </div>
+    </div>
+  </div>
+</div>
