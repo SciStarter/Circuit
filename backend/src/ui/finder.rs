@@ -37,6 +37,191 @@ pub fn routes(routes: RouteSegment<Database>) -> RouteSegment<Database> {
         .at("search", |r| r.get(search))
         .at("geo", |r| r.post(geo))
         .at("geom", |r| r.post(geom))
+        .at("geolocate", |r| r.get(geolocate))
+        .at("geosuggest", |r| r.get(geosuggest))
+}
+
+/// Format an OpenCage geocoder match into a finder place.
+fn match_to_place(m: &geo::Match, proximity: f32) -> GeoPlace {
+    GeoPlace {
+        near: format!(
+            "{}, {} {}, {}",
+            if let Some(city) = &m.components.city {
+                city.clone()
+            } else if let Some(town) = &m.components.town {
+                town.clone()
+            } else if let Some(county) = &m.components.county {
+                county.clone()
+            } else {
+                String::new()
+            },
+            m.components.state_code,
+            if let Some(code) = &m.components.postcode {
+                if let Some((before, _)) = code.split_once('-') {
+                    before.to_string()
+                } else {
+                    code.to_string()
+                }
+            } else {
+                String::new()
+            },
+            m.components.country
+        ),
+        longitude: m.geometry.longitude,
+        latitude: m.geometry.latitude,
+        proximity,
+    }
+}
+
+#[derive(Deserialize)]
+struct GeoSuggestQuery {
+    q: String,
+}
+
+/// Location autocomplete suggestions for the finder's "Near" field. Proxies
+/// the OpenCage geocoder (server-side key) and returns up to 5 candidate
+/// places, so the UI doesn't need a domain-locked client geosearch key.
+pub async fn geosuggest(req: tide::Request<Database>) -> tide::Result {
+    let GeoSuggestQuery { q } = req.query()?;
+    let q = q.trim();
+    if q.len() < 3 {
+        return okay(&GeoResult { places: vec![] });
+    }
+
+    let result = geo::Query::new(q.to_string(), false)
+        .with_limit(5)
+        .lookup()
+        .await?;
+
+    if result.status.code != 200 {
+        return okay(&GeoResult { places: vec![] });
+    }
+
+    let mut results = result.results.clone();
+    results.sort_unstable_by_key(|m| -(m.confidence as i32));
+
+    okay(&GeoResult {
+        places: results.iter().map(|m| match_to_place(m, 0.0)).collect(),
+    })
+}
+
+#[derive(Deserialize)]
+struct GeolocateQuery {
+    ip: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct IpGeoResponse {
+    latitude: String,
+    longitude: String,
+    #[serde(default)]
+    city: String,
+    #[serde(default)]
+    state_prov: String,
+}
+
+/// Strip the port from a socket address: `127.0.0.1:80` -> `127.0.0.1`,
+/// `[::1]:80` -> `::1`, bare addresses unchanged.
+fn strip_port(addr: &str) -> String {
+    if let Some(rest) = addr.strip_prefix('[') {
+        rest.split(']').next().unwrap_or(rest).to_string()
+    } else {
+        addr.rsplit_once(':').map(|(h, _)| h).unwrap_or(addr).to_string()
+    }
+}
+
+/// True if `ip` is publicly routable (not loopback / common private ranges).
+fn ip_routable(ip: &str) -> bool {
+    !(ip.starts_with("127.")
+        || ip == "::1"
+        || ip.starts_with("10.")
+        || ip.starts_with("192.168.")
+        || ip.starts_with("169.254.")
+        || ip.starts_with("fc")
+        || ip.starts_with("fd"))
+}
+
+fn place_label(city: &str, state: &str) -> String {
+    match (city.trim(), state.trim()) {
+        ("", "") => String::new(),
+        ("", st) => st.to_string(),
+        (c, "") => c.to_string(),
+        (c, st) => format!("{c}, {st}"),
+    }
+}
+
+/// Geolocate an IP address to coordinates and a "City, State" label, caching
+/// the result in `c_ip_coords` (the persistent, shared cache). The IP comes
+/// from the `ip` query param (the UI forwards the end user's address) or, if
+/// absent/private, the caller's own address — and when that too is private,
+/// ipgeolocation.io geolocates the requesting server's public IP.
+pub async fn geolocate(req: tide::Request<Database>) -> tide::Result {
+    let query: GeolocateQuery = req.query().unwrap_or(GeolocateQuery { ip: None });
+
+    let candidate = query.ip.or_else(|| req.remote().map(strip_port));
+
+    // Only a routable client IP yields a meaningful "near me" location. With
+    // none (loopback/private, e.g. local dev with no forwarded IP), there's no
+    // location to default to — the server's own IP is not the user's.
+    let Some(ip) = candidate.as_deref().filter(|ip| ip_routable(ip)) else {
+        return Ok(tide::Response::builder(StatusCode::NoContent).build());
+    };
+
+    let db = req.state();
+
+    // Persistent cache hit.
+    if let Some((Some(lon), Some(lat), city, state)) =
+        sqlx::query_as::<_, (Option<f32>, Option<f32>, Option<String>, Option<String>)>(
+            r#"SELECT "lon", "lat", "city", "state" FROM c_ip_coords WHERE "ip" = $1"#,
+        )
+        .bind(ip)
+        .fetch_optional(db)
+        .await?
+    {
+        return okay(&json!({
+            "longitude": lon,
+            "latitude": lat,
+            "near": place_label(city.as_deref().unwrap_or(""), state.as_deref().unwrap_or("")),
+        }));
+    }
+
+    let key = std::env::var("IPGEOLOCATION_KEY")
+        .map_err(|_| tide::Error::from_str(StatusCode::NotImplemented, "geolocation disabled"))?;
+    let url = format!("https://api.ipgeolocation.io/ipgeo?apiKey={key}&ip={ip}");
+
+    let geo: IpGeoResponse = surf::get(&url)
+        .recv_json()
+        .await
+        .map_err(|e| tide::Error::from_str(StatusCode::BadGateway, e.to_string()))?;
+
+    let (Ok(lon), Ok(lat)) = (geo.longitude.trim().parse::<f32>(), geo.latitude.trim().parse::<f32>())
+    else {
+        return Err(tide::Error::from_str(
+            StatusCode::BadGateway,
+            "geolocation service returned invalid coordinates",
+        ));
+    };
+
+    sqlx::query(
+        r#"INSERT INTO c_ip_coords ("ip", "lon", "lat", "city", "state")
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT ("ip") DO UPDATE
+             SET "lon" = excluded."lon", "lat" = excluded."lat",
+                 "city" = excluded."city", "state" = excluded."state""#,
+    )
+    .bind(ip)
+    .bind(lon)
+    .bind(lat)
+    .bind(&geo.city)
+    .bind(&geo.state_prov)
+    .execute(db)
+    .await?;
+
+    okay(&json!({
+        "longitude": lon,
+        "latitude": lat,
+        "near": place_label(&geo.city, &geo.state_prov),
+    }))
 }
 
 pub async fn partners(req: tide::Request<Database>) -> tide::Result {
@@ -154,37 +339,7 @@ pub async fn geo(mut req: tide::Request<Database>) -> tide::Result {
     results.sort_unstable_by_key(|m| (m.confidence as i32));
 
     let places = GeoResult {
-        places: results
-            .iter()
-            .map(|m| GeoPlace {
-                near: format!(
-                    "{}, {} {}, {}",
-                    if let Some(city) = &m.components.city {
-                        city.clone()
-                    } else if let Some(town) = &m.components.town {
-                        town.clone()
-                    } else if let Some(county) = &m.components.county {
-                        county.clone()
-                    } else {
-                        String::new()
-                    },
-                    m.components.state_code,
-                    if let Some(code) = &m.components.postcode {
-                        if let Some((before, _)) = code.split_once('-') {
-                            before.to_string()
-                        } else {
-                            code.to_string()
-                        }
-                    } else {
-                        String::new()
-                    },
-                    m.components.country
-                ),
-                longitude: m.geometry.longitude,
-                latitude: m.geometry.latitude,
-                proximity,
-            })
-            .collect(),
+        places: results.iter().map(|m| match_to_place(m, proximity)).collect(),
     };
 
     okay(&places)

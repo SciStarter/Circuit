@@ -9,3 +9,5 @@ backend/PATCH
 backend/*/PATCH
 backend/target
 backend/*/target
+frontend/target
+old-frontend
