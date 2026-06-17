@@ -17,6 +17,7 @@
   <script src="/static/js/opp-time.js" defer></script>
   <script src="/static/js/opp-actions.js" defer></script>
   <script src="/static/js/opp-map.js" defer></script>
+  <script src="/static/js/opp-form.js" defer></script>
   <script src="/static/js/offline.js" defer></script>
 </head>
 <body>
@@ -84,7 +85,7 @@
             <ul>
               <li class="mobile-only"><a href="/find"><img class="menu-icon" src="/static/img/find-science-opportunities.svg" alt=""> Find Opportunities</a></li>
               <li class="mobile-only"><a href="/my/saved"><img class="menu-icon" src="/static/img/saved-science-opportunities.svg" alt=""> Saved Opportunities</a></li>
-              <li class="mobile-only"><a href="/my/science"><img class="menu-icon" src="/static/img/my-science.svg" alt=""> My Activity Log<% if chrome.reports_pending() > 0 { %><span class="bubble"><%= chrome.reports_pending() %></span><% } %></a></li>
+              <li class="mobile-only"><a href="/my/science"><img class="menu-icon" src="/static/img/my-science.svg" alt=""> My Activity Log<% let reports_pending = chrome.reports_pending(); %><% include!("../partials/reports_badge.stpl"); %></a></li>
               <li class="mobile-only"><a href="/my/goals"><img class="menu-icon" src="/static/img/my-goals.svg" alt=""> My Goals</a></li>
               <li class="mobile-only"><a href="/my/profile"><img class="menu-icon" src="/static/img/my-profile-and-settings.svg" alt=""> My Profile &amp; Settings</a></li>
               <% if chrome.owner() { %>
@@ -145,7 +146,7 @@
           <% if chrome.owner() { %><strong>My Participation</strong><% } %>
           <a href="/find" class="<% if chrome.is_active("/find") { %>active<% } %>"><img src="/static/img/find-science-opportunities.svg" alt=""> Find Opportunities</a>
           <a href="/my/saved" class="<% if chrome.is_active("/my/saved") { %>active<% } %>"><img src="/static/img/saved-science-opportunities.svg" alt=""> Saved Opportunities</a>
-          <a href="/my/science" class="<% if chrome.is_active("/my/science") { %>active<% } %>"><img src="/static/img/my-science.svg" alt=""> My Activity Log<% if chrome.reports_pending() > 0 { %><span class="bubble"><%= chrome.reports_pending() %></span><% } %></a>
+          <a href="/my/science" class="<% if chrome.is_active("/my/science") { %>active<% } %>"><img src="/static/img/my-science.svg" alt=""> My Activity Log<% let reports_pending = chrome.reports_pending(); %><% include!("../partials/reports_badge.stpl"); %></a>
           <a href="/my/goals" class="<% if chrome.is_active("/my/goals") { %>active<% } %>"><img src="/static/img/my-goals.svg" alt=""> My Goals</a>
           <a href="/my/profile" class="<% if chrome.is_active("/my/profile") { %>active<% } %>"><img src="/static/img/my-profile-and-settings.svg" alt=""> My Profile &amp; Settings</a>
           <% if chrome.owner() { %>

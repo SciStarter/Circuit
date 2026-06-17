@@ -1,0 +1,38 @@
+<div id="saved-results">
+  <% if items.is_empty() { %>
+    <p class="no-results">You haven't saved any opportunities yet. Browse the
+      <a href="/find">finder</a> and tap the bookmark to save one for later.</p>
+  <% } else { %>
+    <div class="opportunity-cards">
+      <% for item in &items { %>
+        <div class="saved-item">
+          <% let c = &item.card; %>
+          <% include!("opportunity_card.stpl"); %>
+          <form class="saved-remove" action="/my/saved/<%= item.uid %>/remove" method="post"
+                hx-post="/my/saved/<%= item.uid %>/remove" hx-target="#saved-results" hx-swap="outerHTML">
+            <input type="hidden" name="search" value="<%= search %>">
+            <input type="hidden" name="sort" value="<%= sort %>">
+            <input type="hidden" name="page" value="<%= page %>">
+            <button type="submit" title="Remove from saved" aria-label="Remove from saved">
+              <img src="/static/img/trash.svg" alt="">
+            </button>
+          </form>
+        </div>
+      <% } %>
+    </div>
+
+    <nav class="pagination" aria-label="pagination">
+      <% if has_prev { %>
+        <a class="action-button" href="<%= prev_url %>">&larr; Previous</a>
+      <% } else { %>
+        <span class="action-button disabled">&larr; Previous</span>
+      <% } %>
+      <span class="page-status">Page <%= page_index + 1 %> of <%= last_page + 1 %></span>
+      <% if has_next { %>
+        <a class="action-button" href="<%= next_url %>">Next &rarr;</a>
+      <% } else { %>
+        <span class="action-button disabled">Next &rarr;</span>
+      <% } %>
+    </nav>
+  <% } %>
+</div>

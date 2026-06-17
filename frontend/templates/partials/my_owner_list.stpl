@@ -1,0 +1,40 @@
+<div class="owner-tab-head">
+  <h2><%= heading %></h2>
+  <form action="/my/opportunities" method="get" class="owner-search">
+    <input type="hidden" name="tab" value="<%= tab %>">
+    <input type="text" name="q" value="<%= search %>" placeholder="Search your opportunities" autocomplete="off">
+    <button type="submit" class="action-button">Search</button>
+  </form>
+</div>
+
+<% if list.items.is_empty() { %>
+  <p class="no-results">No opportunities here<% if tab == "live" { %> &mdash; add one!<% } %></p>
+<% } else { %>
+  <div class="opportunity-cards owner-cards">
+    <% for item in &list.items { %>
+      <article class="opportunity-card owner">
+        <a href="/<%= item.slug %>" class="primary">
+          <img src="<%= item.card.image %>" alt="" loading="lazy">
+          <div>
+            <h1><%= item.card.title %></h1>
+            <div class="info"><img src="/static/img/location-marker.svg" alt=""> <%= item.card.location_line %></div>
+            <div class="info"><img src="/static/img/calendar.svg" alt=""> <%= item.card.time_line %></div>
+          </div>
+        </a>
+        <div class="owner-actions">
+          <% if list.editable { %>
+            <a class="action-button tertiary" href="/my/opportunity/<%= item.uid %>">Edit</a>
+          <% } %>
+          <a class="action-button tertiary" href="/<%= item.slug %>">View</a>
+          <% if list.editable { %>
+            <form action="/my/opportunities/<%= item.uid %>/trash" method="post" onsubmit="return confirm('Move this opportunity to trash?');">
+              <input type="hidden" name="tab" value="<%= tab %>">
+              <button type="submit" class="action-button tertiary">Trash</button>
+            </form>
+          <% } %>
+        </div>
+      </article>
+    <% } %>
+  </div>
+  <% include!("my_pagination.stpl"); %>
+<% } %>

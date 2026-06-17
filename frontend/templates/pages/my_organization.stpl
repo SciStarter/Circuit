@@ -1,0 +1,153 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <% if no_org { %>
+      <div class="organizations">
+        <h1>No Organization</h1>
+        <p class="paragraph">You have permission to manage opportunities, but you are not a
+          member of any organization, so this page is blank.</p>
+      </div>
+    <% } else { %>
+      <div class="organizations">
+        <% if partners.len() > 1 { %>
+          <form action="/my/organization" method="get" class="org-picker">
+            <select name="partner" onchange="this.form.submit()">
+              <% for p in &partners { %>
+                <option value="<%= p.uid %>" <% if p.uid == org.uid { %>selected<% } %>><%= p.name %></option>
+              <% } %>
+            </select>
+          </form>
+        <% } else { %>
+          <h1>Your Partner Organization</h1>
+        <% } %>
+
+        <input type="radio" name="org-tab" id="org-settings" class="orgtab-radio" checked>
+        <input type="radio" name="org-tab" id="org-managers" class="orgtab-radio">
+        <input type="radio" name="org-tab" id="org-contact" class="orgtab-radio">
+        <ul class="nav-tabs">
+          <li><label for="org-settings">Organizational Settings</label></li>
+          <li><label for="org-managers">Page Managers</label></li>
+          <li><label for="org-contact">Org Contact Info</label></li>
+        </ul>
+
+        <!-- ===== Organizational Settings ===== -->
+        <div class="org-panel panel-settings">
+          <form action="/my/organization/<%= org.uid %>" method="post" class="org-form">
+            <input type="hidden" name="section" value="settings">
+            <label class="field">Organization
+              <input type="text" name="name" value="<%= org.name %>">
+            </label>
+            <label class="field">Organization Type
+              <select name="organization_type">
+                <% for (code, label) in &org_types { %>
+                  <option value="<%= code %>" <% if org.type_is(code) { %>selected<% } %>><%= label %></option>
+                <% } %>
+              </select>
+            </label>
+            <label class="field">Link
+              <input type="url" name="url" value="<%= org.url() %>">
+            </label>
+            <label class="field">Logo Link
+              <input type="url" name="image_url" value="<%= org.image_url() %>">
+            </label>
+            <% if !org.image_url().is_empty() { %>
+              <img src="<%= org.image_url() %>" class="display-image" alt="">
+            <% } %>
+
+            <h3>Exchange Color Settings</h3>
+            <p class="help">Only for partners using an <a href="/display-opportunities">Exchange</a>.</p>
+            <div class="color-row">
+              <label class="field">Background <input type="color" name="background_color" value="<%= org.color("background") %>"></label>
+              <label class="field">Primary <input type="color" name="primary_color" value="<%= org.color("primary") %>"></label>
+              <label class="field">Secondary <input type="color" name="secondary_color" value="<%= org.color("secondary") %>"></label>
+              <label class="field">Tertiary <input type="color" name="tertiary_color" value="<%= org.color("tertiary") %>"></label>
+            </div>
+            <button type="submit" class="action-button primary">Save</button>
+          </form>
+        </div>
+
+        <!-- ===== Page Managers ===== -->
+        <div class="org-panel panel-managers">
+          <% if !pending.is_empty() { %>
+            <h2>Pending Organization Page Managers</h2>
+            <% for p in &pending { %>
+              <div class="manager-row">
+                <div class="info"><%= p.display_name() %></div>
+                <div class="info"><a href="mailto:<%= p.email() %>"><%= p.email() %></a></div>
+                <div class="info"><%= p.phone() %></div>
+                <div class="actions">
+                  <form action="/my/organization/<%= org.uid %>/member" method="post">
+                    <input type="hidden" name="action" value="approve">
+                    <input type="hidden" name="target" value="<%= p.uid %>">
+                    <button type="submit" class="action-button primary"><img src="/static/img/check.svg" alt=""> Approve</button>
+                  </form>
+                  <form action="/my/organization/<%= org.uid %>/member" method="post">
+                    <input type="hidden" name="action" value="discard">
+                    <input type="hidden" name="target" value="<%= p.uid %>">
+                    <button type="submit" class="action-button tertiary" title="discard"><img src="/static/img/trash.svg" alt=""></button>
+                  </form>
+                </div>
+              </div>
+            <% } %>
+          <% } %>
+
+          <h2>Current Organization Page Managers</h2>
+          <% for p in &managers { %>
+            <div class="manager-row">
+              <div class="info"><%= p.display_name() %></div>
+              <div class="info"><a href="mailto:<%= p.email() %>"><%= p.email() %></a></div>
+              <div class="info"><%= p.phone() %></div>
+              <div class="actions">
+                <% if p.uid != user_uid { %>
+                  <form action="/my/organization/<%= org.uid %>/member" method="post"
+                        onsubmit="return confirm('Remove this manager?');">
+                    <input type="hidden" name="action" value="remove">
+                    <input type="hidden" name="target" value="<%= p.uid %>">
+                    <button type="submit" class="action-button tertiary" title="remove"><img src="/static/img/trash.svg" alt=""></button>
+                  </form>
+                <% } %>
+              </div>
+            </div>
+          <% } %>
+
+          <details class="invite-box">
+            <summary class="action-button primary">+ Add New Organization Manager(s)</summary>
+            <form action="/my/organization/<%= org.uid %>/invite" method="post">
+              <p class="help">Organization managers can edit organizational settings and opportunity
+                records. Add emails, one per line; each receives an email link.</p>
+              <textarea name="emails" rows="4" placeholder="Emails, one per line"></textarea>
+              <button type="submit" class="action-button primary">Send Invitations</button>
+            </form>
+          </details>
+
+          <% if !is_prime { %>
+            <form action="/my/organization/<%= org.uid %>/member" method="post" class="leave-org"
+                  onsubmit="return confirm('Are you sure you want to give up your authority to manage this organization?');">
+              <input type="hidden" name="action" value="leave">
+              <button type="submit" class="action-button tertiary danger">Leave organization</button>
+            </form>
+          <% } %>
+        </div>
+
+        <!-- ===== Org Contact Info ===== -->
+        <div class="org-panel panel-contact">
+          <form action="/my/organization/<%= org.uid %>" method="post" class="org-form">
+            <input type="hidden" name="section" value="contact">
+            <label class="field">Name
+              <input type="text" name="manager_name" value="<%= org.manager.name() %>">
+            </label>
+            <label class="field">Email
+              <input type="email" name="manager_email" value="<%= org.manager.email() %>">
+            </label>
+            <label class="field">Phone
+              <input type="text" name="manager_phone" value="<%= org.manager.phone() %>">
+            </label>
+            <label class="field">Address
+              <input type="text" name="manager_mailing" value="<%= org.manager.mailing() %>">
+            </label>
+            <button type="submit" class="action-button primary">Save</button>
+          </form>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>

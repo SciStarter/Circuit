@@ -1,0 +1,141 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <div class="my-goals">
+
+      <% if set_mode { %>
+        <div class="instruct">
+          <h1><img src="/static/img/atom.svg" alt=""> Set a goal</h1>
+          <p class="lead">Choose the goal that's right for you, and then be sure to come back to
+            Science Near Me to log your activity after you participate in a science opportunity.</p>
+          <h2>Why Set a Goal?</h2>
+          <ul>
+            <li><p>Setting a goal is a great way to inspire yourself to increase your science learning and engagement!</p></li>
+            <li><p>Your goals and activity logs also help researchers better understand how people participate in science.</p></li>
+          </ul>
+          <h2>How to Record Your Science Participation</h2>
+          <p>It's super simple!</p>
+          <ol>
+            <li><p>On each science opportunity page you'll find an <img class="inline-icon" src="/static/img/submit-opportunity.svg" alt=""> "I Did This!" button.</p></li>
+            <li><p>After participating in the activity, visit its page and click that button!</p></li>
+          </ol>
+          <h2>Set Your Goal</h2>
+        </div>
+
+        <section class="goals set-goal">
+          <% for (cat, label, target, blurb) in [
+              ("dabbler", "Science Dabbler", 5, "Take part in 5 science opportunities in one year"),
+              ("enthusiast", "Science Enthusiast", 20, "Take part in 20 science opportunities in one year"),
+              ("hero", "Science Hero", 50, "Take part in 50 science opportunities in one year"),
+          ] { %>
+            <div class="goal-card">
+              <img class="trophy" src="/static/img/trophy-<%= cat %>.svg" alt="">
+              <div>
+                <div class="goal-header">
+                  <strong><%= label %></strong>
+                  <p><%= blurb %></p>
+                </div>
+                <form action="/my/goals/set" method="post">
+                  <input type="hidden" name="category" value="<%= cat %>">
+                  <input type="hidden" name="target" value="<%= target %>">
+                  <button type="submit" class="action-button primary arrow">Set Goal</button>
+                </form>
+              </div>
+            </div>
+          <% } %>
+        </section>
+
+      <% } else { %>
+        <section class="goals current-goal">
+          <% for goal in &goals { %>
+            <% if goal.reached { %>
+              <div class="congrats">
+                <span class="congratulations">Congratulations!</span>
+                <img class="trophy" src="/static/img/trophy-<%= goal.category %>.svg" alt="">
+                <span class="you-are">You're a</span>
+                <span class="category">science <%= goal.category %></span>
+                <span class="explain">Take part in <%= goal.target %> science opportunities in <%= goal.duration_label %>!</span>
+                <span class="share-prompt">Share your success!</span>
+                <div class="share">
+                  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fsciencenearme.org%2F" target="_blank" rel="noopener"><img src="/static/img/facebook-reverse.svg" alt="Share on Facebook"></a>
+                  <a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fsciencenearme.org%2F&text=I%27m%20a%20science%20<%= goal.category %>%21" target="_blank" rel="noopener"><img src="/static/img/twitter-app-reverse.svg" alt="Share on Twitter"></a>
+                  <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fsciencenearme.org%2F" target="_blank" rel="noopener"><img src="/static/img/linkedin-reverse.svg" alt="Share on LinkedIn"></a>
+                </div>
+                <form action="/my/goals/<%= goal.id %>/status" method="post">
+                  <input type="hidden" name="status" value="succeeded">
+                  <button type="submit" class="action-button primary arrow">Set a New Goal</button>
+                </form>
+              </div>
+            <% } %>
+          <% } %>
+
+          <% for goal in &goals { %>
+            <% if goal.failed { %>
+              <div class="sorry">
+                <strong>Shucks! You didn't meet your goal. But it's OK!</strong>
+                <p>You can end this goal and try again. We believe in you! No matter what,
+                  when science learning is your goal, you're a winner!</p>
+                <form action="/my/goals/<%= goal.id %>/status" method="post">
+                  <input type="hidden" name="status" value="failed">
+                  <button type="submit" class="action-button primary arrow">Set a New Goal</button>
+                </form>
+              </div>
+            <% } %>
+          <% } %>
+
+          <h1><img src="/static/img/atom.svg" alt=""> Current Goal</h1>
+
+          <% for goal in &goals { %>
+            <div class="goal">
+              <% if goal.count < goal.target { %>
+                <% if goal.failed { %>
+                  <form class="trash-form" action="/my/goals/<%= goal.id %>/status" method="post">
+                    <input type="hidden" name="status" value="failed">
+                <% } else { %>
+                  <form class="trash-form" action="/my/goals/<%= goal.id %>/delete" method="post">
+                <% } %>
+                    <button type="submit" class="trash" title="cancel goal" aria-label="cancel goal">
+                      <img src="/static/img/trash.svg" alt="">
+                    </button>
+                  </form>
+              <% } %>
+              <h2>Science <%= goal.category %></h2>
+              <strong>Attend <em><%= goal.target %> science opportunities</em> in <em><%= goal.duration_label %></em></strong>
+              <div class="dates">
+                <span>Start Date: <%= goal.begin_label %></span>
+                <span>End Date: <%= goal.end_label %></span>
+              </div>
+              <div class="progression">
+                <div class="progress-bar">
+                  <div class="pb-label">Science Opportunities <span><%= goal.count %>/<%= goal.target %></span></div>
+                  <div class="pb-track"><div class="pb-fill" style="width: <%= goal.opp_pct %>%"></div></div>
+                </div>
+                <div class="progress-bar">
+                  <div class="pb-label">Time Left <span><%= goal.days_left %> days</span></div>
+                  <div class="pb-track"><div class="pb-fill" style="width: <%= goal.time_pct %>%"></div></div>
+                </div>
+              </div>
+              <% if !goal.items.is_empty() { %>
+                <div class="itemized">
+                  <ol>
+                    <% for item in &goal.items { %>
+                      <li><a href="/<%= item.slug %>"><%= item.title %></a></li>
+                    <% } %>
+                  </ol>
+                </div>
+              <% } %>
+            </div>
+          <% } %>
+
+          <div class="instruct instruct2">
+            <h2>How to Record Your Science Participation</h2>
+            <ol>
+              <li><p>On each science opportunity page you'll find an <img class="inline-icon" src="/static/img/submit-opportunity.svg" alt=""> "I Did This!" button.</p></li>
+              <li><p>After participating in the activity, visit its page and click that button!</p></li>
+            </ol>
+          </div>
+        </section>
+      <% } %>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,36 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <div class="your-opportunities">
+      <div class="flex-header">
+        <h1>Your Opportunities</h1>
+        <a class="action-button primary add-btn" href="/my/submit-opportunity">
+          <img src="/static/img/submit-opportunity.svg" alt=""> Add a new opportunity
+        </a>
+      </div>
+
+      <input type="radio" name="opp-tab" id="ot-live" class="otab-radio" <% if active_tab == "live" { %>checked<% } %>>
+      <input type="radio" name="opp-tab" id="ot-draft" class="otab-radio" <% if active_tab == "draft" { %>checked<% } %>>
+      <input type="radio" name="opp-tab" id="ot-past" class="otab-radio" <% if active_tab == "past" { %>checked<% } %>>
+
+      <ul class="nav-tabs">
+        <li><label for="ot-live">Current, Live Opportunities</label></li>
+        <li><label for="ot-draft">Draft or Unpublished</label></li>
+        <li><label for="ot-past">Past or Trashed</label></li>
+        <li class="push-right"><a class="action-button tertiary" href="/my/opportunities/export">Export Records</a></li>
+      </ul>
+
+      <div class="opp-tab-panel panel-live">
+        <% let list = &live; let tab = "live"; let heading = "Current, Live Opportunities"; %>
+        <% include!("../partials/my_owner_list.stpl"); %>
+      </div>
+      <div class="opp-tab-panel panel-draft">
+        <% let list = &draft; let tab = "draft"; let heading = "Draft or Unpublished Opportunities"; %>
+        <% include!("../partials/my_owner_list.stpl"); %>
+      </div>
+      <div class="opp-tab-panel panel-past">
+        <% let list = &past; let tab = "past"; let heading = "Past or Trashed Opportunities"; %>
+        <% include!("../partials/my_owner_list.stpl"); %>
+      </div>
+    </div>
+  </div>
+</div>

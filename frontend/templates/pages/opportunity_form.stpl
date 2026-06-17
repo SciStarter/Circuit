@@ -1,0 +1,280 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <div id="edit-opportunity">
+      <div class="form-head">
+        <h1><% if edit_mode { %>Edit Opportunity<% } else { %>Add an Opportunity<% } %></h1>
+        <% if edit_mode && !opp.slug.is_empty() { %>
+          <a class="action-button primary" href="/<%= opp.slug %>"><img src="/static/img/eye.svg" alt=""> Return to opportunity</a>
+        <% } else { %>
+          <a class="cancel" href="/my/opportunities">cancel</a>
+        <% } %>
+      </div>
+
+      <form class="opp-form" method="post"
+            action="<% if edit_mode { %>/my/opportunity/<%= opp.uid %><% } else { %>/my/submit-opportunity<% } %>">
+
+        <%# CSS section tabs %>
+        <input type="radio" name="opp-section" id="sec-basic" class="sec-radio" checked>
+        <input type="radio" name="opp-section" id="sec-required" class="sec-radio">
+        <input type="radio" name="opp-section" id="sec-additional" class="sec-radio">
+        <ol class="section-tabs">
+          <li><label for="sec-basic">Basic Information</label></li>
+          <li><label for="sec-required">Required Fields</label></li>
+          <li><label for="sec-additional">Additional Fields</label></li>
+        </ol>
+
+        <!-- ===================== Basic Information ===================== -->
+        <section class="opp-section-panel panel-basic">
+          <div class="legend-flex"><legend>Basic Information</legend><span class="required">* required</span></div>
+
+          <label class="field">Name of Opportunity<span class="required">*</span>
+            <input type="text" name="title" maxlength="64" value="<%= opp.title %>">
+            <small>64 character maximum</small>
+          </label>
+
+          <label class="field">Host Organization<span class="required">*</span>
+            <input type="text" name="organization_name" value="<%= opp.organization_name %>">
+            <small>The organization hosting the event, project, or attraction. Shown in search results and on the opportunity page.</small>
+          </label>
+
+          <label class="field">Contact Name<span class="required">*</span>
+            <input type="text" name="contact_name" value="<%= opp.contact_name %>">
+            <small>Who Science Near Me should contact about this opportunity. Not published.</small>
+          </label>
+
+          <label class="field">Contact Email<span class="required">*</span>
+            <input type="email" name="contact_email" value="<%= opp.contact_email %>">
+            <small>Not published.</small>
+          </label>
+
+          <input type="hidden" name="contact_phone" value="<%= opp.contact_phone %>">
+
+          <% if partners.len() == 1 { %>
+            <input type="hidden" name="partner" value="<%= partners[0].uid %>">
+            <div class="field"><span class="field-label">Science Near Me partner</span>
+              <p class="partner-name"><%= partners[0].name %></p>
+            </div>
+          <% } else if partners.len() > 1 { %>
+            <label class="field">Science Near Me partner<span class="required">*</span>
+              <select name="partner">
+                <% for p in &partners { %>
+                  <option value="<%= p.uid %>" <% if p.uid == opp.partner { %>selected<% } %>><%= p.name %></option>
+                <% } %>
+              </select>
+            </label>
+          <% } %>
+
+          <fieldset class="field">
+            <span class="field-label">Where is your opportunity?<span class="required">*</span></span>
+            <label class="opt"><input type="radio" name="location_mode" value="online" <% if opp.location_mode() == "online" { %>checked<% } %>>
+              <span><strong>Online Only</strong><small>An external link where people can participate.</small></span></label>
+            <label class="opt"><input type="radio" name="location_mode" value="physical" <% if opp.location_mode() == "physical" { %>checked<% } %>>
+              <span><strong>Physical Location</strong><small>An address or area.</small></span></label>
+            <label class="opt"><input type="radio" name="location_mode" value="both" <% if opp.location_mode() == "both" { %>checked<% } %>>
+              <span><strong>Physical Location &amp; Online</strong><small>An address plus an external link.</small></span></label>
+          </fieldset>
+
+          <div class="loc-fields" data-place-lookup>
+            <div class="field when-place">
+              <span class="field-label">Search for an address or location<span class="required">*</span></span>
+              <input type="text" name="location_name" value="<%= opp.location_name %>" autocomplete="off" placeholder="Begin typing and select a location">
+              <input type="hidden" name="point_lng" value="<%= opp.point_lng() %>">
+              <input type="hidden" name="point_lat" value="<%= opp.point_lat() %>">
+            </div>
+            <label class="field when-url">External link to participate<span class="required">*</span>
+              <input type="url" name="partner_opp_url" value="<%= opp.partner_opp_url() %>" placeholder="https://...">
+            </label>
+          </div>
+
+          <fieldset class="field">
+            <span class="field-label">When is your opportunity?<span class="required">*</span></span>
+            <label class="opt"><input type="radio" name="when_mode" value="ongoing" <% if opp.when_mode() == "ongoing" { %>checked<% } %>>
+              <span><strong>On Demand / Always Available</strong><small>Ongoing with no set time periods. May have an end date.</small></span></label>
+            <label class="opt"><input type="radio" name="when_mode" value="time" <% if opp.when_mode() == "time" { %>checked<% } %>>
+              <span><strong>At a Set Time</strong><small>Time periods and dates that may recur.</small></span></label>
+          </fieldset>
+
+          <div class="when-ongoing block">
+            <label class="check"><input type="checkbox" name="ongoing_has_end" <% if !opp.ongoing_end().is_empty() { %>checked<% } %>> This opportunity has an end date</label>
+            <label class="field">End date
+              <input type="date" name="ongoing_end" value="<%= opp.ongoing_end() %>">
+            </label>
+          </div>
+
+          <div class="when-time block">
+            <label class="field">Select a time zone<span class="required">*</span>
+              <select name="timezone">
+                <option value="">Select a time zone</option>
+                <% for tz in &timezones { %>
+                  <option value="<%= tz %>" <% if tz.as_str() == opp.timezone() { %>selected<% } %>><%= tz.replace('_', " ") %></option>
+                <% } %>
+              </select>
+            </label>
+
+            <span class="field-label">Beginning and ending dates &amp; times<span class="required">*</span></span>
+            <div class="period-list">
+              <% let periods = opp.periods(); %>
+              <% if periods.is_empty() { %>
+                <div class="period-row">
+                  <input type="datetime-local" name="start_dt[]" value="">
+                  <span class="to">to</span>
+                  <input type="datetime-local" name="end_dt[]" value="">
+                  <button type="button" class="remove-period" aria-label="remove">&times;</button>
+                </div>
+              <% } else { %>
+                <% for (start, end) in &periods { %>
+                  <div class="period-row">
+                    <input type="datetime-local" name="start_dt[]" value="<%= start %>">
+                    <span class="to">to</span>
+                    <input type="datetime-local" name="end_dt[]" value="<%= end %>">
+                    <button type="button" class="remove-period" aria-label="remove">&times;</button>
+                  </div>
+                <% } %>
+              <% } %>
+            </div>
+            <button type="button" class="action-button tertiary add-period">+ Add another date &amp; time</button>
+
+            <div class="recurrence-fields">
+              <label class="field">Recurrence
+                <select name="recurrence">
+                  <option value="once" <% if opp.recurrence == "once" { %>selected<% } %>>Once</option>
+                  <option value="daily" <% if opp.recurrence == "daily" { %>selected<% } %>>Daily</option>
+                  <option value="weekly" <% if opp.recurrence == "weekly" { %>selected<% } %>>Weekly</option>
+                </select>
+              </label>
+              <label class="field">Recurrence end date
+                <input type="date" name="end_recurrence" value="<%= opp.end_recurrence_date() %>">
+              </label>
+            </div>
+          </div>
+
+          <label class="field">How can people learn more? (external link)<span class="required">*</span>
+            <input type="url" name="organization_website" value="<%= opp.organization_website() %>" placeholder="https://...">
+          </label>
+        </section>
+
+        <!-- ===================== Required Fields ===================== -->
+        <section class="opp-section-panel panel-required">
+          <div class="legend-flex"><legend>Required Fields</legend><span class="required">* required</span></div>
+
+          <label class="field">Short Summary (appears in search results)<span class="required">*</span>
+            <textarea name="short_desc" maxlength="164" rows="2"><%= opp.short_desc %></textarea>
+            <small>A short, friendly sentence. 164 character limit.</small>
+          </label>
+
+          <label class="field">Description of opportunity<span class="required">*</span>
+            <textarea name="description" rows="8"><%= opp.description %></textarea>
+          </label>
+
+          <div class="field">
+            <span class="field-label">Display Image<span class="required">*</span></span>
+            <small>Reflect the activity, not a logo. png, jpeg, or webp. Recommended 600×400px.</small>
+            <div class="image-row">
+              <img class="image-preview" src="<% if opp.image_url.is_empty() { %>/static/img/no-image-thumb.jpg<% } else { %><%= opp.image_url %><% } %>" alt="">
+              <div>
+                <input type="url" name="image_url" id="image_url" value="<%= opp.image_url %>" placeholder="Image URL (https://...)">
+                <label class="upload-label">Or upload an image
+                  <input type="file" id="image_upload" accept="image/png,image/jpeg,image/webp">
+                </label>
+                <span class="upload-status" id="upload_status" hidden></span>
+              </div>
+            </div>
+          </div>
+
+          <fieldset class="field">
+            <span class="field-label">Public engagement of science domain<span class="required">*</span></span>
+            <div class="radio-grid">
+              <% for (code, label) in &pes_domains { %>
+                <label class="check"><input type="radio" name="pes_domain" value="<%= code %>" <% if opp.domain_is(code) { %>checked<% } %>> <%= label %></label>
+              <% } %>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <span class="field-label">Activity types<span class="required">*</span></span>
+            <input type="text" class="facet-filter" data-target="#descriptor-list" placeholder="Type to filter activity list" autocomplete="off">
+            <div id="descriptor-list" class="checkbox-grid">
+              <% for (code, label) in &descriptors { %>
+                <label class="check" data-label="<%= label.to_lowercase() %>"><input type="checkbox" name="opp_descriptor[]" value="<%= code %>" <% if opp.has_descriptor(code) { %>checked<% } %>> <%= label %></label>
+              <% } %>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <span class="field-label">Associated Cost<span class="required">*</span></span>
+            <label class="check"><input type="radio" name="cost" value="free" <% if opp.cost == "free" { %>checked<% } %>> Free</label>
+            <label class="check"><input type="radio" name="cost" value="cost" <% if opp.cost == "cost" { %>checked<% } %>> Cost</label>
+          </fieldset>
+
+          <fieldset class="field ages">
+            <span class="field-label">Age required to participate</span>
+            <label class="check"><input type="checkbox" name="has_minimum" <% if opp.has_minimum() { %>checked<% } %>> Minimum age</label>
+            <input type="number" name="min_age" min="0" value="<%= opp.min_age %>">
+            <label class="check"><input type="checkbox" name="has_maximum" <% if opp.has_maximum() { %>checked<% } %>> Maximum age</label>
+            <input type="number" name="max_age" min="0" value="<%= opp.max_age %>">
+          </fieldset>
+
+          <fieldset class="field">
+            <span class="field-label">Venue type(s)<span class="required">*</span></span>
+            <label class="check"><input type="checkbox" name="opp_venue[]" value="indoors" <% if opp.has_venue("indoors") { %>checked<% } %>> Indoors</label>
+            <label class="check"><input type="checkbox" name="opp_venue[]" value="outdoors" <% if opp.has_venue("outdoors") { %>checked<% } %>> Outdoors</label>
+          </fieldset>
+
+          <fieldset class="field">
+            <span class="field-label">Topics<span class="required">*</span></span>
+            <input type="text" class="facet-filter" data-target="#topic-list" placeholder="Type to filter topic list" autocomplete="off">
+            <div id="topic-list" class="checkbox-grid">
+              <% for (code, label) in &topics { %>
+                <label class="check" data-label="<%= label.to_lowercase() %>"><input type="checkbox" name="opp_topics[]" value="<%= code %>" <% if opp.has_topic(code) { %>checked<% } %>> <%= label %></label>
+              <% } %>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <span class="field-label">Ticket Required<span class="required">*</span></span>
+            <label class="check"><input type="radio" name="ticket_required" value="true" <% if opp.ticket_required { %>checked<% } %>> Yes</label>
+            <label class="check"><input type="radio" name="ticket_required" value="false" <% if !opp.ticket_required { %>checked<% } %>> No</label>
+          </fieldset>
+
+          <label class="field">Keywords and key phrases<span class="required">*</span>
+            <input type="text" name="tags" id="tags-input" value="<%= opp.tags_csv() %>" placeholder="Separate with commas">
+            <small>Help participants find your opportunity. Separate with commas.</small>
+          </label>
+          <div class="tag-suggest">Most used:
+            <% for k in &most_used { %><button type="button" class="action-button tertiary tag-chip" data-tag="<%= k %>"><%= k %></button><% } %>
+          </div>
+        </section>
+
+        <!-- ===================== Additional Fields ===================== -->
+        <section class="opp-section-panel panel-additional">
+          <legend>Social Media</legend>
+          <p class="help">All optional. You can add or edit later.</p>
+
+          <label class="field">Opportunity Hashtags
+            <input type="text" name="opp_hashtags" value="<%= opp.hashtags_csv() %>" placeholder="Separate with commas">
+          </label>
+          <label class="field">Twitter Handle
+            <input type="text" name="social_twitter" value="<%= opp.opp_social_handles.twitter() %>" placeholder="@handle">
+          </label>
+          <label class="field">Instagram Handle
+            <input type="text" name="social_instagram" value="<%= opp.opp_social_handles.instagram() %>" placeholder="@handle">
+          </label>
+          <label class="field">Facebook Page
+            <input type="url" name="social_facebook" value="<%= opp.opp_social_handles.facebook() %>" placeholder="https://...">
+          </label>
+        </section>
+
+        <div class="form-actions">
+          <% if edit_mode { %>
+            <button type="submit" name="action" value="continue" class="action-button primary">Save &amp; Continue Editing</button>
+            <button type="submit" name="action" value="view" class="action-button primary">Save &amp; View</button>
+            <button type="submit" name="action" value="publish" class="action-button primary">Save &amp; Publish</button>
+          <% } else { %>
+            <button type="submit" name="action" value="view" class="action-button tertiary">Save &amp; Complete Later</button>
+            <button type="submit" name="action" value="publish" class="action-button primary">Save &amp; Publish</button>
+          <% } %>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

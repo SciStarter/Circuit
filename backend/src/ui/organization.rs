@@ -8,7 +8,7 @@ use common::{
         analytics::{RelativeTimePeriod, Status as AnayticsStatus},
         invitation::{Invitation, InvitationMode},
         opportunity::{EntityType, LocationType, OpportunityQuery, OpportunityQueryOrdering},
-        person::PersonPrivilegedReference,
+        person::{Permission, PersonPrivilegedReference},
         Opportunity, Pagination, Partner, Person, SelectOption,
     },
     CachedJson, Database,
@@ -172,6 +172,19 @@ pub async fn my_organizations(mut req: tide::Request<Database>) -> tide::Result 
         tide::Error::from_str(tide::StatusCode::Forbidden, "Authorization required")
     })?;
 
+    // Admins (ManagePartners) may manage any organization, so they get the full
+    // catalog (minus the internal system partner); everyone else gets only the
+    // organizations they are a member of.
+    if person.check_permission(&Permission::ManagePartners) {
+        let internal = *common::INTERNAL_UID;
+        let catalog: Vec<_> = Partner::catalog(req.state())
+            .await?
+            .into_iter()
+            .filter(|p| p.uid != internal)
+            .collect();
+        return okay(&catalog);
+    }
+
     let partners: Vec<common::model::partner::Partner> = person
         .load_partners(req.state())
         .await?
@@ -196,7 +209,10 @@ async fn authorized_partner(
         .await
         .with_status(|| StatusCode::BadRequest)?;
 
-    if !partner.person_has_permission(&person.exterior.uid) {
+    // Members manage their own org; admins (ManagePartners) may manage any.
+    if !partner.person_has_permission(&person.exterior.uid)
+        && !person.check_permission(&Permission::ManagePartners)
+    {
         return Err(tide::Error::from_str(StatusCode::Forbidden, "Forbidden"));
     }
 

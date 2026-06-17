@@ -13,7 +13,9 @@
           </div>
         </form>
 
-        <form action="/my/saved/remove-old" method="post">
+        <form action="/my/saved/remove-old" method="post"
+              hx-post="/my/saved/remove-old" hx-target="#saved-results" hx-swap="outerHTML"
+              hx-confirm="Remove all past opportunities from your saved list?">
           <input type="hidden" name="search" value="<%= search %>">
           <input type="hidden" name="sort" value="<%= sort %>">
           <button type="submit" class="remove-old">
@@ -35,40 +37,7 @@
       </section>
 
       <section id="results">
-        <% if items.is_empty() { %>
-          <p class="no-results">You haven't saved any opportunities yet. Browse the
-            <a href="/find">finder</a> and tap the bookmark to save one for later.</p>
-        <% } else { %>
-          <div class="opportunity-cards">
-            <% for item in &items { %>
-              <div class="saved-item">
-                <% let c = &item.card; %>
-                <% include!("../partials/opportunity_card.stpl"); %>
-                <form class="saved-remove" action="/my/saved/<%= item.uid %>/remove" method="post">
-                  <input type="hidden" name="search" value="<%= search %>">
-                  <input type="hidden" name="sort" value="<%= sort %>">
-                  <button type="submit" title="Remove from saved" aria-label="Remove from saved">
-                    <img src="/static/img/trash.svg" alt="">
-                  </button>
-                </form>
-              </div>
-            <% } %>
-          </div>
-
-          <nav class="pagination" aria-label="pagination">
-            <% if has_prev { %>
-              <a class="action-button" href="<%= prev_url %>">&larr; Previous</a>
-            <% } else { %>
-              <span class="action-button disabled">&larr; Previous</span>
-            <% } %>
-            <span class="page-status">Page <%= page_index + 1 %> of <%= last_page + 1 %></span>
-            <% if has_next { %>
-              <a class="action-button" href="<%= next_url %>">Next &rarr;</a>
-            <% } else { %>
-              <span class="action-button disabled">Next &rarr;</span>
-            <% } %>
-          </nav>
-        <% } %>
+        <%- results_html %>
       </section>
     </div>
   </div>

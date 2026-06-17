@@ -1,0 +1,36 @@
+<div id="report-results">
+  <% if list.items.is_empty() { %>
+    <p class="no-results">Nothing to report right now. As you explore opportunities,
+      the ones you show interest in will appear here so you can confirm whether you took part.</p>
+  <% } else { %>
+    <div class="results">
+      <% for item in &list.items { %>
+        <div class="reportable">
+          <% let c = &item.card; %>
+          <% include!("opportunity_card.stpl"); %>
+          <div class="actions">
+            <form action="/my/science/report" method="post"
+                  hx-post="/my/science/report" hx-target="#report-results" hx-swap="outerHTML">
+              <input type="hidden" name="id" value="<%= item.id %>">
+              <input type="hidden" name="mode" value="30">
+              <input type="hidden" name="rpage" value="<%= list.page_index %>">
+              <button type="submit" class="action-button tertiary"><span class="bigger">&check;</span> I did this</button>
+            </form>
+            <form action="/my/science/report" method="post"
+                  hx-post="/my/science/report" hx-target="#report-results" hx-swap="outerHTML">
+              <input type="hidden" name="id" value="<%= item.id %>">
+              <input type="hidden" name="mode" value="5">
+              <input type="hidden" name="rpage" value="<%= list.page_index %>">
+              <button type="submit" class="action-button tertiary"><span class="bigger">&times;</span> I didn't do this</button>
+            </form>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    <% include!("my_pagination.stpl"); %>
+  <% } %>
+</div>
+<% if oob { %>
+<%# htmx 4 multi-target partial: replaces every `.reports-badge` (tab + both nav badges). %>
+<template hx type="partial" hx-target=".reports-badge" hx-swap="outerHTML"><% let reports_pending = list.total; %><% include!("reports_badge.stpl"); %></template>
+<% } %>

@@ -8,7 +8,7 @@
       <input type="radio" name="science-tab" id="tab-log" class="tab-radio" <% if !report_checked { %>checked<% } %>>
 
       <div class="science-tabs" role="tablist">
-        <label for="tab-report" class="tab">Report Your Science<% if report.total > 0 { %><span class="bubble"><%= report.total %></span><% } %></label>
+        <label for="tab-report" class="tab">Report Your Science<% let reports_pending = report_total; %><% include!("../partials/reports_badge.stpl"); %></label>
         <label for="tab-log" class="tab">Your Activity Log</label>
       </div>
 
@@ -18,33 +18,7 @@
           clicking to a website, saving, or adding to your calendar. Recording and
           reporting this activity helps scientists learn how people engage in science.
         </p>
-        <% if report.items.is_empty() { %>
-          <p class="no-results">Nothing to report right now. As you explore opportunities,
-            the ones you show interest in will appear here so you can confirm whether you took part.</p>
-        <% } else { %>
-          <div class="results">
-            <% for item in &report.items { %>
-              <div class="reportable">
-                <% let c = &item.card; %>
-                <% include!("../partials/opportunity_card.stpl"); %>
-                <div class="actions">
-                  <form action="/my/science/report" method="post">
-                    <input type="hidden" name="id" value="<%= item.id %>">
-                    <input type="hidden" name="mode" value="30">
-                    <button type="submit" class="action-button tertiary"><span class="bigger">&check;</span> I did this</button>
-                  </form>
-                  <form action="/my/science/report" method="post">
-                    <input type="hidden" name="id" value="<%= item.id %>">
-                    <input type="hidden" name="mode" value="5">
-                    <button type="submit" class="action-button tertiary"><span class="bigger">&times;</span> I didn't do this</button>
-                  </form>
-                </div>
-              </div>
-            <% } %>
-          </div>
-          <% let list = &report; %>
-          <% include!("../partials/my_pagination.stpl"); %>
-        <% } %>
+        <%- report_html %>
       </section>
 
       <section class="tab-panel log-panel">

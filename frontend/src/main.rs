@@ -81,6 +81,37 @@ async fn main() -> std::io::Result<()> {
             get(routes::my::profile_settings).post(routes::my::save_profile),
         )
         .at("/my/profile/delete", post(routes::my::delete_account))
+        .at("/my/goals", get(routes::my::goals_page))
+        .at("/my/goals/set", post(routes::my::set_goal))
+        .at("/my/goals/:id/status", post(routes::my::update_goal_status))
+        .at("/my/goals/:id/delete", post(routes::my::delete_goal))
+        .at(
+            "/my/submit-opportunity",
+            get(routes::opp_form::new_opportunity).post(routes::opp_form::save_new),
+        )
+        .at(
+            "/my/opportunity/:uid",
+            get(routes::opp_form::edit_opportunity).post(routes::opp_form::save_existing),
+        )
+        .at("/my/opportunities", get(routes::my::opportunities))
+        .at(
+            "/my/opportunities/export",
+            get(routes::my::export_opportunities),
+        )
+        .at(
+            "/my/opportunities/:uid/trash",
+            post(routes::my::trash_opportunity),
+        )
+        .at("/my/organization", get(routes::my::organization))
+        .at("/my/organization/:uid", post(routes::my::save_organization))
+        .at(
+            "/my/organization/:uid/member",
+            post(routes::my::manage_org_member),
+        )
+        .at(
+            "/my/organization/:uid/invite",
+            post(routes::my::invite_managers),
+        )
         .at("/api/*path", proxy::api_proxy)
         // Interactive action-bar toggles (HTMX) on a detail page.
         .at("/:slug/like", post(routes::entity::toggle_like))

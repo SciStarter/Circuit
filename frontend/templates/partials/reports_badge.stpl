@@ -1,0 +1,4 @@
+<%# Pending-report count badge. Expects an i64 `reports_pending` in scope.
+    Always rendered (hidden when zero) and tagged `.reports-badge` so a single
+    htmx multi-target swap can update every instance at once. %>
+<span class="reports-badge bubble"<% if reports_pending == 0 { %> hidden<% } %>><% if reports_pending > 0 { %><%= reports_pending %><% } %></span>
