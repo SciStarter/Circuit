@@ -1,5 +1,9 @@
+use poem::web::cookie::CookieJar;
+use poem::Request;
+
 use crate::api::ApiClient;
-use crate::session::{current_user, CurrentUser};
+use crate::session::{current_user, token_from_jar, CurrentUser};
+use crate::AppState;
 
 /// Per-request context for the global chrome (header, nav, footer). Built once
 /// per request and rendered into every page via the layout. Mirrors the data
@@ -33,6 +37,21 @@ impl Chrome {
         }
     }
 
+    /// Build the chrome for a request straight from the framework primitives,
+    /// resolving the session token from the cookie jar. The single entry point
+    /// used by every page handler.
+    pub async fn for_request(state: &AppState, jar: &CookieJar, req: &Request) -> Chrome {
+        let token = token_from_jar(jar);
+        Chrome::build(
+            &state.api,
+            token.as_deref(),
+            req.header("host"),
+            req.uri().path().to_string(),
+            state.config.domain.clone(),
+        )
+        .await
+    }
+
     /// Whether the current request path matches `p` (for nav highlighting).
     pub fn is_active(&self, p: &str) -> bool {
         self.path == p
@@ -40,6 +59,11 @@ impl Chrome {
 
     pub fn authenticated(&self) -> bool {
         self.user.is_some()
+    }
+
+    /// The current user's uid, if authenticated.
+    pub fn uid(&self) -> Option<&str> {
+        self.user.as_ref().map(|u| u.uid.as_str())
     }
 
     /// An "owner" can manage opportunities (belongs to at least one partner).

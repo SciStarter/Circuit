@@ -70,6 +70,17 @@ async fn main() -> std::io::Result<()> {
         )
         .at("/account", get(routes::auth::account))
         .at("/logout", post(routes::auth::logout))
+        // Authenticated account area.
+        .at("/my/saved", get(routes::my::saved_opportunities))
+        .at("/my/saved/remove-old", post(routes::my::remove_old_saved))
+        .at("/my/saved/:uid/remove", post(routes::my::remove_saved))
+        .at("/my/science", get(routes::my::science))
+        .at("/my/science/report", post(routes::my::report_involvement))
+        .at(
+            "/my/profile",
+            get(routes::my::profile_settings).post(routes::my::save_profile),
+        )
+        .at("/my/profile/delete", post(routes::my::delete_account))
         .at("/api/*path", proxy::api_proxy)
         // Interactive action-bar toggles (HTMX) on a detail page.
         .at("/:slug/like", post(routes::entity::toggle_like))

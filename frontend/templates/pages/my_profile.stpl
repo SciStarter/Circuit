@@ -1,0 +1,127 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <form class="my-profile" action="/my/profile" method="post">
+      <h1>My Profile &amp; Settings</h1>
+
+      <% if saved { %>
+        <div class="profile-notice success">Your profile has been saved.</div>
+      <% } %>
+      <% if pwreset { %>
+        <div class="profile-notice warning">Please select a new password now.</div>
+      <% } %>
+
+      <section class="account-settings">
+        <div class="profile-item">
+          <label for="pf-email">Email (login)</label>
+          <input id="pf-email" type="email" name="email" value="<%= profile.email %>" autocomplete="email">
+        </div>
+        <div class="profile-item">
+          <label for="pf-password">Password</label>
+          <input id="pf-password" type="password" name="password" placeholder="Leave blank to keep current" autocomplete="new-password">
+        </div>
+        <div class="profile-item">
+          <label for="pf-username">Display Name</label>
+          <input id="pf-username" type="text" name="username" value="<%= profile.username() %>">
+        </div>
+        <div class="profile-item">
+          <label for="pf-zip">Zip/Postal Code</label>
+          <input id="pf-zip" type="text" name="zip_code" value="<%= profile.zip_code() %>">
+        </div>
+        <div class="profile-item">
+          <label for="pf-phone">Phone Number</label>
+          <input id="pf-phone" type="text" name="phone" value="<%= profile.phone() %>">
+        </div>
+        <div class="profile-item">
+          <label for="pf-first">First Name</label>
+          <input id="pf-first" type="text" name="first_name" value="<%= profile.first_name() %>">
+        </div>
+        <div class="profile-item">
+          <label for="pf-last">Last Name</label>
+          <input id="pf-last" type="text" name="last_name" value="<%= profile.last_name() %>">
+        </div>
+        <div class="profile-item check">
+          <label><input type="checkbox" name="private" <% if profile.private { %>checked<% } %>> Make my profile private</label>
+        </div>
+        <div id="allow-comm" class="profile-item check">
+          <label><input type="checkbox" name="allow_emails" <% if profile.allow_emails { %>checked<% } %>> Accept messages from all users, opportunity providers, and researchers.</label>
+          <small>If you turn this off, only Science Near Me staff and Opportunity Providers can email you.</small>
+        </div>
+      </section>
+
+      <section class="research-questions">
+        <h2>The following fields are used for scientific research.</h2>
+        <em>Consider adding them to help us study public engagement in science and informal science learning.</em>
+
+        <div class="research-item">
+          <div><label>Gender</label><small>Check one or more options</small></div>
+          <div>
+            <label><input type="checkbox" name="genders[]" value="female" <% if profile.has_gender("female") { %>checked<% } %>> Female</label>
+            <label><input type="checkbox" name="genders[]" value="male" <% if profile.has_gender("male") { %>checked<% } %>> Male</label>
+            <label><input type="checkbox" name="genders[]" value="non-binary" <% if profile.has_gender("non-binary") { %>checked<% } %>> Non-binary</label>
+            <label><input type="checkbox" name="genders[]" value="transgender" <% if profile.has_gender("transgender") { %>checked<% } %>> Transgender</label>
+            <label><input type="checkbox" name="genders[]" value="intersex" <% if profile.has_gender("intersex") { %>checked<% } %>> Intersex</label>
+            <div class="other-row">
+              <label><input type="checkbox" name="genders[]" value="other" <% if profile.has_gender("other") { %>checked<% } %>> Other</label>
+              <input type="text" name="gender_other" value="<%= profile.gender_other() %>">
+            </div>
+          </div>
+        </div>
+
+        <div class="research-item">
+          <div><label>Birth Year</label></div>
+          <div>
+            <input type="text" inputmode="numeric" name="birth_year" value="<% if let Some(y) = profile.birth_year { %><%= y %><% } %>">
+          </div>
+        </div>
+
+        <div class="research-item">
+          <div><label>Race/Ethnicity</label><small>Check one or more options</small></div>
+          <div>
+            <label><input type="checkbox" name="ethnicities[]" value="asian" <% if profile.has_ethnicity("asian") { %>checked<% } %>> Asian</label>
+            <label><input type="checkbox" name="ethnicities[]" value="black-or-african" <% if profile.has_ethnicity("black-or-african") { %>checked<% } %>> Black or African</label>
+            <label><input type="checkbox" name="ethnicities[]" value="latinx-or-hispanic" <% if profile.has_ethnicity("latinx-or-hispanic") { %>checked<% } %>> Latinx or Hispanic</label>
+            <label><input type="checkbox" name="ethnicities[]" value="middle-eastern-or-north-african" <% if profile.has_ethnicity("middle-eastern-or-north-african") { %>checked<% } %>> Middle Eastern or North African</label>
+            <label><input type="checkbox" name="ethnicities[]" value="native-american-or-native-alaskan" <% if profile.has_ethnicity("native-american-or-native-alaskan") { %>checked<% } %>> Native American or Native Alaskan</label>
+            <label><input type="checkbox" name="ethnicities[]" value="native-hawaiian-or-pacific-islander" <% if profile.has_ethnicity("native-hawaiian-or-pacific-islander") { %>checked<% } %>> Native Hawaiian or Pacific Islander</label>
+            <label><input type="checkbox" name="ethnicities[]" value="white-or-caucasian" <% if profile.has_ethnicity("white-or-caucasian") { %>checked<% } %>> White or Caucasian</label>
+            <div class="other-row">
+              <label><input type="checkbox" name="ethnicities[]" value="other" <% if profile.has_ethnicity("other") { %>checked<% } %>> Other</label>
+              <input type="text" name="ethnicity_other" value="<%= profile.ethnicity_other() %>">
+            </div>
+          </div>
+        </div>
+
+        <div class="research-item">
+          <div><label>Family Income</label><small>Select the range that best reflects your household yearly income</small></div>
+          <div>
+            <label><input type="radio" name="family_income" value="zero-to-twenty-five" <% if profile.income_is("zero-to-twenty-five") { %>checked<% } %>> $0&mdash;$25,000</label>
+            <label><input type="radio" name="family_income" value="twenty-five-to-fifty" <% if profile.income_is("twenty-five-to-fifty") { %>checked<% } %>> $25,001&mdash;$50,000</label>
+            <label><input type="radio" name="family_income" value="fifty-to-hundred" <% if profile.income_is("fifty-to-hundred") { %>checked<% } %>> $50,001&mdash;$100,000</label>
+            <label><input type="radio" name="family_income" value="hundred-plus" <% if profile.income_is("hundred-plus") { %>checked<% } %>> $100,001+</label>
+          </div>
+        </div>
+
+        <div class="research-item">
+          <div><label>Your Education</label><small>Select your highest level of attainment</small></div>
+          <div>
+            <label><input type="radio" name="education_level" value="grade-school" <% if profile.education_is("grade-school") { %>checked<% } %>> Elementary Graduate</label>
+            <label><input type="radio" name="education_level" value="high-school" <% if profile.education_is("high-school") { %>checked<% } %>> High School Graduate or Equivalent</label>
+            <label><input type="radio" name="education_level" value="trade-school" <% if profile.education_is("trade-school") { %>checked<% } %>> Some College</label>
+            <label><input type="radio" name="education_level" value="university" <% if profile.education_is("university") { %>checked<% } %>> Bachelor's Degree</label>
+            <label><input type="radio" name="education_level" value="graduate" <% if profile.education_is("graduate") { %>checked<% } %>> Master's Degree or Advanced Degree</label>
+            <label><input type="radio" name="education_level" value="doctorate" <% if profile.education_is("doctorate") { %>checked<% } %>> Ph. D. or M. D.</label>
+          </div>
+        </div>
+      </section>
+
+      <div class="account-ops">
+        <button type="submit" class="action-button primary">Save</button>
+      </div>
+    </form>
+
+    <form class="delete-account" action="/my/profile/delete" method="post"
+          onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+      <button type="submit">Delete Account</button>
+    </form>
+  </div>
+</div>

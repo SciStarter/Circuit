@@ -1,0 +1,75 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <div class="my-saved">
+      <h1>Saved Science Opportunities</h1>
+
+      <section id="manage">
+        <form class="saved-search" action="/my/saved" method="get">
+          <label for="saved-search-text">Search your saved opportunities</label>
+          <div class="saved-search-row">
+            <input id="saved-search-text" name="search" type="text" value="<%= search %>" autocomplete="off">
+            <% if sort != "closest" { %><input type="hidden" name="sort" value="<%= sort %>"><% } %>
+            <button type="submit" class="action-button">Search</button>
+          </div>
+        </form>
+
+        <form action="/my/saved/remove-old" method="post">
+          <input type="hidden" name="search" value="<%= search %>">
+          <input type="hidden" name="sort" value="<%= sort %>">
+          <button type="submit" class="remove-old">
+            <img src="/static/img/trash.svg" alt=""> Remove Past Opportunities
+          </button>
+        </form>
+      </section>
+
+      <section id="sort">
+        <form action="/my/saved" method="get" class="sort-form">
+          <% if !search.is_empty() { %><input type="hidden" name="search" value="<%= search %>"><% } %>
+          <label>Sort:
+            <select name="sort" onchange="this.form.submit()">
+              <option value="closest" <% if sort == "closest" { %>selected<% } %>>Closest</option>
+              <option value="soonest" <% if sort == "soonest" { %>selected<% } %>>Soonest</option>
+            </select>
+          </label>
+        </form>
+      </section>
+
+      <section id="results">
+        <% if items.is_empty() { %>
+          <p class="no-results">You haven't saved any opportunities yet. Browse the
+            <a href="/find">finder</a> and tap the bookmark to save one for later.</p>
+        <% } else { %>
+          <div class="opportunity-cards">
+            <% for item in &items { %>
+              <div class="saved-item">
+                <% let c = &item.card; %>
+                <% include!("../partials/opportunity_card.stpl"); %>
+                <form class="saved-remove" action="/my/saved/<%= item.uid %>/remove" method="post">
+                  <input type="hidden" name="search" value="<%= search %>">
+                  <input type="hidden" name="sort" value="<%= sort %>">
+                  <button type="submit" title="Remove from saved" aria-label="Remove from saved">
+                    <img src="/static/img/trash.svg" alt="">
+                  </button>
+                </form>
+              </div>
+            <% } %>
+          </div>
+
+          <nav class="pagination" aria-label="pagination">
+            <% if has_prev { %>
+              <a class="action-button" href="<%= prev_url %>">&larr; Previous</a>
+            <% } else { %>
+              <span class="action-button disabled">&larr; Previous</span>
+            <% } %>
+            <span class="page-status">Page <%= page_index + 1 %> of <%= last_page + 1 %></span>
+            <% if has_next { %>
+              <a class="action-button" href="<%= next_url %>">Next &rarr;</a>
+            <% } else { %>
+              <span class="action-button disabled">Next &rarr;</span>
+            <% } %>
+          </nav>
+        <% } %>
+      </section>
+    </div>
+  </div>
+</div>

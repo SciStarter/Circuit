@@ -84,19 +84,6 @@ pub struct NextQuery {
     next: Option<String>,
 }
 
-/// Build the chrome for an auth page (resolving any existing session).
-async fn build_chrome(state: &AppState, jar: &CookieJar, req: &Request) -> Chrome {
-    let token = token_from_jar(jar);
-    Chrome::build(
-        &state.api,
-        token.as_deref(),
-        req.header("host"),
-        req.uri().path().to_string(),
-        state.config.domain.clone(),
-    )
-    .await
-}
-
 /// If the request already carries a valid session, produce a redirect to
 /// `next`. Used by the login/signup pages, which the old app skipped for
 /// already-authenticated visitors.
@@ -180,7 +167,7 @@ pub async fn login_form(
     if let Some(redirect) = redirect_if_authenticated(&state, jar, &next).await {
         return Ok(redirect);
     }
-    let chrome = build_chrome(&state, jar, req).await;
+    let chrome = Chrome::for_request(&state, jar, req).await;
     Ok(page(
         chrome,
         "Log in | Science Near Me",
@@ -220,7 +207,7 @@ pub async fn login_submit(
     match outcome {
         AuthOutcome::Success => Ok(Redirect::see_other(next).into_response()),
         AuthOutcome::Failure(error) => {
-            let chrome = build_chrome(&state, jar, req).await;
+            let chrome = Chrome::for_request(&state, jar, req).await;
             Ok(page(
                 chrome,
                 "Log in | Science Near Me",
@@ -258,7 +245,7 @@ pub async fn signup_form(
     if let Some(redirect) = redirect_if_authenticated(&state, jar, &next).await {
         return Ok(redirect);
     }
-    let chrome = build_chrome(&state, jar, req).await;
+    let chrome = Chrome::for_request(&state, jar, req).await;
     Ok(page(
         chrome,
         "Create an account | Science Near Me",
@@ -333,7 +320,7 @@ pub async fn signup_submit(
     };
 
     if let Some(msg) = validate_signup(&input, agree) {
-        let chrome = build_chrome(&state, jar, req).await;
+        let chrome = Chrome::for_request(&state, jar, req).await;
         return Ok(page(
             chrome,
             "Create an account | Science Near Me",
@@ -369,7 +356,7 @@ pub async fn signup_submit(
     match outcome {
         AuthOutcome::Success => Ok(Redirect::see_other(next).into_response()),
         AuthOutcome::Failure(error) => {
-            let chrome = build_chrome(&state, jar, req).await;
+            let chrome = Chrome::for_request(&state, jar, req).await;
             Ok(page(
                 chrome,
                 "Create an account | Science Near Me",
@@ -401,7 +388,7 @@ pub async fn scistarter_form(
     req: &Request,
     Query(q): Query<NextQuery>,
 ) -> Result<Response, AppError> {
-    let chrome = build_chrome(&state, jar, req).await;
+    let chrome = Chrome::for_request(&state, jar, req).await;
     Ok(page(
         chrome,
         "Log in with SciStarter | Science Near Me",
@@ -435,7 +422,7 @@ pub async fn scistarter_submit(
     match outcome {
         AuthOutcome::Success => Ok(Redirect::see_other(next).into_response()),
         AuthOutcome::Failure(error) => {
-            let chrome = build_chrome(&state, jar, req).await;
+            let chrome = Chrome::for_request(&state, jar, req).await;
             Ok(page(
                 chrome,
                 "Log in with SciStarter | Science Near Me",
@@ -466,7 +453,7 @@ pub async fn forgot_form(
     jar: &CookieJar,
     req: &Request,
 ) -> Result<Response, AppError> {
-    let chrome = build_chrome(&state, jar, req).await;
+    let chrome = Chrome::for_request(&state, jar, req).await;
     Ok(page(
         chrome,
         "Forgot your password? | Science Near Me",
@@ -498,7 +485,7 @@ pub async fn forgot_submit(
         )
         .await;
 
-    let chrome = build_chrome(&state, jar, req).await;
+    let chrome = Chrome::for_request(&state, jar, req).await;
     Ok(page(
         chrome,
         "Forgot your password? | Science Near Me",
@@ -526,7 +513,7 @@ pub async fn account(
     Query(q): Query<NextQuery>,
 ) -> Result<Response, AppError> {
     let next = safe_next(q.next);
-    let chrome = build_chrome(&state, jar, req).await;
+    let chrome = Chrome::for_request(&state, jar, req).await;
     Ok(page(
         chrome,
         "Sign in or create an account | Science Near Me",

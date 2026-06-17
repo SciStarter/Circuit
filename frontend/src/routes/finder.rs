@@ -15,11 +15,12 @@ use crate::render::{page, Render};
 use crate::session::token_from_jar;
 use crate::AppState;
 
-/// Search response from `GET /api/ui/finder/search`.
+/// Search response from `GET /api/ui/finder/search`. Shared with the `/my`
+/// pages (saved opportunities), which query the same endpoint.
 #[derive(Debug, Deserialize)]
-struct SearchResults {
-    pagination: PaginationInfo,
-    matches: Vec<OpportunityExterior>,
+pub struct SearchResults {
+    pub pagination: PaginationInfo,
+    pub matches: Vec<OpportunityExterior>,
 }
 
 /// Response from the backend geolocate endpoint (`/api/ui/finder/geolocate`).
@@ -39,12 +40,12 @@ struct PartnerOption {
 }
 
 #[derive(Debug, Deserialize)]
-struct PaginationInfo {
-    page_index: i64,
+pub struct PaginationInfo {
+    pub page_index: i64,
     #[allow(dead_code)]
-    per_page: i64,
-    last_page: i64,
-    total: i64,
+    pub per_page: i64,
+    pub last_page: i64,
+    pub total: i64,
 }
 
 /// The finder query. Parsed from and serialized back to the query string with

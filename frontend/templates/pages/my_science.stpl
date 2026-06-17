@@ -1,0 +1,83 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <div class="my-science">
+      <%
+        let report_checked = active_tab != "log";
+      %>
+      <input type="radio" name="science-tab" id="tab-report" class="tab-radio" <% if report_checked { %>checked<% } %>>
+      <input type="radio" name="science-tab" id="tab-log" class="tab-radio" <% if !report_checked { %>checked<% } %>>
+
+      <div class="science-tabs" role="tablist">
+        <label for="tab-report" class="tab">Report Your Science<% if report.total > 0 { %><span class="bubble"><%= report.total %></span><% } %></label>
+        <label for="tab-log" class="tab">Your Activity Log</label>
+      </div>
+
+      <section class="tab-panel report-panel">
+        <p class="my-intro">
+          This section lists opportunities you've expressed an interest in by
+          clicking to a website, saving, or adding to your calendar. Recording and
+          reporting this activity helps scientists learn how people engage in science.
+        </p>
+        <% if report.items.is_empty() { %>
+          <p class="no-results">Nothing to report right now. As you explore opportunities,
+            the ones you show interest in will appear here so you can confirm whether you took part.</p>
+        <% } else { %>
+          <div class="results">
+            <% for item in &report.items { %>
+              <div class="reportable">
+                <% let c = &item.card; %>
+                <% include!("../partials/opportunity_card.stpl"); %>
+                <div class="actions">
+                  <form action="/my/science/report" method="post">
+                    <input type="hidden" name="id" value="<%= item.id %>">
+                    <input type="hidden" name="mode" value="30">
+                    <button type="submit" class="action-button tertiary"><span class="bigger">&check;</span> I did this</button>
+                  </form>
+                  <form action="/my/science/report" method="post">
+                    <input type="hidden" name="id" value="<%= item.id %>">
+                    <input type="hidden" name="mode" value="5">
+                    <button type="submit" class="action-button tertiary"><span class="bigger">&times;</span> I didn't do this</button>
+                  </form>
+                </div>
+              </div>
+            <% } %>
+          </div>
+          <% let list = &report; %>
+          <% include!("../partials/my_pagination.stpl"); %>
+        <% } %>
+      </section>
+
+      <section class="tab-panel log-panel">
+        <div class="manage">
+          <div class="status">
+            <span><%= log.total %></span>
+            <span>Total Science Opportunities Logged</span>
+          </div>
+          <div class="search">
+            <form action="/my/science" method="get">
+              <input type="hidden" name="tab" value="log">
+              <label for="log-search">Search your opportunities</label>
+              <div class="log-search-row">
+                <input id="log-search" name="text" type="text" value="<%= search %>" autocomplete="off">
+                <button type="submit" class="action-button">Search</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <% if log.items.is_empty() { %>
+          <p class="no-results">No logged activity yet. When you confirm you took part in an
+            opportunity, it will be recorded here.</p>
+        <% } else { %>
+          <div class="results opportunity-cards">
+            <% for item in &log.items { %>
+              <% let c = &item.card; %>
+              <% include!("../partials/opportunity_card.stpl"); %>
+            <% } %>
+          </div>
+          <% let list = &log; %>
+          <% include!("../partials/my_pagination.stpl"); %>
+        <% } %>
+      </section>
+    </div>
+  </div>
+</div>

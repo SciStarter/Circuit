@@ -1,0 +1,13 @@
+<nav class="pagination" aria-label="pagination">
+  <% if list.has_prev { %>
+    <a class="action-button" href="<%= list.prev_url %>">&larr; Previous</a>
+  <% } else { %>
+    <span class="action-button disabled">&larr; Previous</span>
+  <% } %>
+  <span class="page-status">Page <%= list.page_index + 1 %> of <%= list.last_page + 1 %></span>
+  <% if list.has_next { %>
+    <a class="action-button" href="<%= list.next_url %>">Next &rarr;</a>
+  <% } else { %>
+    <span class="action-button disabled">Next &rarr;</span>
+  <% } %>
+</nav>
