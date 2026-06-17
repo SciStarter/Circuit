@@ -1,0 +1,30 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <div class="data-overview">
+      <div class="flex-header">
+        <h1>Opportunity Data Explorer</h1>
+        <% if !opps.is_empty() { %>
+          <form action="/my/opportunity-data-explorer" method="get">
+            <select name="org" onchange="this.form.submit()">
+              <% for o in &opps { %>
+                <option value="<%= o.uid %>" <% if o.uid == selected_uid { %>selected<% } %>><%= o.title %></option>
+              <% } %>
+            </select>
+          </form>
+        <% } %>
+      </div>
+
+      <% if opps.is_empty() { %>
+        <p class="no-results">You don't have any opportunities yet. <a href="/my/submit-opportunity">Add one</a> to see its data here.</p>
+      <% } else { %>
+        <h2 class="explorer-subject"><%= selected_title %></h2>
+        <% if !has_data { %>
+          <p class="no-results">No analytics have been compiled for this opportunity yet.
+            Data appears here once it has accrued views and engagement.</p>
+        <% } else { %>
+          <% include!("../partials/analytics_sections.stpl"); %>
+        <% } %>
+      <% } %>
+    </div>
+  </div>
+</div>

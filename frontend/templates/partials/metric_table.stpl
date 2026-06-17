@@ -1,0 +1,15 @@
+<table class="bar-table metric-table">
+  <thead>
+    <tr><th></th><% for c in &metric_columns { %><th><%= c %></th><% } %></tr>
+  </thead>
+  <tbody>
+    <% for row in rows { %>
+      <tr>
+        <th><%= row.label %></th>
+        <% for cell in &row.cells { %>
+          <td class="table-bar"><span class="bar" style="width: <%= cell.pct %>%; background:#268699"></span> <%= cell.value %></td>
+        <% } %>
+      </tr>
+    <% } %>
+  </tbody>
+</table>

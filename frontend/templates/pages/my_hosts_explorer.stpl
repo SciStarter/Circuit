@@ -1,0 +1,73 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <div class="data-overview hosts-explorer">
+      <div class="flex-header">
+        <h1>Hosts Explorer</h1>
+        <% if orgs.len() > 1 { %>
+          <form action="/my/hosts-explorer" method="get">
+            <select name="org" onchange="this.form.submit()">
+              <% for o in &orgs { %>
+                <option value="<%= o.uid %>" <% if o.uid == selected_uid { %>selected<% } %>><%= o.name %></option>
+              <% } %>
+            </select>
+          </form>
+        <% } %>
+      </div>
+
+      <% if orgs.is_empty() { %>
+        <p class="no-results">You're not a member of any organization, so there's no data to show.</p>
+      <% } else if !has_data || total_hosts == 0 { %>
+        <p class="no-results">No host data has been compiled for <strong><%= selected_name %></strong> yet.</p>
+      <% } else { %>
+
+        <div class="stat-row">
+          <div class="stat"><span class="num"><%= total_hosts %></span><span class="lbl">Hosts</span></div>
+          <div class="stat"><span class="num"><%= total_opportunities %></span><span class="lbl">Opportunities (all time)</span></div>
+        </div>
+
+        <section class="data-section">
+          <h2>Hosts by opportunities</h2>
+          <div class="chart-box"><canvas data-chart="<%= treemap %>"></canvas></div>
+        </section>
+
+        <section class="data-section">
+          <h2>Opportunities by host</h2>
+          <table class="bar-table">
+            <thead><tr><th>Host</th><th>Total</th><th>Live</th></tr></thead>
+            <tbody>
+              <% for h in &hosts { %>
+                <tr>
+                  <th><%= h.name %></th>
+                  <td class="table-bar"><span class="bar" style="width: <%= h.total_pct %>%; background:#268699"></span> <%= h.total %></td>
+                  <td class="table-bar"><span class="bar" style="width: <%= h.live_pct %>%; background:#7cb4bf"></span> <%= h.live %></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="data-section">
+          <h2>Engagement by host</h2>
+          <table class="bar-table metric-table">
+            <thead><tr><th>Host</th><th>Views</th><th>Exits</th><th>Did&nbsp;it</th><th>Saves</th><th>Likes</th><th>Shares</th><th>Calendar</th></tr></thead>
+            <tbody>
+              <% for h in &hosts { %>
+                <tr>
+                  <th><%= h.name %></th>
+                  <td class="table-bar"><span class="bar" style="width: <%= h.views_pct %>%; background:#268699"></span> <%= h.views %></td>
+                  <td class="table-bar"><span class="bar" style="width: <%= h.exits_pct %>%; background:#268699"></span> <%= h.exits %></td>
+                  <td class="table-bar"><span class="bar" style="width: <%= h.didits_pct %>%; background:#268699"></span> <%= h.didits %></td>
+                  <td class="table-bar"><span class="bar" style="width: <%= h.saves_pct %>%; background:#268699"></span> <%= h.saves %></td>
+                  <td class="table-bar"><span class="bar" style="width: <%= h.likes_pct %>%; background:#268699"></span> <%= h.likes %></td>
+                  <td class="table-bar"><span class="bar" style="width: <%= h.shares_pct %>%; background:#268699"></span> <%= h.shares %></td>
+                  <td class="table-bar"><span class="bar" style="width: <%= h.calendar_pct %>%; background:#268699"></span> <%= h.calendar_adds %></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </section>
+
+      <% } %>
+    </div>
+  </div>
+</div>

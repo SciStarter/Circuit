@@ -18,6 +18,7 @@
   <script src="/static/js/opp-actions.js" defer></script>
   <script src="/static/js/opp-map.js" defer></script>
   <script src="/static/js/opp-form.js" defer></script>
+  <script src="/static/js/charts.js" defer></script>
   <script src="/static/js/offline.js" defer></script>
 </head>
 <body>

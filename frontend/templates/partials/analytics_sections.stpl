@@ -1,0 +1,60 @@
+<!-- Engagement -->
+<section class="data-section">
+  <h2>Engagement</h2>
+  <div class="stat-row">
+    <div class="stat"><span class="num"><%= sections.eng_total_views %></span><span class="lbl">Views</span></div>
+    <div class="stat"><span class="num"><%= sections.eng_total_clicks %></span><span class="lbl">Clicks to Website</span></div>
+  </div>
+  <div class="chart-box"><canvas data-chart="<%= sections.eng_line %>"></canvas></div>
+  <% if !sections.eng_bars.is_empty() { %>
+    <table class="bar-table">
+      <thead><tr><th>Metric</th><th>This</th><th>Network mean</th><th>Network median</th></tr></thead>
+      <tbody>
+        <% for b in &sections.eng_bars { %>
+          <tr>
+            <th><%= b.label %></th>
+            <td class="table-bar"><span class="bar" style="width: <%= b.self_pct %>%; background:#268699"></span> <%= b.self_val %></td>
+            <td class="table-bar"><span class="bar" style="width: <%= b.mean_pct %>%; background:#7cb4bf"></span> <%= b.mean_val %></td>
+            <td class="table-bar"><span class="bar" style="width: <%= b.median_pct %>%; background:#f2c04b"></span> <%= b.median_val %></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+
+<!-- Traffic -->
+<section class="data-section">
+  <h2>Traffic</h2>
+  <div class="chart-split">
+    <div class="chart-box"><canvas data-chart="<%= sections.traffic_line %>"></canvas></div>
+    <% if sections.traffic_has_pie { %>
+      <div class="chart-box pie"><canvas data-chart="<%= sections.traffic_pie %>"></canvas></div>
+    <% } %>
+  </div>
+  <% if !sections.traffic_rows.is_empty() { %>
+    <% let rows = &sections.traffic_rows; %>
+    <% include!("metric_table.stpl"); %>
+  <% } %>
+</section>
+
+<!-- Technology -->
+<section class="data-section">
+  <h2>Technology</h2>
+  <div class="chart-split">
+    <div class="chart-box pie"><canvas data-chart="<%= sections.tech_doughnut %>"></canvas></div>
+    <div class="grow">
+      <% let rows = &sections.tech_rows; %>
+      <% include!("metric_table.stpl"); %>
+    </div>
+  </div>
+</section>
+
+<!-- Audience -->
+<% if !sections.states_rows.is_empty() { %>
+  <section class="data-section">
+    <h2>Audience</h2>
+    <% let rows = &sections.states_rows; %>
+    <% include!("metric_table.stpl"); %>
+  </section>
+<% } %>

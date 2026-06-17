@@ -1,0 +1,43 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <div class="data-overview">
+      <div class="flex-header">
+        <h1>Your Data Overview</h1>
+        <% if orgs.len() > 1 { %>
+          <form action="/my/data-overview" method="get">
+            <select name="org" onchange="this.form.submit()">
+              <% for o in &orgs { %>
+                <option value="<%= o.uid %>" <% if o.uid == selected_uid { %>selected<% } %>><%= o.name %></option>
+              <% } %>
+            </select>
+          </form>
+        <% } %>
+      </div>
+
+      <% if orgs.is_empty() { %>
+        <p class="no-results">You're not a member of any organization, so there's no data to show.</p>
+      <% } else if !has_data { %>
+        <p class="no-results">No analytics have been compiled for <strong><%= selected_name %></strong> yet.
+          Data appears here once the opportunity has accrued views and engagement.</p>
+      <% } else { %>
+        <% include!("../partials/analytics_sections.stpl"); %>
+
+        <% if !searches.is_empty() { %>
+          <section class="data-section">
+            <h2>User Searches</h2>
+            <table class="bar-table">
+              <tbody>
+                <% for (place, count) in &searches { %>
+                  <tr>
+                    <th><%= place %></th>
+                    <td class="table-bar"><span class="bar" style="width: <%= count * 100 / searches_max %>%; background:#165e6f"></span> <%= count %></td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </section>
+        <% } %>
+      <% } %>
+    </div>
+  </div>
+</div>

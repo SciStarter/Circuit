@@ -1,0 +1,9 @@
+<div class="prop-bars">
+  <% for r in rows { %>
+    <div class="prop-row">
+      <span class="prop-label"><%= r.label %></span>
+      <span class="prop-track"><span class="bar" style="width: <%= r.pct %>%; background:#165e6f"></span></span>
+      <span class="prop-value"><%= r.value %></span>
+    </div>
+  <% } %>
+</div>

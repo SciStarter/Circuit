@@ -3632,3 +3632,218 @@ footer .partner .description {
   border-color: var(--color-snm-info);
   background: var(--color-snm-bg);
 }
+
+/* ---- /my/data-overview — Data Insights ---- */
+.data-overview .flex-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.data-overview h1 {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--color-snm-element-med);
+}
+.data-overview .flex-header select {
+  font-weight: bold;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--color-snm-border);
+  border-radius: 8px;
+}
+.data-section {
+  margin: 1.5rem 0 2.5rem;
+}
+.data-section h2 {
+  font-family: var(--font-heading);
+  font-weight: bold;
+  font-size: var(--text-large);
+  color: var(--color-snm-bg-dark);
+  border-bottom: 1px solid var(--color-snm-border);
+  padding-bottom: 0.4rem;
+  margin-bottom: 1rem;
+}
+.stat-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-snm-border);
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  min-width: 8rem;
+}
+.stat .num {
+  font-family: var(--font-heading);
+  font-weight: bold;
+  font-size: var(--text-largest);
+  color: var(--color-snm-element-med);
+}
+.stat .lbl {
+  font-size: var(--text-smaller);
+  color: var(--color-snm-glance);
+}
+
+/* Chart.js containers must be sized (maintainAspectRatio:false). */
+.chart-box {
+  position: relative;
+  height: 300px;
+  margin: 1rem 0;
+}
+.chart-box.pie {
+  max-width: 360px;
+  margin-inline: auto;
+}
+.chart-split {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.chart-split > .chart-box {
+  flex: 1 1 320px;
+  min-width: 280px;
+}
+.chart-split > .grow {
+  flex: 2 1 360px;
+  min-width: 280px;
+  overflow-x: auto;
+}
+
+/* Metric / comparison bar tables */
+.bar-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-smaller);
+}
+.bar-table th,
+.bar-table td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--color-snm-border);
+  white-space: nowrap;
+}
+.bar-table thead th {
+  color: var(--color-snm-glance);
+  font-weight: bold;
+}
+.bar-table tbody th {
+  font-weight: bold;
+  color: var(--color-snm-element-dark);
+}
+.bar-table .table-bar {
+  position: relative;
+  min-width: 80px;
+}
+.bar-table .table-bar .bar {
+  display: inline-block;
+  height: 0.6rem;
+  border-radius: 3px;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+  min-width: 1px;
+}
+.metric-table {
+  min-width: 640px;
+}
+
+/* ---- /my/snm-data-overview ---- */
+.snm-overview .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.snm-overview .stat-grid .stat {
+  padding: 0.6rem 0.9rem;
+}
+.snm-overview .stat-grid .num {
+  font-size: var(--text-large);
+}
+.bar-table .table-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  width: 1%;
+  white-space: nowrap;
+}
+.attr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 1rem 0;
+}
+.attr-table h3,
+.snm-overview section h3 {
+  font-family: var(--font-heading);
+  font-weight: bold;
+  font-size: var(--text-medium);
+  color: var(--color-snm-element-med);
+  margin: 1.25rem 0 0.5rem;
+}
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem 2rem;
+}
+.demo-block h3 {
+  font-family: var(--font-heading);
+  font-weight: bold;
+  font-size: var(--text-medium);
+  color: var(--color-snm-element-med);
+  margin-bottom: 0.5rem;
+}
+.demo-block .chart-box.pie {
+  height: 200px;
+  margin: 0 auto;
+}
+.demo-legend {
+  text-align: center;
+  font-size: var(--text-smaller);
+  color: var(--color-snm-glance);
+}
+.demo-legend .sw {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+.prop-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.prop-row {
+  display: grid;
+  grid-template-columns: 9rem 1fr 3.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: var(--text-smaller);
+}
+.prop-label {
+  color: var(--color-snm-element-dark);
+}
+.prop-track {
+  display: block;
+  height: 0.7rem;
+  background: var(--color-snm-bg-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.prop-track .bar {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+}
+.prop-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-snm-glance);
+}

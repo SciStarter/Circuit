@@ -1,0 +1,127 @@
+<div class="my snm-wrapper">
+  <div class="snm-container">
+    <div class="data-overview snm-overview">
+      <h1>SNM Data Overview</h1>
+
+      <div class="stat-row">
+        <div class="stat"><span class="num"><%= opp_total %></span><span class="lbl">Published Opportunities</span></div>
+        <div class="stat"><span class="num"><%= visits_total %></span><span class="lbl">Site Visits</span></div>
+      </div>
+
+      <!-- Opportunities -->
+      <section class="data-section">
+        <h2>Opportunities</h2>
+        <table class="bar-table">
+          <tbody>
+            <% for b in &opp_breakdown { %>
+              <tr>
+                <th><%= b.label %></th>
+                <td class="table-num"><%= b.value %></td>
+                <td class="table-bar"><span class="bar" style="width: <%= b.pct %>%; background:#165e6f"></span></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+
+        <div class="attr-grid">
+          <% for t in &attributes { %>
+            <div class="attr-table">
+              <h3><%= t.title %></h3>
+              <table class="bar-table">
+                <thead><tr><th></th><th>All</th><th>Current</th></tr></thead>
+                <tbody>
+                  <% for r in &t.rows { %>
+                    <tr>
+                      <th><%= r.label %></th>
+                      <td class="table-bar"><span class="bar" style="width: <%= r.all_pct %>%; background:#268699"></span> <%= r.all %></td>
+                      <td class="table-bar"><span class="bar" style="width: <%= r.current_pct %>%; background:#7cb4bf"></span> <%= r.current %></td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        </div>
+
+        <% if !providers.is_empty() { %>
+          <h3>Providers</h3>
+          <table class="bar-table">
+            <tbody>
+              <% for p in &providers { %>
+                <tr>
+                  <th><%= p.label %></th>
+                  <td class="table-num"><%= p.value %></td>
+                  <td class="table-bar"><span class="bar" style="width: <%= p.pct %>%; background:#165e6f"></span></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        <% } %>
+      </section>
+
+      <!-- Engagement -->
+      <section class="data-section">
+        <h2>Engagement</h2>
+        <div class="stat-grid">
+          <% for s in &stats { %>
+            <div class="stat"><span class="num"><%= s.value %></span><span class="lbl"><%= s.label %></span></div>
+          <% } %>
+        </div>
+        <% if !searches.is_empty() { %>
+          <h3>Top searches by keyword</h3>
+          <table class="bar-table">
+            <tbody>
+              <% for s in &searches { %>
+                <tr>
+                  <th><%= s.label %></th>
+                  <td class="table-num"><%= s.value %></td>
+                  <td class="table-bar"><span class="bar" style="width: <%= s.pct %>%; background:#165e6f"></span></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        <% } %>
+      </section>
+
+      <!-- Demographics -->
+      <% if has_demographics { %>
+        <section class="data-section">
+          <h2>Audience Demographics</h2>
+          <div class="demo-grid">
+            <div class="demo-block">
+              <h3>Gender</h3>
+              <div class="chart-box pie"><canvas data-chart="<%= gender_doughnut %>"></canvas></div>
+              <p class="demo-legend"><span class="sw" style="background:#268699"></span> Female <%= female_pct %>
+                &nbsp; <span class="sw" style="background:#7cb4bf"></span> Male <%= male_pct %></p>
+            </div>
+            <div class="demo-block">
+              <h3>Age</h3>
+              <% let rows = &age_rows; %>
+              <% include!("../partials/prop_bars.stpl"); %>
+            </div>
+            <div class="demo-block">
+              <h3>Ethnicity</h3>
+              <% let rows = &ethnicity_rows; %>
+              <% include!("../partials/prop_bars.stpl"); %>
+            </div>
+            <div class="demo-block">
+              <h3>Education</h3>
+              <% let rows = &education_rows; %>
+              <% include!("../partials/prop_bars.stpl"); %>
+            </div>
+            <div class="demo-block">
+              <h3>Household Income</h3>
+              <% let rows = &income_rows; %>
+              <% include!("../partials/prop_bars.stpl"); %>
+            </div>
+            <div class="demo-block">
+              <h3>Children</h3>
+              <% let rows = &children_rows; %>
+              <% include!("../partials/prop_bars.stpl"); %>
+            </div>
+          </div>
+        </section>
+      <% } %>
+    </div>
+  </div>
+</div>

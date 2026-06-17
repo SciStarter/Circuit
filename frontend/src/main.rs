@@ -102,6 +102,16 @@ async fn main() -> std::io::Result<()> {
             "/my/opportunities/:uid/trash",
             post(routes::my::trash_opportunity),
         )
+        .at("/my/data-overview", get(routes::data::data_overview))
+        .at("/my/hosts-explorer", get(routes::data::hosts_explorer))
+        .at(
+            "/my/opportunity-data-explorer",
+            get(routes::data::opportunity_data_explorer),
+        )
+        .at(
+            "/my/snm-data-overview",
+            get(routes::data::snm_data_overview),
+        )
         .at("/my/organization", get(routes::my::organization))
         .at("/my/organization/:uid", post(routes::my::save_organization))
         .at(
