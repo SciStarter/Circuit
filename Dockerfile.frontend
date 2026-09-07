@@ -1,6 +1,9 @@
 FROM node:16
 EXPOSE 3000
+# Install from the lockfile inside the image; the build must not depend on
+# whatever node_modules happens to exist on the host.
+COPY frontend/package.json frontend/yarn.lock ./
+RUN yarn install --frozen-lockfile
 COPY frontend/ .
 RUN yarn build
 CMD ["yarn", "start", "-H", "0.0.0.0"]
-
