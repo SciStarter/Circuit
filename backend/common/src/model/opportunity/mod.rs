@@ -172,7 +172,10 @@ pub enum EntityType {
     Unspecified,
     Attraction,
     Page(PageOptions),
-    #[serde(other)]
+    // Deliberately not #[serde(other)]: an entity_type this code cannot
+    // interpret must be an error, not silently reinterpreted as a plain
+    // opportunity. Defaulting here discards the real type, and the next store()
+    // writes that loss back to the database permanently.
     #[default]
     Opportunity,
 }
@@ -1021,7 +1024,7 @@ pub fn opportunity_from_row(
             organization_type: deserialize_enum(&organization_type).unwrap_or_default(),
             organization_website,
             organization_logo_url,
-            entity_type: deserialize_enum(&entity_type).unwrap_or_default(),
+            entity_type: deserialize_enum(&entity_type)?,
             opp_venue: deserialize_enum_vec(&opp_venue),
             opp_descriptor: deserialize_enum_vec(&opp_descriptor),
             min_age,
@@ -2389,7 +2392,14 @@ impl Opportunity {
 
     pub async fn set_slug_if_necessary(&mut self, db: &Database) -> Result<(), Error> {
         if self.exterior.slug.is_empty() {
-            let base = slugify(&self.exterior.title);
+            // A blank title would slugify to a blank slug, which the database
+            // requires to be unique like any other. Fall back to the uid, which
+            // is always present and already distinct.
+            let base = match slugify(&self.exterior.title) {
+                slugified if slugified.is_empty() => self.exterior.uid.to_string(),
+                slugified => slugified,
+            };
+
             let mut slug = base.clone();
             let mut disamb = 0u32;
 
@@ -2594,5 +2604,52 @@ VALUES ($1, $2, $3)
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn opportunity_entity_type_round_trips() {
+        let stored = serialize_enum(&EntityType::Opportunity);
+        assert_eq!(stored, "opportunity");
+        assert_eq!(
+            deserialize_enum::<EntityType>(&stored).unwrap(),
+            EntityType::Opportunity
+        );
+    }
+
+    #[test]
+    fn page_entity_type_round_trips() {
+        let original = EntityType::Page(PageOptions {
+            layout: PageLayout::AddOpportunities,
+        });
+        let stored = serialize_enum(&original);
+
+        assert_eq!(stored, r#"{"page":{"layout":"add_opportunities"}}"#);
+        assert_eq!(deserialize_enum::<EntityType>(&stored).unwrap(), original);
+    }
+
+    #[test]
+    fn page_entity_type_parses_with_postgres_spacing() {
+        // json_build_object() renders spaces around its colons, so the rows the
+        // repair migration writes do not match serde_json's own formatting.
+        let stored = r#"{"page" : {"layout" : "just_content"}}"#;
+
+        assert_eq!(
+            deserialize_enum::<EntityType>(stored).unwrap(),
+            EntityType::Page(PageOptions {
+                layout: PageLayout::JustContent
+            })
+        );
+    }
+
+    #[test]
+    fn legacy_page_name_is_an_error_rather_than_an_opportunity() {
+        // The form the repair migration normalizes away. Before that migration
+        // this deserialized to Opportunity, and storing the row wrote the loss back.
+        assert!(deserialize_enum::<EntityType>("page_just_content").is_err());
     }
 }

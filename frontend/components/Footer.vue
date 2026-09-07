@@ -26,7 +26,7 @@
     <ul>
       <li><h1>For Providers</h1></li>
       <li>
-        <nuxt-link to="/my/submit-opportunity">
+        <nuxt-link to="/add-opportunities">
           Add Your Opportunities to Science Near Me
         </nuxt-link>
       </li>
