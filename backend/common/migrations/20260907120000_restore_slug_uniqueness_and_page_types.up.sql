@@ -4,11 +4,18 @@
 -- single representation for deserialize_enum() to read. This must accompany the
 -- deserializer fix: an unparseable entity_type is now an error rather than
 -- being silently reinterpreted as a plain opportunity.
+--
+-- The rendering matters. The search trigger added by
+-- 20260317031840_opportunity_typed_columns recognizes a page by
+-- starts_with(entity_type, '{"page":') and casts anything else to
+-- t_entity_type, which fails for JSON. json_build_object() renders a space
+-- before the colon, so it is cast through jsonb, whose text output matches both
+-- the trigger and the rows already stored in this form.
 
 update c_opportunity
 set entity_type = json_build_object(
       'page', json_build_object('layout', substring(entity_type from 6))
-    )::text
+    )::jsonb::text
 where entity_type like 'page\_%';
 
 -- The add-opportunities page was flattened to a plain opportunity by a store()
@@ -16,7 +23,7 @@ where entity_type like 'page\_%';
 -- are served as 404, so /add-opportunities stopped resolving.
 
 update c_opportunity
-set entity_type = '{"page":{"layout":"add_opportunities"}}',
+set entity_type = '{"page": {"layout": "add_opportunities"}}'::jsonb::text,
     accepted = true
 where slug = 'add-opportunities';
 
