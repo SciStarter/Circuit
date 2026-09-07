@@ -176,7 +176,7 @@
       </ul>
       <ul>
         <li><h1>For Providers</h1></li>
-        <li><a href="/add-opportunities">Add Your Opportunities to Science Near Me</a></li>
+        <li><a href="/my/submit-opportunity">Add Your Opportunities to Science Near Me</a></li>
         <li><a href="/display-opportunities">Display Science Near Me Opportunities on Your Website</a></li>
         <li><a href="/api/docs/v1.html">API Documentation</a></li>
       </ul>
