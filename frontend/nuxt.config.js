@@ -210,11 +210,12 @@ export default {
     },
   },
 
-  // In production, these requests won't normally make it to the
-  // Nuxt server, so this is mostly for local development.
-  proxy: {
-    "/api": process.env.LOCAL_API_URL || "https://" + process.env.DOMAIN,
-  },
+  // Local development only. In production the ingress routes /api to
+  // the backend services, and proxying /api to the public hostname
+  // would loop any /api request that reaches Nuxt back into itself.
+  proxy: process.env.LOCAL_API_URL
+    ? { "/api": process.env.LOCAL_API_URL }
+    : {},
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {

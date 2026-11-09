@@ -55,6 +55,17 @@ spec:
             name: circuit-logger-service-beta
             port:
               number: 9000
+      # Everything else under /api belongs to the API (which 404s
+      # unknown paths). It must never fall through to the frontend:
+      # Nuxt proxies /api to the public hostname, so an unmatched
+      # /api path would loop frontend -> ingress -> frontend forever.
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: circuit-api-service-beta
+            port:
+              number: 8000
       - path: /
         pathType: Prefix
         backend:
@@ -100,6 +111,14 @@ spec:
             name: circuit-logger-service
             port:
               number: 9000
+      # See the comment on the beta /api rule.
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: circuit-api-service
+            port:
+              number: 8000
       - path: /
         pathType: Prefix
         backend:
